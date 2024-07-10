@@ -1,13 +1,16 @@
 <template>
-  <div>
-    <h1>About Page</h1>
-    <p>This is the about page content.</p>
-  </div>
+
+    <Markdown/>
+
 </template>
 
-<script lang="ts" setup>
-</script>
+<script>
 
-<style scoped>
-/* 你的样式 */
-</style>
+import Markdown from '@/components/Markdown.vue';
+
+export default {
+  components: {
+    Markdown
+  }
+};
+</script>
