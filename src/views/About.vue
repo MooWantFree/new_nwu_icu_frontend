@@ -1,21 +1,13 @@
-<!--<template>-->
-<!--  <div class="flex flex-col min-h-screen">-->
-<!--    <Navbar />-->
-<!--    <div class="h-16 sm:h-16 md:h-16 lg:h-16 xl:h-16"></div>-->
-<!--    <div class="flex-grow">-->
-<!--      <Markdown />-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</template>-->
+<template>
+  <div>
+    <h1>About Page</h1>
+    <p>This is the about page content.</p>
+  </div>
+</template>
 
-<!--<script>-->
-<!--import Navbar from '../components/Navbar.vue';-->
-<!--import Markdown from '../components/Markdown.vue';-->
+<script lang="ts" setup>
+</script>
 
-<!--export default {-->
-<!--  components: {-->
-<!--    Navbar,-->
-<!--    Markdown-->
-<!--  }-->
-<!--};-->
-<!--</script>-->
+<style scoped>
+/* 你的样式 */
+</style>
