@@ -1,34 +1,46 @@
 <template>
-  <a-dropdown class="mobile-only">
-    <a class="ant-dropdown-link" @click.prevent>
-      <div>
-        <MenuOutlined/>
-        <DownOutlined/>
-      </div>
-
-    </a>
-    <template #overlay>
-      <a-menu>
-        <a-menu-item key="review">
-          <RouterLink to="/review">课程评价</RouterLink>
-        </a-menu-item>
-        <a-menu-item key="download">
-          <RouterLink to="/download">资源下载</RouterLink>
-        </a-menu-item>
-        <a-menu-item key="about">
-          <RouterLink to="/about">关于</RouterLink>
-        </a-menu-item>
-        <a-menu-divider/>
-        <a-menu-item key="login">
-          <RouterLink to="/login">登录</RouterLink>
-        </a-menu-item>
-      </a-menu>
-    </template>
-  </a-dropdown>
+  <n-dropdown :options="options">
+    <n-button>用户资料</n-button>
+  </n-dropdown>
 </template>
 
-<script lang="ts" setup>
-import {DownOutlined, MenuOutlined} from '@ant-design/icons-vue';
+<script lang="ts">
+import type {Component} from 'vue'
+import {defineComponent, h} from 'vue'
+import {NIcon} from 'naive-ui'
+import {LogOutOutline as LogoutIcon, Pencil as EditIcon, PersonCircleOutline as UserIcon} from '@vicons/ionicons5'
+
+const renderIcon = (icon: Component) => {
+  return () => {
+    return h(NIcon, null, {
+      default: () => h(icon)
+    })
+  }
+}
+
+export default defineComponent({
+  setup() {
+    return {
+      options: [
+        {
+          label: '用户资料',
+          key: 'profile',
+          icon: renderIcon(UserIcon)
+        },
+        {
+          label: '编辑用户资料',
+          key: 'editProfile',
+          icon: renderIcon(EditIcon)
+        },
+        {
+          label: '退出登录',
+          key: 'logout',
+          icon: renderIcon(LogoutIcon)
+        }
+      ]
+    }
+  }
+})
 </script>
 
 <style scoped>

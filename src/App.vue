@@ -1,25 +1,26 @@
 <template>
-  <a-layout class="home_layout">
-    <a-layout-header style="display: flex">
+  <n-loading-bar-provider>
+    <n-message-provider>
+      <n-notification-provider>
+        <n-modal-provider>
+          <n-dialog-provider>
 
-      <NavBar/>
-      <DropMenu/>
-    </a-layout-header>
-    <br>
-    <a-layout-content>
-      <RouterView/>
-    </a-layout-content>
-    <a-layout-footer class="home_footer">
-      2019-{{ new Date().getFullYear() }} NWU.ICU
-    </a-layout-footer>
-  </a-layout>
+            <div>
+              <Navbar/>
+              <br>
+              <RouterView/>
+              <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
+            </div>
+
+          </n-dialog-provider>
+        </n-modal-provider>
+      </n-notification-provider>
+    </n-message-provider>
+  </n-loading-bar-provider>
 </template>
 
 <script lang="ts" setup>
-
-import DropMenu from '@/components/DropMenu.vue';
-import NavBar from '@/components/NavBar.vue'
-
+import Navbar from "@/components/NavBar.vue";
 </script>
 
 <style scoped>
