@@ -65,16 +65,18 @@ const desktopOptions: MenuOption[] = [
     disabled: false,
     children: [
       {
-        label: '课程评价',
-        key: 'review'
-      },
-      {
-
-        label: '课程信息',
-        key: 'course'
-      }, {
-        label: '学院课程',
-        key: 'college'
+        label: () =>
+            h(
+                RouterLink,
+                {
+                  to: {
+                    name: 'review'
+                  }
+                },
+                {default: () => '课程评价'}
+            ),
+        key: 'review',
+        icon: renderIcon(About)
       },
     ]
   },
@@ -122,22 +124,22 @@ export default defineComponent({
 <style>
 .navbar {
   width: 100%;
-  height: 50px; /* 设置固定高度 */
+  height: 50px; 
   background-color: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  position: fixed; /* 使其固定在页面顶部 */
+  position: fixed; 
   top: 0;
   left: 0;
-  display: flex; /* 使菜单项水平排列 */
-  align-items: center; /* 垂直居中 */
-  justify-content: space-between; /* 在水平方向上分散菜单项 */
-  padding: 0 10px; /* 添加内边距防止内容贴边 */
-  z-index: 1000; /* 确保导航条在最上层 */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 0 10px; 
+  z-index: 1000; 
 }
 
 @media (max-width: 768px) {
   .navbar {
-    height: 50px; /* 确保小屏幕下高度不变 */
+    height: 50px; 
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   }
