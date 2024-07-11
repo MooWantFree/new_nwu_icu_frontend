@@ -6,11 +6,11 @@
       <DropMenu/>
     </a-layout-header>
     <br>
-    <a-layout-content style="padding: 0 50px">
+    <a-layout-content>
       <RouterView/>
     </a-layout-content>
     <a-layout-footer class="home_footer">
-      2019-{{ currentYear }} NWU.ICU
+      2019-{{ new Date().getFullYear() }} NWU.ICU
     </a-layout-footer>
   </a-layout>
 </template>
@@ -19,9 +19,6 @@
 
 import DropMenu from '@/components/DropMenu.vue';
 import NavBar from '@/components/NavBar.vue'
-
-const currentYear = new Date().getFullYear();
-
 
 </script>
 
