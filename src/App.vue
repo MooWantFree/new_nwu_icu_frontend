@@ -3,26 +3,26 @@
     <a-layout-header>
       <div class="logo"></div>
       <a-menu
-          v-model:selectedKeys="selectedKeys"
           theme="dark"
           mode="horizontal"
+          :selected-keys="[activeMenuItem]"
           :style="{ lineHeight: '64px' }"
       >
-        <a-menu-item key="0" title="a">
+        <a-menu-item key="home">
           <RouterLink to="/"><b>NWU.ICU</b></RouterLink>
         </a-menu-item>
-        <a-menu-item key="1" title="b">
+        <a-menu-item key="review">
           <RouterLink to="/review">课程评价</RouterLink>
         </a-menu-item>
-        <a-menu-item key="2" title="c">
+        <a-menu-item key="download">
           <RouterLink to="/download">资源下载</RouterLink>
         </a-menu-item>
 
-        <a-menu-item key="3">
+        <a-menu-item key="about">
           <RouterLink to="/about">About</RouterLink>
         </a-menu-item>
         <a-menu-item class="spacer" disabled style="flex-grow: 1;"></a-menu-item>
-        <a-menu-item key="4">
+        <a-menu-item key="login">
           <RouterLink to="/login">Login</RouterLink>
         </a-menu-item>
       </a-menu>
@@ -39,10 +39,18 @@
 </template>
 
 <script lang="ts" setup>
-import {ref} from 'vue';
+import {ref, watch} from 'vue';
+import {useRoute} from "vue-router";
 
 const currentYear = new Date().getFullYear();
-const selectedKeys = ref<string[]>(['0']);
+const route = useRoute()
+const activeMenuItem = ref('home')
+watch(() => route.path,
+    pathname => {
+      const modules = pathname.split('/')
+      activeMenuItem.value = modules[1]
+    },
+    {immediate: true})
 </script>
 
 <style scoped>
@@ -62,4 +70,7 @@ const selectedKeys = ref<string[]>(['0']);
   display: none !important;
 }
 
+.router-link-active {
+  //background-color: white;
+}
 </style>
