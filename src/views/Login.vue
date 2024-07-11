@@ -1,5 +1,7 @@
 <template>
-  <Login/>
+  <div class="flex content-center items-center">
+    <Login />
+  </div>
 </template>
 
 <script>
@@ -12,3 +14,6 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+</style>

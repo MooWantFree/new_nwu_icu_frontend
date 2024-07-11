@@ -1,16 +1,13 @@
 <template>
   <a-layout class="layout">
-    <a-layout-header>
-      <div class="logo"></div>
+    <a-layout-header style="display: flex">
+      <div style="margin-right: 5px"><RouterLink to="/"><b>NWU.ICU</b></RouterLink></div>
       <a-menu
           theme="dark"
-          mode="horizontal"
+          :mode="naviBarLayout"
           :selected-keys="[activeMenuItem]"
           :style="{ lineHeight: '64px' }"
       >
-        <a-menu-item key="home">
-          <RouterLink to="/"><b>NWU.ICU</b></RouterLink>
-        </a-menu-item>
         <a-menu-item key="review">
           <RouterLink to="/review">课程评价</RouterLink>
         </a-menu-item>
@@ -21,11 +18,12 @@
         <a-menu-item key="about">
           <RouterLink to="/about">About</RouterLink>
         </a-menu-item>
-        <a-menu-item class="spacer" disabled style="flex-grow: 1;"></a-menu-item>
-        <a-menu-item key="login">
-          <RouterLink to="/login">Login</RouterLink>
+
+        <a-menu-item key="login" style="margin-left: auto">
+
         </a-menu-item>
       </a-menu>
+
     </a-layout-header>
     <br>
     <a-layout-content style="padding: 0 50px">
@@ -50,7 +48,15 @@ watch(() => route.path,
       const modules = pathname.split('/')
       activeMenuItem.value = modules[1]
     },
-    {immediate: true})
+    {immediate: true}
+)
+
+const isMobile = ref(false)
+const naviBarLayout = ref(isMobile.value ? 'vertical' : 'horizontal')
+watch(() => window.innerWidth, (width) => {
+  isMobile.value = width < 768
+  naviBarLayout.value = isMobile.value ? 'vertical' : 'horizontal'
+})
 </script>
 
 <style scoped>
@@ -65,12 +71,4 @@ watch(() => route.path,
   text-align: center;
 }
 
-
-.spacer {
-  display: none !important;
-}
-
-.router-link-active {
-  //background-color: white;
-}
 </style>
