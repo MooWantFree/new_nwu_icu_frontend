@@ -8,17 +8,22 @@
           mode="horizontal"
           :style="{ lineHeight: '64px' }"
       >
-        <a-menu-item key="0">
+        <a-menu-item key="0" title="a">
           <RouterLink to="/">NWU.ICU</RouterLink>
         </a-menu-item>
-        <a-menu-item key="1">
+        <a-menu-item key="1" title="b">
           <RouterLink to="/review">课程评价</RouterLink>
         </a-menu-item>
-        <a-menu-item key="2">
+        <a-menu-item key="2" title="c">
           <RouterLink to="/download">资源下载</RouterLink>
         </a-menu-item>
+
         <a-menu-item key="3">
           <RouterLink to="/about">About</RouterLink>
+        </a-menu-item>
+        <a-menu-item class="spacer" disabled style="flex-grow: 1;"></a-menu-item>
+        <a-menu-item key="4">
+          <RouterLink to="/login">Login</RouterLink>
         </a-menu-item>
       </a-menu>
     </a-layout-header>
@@ -47,35 +52,14 @@ const selectedKeys = ref<string[]>(['2']);
   min-height: 100vh;
 }
 
-.content {
-  flex: 1;
-  padding: 0 50px;
-}
 
 .footer {
   text-align: center;
 }
 
-.site-layout-content {
-  min-height: 280px;
-  padding: 24px;
-  background: #fff;
+
+.spacer {
+  display: none !important;
 }
 
-#components-layout-demo-top .logo {
-  float: left;
-  width: 120px;
-  height: 31px;
-  margin: 16px 24px 16px 0;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.ant-row-rtl #components-layout-demo-top .logo {
-  float: right;
-  margin: 16px 0 16px 24px;
-}
-
-[data-theme='dark'] .site-layout-content {
-  background: #141414;
-}
 </style>
