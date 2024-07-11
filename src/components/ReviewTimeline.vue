@@ -6,6 +6,7 @@
         :datetime="review.datetime"
         :course="review.course"
         :content="review.content"
+        :edited="review.edited"
       />
       <!-- 仅在不是最后一条评价时添加分隔线 -->
       <a-divider v-if="index < reviews.length - 1" />
@@ -21,7 +22,6 @@ import ReviewItems from '@/components/ReviewItems.vue';
 const reviews = ref([]);
 
 const fetchReviews = async () => {
-  // 模拟 API 请求
   const response = await axios.get('/api/review');
   reviews.value = response.data;
 };

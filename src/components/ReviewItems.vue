@@ -1,7 +1,7 @@
 <template>
   <div class="comment-container">
     <a-comment>
-      <template #author><a>{{ author }}</a> 点评了 <a>{{ course }}</a></template>
+      <template #author><a>{{ author }}</a> {{ operation }}了 <a>{{ course }}</a></template>
       <template #avatar>
         <a-avatar src="https://www.loliapi.com/acg/pp/" alt="Han Solo"/>
       </template>
@@ -24,7 +24,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
-
+let operation: String = "添加"
 const props = defineProps({
   author: {
     type: String,
@@ -42,7 +42,14 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  edited: {
+    type: Boolean,
+    required: true,
+  },
 });
+if (props.edited) {
+  operation = "编辑"
+}
 </script>
 
 <style scoped>
