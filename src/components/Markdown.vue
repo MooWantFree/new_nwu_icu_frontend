@@ -4,7 +4,6 @@
 
 <script>
 import axios from 'axios';
-import {marked} from 'marked';
 
 export default {
   data() {
@@ -15,9 +14,8 @@ export default {
   async created() {
     try {
       const response = await axios.get('/api/about');
-      console.log('API Response:', response.data); // 调试输出
-      this.htmlContent = marked(response.data.detail.content);
-      console.log('Converted HTML:', this.htmlContent); // 调试输出
+      // content = content.replace(/<img\s+src="([^"]+)"\s+alt="([^"]*)"\s*\/?>/g, '<n-image src="$1" alt="$2" />')
+      this.htmlContent = response.data.detail.content
     } catch (error) {
       console.error('Failed to fetch markdown content:', error);
     }
