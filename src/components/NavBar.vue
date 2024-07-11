@@ -16,6 +16,9 @@ watch(
 </script>
 
 <template>
+  <div style="margin-right: 5px">
+    <RouterLink to="/"><b>NWU.ICU</b></RouterLink>
+  </div>
   <a-menu
       :selected-keys="[activeMenuItem]"
       :style="{ lineHeight: '64px' }"
@@ -50,9 +53,7 @@ watch(
 
 <style scoped>
 a {
-
-  color: #000000;
-  text-decoration: none;
+  color: white;
 }
 
 .desktop-only {

@@ -32,6 +32,9 @@ import {DownOutlined, MenuOutlined} from '@ant-design/icons-vue';
 </script>
 
 <style scoped>
+a {
+  color: white;
+}
 .mobile-only {
   display: none;
 }

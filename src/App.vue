@@ -1,9 +1,7 @@
 <template>
   <a-layout class="home_layout">
     <a-layout-header style="display: flex">
-      <div style="margin-right: 5px">
-        <RouterLink to="/"><b>NWU.ICU</b></RouterLink>
-      </div>
+
       <NavBar/>
       <DropMenu/>
     </a-layout-header>
@@ -28,6 +26,7 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <style scoped>
+
 .home_layout {
   display: flex;
   flex-direction: column;
