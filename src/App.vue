@@ -9,7 +9,7 @@
           :style="{ lineHeight: '64px' }"
       >
         <a-menu-item key="0" title="a">
-          <RouterLink to="/">NWU.ICU</RouterLink>
+          <RouterLink to="/"><b>NWU.ICU</b></RouterLink>
         </a-menu-item>
         <a-menu-item key="1" title="b">
           <RouterLink to="/review">课程评价</RouterLink>
@@ -27,7 +27,7 @@
         </a-menu-item>
       </a-menu>
     </a-layout-header>
-
+    <br>
     <a-layout-content style="padding: 0 50px">
       <RouterView/>
     </a-layout-content>
@@ -42,7 +42,7 @@
 import {ref} from 'vue';
 
 const currentYear = new Date().getFullYear();
-const selectedKeys = ref<string[]>(['2']);
+const selectedKeys = ref<string[]>(['0']);
 </script>
 
 <style scoped>
