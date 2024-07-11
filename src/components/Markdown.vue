@@ -24,25 +24,5 @@ export default {
 </script>
 
 <style scoped>
-.markdown-body {
-  @apply prose;
-  /* Tailwind CSS Typography plugin */
-}
 
-.markdown-body img {
-  @apply mx-auto w-1/2;
-}
-
-.markdown-body table {
-  @apply table-auto w-full;
-}
-
-.markdown-body th,
-.markdown-body td {
-  @apply px-4 py-2 border;
-}
-
-.markdown-body th {
-  @apply bg-gray-200;
-}
 </style>

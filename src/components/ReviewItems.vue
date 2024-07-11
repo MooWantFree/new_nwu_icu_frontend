@@ -1,22 +1,22 @@
 <template>
-  <div class="comment-container">
-    <a-comment>
-      <template #author><a>{{ author }}</a> {{ operation }}了 <a>{{ course }}</a></template>
-      <template #avatar>
-        <a-avatar src="https://www.loliapi.com/acg/pp/" alt="Han Solo"/>
+  <n-list>
+    <n-list-item>
+      <template #prefix>
+        <n-image src="https://www.loliapi.com/acg/pp/"/>
       </template>
-      <template #content>
-        <p>
-          {{ content }}
-        </p>
+      <template #suffix>
+        <n-button>Suffix</n-button>
       </template>
-      <template #datetime>
-        <a-tooltip :title="dayjs().format('YYYY-MM-DD HH:mm:ss')">
-          <span>{{ datetime }}</span>
-        </a-tooltip>
-      </template>
-    </a-comment>
-  </div>
+      <n-thing title="Thing" title-extra="extra" description="description">
+        Biu<br>
+        Biu<br>
+        Biu<br>
+      </n-thing>
+    </n-list-item>
+    <n-list-item>
+      <n-thing title="Thing" title-extra="extra" description="description" />
+    </n-list-item>
+  </n-list>
 </template>
 
 <script lang="ts" setup>
