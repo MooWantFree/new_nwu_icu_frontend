@@ -58,7 +58,6 @@
 </template>
 <script lang="ts" setup>
 import {computed, reactive} from 'vue';
-import {LockOutlined, UserOutlined} from '@ant-design/icons-vue';
 
 interface FormState {
   username: string;
