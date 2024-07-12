@@ -7,6 +7,10 @@ import ReviewTimeline from "@/views/ReviewTimeline.vue";
 
 const routes = [
   {
+    path: '/',
+    component: () => import('@/views/Home.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/views/Home.vue')
@@ -41,6 +45,11 @@ const routes = [
 const Router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+Router.beforeEach((to, from, next) => {
+  document.title = 'NWU.ICU';
+  next();
 });
 
 export default Router;
