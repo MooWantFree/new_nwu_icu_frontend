@@ -2,14 +2,14 @@
   <div class="navbar">
     <div class="left-button">
       <router-link :to="{ name: 'home' }">
-        <n-button type="success">
+        <n-button color="#000000" dashed>
           NWU.ICU
         </n-button>
       </router-link>
     </div>
     <div class="center-buttons">
       <n-dropdown trigger="hover" :options="options">
-        <n-button>
+        <n-button quaternary type="primary">
           <template #icon>
             <n-icon>
               <school/>
@@ -20,7 +20,7 @@
       </n-dropdown>
       <n-popconfirm @positive-click="handlePositiveClick">
         <template #trigger>
-          <n-button>
+          <n-button quaternary type="primary">
             <template #icon>
               <n-icon>
                 <download/>
@@ -32,7 +32,7 @@
         即将要访问外部网站(虽然也是我们的:D)
       </n-popconfirm>
       <router-link :to="{ name: 'about' }">
-        <n-button color="#ff69b4">
+        <n-button quaternary color="#ff69b4">
           <template #icon>
             <n-icon>
               <about/>
@@ -44,7 +44,7 @@
     </div>
     <div class="right-button">
       <router-link :to="{ name: 'login' }">
-        <n-button color="#ff69b4">
+        <n-button type="info" >
           <template #icon>
             <n-icon>
               <login/>
