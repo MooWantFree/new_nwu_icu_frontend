@@ -42,7 +42,7 @@ import Navbar from "@/components/NavBar.vue";
 }
 
 .content {
-  margin-top: 50px; /* 这个值应等于导航栏的高度 */
+  margin-top: 65px; /* 这个值应等于导航栏的高度 */
   flex-grow: 1;
 }
 
