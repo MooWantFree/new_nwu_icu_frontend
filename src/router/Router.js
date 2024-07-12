@@ -8,17 +8,20 @@ import ReviewTimeline from "@/views/ReviewTimeline.vue";
 const routes = [
   {
     path: '/',
-    component: () => import('@/views/Home.vue')
+    component: () => import('@/views/Home.vue'),
+    pageTitle: '主页'
   },
   {
     path: '/home',
     name: 'home',
-    component: () => import('@/views/Home.vue')
+    component: () => import('@/views/Home.vue'),
+    pageTitle: '主页'
   },
   {
     path: "/about",
     name: 'about',
-    component: About
+    component: About,
+    pageTitle: '关于'
   },
   {
     path: "/login",
@@ -38,7 +41,7 @@ const routes = [
   {
     path: "/review",
     name: 'review',
-    component: ReviewTimeline
+    component: ()=> import('@/views/courseReview/Review.vue')
   },
 ];
 
@@ -48,7 +51,7 @@ const Router = createRouter({
 });
 
 Router.beforeEach((to, from, next) => {
-  document.title = 'NWU.ICU';
+  document.title = routes.filter(it => it.path === to.path)[0]?.pageTitle ?? 'NWU.ICU'
   next();
 });
 
