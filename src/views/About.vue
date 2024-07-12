@@ -4,16 +4,11 @@
 
 </template>
 
-<script>
+<script lang="ts" setup>
 
 import Markdown from '@/components/Markdown.vue';
+import {onBeforeMount} from "vue";
 
-export default {
-  mounted() {
-    document.title = '关于本站';
-  },
-  components: {
-    Markdown
-  }
-};
+
+
 </script>

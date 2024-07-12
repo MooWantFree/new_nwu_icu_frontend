@@ -57,7 +57,7 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import {
   BookOutline as BookIcon,
   CloudDownloadOutline as Download,
@@ -65,55 +65,41 @@ import {
   LogInOutline as Login,
   SchoolSharp as School
 } from '@vicons/ionicons5'
-import {Component, defineComponent, h} from 'vue'
+import {Component, h} from 'vue'
 import {RouterLink} from "vue-router";
 import {NIcon} from "naive-ui";
-import {message} from "ant-design-vue";
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, {default: () => h(icon)})
 }
 
-export default defineComponent({
-  components: {
-    Download,
-    Login,
-    School,
-    About,
-  },
-  setup() {
-    const options = [{
-      label: '课程评价',
-      key: 'courseReview',
-      icon: renderIcon(BookIcon),
-      disabled: false,
-      children: [
-        {
-          label: () =>
-            h(
-                RouterLink,
-                {
-                  to: {
-                    name: 'review'
-                  }
-                },
-                {default: () => '课程评价'}
-            ),
-          key: 'review',
-          icon: renderIcon(About)
-        },
-      ]
-    }];
-    const handlePositiveClick = () => {
-      window.open('https://resour.nwu.icu', '_blank');
-      message.info('yes')
-    }
-    return {
-      options,
-      handlePositiveClick
-    };
-  }
-});
+const options = [{
+  label: '课程评价',
+  key: 'courseReview',
+  icon: renderIcon(BookIcon),
+  disabled: false,
+  children: [
+    {
+      label: () =>
+          h(
+              RouterLink,
+              {
+                to: {
+                  name: 'review'
+                }
+              },
+              {default: () => '课程评价'}
+          ),
+      key: 'review',
+      icon: renderIcon(About)
+    },
+  ]
+}];
+
+const handlePositiveClick = () => {
+  window.open('https://resour.nwu.icu', '_blank');
+}
+
 </script>
 
 <style>
