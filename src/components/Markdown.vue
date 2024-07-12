@@ -8,9 +8,6 @@
 import axios from 'axios';
 
 export default {
-    mounted() {
-    document.title = '关于本站';
-  },
   data() {
     return {
       htmlContent: ''

@@ -14,9 +14,6 @@ import {defineComponent, onMounted, ref} from 'vue'
 import {NumberAnimationInst} from 'naive-ui'
 
 export default defineComponent({
-      mounted() {
-    document.title = '主页';
-  },
   setup () {
     const numberAnimationInstRef = ref<NumberAnimationInst | null>(null)
 
