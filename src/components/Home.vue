@@ -1,13 +1,12 @@
 <template>
-  <n-statistic label="本站已经存活了" tabular-nums>
-    <n-number-animation ref="numberAnimationInstRef" :from="0" :to="daysAlive" />
-    <template #suffix>
-      天
-    </template>
-  </n-statistic>
-  <n-space vertical>
-    害, 干啥不是活着
-  </n-space>
+  <div class="counter">
+    <n-statistic label="本站已经存活了" tabular-nums>
+      <n-number-animation ref="numberAnimationInstRef" :from="0" :to="daysAlive" />
+      <template #suffix>
+        天
+      </template>
+    </n-statistic>
+  </div>
 </template>
 
 <script lang="ts">
@@ -38,3 +37,12 @@ export default defineComponent({
   }
 })
 </script>
+
+<style scoped>
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* 可选：如果需要整个视口高度居中 */
+}
+</style>

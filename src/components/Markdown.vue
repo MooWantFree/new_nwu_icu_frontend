@@ -1,5 +1,7 @@
 <template>
-  <div class="markdown-body" v-html="htmlContent"></div>
+  <div>
+    <iframe ref="iframe" class="iframe-content"></iframe>
+  </div>
 </template>
 
 <script>
@@ -14,15 +16,34 @@ export default {
   async created() {
     try {
       const response = await axios.get('/api/about');
-      // content = content.replace(/<img\s+src="([^"]+)"\s+alt="([^"]*)"\s*\/?>/g, '<n-image src="$1" alt="$2" />')
-      this.htmlContent = response.data.detail.content
+      this.htmlContent = response.data.detail.content;
+      this.updateIframeContent();
     } catch (error) {
       console.error('Failed to fetch markdown content:', error);
+    }
+  },
+  methods: {
+    updateIframeContent() {
+      const iframe = this.$refs.iframe;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(this.htmlContent);
+        iframe.contentWindow.document.close();
+      }
+    }
+  },
+  watch: {
+    htmlContent() {
+      this.updateIframeContent();
     }
   }
 };
 </script>
 
 <style scoped>
-
+.iframe-content {
+  width: 100%;
+  height: 100vh;
+  border: none;
+}
 </style>

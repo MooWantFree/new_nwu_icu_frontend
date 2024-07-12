@@ -2,7 +2,7 @@
   <n-list>
     <n-list-item>
       <template #prefix>
-        <n-image src="https://www.loliapi.com/acg/pp/"/>
+        <n-image width="100" src="https://www.loliapi.com/acg/pp/"/>
       </template>
       <template #suffix>
         <n-button>Suffix</n-button>

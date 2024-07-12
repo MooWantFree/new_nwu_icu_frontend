@@ -4,18 +4,17 @@
       <n-notification-provider>
         <n-modal-provider>
           <n-dialog-provider>
-            <div class="AllPage">
-              <div>
-                <Navbar/>
+            <div class="all-page">
+              <div class="nav-bar">
+                <Navbar />
               </div>
 
-              <div class="content-wrapper">
-                <div class="content-container">
-                  <RouterView/>
-                </div>
+              <div class="content">
+                <RouterView />
               </div>
-              <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
             </div>
+
+            <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
           </n-dialog-provider>
         </n-modal-provider>
       </n-notification-provider>
@@ -28,38 +27,27 @@ import Navbar from "@/components/NavBar.vue";
 </script>
 
 <style scoped>
-.AllPage {
-  display: flex;
-  flex-direction: column; /* 垂直排列子元素 */
-  height: 100vh; /* 高度占满视口 */
-  background-color: #F3F3F3;
-  padding-bottom: 510px;
-}
-
-
-
-.content-wrapper {
-  padding-top: 50px;
-  flex: 1; /* 占据剩余空间 */
-  display: flex;
-  justify-content: center; /* 水平居中对齐 */
-}
-
-.content-container {
-  width: 80%;
-  max-width: 80vw; /* 确保最大宽度为屏幕的80% */
-  background-color: white; /* 设置背景颜色为白色 */
-  padding: 20px; /* 添加一些内边距 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加一些阴影效果 */
-  overflow: hidden; /* 防止内容溢出 */
+.all-page {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.content {
+  margin-top: 50px; /* 这个值应等于导航栏的高度 */
+  flex-grow: 1;
+}
 
 .home_footer {
   text-align: center;
-  padding: 10px;
-  background-color: #f1f1f1;
+  padding: 20px 0;
 }
 </style>
