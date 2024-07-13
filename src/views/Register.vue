@@ -53,7 +53,6 @@
 import {Dayjs} from 'dayjs';
 import type {UnwrapRef} from 'vue';
 import {reactive, ref, toRaw} from 'vue';
-import type {Rule} from 'ant-design-vue/es/form';
 
 interface FormState {
   name: string;

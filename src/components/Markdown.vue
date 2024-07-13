@@ -1,10 +1,11 @@
 <template>
-  <div class="markdown-body" v-html="htmlContent"></div>
+  <div>
+    <iframe ref="iframe" class="iframe-content"></iframe>
+  </div>
 </template>
 
 <script>
 import axios from 'axios';
-import {marked} from 'marked';
 
 export default {
   data() {
@@ -15,36 +16,34 @@ export default {
   async created() {
     try {
       const response = await axios.get('/api/about');
-      console.log('API Response:', response.data); // 调试输出
-      this.htmlContent = marked(response.data.detail.content);
-      console.log('Converted HTML:', this.htmlContent); // 调试输出
+      this.htmlContent = response.data.detail.content;
+      this.updateIframeContent();
     } catch (error) {
       console.error('Failed to fetch markdown content:', error);
+    }
+  },
+  methods: {
+    updateIframeContent() {
+      const iframe = this.$refs.iframe;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(this.htmlContent);
+        iframe.contentWindow.document.close();
+      }
+    }
+  },
+  watch: {
+    htmlContent() {
+      this.updateIframeContent();
     }
   }
 };
 </script>
 
 <style scoped>
-.markdown-body {
-  @apply prose;
-  /* Tailwind CSS Typography plugin */
-}
-
-.markdown-body img {
-  @apply mx-auto w-1/2;
-}
-
-.markdown-body table {
-  @apply table-auto w-full;
-}
-
-.markdown-body th,
-.markdown-body td {
-  @apply px-4 py-2 border;
-}
-
-.markdown-body th {
-  @apply bg-gray-200;
+.iframe-content {
+  width: 100%;
+  height: 100vh;
+  border: none;
 }
 </style>

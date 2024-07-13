@@ -4,13 +4,11 @@
 
 </template>
 
-<script>
+<script lang="ts" setup>
 
 import Markdown from '@/components/Markdown.vue';
+import {onBeforeMount} from "vue";
 
-export default {
-  components: {
-    Markdown
-  }
-};
+
+
 </script>
