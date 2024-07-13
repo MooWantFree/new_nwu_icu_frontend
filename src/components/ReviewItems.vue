@@ -14,7 +14,7 @@
         <div>
           <span style="color: #18A058;">{{ props.author.name }}</span>
           <span style="color: #999999;">{{ props.edited ? '&nbsp;更新了点评&nbsp;' : '&nbsp;点评了&nbsp;' }}</span>
-          <router-link to="`/review/course/${props.course.course_id}`">
+          <router-link :to="`/review/course/${props.course.course_id}`">
             <span style="color: #18A058;">{{ props.course.course_name }}</span>
           </router-link>
         </div>
