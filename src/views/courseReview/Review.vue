@@ -1,26 +1,24 @@
 <template>
   <div class="review-list">
-    <!--      <template v-if="loading">-->
-    <!--        <n-list-item v-for="i in pageLength" :key="i">-->
-    <!--          <n-skeleton circle size="medium" />-->
-    <!--          <n-skeleton text :repeat="3">-->
-    <!--&lt;!&ndash;            TODO: 还得改，表现的和Card一样&ndash;&gt;-->
-    <!--          </n-skeleton>-->
-    <!--        </n-list-item>-->
-    <!--      </template>-->
-    <!--      <template v-else>-->
-    <template v-for="(review, index) in reviews" :key="index">
-          <review-items
-              :author="review.author"
-              :datetime="review.datetime"
-              :course="review.course"
-              :content="review.content"
-              :teachers="review.teachers"
-              :edited="review.edited"
-          />
+    <template v-if="loading">
+      <template v-for="i in pageLength" :key="i">
+        <n-skeleton circle size="medium" />
+        <n-skeleton text :repeat="3">
+        </n-skeleton>
+      </template>
     </template>
-    <!--      </template>-->
-
+    <template v-else>
+      <review-items
+        v-for="(review, index) in reviews"
+        :key="index"
+        :author="review.author"
+        :datetime="review.datetime"
+        :course="review.course"
+        :content="review.content"
+        :teachers="review.teachers"
+        :edited="review.edited"
+      />
+    </template>
   </div>
 </template>
 
@@ -50,8 +48,9 @@ onMounted(async ()=>{
 .review-list {
   display: flex;
   flex-direction: column;
-  width: 80%;
+  width: 60%;
   justify-content: center;
   margin: 0 auto;
+  background-color: white;
 }
 </style>
