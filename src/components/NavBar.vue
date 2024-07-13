@@ -54,6 +54,17 @@
         </n-button>
       </router-link>
     </div>
+    <div class="right-button_mobile">
+      <n-dropdown trigger="hover" :size="'huge'" :options="mobileOptions" :inverted="false">
+        <n-button type="info">
+          <template #icon>
+            <n-icon>
+              <MenuSharp/>
+            </n-icon>
+          </template>
+        </n-button>
+      </n-dropdown>
+    </div>
   </div>
 </template>
 
@@ -63,6 +74,7 @@ import {
   CloudDownloadOutline as Download,
   InformationCircleOutline as About,
   LogInOutline as Login,
+  MenuSharp as MenuSharp,
   SchoolSharp as School
 } from '@vicons/ionicons5'
 import {Component, h} from 'vue'
@@ -93,9 +105,71 @@ const options = [{
       key: 'review',
       icon: renderIcon(About)
     },
+       {
+      label: () =>
+          h(
+              RouterLink,
+              {
+                to: {
+                  name: 'review'
+                }
+              },
+              {default: () => '课程评价'}
+          ),
+      key: 'review',
+      icon: renderIcon(About)
+    },
+       {
+      label: () =>
+          h(
+              RouterLink,
+              {
+                to: {
+                  name: 'review'
+                }
+              },
+              {default: () => '课程评价'}
+          ),
+      key: 'review',
+      icon: renderIcon(About)
+    },
+       {
+      label: () =>
+          h(
+              RouterLink,
+              {
+                to: {
+                  name: 'review'
+                }
+              },
+              {default: () => '课程评价'}
+          ),
+      key: 'review',
+      icon: renderIcon(About)
+    },
   ]
 }];
-
+const mobileOptions = [
+  ...options,
+  {
+    label: '资料下载',
+    key: 'resourcesDownload',
+    icon: renderIcon(Download),
+    disabled: false,
+  },
+  {
+    label: '关于',
+    key: 'about',
+    icon: renderIcon(About),
+    disabled: false,
+  },
+  {
+    label: '登录',
+    key: 'Login',
+    type: "info",
+    icon: renderIcon(Login),
+    disabled: false,
+  },]
 const handlePositiveClick = () => {
   window.open('https://resour.nwu.icu', '_blank');
 }
@@ -110,24 +184,27 @@ const handlePositiveClick = () => {
   width: 100%;
   height: 50px;
   background-color: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
   position: fixed;
   top: 0;
   left: 0;
-  padding: 0 10px;
   z-index: 1000;
 }
 
-.left-button, .right-button {
+
+.left-button {
+  margin-left: 1.5rem; /* 左侧按钮距离网页边缘22px */
   flex: 0;
 }
 
-.left-button {
-  margin-left: 22px; /* 左侧按钮距离网页边缘22px */
+.right-button {
+  margin-right: 1.5rem; /* 右侧按钮距离网页边缘22px */
+  flex: 0;
 }
 
-.right-button {
-  margin-right: 22px; /* 右侧按钮距离网页边缘22px */
+.right-button_mobile {
+  display: none;
+  margin-right: 1.5rem;
 }
 
 .center-buttons {
@@ -138,10 +215,17 @@ const handlePositiveClick = () => {
 }
 
 @media (max-width: 768px) {
-  .navbar {
-    height: 50px;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  .center-buttons {
+    display: none;
+  }
+
+  .right-button {
+    display: none;
+  }
+
+  .right-button_mobile {
+    display: initial;
   }
 }
 </style>
