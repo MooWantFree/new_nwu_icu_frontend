@@ -4,11 +4,8 @@
       <n-notification-provider>
         <n-modal-provider>
           <n-dialog-provider>
-            <div class="all-page">
-              <div class="nav-bar">
-                <Navbar />
-              </div>
-
+            <Navbar />
+            <div class="all-page">            
               <div class="content">
                 <RouterView />
               </div>
@@ -30,7 +27,9 @@ import Navbar from "@/components/NavBar.vue";
 .all-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 70vh;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
 }
 
 .nav-bar {
@@ -41,10 +40,7 @@ import Navbar from "@/components/NavBar.vue";
   z-index: 1000;
 }
 
-.content {
-  margin-top: 65px; /* 这个值应等于导航栏的高度 */
-  flex-grow: 1;
-}
+
 
 .home_footer {
   text-align: center;
