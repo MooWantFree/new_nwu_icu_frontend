@@ -3,7 +3,6 @@ import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
 import Reset from "@/views/Reset.vue";
 import Register from "@/views/Register.vue";
-import ReviewTimeline from "@/views/ReviewTimeline.vue";
 
 const routes = [
   {
