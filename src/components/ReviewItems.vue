@@ -30,8 +30,7 @@
       <template v-for="(teacher,index) in props.teachers">
         <router-link :to="`/review/teacher/${teacher.teacher_id}`">
           <span style="color: #18A058;">{{ teacher.teacher_name }}</span>
-        </router-link>
-        {{ index < props.teachers.length - 1 ? ',' : '' }}
+        </router-link>{{ index < props.teachers.length - 1 ? ',' : '' }}
       </template>
       <div class="review-content">
         <span style="color: #808080;">{{ props.content }}</span>
