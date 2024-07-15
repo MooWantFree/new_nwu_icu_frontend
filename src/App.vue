@@ -5,13 +5,13 @@
         <n-modal-provider>
           <n-dialog-provider>
             <div class="all-page">
-              <div class="nav-bar">
-                <Navbar />
-              </div>
+              <n-layout>
+                  <NavBarNew />
 
-              <div class="content">
-                <RouterView />
-              </div>
+                <div class="content">
+                  <RouterView />
+                </div>
+              </n-layout>
             </div>
 
             <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
@@ -24,6 +24,7 @@
 
 <script lang="ts" setup>
 import Navbar from "@/components/NavBar.vue";
+import NavBarNew from "@/components/NavBarNew.vue";
 </script>
 
 <style scoped>
@@ -31,14 +32,6 @@ import Navbar from "@/components/NavBar.vue";
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-}
-
-.nav-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
 }
 
 .content {
