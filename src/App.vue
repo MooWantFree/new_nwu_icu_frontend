@@ -6,10 +6,10 @@
           <n-dialog-provider>
             <div class="all-page">
               <n-layout>
-                  <NavBarNew />
+                <NavBar/>
 
                 <div class="content">
-                  <RouterView />
+                  <RouterView/>
                 </div>
               </n-layout>
             </div>
@@ -23,8 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/components/NavBar.vue";
-import NavBarNew from "@/components/NavBarNew.vue";
+import NavBar from "@/components/NavBar.vue";
 </script>
 
 <style scoped>

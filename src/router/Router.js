@@ -1,8 +1,8 @@
 import {createRouter, createWebHistory} from "vue-router";
 import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
-import Reset from "@/views/Reset.vue";
-import Register from "@/views/Register.vue";
+// import Reset from "@/views/Reset.vue";
+// import Register from "@/views/Register.vue";
 
 const routes = [
   {
@@ -27,16 +27,16 @@ const routes = [
     name: 'login',
     component: Login
   },
-  {
-    path: "/reset",
-    name: 'reset',
-    component: Reset
-  },
-  {
-    path: "/register",
-    name: 'register',
-    component: Register
-  },
+  // {
+  //   path: "/reset",
+  //   name: 'reset',
+  //   component: Reset
+  // },
+  // {
+  //   path: "/register",
+  //   name: 'register',
+  //   component: Register
+  // },
   {
     path: "/review",
     name: 'review',
