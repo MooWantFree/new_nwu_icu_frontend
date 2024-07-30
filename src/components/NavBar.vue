@@ -42,7 +42,7 @@
       </div>
       <div v-else>
         <n-popover
-            :ref="mobilePopoverRef"
+            ref="mobilePopoverRef"
             style="padding: 0; width: 288px"
             placement="bottom-end"
             display-directive="show"
@@ -60,6 +60,7 @@
                 :options="mobileMenuOptions"
                 :indent="18"
                 :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
                 accordion
             />
           </div>
@@ -94,11 +95,9 @@ const onPageWidthUpdate = () => {
 const isMobile = computed(() => pageWidth.value <= 800)
 onMounted(() => {
   window.addEventListener('resize', onPageWidthUpdate)
-  console.log('added')
 })
 onUnmounted(() => {
   window.removeEventListener('resize', onPageWidthUpdate)
-  console.log('removed')
 })
 
 // Menus
@@ -138,11 +137,14 @@ const renderMenuLabel = (option: MenuOption) => {
         option.text
     )
   }
+}
 
+const handleUpdateMobileMenu = () => {
+  mobilePopoverRef.value.setShow(false)
 }
 
 // Mobile Menu
-const mobilePopoverRef = ref<HTMLElement | null>(null)
+const mobilePopoverRef = ref(null)
 
 // Dialog for outer href
 const dialog = useDialog()
@@ -272,30 +274,6 @@ const style = computed(() => {
   align-items: center;
 }
 </style>
-
-<style scoped>
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.login-container {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-</style>
-
 
 <style>
 .nav-menu .n-menu-item,
