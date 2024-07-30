@@ -2,11 +2,12 @@
   <n-layout-header bordered class="nav" :style="style">
     <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
       <img alt="logo image" src="@/assets/logo.svg"/>
-      <n-button v-if="!isMobile" color="#000000" dashed>NWU.ICU</n-button>
+      <n-button color="#000000" dashed>NWU.ICU</n-button>
     </n-text>
     <div
         :style="
-        !isMobile ? 'display: flex; align-items: center; overflow: hidden;' : ''
+        !isMobile ? 'display: flex; align-items: center; overflow: hidden;'
+        : 'margin-left: auto'
         "
     >
       <div v-if="!isMobile" class="nav-menu">
