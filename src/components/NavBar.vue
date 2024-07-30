@@ -27,7 +27,7 @@
             登录
           </n-button>
         </div>
-<!--            TODO: Make modal unable to close in login loading-->
+        <!--            TODO: Make modal unable to close in login loading-->
         <n-modal
             v-model:show="showLoginPopup"
             preset="card"
@@ -55,17 +55,37 @@
               <MenuOutline/>
             </n-icon>
           </template>
+          <template #header>
+            <n-menu
+                :value="activeKey"
+                :options="mobileMenuHomeButton"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+            />
+          </template>
           <div style="overflow: auto; max-height: 79vh">
             <!--            Mobile Menu-->
             <n-menu
                 :value="activeKey"
-                :options="mobileMenuOptions"
+                :options="menuOptions"
                 :indent="18"
                 :render-label="renderMenuLabel"
                 @update:value="handleUpdateMobileMenu"
                 accordion
             />
           </div>
+          <template #footer>
+            <n-menu
+                :value="activeKey"
+                :options="mobileMenuLoginButton"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+            />
+          </template>
         </n-popover>
       </div>
     </div>
@@ -76,13 +96,23 @@
 import {Component, computed, h, onMounted, onUnmounted, ref} from "vue";
 import {MenuOption, NA, NIcon, useMessage, NModal, useDialog} from "naive-ui";
 import {RouterLink, useRoute, useRouter} from "vue-router";
-import {CloudDownload, LogIn, InformationCircleOutline, MenuOutline, Pencil, OpenOutline, AlertCircle} from "@vicons/ionicons5";
-import Login from "@/components/Login.vue";
+import {
+  CloudDownload,
+  LogIn,
+  InformationCircleOutline,
+  MenuOutline,
+  Pencil,
+  OpenOutline,
+  AlertCircle,
+  Home,
+} from "@vicons/ionicons5";
+import Login from "@/components/LoginForm.vue";
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const activeKey = ref<string | null>(null)
+// TODO: activeKey: init it on page loaded
 
 // Login popup in PC
 const showLoginPopup = ref(false)
@@ -153,12 +183,6 @@ const dialog = useDialog()
 
 // Menu Options
 const menuOptions = [
-  // {
-  //   key: 'home',
-  //   text: '主页',
-  //   icon: renderIcon(Home),
-  //   path: '/',
-  // },
   {
     key: 'courseReview',
     text: '课程评价',
@@ -185,7 +209,7 @@ const menuOptions = [
     key: 'resourceDownload',
     text: '资料下载',
     icon: renderIcon(CloudDownload),
-    onClick: ()=>{ // It is used!
+    onClick: () => { // It is used!
       dialog.create({
         icon: renderIcon(OpenOutline),
         title: "打开外部链接",
@@ -193,7 +217,7 @@ const menuOptions = [
         positiveText: "打开",
         negativeText: "算了",
         onPositiveClick(e) {
-            window.open('https://resour.nwu.icu', "_blank")
+          window.open('https://resour.nwu.icu', "_blank")
         },
       })
     }
@@ -206,15 +230,19 @@ const menuOptions = [
   },
 ]
 
-const mobileMenuOptions = [
-  ...menuOptions,
-  {
-    key: 'login',
-    text: '登录',
-    path: '/login',
-    icon: renderIcon(LogIn),
-  },
-]
+const mobileMenuHomeButton = [{
+  key: 'home',
+  text: '主页',
+  icon: renderIcon(Home),
+  path: '/',
+}]
+
+const mobileMenuLoginButton = [{
+  key: 'login',
+  text: '登录/注册',
+  path: '/login',
+  icon: renderIcon(LogIn),
+}]
 
 
 const style = computed(() => {
