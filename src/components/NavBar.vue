@@ -27,10 +27,12 @@
             登录
           </n-button>
         </div>
+<!--            TODO: Make modal unable to close in login loading-->
         <n-modal
             v-model:show="showLoginPopup"
             preset="card"
 
+            :mask-closable="false"
             title="登录/注册"
             style="width: 600px"
             :bordered="false"
@@ -183,7 +185,7 @@ const menuOptions = [
     key: 'resourceDownload',
     text: '资料下载',
     icon: renderIcon(CloudDownload),
-    onClick: ()=>{
+    onClick: ()=>{ // It is used!
       dialog.create({
         icon: renderIcon(OpenOutline),
         title: "打开外部链接",
