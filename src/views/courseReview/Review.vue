@@ -31,7 +31,7 @@ const loading = ref(true)
 const pageLength = ref(5)
 
 const fetchReviews = async () => {
-  const resp = await fetch('/api/review')
+  const resp = await fetch('/api/review/latest')
   const data = await resp.json()
   // TODO: 错误处理
   reviews.value = data.content.reviews

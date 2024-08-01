@@ -84,6 +84,9 @@ const handleLoginButtonClick = (e: MouseEvent) => {
       // TODO: CSRF Token
       fetch("/api/user/login/", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           username: loginFormValue.value.username,
           password: loginFormValue.value.password,
