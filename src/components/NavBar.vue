@@ -10,9 +10,9 @@
         : 'margin-left: auto'
         "
     >
-      <div v-if="!isMobile" class="nav-menu">
+      <template v-if="!isMobile" >
         <!--        PC NaviBars: left-->
-        <div class="nav-bar-pc-left">
+        <div class="nav-bar-pc-left" style="margin-left: auto">
           <n-menu
               :value="activeKey"
               mode="horizontal"
@@ -20,12 +20,12 @@
               :render-label="renderMenuLabel"
           />
         </div>
-        <div class="nav-bar-pc-right">
+        <div class="nav-bar-pc-right" style="margin-left: auto">
           <n-button
               type="info"
               @click="showLoginPopup = true"
           >
-            登录
+            登录/注册
           </n-button>
         </div>
         <!--            TODO: Make modal unable to close in login loading-->
@@ -42,8 +42,8 @@
         >
           <Login/>
         </n-modal>
-      </div>
-      <div v-else>
+      </template>
+      <template v-else>
         <n-popover
             ref="mobilePopoverRef"
             style="padding: 0; width: 288px"
@@ -88,7 +88,7 @@
             />
           </template>
         </n-popover>
-      </div>
+      </template>
     </div>
   </n-layout-header>
 </template>
@@ -282,6 +282,7 @@ const style = computed(() => {
 }
 
 .nav-menu {
+  width: 100%;
   padding-left: 36px;
   overflow: hidden;
   flex-grow: 0;
