@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import LoginForm from '@/components/LoginForm.vue'
-import {useRoute, useRouter} from "vue-router";
+import {useRouter} from "vue-router";
 import {useMessage} from "naive-ui";
 
 const router = useRouter()

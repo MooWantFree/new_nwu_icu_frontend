@@ -10,7 +10,7 @@
         : 'margin-left: auto'
         "
     >
-      <template v-if="!isMobile" >
+      <template v-if="!isMobile">
         <!--        PC NaviBars: left-->
         <div class="nav-bar-pc-left" style="margin-left: auto">
           <n-menu
@@ -21,14 +21,31 @@
           />
         </div>
         <div class="nav-bar-pc-right" style="margin-left: auto">
-          <n-button
-              type="info"
-              @click="showLoginPopup = true"
-          >
-            登录/注册
-          </n-button>
+          <template v-if="!loginStatus">
+            <n-button
+                type="info"
+                @click="showLoginPopup = true"
+            >
+              登录/注册
+            </n-button>
+          </template>
+          <template v-else>
+            <n-dropdown :options="userAvatarDropdownOptions" :render-label="renderMenuLabel" trigger="hover">
+              <template v-if="userInfo===null">
+                <n-avatar :style="{
+                  color: 'yellow',
+                  backgroundColor: 'red',
+                }"
+                >
+                  M
+                </n-avatar>
+              </template>
+              <template v-else>
+                <n-avatar :src="`/api/download/${userInfo.message.avatar}`"/>
+              </template>
+            </n-dropdown>
+          </template>
         </div>
-        <!--            TODO: Make modal unable to close in login loading-->
         <n-modal
             v-model:show="showLoginPopup"
             preset="card"
@@ -94,20 +111,23 @@
 </template>
 
 <script lang="ts" setup>
-import {Component, computed, h, onMounted, onUnmounted, ref} from "vue";
-import {MenuOption, NA, NIcon, useMessage, NModal, useDialog} from "naive-ui";
+import {Component, computed, h, onMounted, onUnmounted, ref, watch} from "vue";
+import {MenuOption, NA, NIcon, NModal, useDialog, useMessage} from "naive-ui";
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import {
   CloudDownload,
-  LogIn,
-  InformationCircleOutline,
-  MenuOutline,
-  Pencil,
-  OpenOutline,
-  AlertCircle,
   Home,
+  InformationCircleOutline,
+  LogIn, LogOut,
+  MenuOutline,
+  OpenOutline,
+  Pencil,
+  Person,
+
 } from "@vicons/ionicons5";
 import Login from "@/components/LoginForm.vue";
+import {checkLoginStatus} from "@/lib/logins";
+import {renderIcon, renderMenuLabel} from "@/lib/h";
 
 const route = useRoute()
 const router = useRouter()
@@ -115,16 +135,66 @@ const message = useMessage()
 const activeKey = ref<string | null>(null)
 // TODO: activeKey: init it on page loaded
 
+
 // Login status
-const loginStatus = ref(false) // TODO: 计算是否登录成功
+const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重置
 
 // Login popup in PC
 const showLoginPopup = ref(false)
-const handleLoginSuccess = () => {
-  message.success("成功登录，页面将会刷新")
+const handleLoginSuccess = (data: UserInfo) => {
+  console.log(data)
+  const displayName = data.message.nickname ?? data.message.username ?? ""
+  message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
+  showLoginPopup.value = false
   loginStatus.value = true
 }
-// TODO: User avatar and menu after login
+// user avatar
+type UserInfo = {
+  message: {
+    "id": number,
+    "username": string,
+    "email": string,
+    "date_joined": string,
+    "nickname": string,
+    "avatar": string,
+  }
+}
+const userInfo = ref<UserInfo | null>(null)
+const fetchUserInfo = async (loginStatus: boolean) => {
+  if (!loginStatus) {
+    userInfo.value = null
+    return
+  }
+  const resp = await fetch("/api/user/profile/")
+  if (!resp.ok) userInfo.value = null
+  userInfo.value = await resp.json()
+}
+const userAvatarDropdownOptions = [
+  {
+    label: '用户资料',
+    key: 'profile',
+    icon: renderIcon(Person),
+    path: '/user/profile',
+  },
+  {
+    label: '编辑用户资料',
+    key: 'editProfile',
+    icon: renderIcon(Pencil),
+    path: '/user/profile/edit',
+  },
+  {
+    label: '退出登录',
+    key: 'logout',
+    icon: renderIcon(LogOut),
+    path: '/logout',
+  }
+]
+onMounted(async () => {
+  await fetchUserInfo(loginStatus.value)
+})
+watch(loginStatus, async (newLoginStatus, oldLoginStatus) => {
+  await fetchUserInfo(newLoginStatus)
+})
 
 // Update Window width on update
 const pageWidth = ref(window.innerWidth)
@@ -146,36 +216,6 @@ const handleLogoClick = () => {
     return
   }
   router.push('/')
-}
-
-const renderIcon = (icon: Component) => {
-  return () => h(NIcon, null, {default: () => h(icon)})
-}
-
-const renderMenuLabel = (option: MenuOption) => {
-  if (option.path) {
-    return h(
-        RouterLink,
-        {
-          to: option.path
-        },
-        {default: () => option.text}
-    )
-  } else if (option.href) {
-    return h(
-        NA,
-        {
-          href: 'https://resour.nwu.icu',
-          target: '_blank',
-        },
-        {default: option.text}
-    )
-  } else {
-    return h(
-        'span',
-        option.text
-    )
-  }
 }
 
 const handleUpdateMobileMenu = () => {
