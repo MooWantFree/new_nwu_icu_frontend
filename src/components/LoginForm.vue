@@ -90,6 +90,10 @@
 import {FormInst, FormItemRule, FormRules, useMessage} from "naive-ui";
 import {nextTick, onMounted, ref} from "vue";
 
+const props = defineProps<{
+  onLoginSuccess: Function
+}>()
+
 // Common parts
 const message = useMessage()
 const loadingRef = ref<boolean>(false)
@@ -139,7 +143,7 @@ const handleLoginButtonClick = (e: MouseEvent) => {
           }
         } else {
           const data = await resp.json()
-          message.success("成功登录，页面将会刷新")
+          props.onLoginSuccess(data)
         }
       } catch (e) {
         console.error(e)

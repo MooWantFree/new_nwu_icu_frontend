@@ -40,7 +40,7 @@
             size="huge"
             aria-modal="true"
         >
-          <Login/>
+          <Login :on-login-success="handleLoginSuccess"/>
         </n-modal>
       </template>
       <template v-else>
@@ -115,9 +115,15 @@ const message = useMessage()
 const activeKey = ref<string | null>(null)
 // TODO: activeKey: init it on page loaded
 
+// Login status
+const loginStatus = ref(false) // TODO: 计算是否登录成功
+
 // Login popup in PC
 const showLoginPopup = ref(false)
-
+const handleLoginSuccess = () => {
+  message.success("成功登录，页面将会刷新")
+  loginStatus.value = true
+}
 // TODO: User avatar and menu after login
 
 // Update Window width on update
