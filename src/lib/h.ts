@@ -14,7 +14,14 @@ const renderMenuLabel = (option: MenuOption) => {
       },
       {default: () => option.text??option.label}
     )
-  } else {
+  }
+  else if (option.onclick) {
+    return h(
+      "div",
+      {onClick: option.onclick},
+      {default: () => option.text??option.label}
+    )
+  }else {
     return h(
       'span',
       option.text??option.label

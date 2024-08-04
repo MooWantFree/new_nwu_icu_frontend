@@ -146,7 +146,6 @@ const handleLoginButtonClick = (e: MouseEvent) => {
           props.onLoginSuccess(data)
         }
       } catch (e) {
-        console.error(e)
         message.error("网络错误，请重试或联系管理员\n" + e.message)
       } finally {
         loadingRef.value = false

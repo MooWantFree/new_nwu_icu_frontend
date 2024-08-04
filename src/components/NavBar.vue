@@ -32,7 +32,7 @@
           <template v-else>
             <n-dropdown :options="userAvatarDropdownOptions" :render-label="renderMenuLabel" trigger="hover">
               <template v-if="userInfo===null">
-                <n-avatar :style="{
+                <n-avatar round :style="{
                   color: 'yellow',
                   backgroundColor: 'red',
                 }"
@@ -41,7 +41,11 @@
                 </n-avatar>
               </template>
               <template v-else>
-                <n-avatar :src="`/api/download/${userInfo.message.avatar}`"/>
+                <n-avatar round :src="`/api/download/${userInfo.message.avatar}`">
+                  <template #fallback>
+                    <img src="https://www.loliapi.com/acg/pp/" />
+                  </template>
+                </n-avatar>
               </template>
             </n-dropdown>
           </template>
@@ -111,9 +115,9 @@
 </template>
 
 <script lang="ts" setup>
-import {Component, computed, h, onMounted, onUnmounted, ref, watch} from "vue";
-import {MenuOption, NA, NIcon, NModal, useDialog, useMessage} from "naive-ui";
-import {RouterLink, useRoute, useRouter} from "vue-router";
+import {computed, h, onMounted, onUnmounted, ref, watch} from "vue";
+import {NIcon, NModal, useDialog, useMessage} from "naive-ui";
+import {useRoute, useRouter} from "vue-router";
 import {
   CloudDownload,
   Home,
@@ -142,7 +146,6 @@ const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重
 // Login popup in PC
 const showLoginPopup = ref(false)
 const handleLoginSuccess = (data: UserInfo) => {
-  console.log(data)
   const displayName = data.message.nickname ?? data.message.username ?? ""
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
   showLoginPopup.value = false
@@ -186,7 +189,20 @@ const userAvatarDropdownOptions = [
     label: '退出登录',
     key: 'logout',
     icon: renderIcon(LogOut),
-    path: '/logout',
+    onclick: () => {
+      const d = dialog.create({
+        icon: renderIcon(LogOut),
+        title: "退出登录",
+        content: "确定要退出登录吗",
+        positiveText: "确定",
+        negativeText: "算了",
+        onPositiveClick(e) {
+          e.preventDefault()
+          d.loading = true
+          return handleLogout()
+        },
+      })
+    }
   }
 ]
 onMounted(async () => {
@@ -195,6 +211,15 @@ onMounted(async () => {
 watch(loginStatus, async (newLoginStatus, oldLoginStatus) => {
   await fetchUserInfo(newLoginStatus)
 })
+const handleLogout = async () => {
+  const resp = await fetch("/api/user/logout/", {
+    method: "POST",
+  })
+  const data = await resp.json()
+  message.success("成功退出登录，欢迎您下次再来")
+  loginStatus.value = false
+  return data
+}
 
 // Update Window width on update
 const pageWidth = ref(window.innerWidth)
@@ -256,7 +281,7 @@ const menuOptions = [
     key: 'resourceDownload',
     text: '资料下载',
     icon: renderIcon(CloudDownload),
-    onClick: () => { // It is used!
+    onclick: () => {
       dialog.create({
         icon: renderIcon(OpenOutline),
         title: "打开外部链接",
