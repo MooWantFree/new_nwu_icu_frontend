@@ -20,6 +20,7 @@
         :page-solt="7"
         :page-size="5"
         @update:page="onPageUpdate"
+        v-model:page="currentPage"
     >
       <template #prefix="{ itemCount, startIndex, endIndex }">
         共{{ itemCount }}个点评
@@ -34,6 +35,7 @@ import ReviewItems from "@/components/courseReview/ReviewItems.vue";
 import {useMessage} from "naive-ui";
 import {LatestCourseReview} from "@/types/courseReview";
 import ReviewItemSkeleton from "@/components/courseReview/ReviewItemSkeleton.vue";
+import {useRoute, useRouter} from "vue-router";
 
 const message = useMessage()
 
@@ -41,6 +43,9 @@ const reviews = ref<LatestCourseReview["content"]["reviews"]>()
 const totalReviewCount = ref(0)
 const loading = ref(true)
 const pageLength = ref(5)
+
+const router = useRouter()
+const route = useRoute()
 
 const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: number = 0) => {
   const searchParams = new URLSearchParams({
@@ -60,15 +65,19 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
 
 onMounted(async () => {
   loading.value = true
-  await fetchReviews(1)
+  await fetchReviews(currentPage.value)
   loading.value = false
 })
 
 // Page
-const currentPage = ref(1)
+const queryPage = parseInt(route.query.page as string)
+const currentPage = ref(isNaN(queryPage) ? 1 : queryPage)
 const onPageUpdate = async (page: number) => {
   loading.value = true
-  await fetchReviews(page)
+  await Promise.all([
+    router.replace({path: route.path, query: {page: page}}),
+    fetchReviews(page)
+  ])
   loading.value = false
 }
 </script>

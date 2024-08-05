@@ -271,7 +271,7 @@ const menuOptions = [
       {
         key: 'reviewTimeline',
         text: '主页',
-        path: '/review'
+        path: '/review/timeline'
       },
       {
         key: 'reviewCourse',
