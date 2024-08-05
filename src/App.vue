@@ -33,13 +33,6 @@ import NavBar from "@/components/NavBar.vue";
   min-height: 90vh;
 }
 
-.content {
-  margin-top: 20vh; 
-  /* flex-grow: 1; */
-}
-/* why margin-top: 65px ??? */
-/* 这个值应等于导航栏的高度 */
-
 .home_footer {
   text-align: center;
   line-height: 10vh;
