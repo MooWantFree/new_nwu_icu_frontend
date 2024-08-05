@@ -2,8 +2,31 @@ import {createRouter, createWebHistory} from "vue-router";
 import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
 import {checkLoginStatus} from "@/lib/logins";
-import Logout from "@/views/Logout.vue";
-// import Reset from "@/views/Reset.vue";
+import Review from "@/views/courseReview/Review.vue";
+import Profile from "@/views/user/Profile.vue";
+
+const courseReviewRoutes = [
+  {
+    path: '/review',
+    component: Review,
+    pathTitle: '课程评价|首页 - 时间线',
+  }
+]
+
+const userRoutes = [
+  {
+    path: "/login",
+    name: 'login',
+    component: Login,
+    pageTitle: "登录/注册",
+  },
+  {
+    path: "/user/profile",
+    name: "用户资料",
+    component: Profile,
+    pageTitle: '用户资料',
+  }
+]
 
 const routes = [
   {
@@ -23,23 +46,8 @@ const routes = [
     component: About,
     pageTitle: '关于'
   },
-  {
-    path: "/login",
-    name: 'login',
-    component: Login,
-    pageTitle: "登录/注册",
-  },
-  {
-    path: '/logout',
-    name: 'logout',
-    component: Logout,
-    pageTitle: "退出登录"
-  },
-  {
-    path: "/review",
-    name: 'review',
-    component: ()=> import('@/views/courseReview/Review.vue')
-  },
+  ...courseReviewRoutes,
+  ...userRoutes
 ];
 
 const Router = createRouter({
