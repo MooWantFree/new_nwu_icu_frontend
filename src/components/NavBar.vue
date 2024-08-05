@@ -101,7 +101,7 @@
           <template #footer>
             <n-menu
                 :value="activeKey"
-                :options="mobileMenuLoginButton"
+                :options="mobileMenuUserAreaButtons"
                 :indent="18"
                 :render-label="renderMenuLabel"
                 @update:value="handleUpdateMobileMenu"
@@ -172,6 +172,20 @@ const fetchUserInfo = async (loginStatus: boolean) => {
   if (!resp.ok) userInfo.value = null
   userInfo.value = await resp.json()
 }
+const handleLogoutButtonClick = () => {
+  const d = dialog.create({
+    icon: renderIcon(LogOut),
+    title: "退出登录",
+    content: "确定要退出登录吗",
+    positiveText: "确定",
+    negativeText: "算了",
+    onPositiveClick(e) {
+      e.preventDefault()
+      d.loading = true
+      return handleLogout()
+    },
+  })
+}
 const userAvatarDropdownOptions = [
   {
     label: '用户资料',
@@ -190,18 +204,7 @@ const userAvatarDropdownOptions = [
     key: 'logout',
     icon: renderIcon(LogOut),
     onclick: () => {
-      const d = dialog.create({
-        icon: renderIcon(LogOut),
-        title: "退出登录",
-        content: "确定要退出登录吗",
-        positiveText: "确定",
-        negativeText: "算了",
-        onPositiveClick(e) {
-          e.preventDefault()
-          d.loading = true
-          return handleLogout()
-        },
-      })
+      handleLogoutButtonClick()
     }
   }
 ]
@@ -315,6 +318,25 @@ const mobileMenuLoginButton = [{
   path: '/login',
   icon: renderIcon(LogIn),
 }]
+
+const mobileMenuUserButtons = [
+  {
+    key: 'profile',
+    text: '用户资料',
+    icon: renderIcon(Person),
+    path: '/user/profile',
+  },
+  {
+    key: 'logout',
+    text: '退出登录',
+    icon: renderIcon(LogOut),
+    onclick: handleLogoutButtonClick,
+  }
+]
+
+const mobileMenuUserAreaButtons = computed(() => {
+  return loginStatus.value ? mobileMenuUserButtons : mobileMenuLoginButton
+})
 
 
 const style = computed(() => {
