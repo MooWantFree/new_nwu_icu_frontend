@@ -2,7 +2,7 @@
   <div class="review-list">
     <template v-if="loading">
       <template v-for="i in pageLength" :key="i">
-        <review-item-skeleton />
+        <review-item-skeleton/>
       </template>
     </template>
     <template v-else>
@@ -12,6 +12,19 @@
           :key="index"
       />
     </template>
+  </div>
+  <div class="pagination" v-if="totalReviewCount !== 0">
+    <n-pagination
+        style="margin-left: auto;margin-right: auto;margin-top: 2rem"
+        :item-count="totalReviewCount"
+        :page-solt="7"
+        :page-size="5"
+        @update:page="onPageUpdate"
+    >
+      <template #prefix="{ itemCount, startIndex, endIndex }">
+        共{{ itemCount }}个点评
+      </template>
+    </n-pagination>
   </div>
 </template>
 
@@ -51,6 +64,13 @@ onMounted(async () => {
   loading.value = false
 })
 
+// Page
+const currentPage = ref(1)
+const onPageUpdate = async (page: number) => {
+  loading.value = true
+  await fetchReviews(page)
+  loading.value = false
+}
 </script>
 
 <style scoped>
@@ -61,5 +81,9 @@ onMounted(async () => {
   justify-content: center;
   margin: 0 auto;
   background-color: white;
+}
+
+.pagination {
+  display: flex;
 }
 </style>

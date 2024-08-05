@@ -13,7 +13,7 @@ type Review = {
     author: {
     name: string,
       id: number,
-      avatar_url: string,
+      avatar_uuid: string,
   },
   datetime: string,
     course: {

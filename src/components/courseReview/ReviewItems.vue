@@ -4,9 +4,10 @@
       <n-avatar
           round
           size="large"
-          :src="review.author.avatar_url"
+          :src="`/api/download/${review.author.avatar_uuid}`"
           fallback-src="https://www.loliapi.com/acg/pp/"
       />
+<!--      TODO: fix fallback-->
     </div>
     <div class="review-container">
       <div class="review-operation-time">
@@ -17,7 +18,7 @@
             </router-link>
           </template>
           <template v-else>
-            <span style="color: #18A058;">{{ review.author.name }}</span>
+            <span style="color: darkgray;">{{ review.author.name }}</span>
           </template>
 
           <span style="color: #999999;">{{ review.edited ? '&nbsp;更新了点评&nbsp;' : '&nbsp;点评了&nbsp;' }}</span>
@@ -31,6 +32,7 @@
             <n-time :time="new Date(review.datetime)" type="relative"/>
           </template>
           <span>{{ new Date(review.datetime).toLocaleDateString() }}</span>
+<!--          TODO: More readable-->
         </n-tooltip>
       </div>
       <span style="color: #999999;">任课教师: </span>
