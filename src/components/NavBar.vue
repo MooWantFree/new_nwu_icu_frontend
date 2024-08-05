@@ -146,7 +146,7 @@ const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重
 // Login popup in PC
 const showLoginPopup = ref(false)
 const handleLoginSuccess = (data: UserInfo) => {
-  const displayName = data.message.nickname ?? data.message.username ?? ""
+  const displayName = data?.message?.nickname ?? data?.message?.username ?? ""
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
   showLoginPopup.value = false
   loginStatus.value = true

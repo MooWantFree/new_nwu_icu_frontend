@@ -147,6 +147,7 @@ const handleLoginButtonClick = (e: MouseEvent) => {
         }
       } catch (e) {
         message.error("网络错误，请重试或联系管理员\n" + e.message)
+        console.error(e)
       } finally {
         loadingRef.value = false
       }
