@@ -40,9 +40,10 @@ export default defineComponent({
 
 <style scoped>
 .counter {
+  margin-top: 0 !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh; /* 可选：如果需要整个视口高度居中 */
+  height: 50vh; /* 可选：如果需要整个视口高度居中 */
 }
 </style>

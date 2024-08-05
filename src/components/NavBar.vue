@@ -1,16 +1,17 @@
 <template>
-  <n-layout-header bordered class="nav" :style="style">
-    <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-      <img alt="logo image" src="@/assets/logo.svg"/>
-      <n-button color="#000000" dashed>NWU.ICU</n-button>
-    </n-text>
+  <n-layout-header bordered class="nav" :style="style" style="display: flex; justify-content: space-around">
     <div
         :style="
-        !isMobile ? 'display: flex; align-items: center; overflow: hidden;'
-        : 'margin-left: auto'
+        !isMobile ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
+        : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
         "
     >
-      <template v-if="!isMobile">
+      
+      <template v-if="!isMobile" style="display: flex; align-items: center">
+        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
+        <img alt="logo image" src="@/assets/logo.svg"/>
+        <n-button color="#000000" dashed>NWU.ICU</n-button>
+      </n-text>
         <!--        PC NaviBars: left-->
         <div class="nav-bar-pc-left" style="margin-left: auto">
           <n-menu
@@ -65,6 +66,10 @@
         </n-modal>
       </template>
       <template v-else>
+        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
+        <img alt="logo image" src="@/assets/logo.svg"/>
+        <n-button color="#000000" dashed>NWU.ICU</n-button>
+      </n-text>
         <n-popover
             ref="mobilePopoverRef"
             style="padding: 0; width: 288px"
@@ -354,12 +359,12 @@ const style = computed(() => {
 </script>
 
 <style scoped>
-.nav {
+/* .nav {
   display: grid;
   grid-template-rows: calc(var(--header-height) - 1px);
   align-items: center;
   padding: 0 var(--side-padding);
-}
+} */
 
 .ui-logo {
   cursor: pointer;
