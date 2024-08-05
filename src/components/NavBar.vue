@@ -1,231 +1,387 @@
 <template>
-  <div class="navbar">
-    <div class="left-button">
-      <router-link :to="{ name: 'home' }">
-        <n-button color="#000000" dashed>
-          NWU.ICU
-        </n-button>
-      </router-link>
-    </div>
-    <div class="center-buttons">
-      <n-dropdown trigger="hover" :options="options">
-        <n-button quaternary type="primary">
-          <template #icon>
-            <n-icon>
-              <school/>
+  <n-layout-header bordered class="nav" :style="style">
+    <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
+      <img alt="logo image" src="@/assets/logo.svg"/>
+      <n-button color="#000000" dashed>NWU.ICU</n-button>
+    </n-text>
+    <div
+        :style="
+        !isMobile ? 'display: flex; align-items: center; overflow: hidden;'
+        : 'margin-left: auto'
+        "
+    >
+      <template v-if="!isMobile">
+        <!--        PC NaviBars: left-->
+        <div class="nav-bar-pc-left" style="margin-left: auto">
+          <n-menu
+              :value="activeKey"
+              mode="horizontal"
+              :options="menuOptions"
+              :render-label="renderMenuLabel"
+          />
+        </div>
+        <div class="nav-bar-pc-right" style="margin-left: auto">
+          <template v-if="!loginStatus">
+            <n-button
+                type="info"
+                @click="showLoginPopup = true"
+            >
+              登录/注册
+            </n-button>
+          </template>
+          <template v-else>
+            <n-dropdown :options="userAvatarDropdownOptions" :render-label="renderMenuLabel" trigger="hover">
+              <template v-if="userInfo===null">
+                <n-avatar round :style="{
+                  color: 'yellow',
+                  backgroundColor: 'red',
+                }"
+                >
+                  M
+                </n-avatar>
+              </template>
+              <template v-else>
+                <n-avatar round :src="`/api/download/${userInfo.message.avatar}`">
+                  <template #fallback>
+                    <img src="https://www.loliapi.com/acg/pp/" />
+                  </template>
+                </n-avatar>
+              </template>
+            </n-dropdown>
+          </template>
+        </div>
+        <n-modal
+            v-model:show="showLoginPopup"
+            preset="card"
+
+            :mask-closable="false"
+            title="登录/注册"
+            style="width: 600px"
+            :bordered="false"
+            size="huge"
+            aria-modal="true"
+        >
+          <Login :on-login-success="handleLoginSuccess"/>
+        </n-modal>
+      </template>
+      <template v-else>
+        <n-popover
+            ref="mobilePopoverRef"
+            style="padding: 0; width: 288px"
+            placement="bottom-end"
+            display-directive="show"
+            trigger="click"
+        >
+          <template #trigger>
+            <n-icon size="20" style="margin-left: 20px">
+              <MenuOutline/>
             </n-icon>
           </template>
-          课程评价
-        </n-button>
-      </n-dropdown>
-      <n-popconfirm @positive-click="handlePositiveClick">
-        <template #trigger>
-          <n-button quaternary type="primary">
-            <template #icon>
-              <n-icon>
-                <download/>
-              </n-icon>
-            </template>
-            资料下载
-          </n-button>
-        </template>
-        即将要访问外部网站(虽然也是我们的:D)
-      </n-popconfirm>
-      <router-link :to="{ name: 'about' }">
-        <n-button quaternary color="#ff69b4">
-          <template #icon>
-            <n-icon>
-              <about/>
-            </n-icon>
+          <template #header>
+            <n-menu
+                :value="activeKey"
+                :options="mobileMenuHomeButton"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+            />
           </template>
-          关于
-        </n-button>
-      </router-link>
-    </div>
-    <div class="right-button">
-      <router-link :to="{ name: 'login' }">
-        <n-button type="info" >
-          <template #icon>
-            <n-icon>
-              <login/>
-            </n-icon>
+          <div style="overflow: auto; max-height: 79vh">
+            <!--            Mobile Menu-->
+            <n-menu
+                :value="activeKey"
+                :options="menuOptions"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+            />
+          </div>
+          <template #footer>
+            <n-menu
+                :value="activeKey"
+                :options="mobileMenuLoginButton"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+            />
           </template>
-          登录
-        </n-button>
-      </router-link>
+        </n-popover>
+      </template>
     </div>
-    <div class="right-button_mobile">
-      <n-dropdown trigger="hover" :size="'huge'" :options="mobileOptions" :inverted="false">
-        <n-button type="info">
-          <template #icon>
-            <n-icon>
-              <MenuSharp/>
-            </n-icon>
-          </template>
-        </n-button>
-      </n-dropdown>
-    </div>
-  </div>
+  </n-layout-header>
 </template>
 
 <script lang="ts" setup>
+import {computed, h, onMounted, onUnmounted, ref, watch} from "vue";
+import {NIcon, NModal, useDialog, useMessage} from "naive-ui";
+import {useRoute, useRouter} from "vue-router";
 import {
-  BookOutline as BookIcon,
-  CloudDownloadOutline as Download,
-  InformationCircleOutline as About,
-  LogInOutline as Login,
-  MenuSharp as MenuSharp,
-  SchoolSharp as School
-} from '@vicons/ionicons5'
-import {Component, h} from 'vue'
-import {RouterLink} from "vue-router";
-import {NIcon} from "naive-ui";
+  CloudDownload,
+  Home,
+  InformationCircleOutline,
+  LogIn, LogOut,
+  MenuOutline,
+  OpenOutline,
+  Pencil,
+  Person,
 
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, {default: () => h(icon)})
+} from "@vicons/ionicons5";
+import Login from "@/components/LoginForm.vue";
+import {checkLoginStatus} from "@/lib/logins";
+import {renderIcon, renderMenuLabel} from "@/lib/h";
+
+const route = useRoute()
+const router = useRouter()
+const message = useMessage()
+const activeKey = ref<string | null>(null)
+// TODO: activeKey: init it on page loaded
+
+
+// Login status
+const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重置
+
+// Login popup in PC
+const showLoginPopup = ref(false)
+const handleLoginSuccess = (data: UserInfo) => {
+  const displayName = data.message.nickname ?? data.message.username ?? ""
+  message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
+  showLoginPopup.value = false
+  loginStatus.value = true
 }
-
-const options = [{
-  label: '课程评价',
-  key: 'courseReview',
-  icon: renderIcon(BookIcon),
-  disabled: false,
-  children: [
-    {
-      label: () =>
-          h(
-              RouterLink,
-              {
-                to: {
-                  name: 'review'
-                }
-              },
-              {default: () => '课程评价'}
-          ),
-      key: 'review',
-      icon: renderIcon(About)
-    },
-       {
-      label: () =>
-          h(
-              RouterLink,
-              {
-                to: {
-                  name: 'review'
-                }
-              },
-              {default: () => '课程评价'}
-          ),
-      key: 'review',
-      icon: renderIcon(About)
-    },
-       {
-      label: () =>
-          h(
-              RouterLink,
-              {
-                to: {
-                  name: 'review'
-                }
-              },
-              {default: () => '课程评价'}
-          ),
-      key: 'review',
-      icon: renderIcon(About)
-    },
-       {
-      label: () =>
-          h(
-              RouterLink,
-              {
-                to: {
-                  name: 'review'
-                }
-              },
-              {default: () => '课程评价'}
-          ),
-      key: 'review',
-      icon: renderIcon(About)
-    },
-  ]
-}];
-const mobileOptions = [
-  ...options,
+// user avatar
+type UserInfo = {
+  message: {
+    "id": number,
+    "username": string,
+    "email": string,
+    "date_joined": string,
+    "nickname": string,
+    "avatar": string,
+  }
+}
+const userInfo = ref<UserInfo | null>(null)
+const fetchUserInfo = async (loginStatus: boolean) => {
+  if (!loginStatus) {
+    userInfo.value = null
+    return
+  }
+  const resp = await fetch("/api/user/profile/")
+  if (!resp.ok) userInfo.value = null
+  userInfo.value = await resp.json()
+}
+const userAvatarDropdownOptions = [
   {
-    label: '资料下载',
-    key: 'resourcesDownload',
-    icon: renderIcon(Download),
-    disabled: false,
+    label: '用户资料',
+    key: 'profile',
+    icon: renderIcon(Person),
+    path: '/user/profile',
   },
   {
-    label: '关于',
+    label: '编辑用户资料',
+    key: 'editProfile',
+    icon: renderIcon(Pencil),
+    path: '/user/profile/edit',
+  },
+  {
+    label: '退出登录',
+    key: 'logout',
+    icon: renderIcon(LogOut),
+    onclick: () => {
+      const d = dialog.create({
+        icon: renderIcon(LogOut),
+        title: "退出登录",
+        content: "确定要退出登录吗",
+        positiveText: "确定",
+        negativeText: "算了",
+        onPositiveClick(e) {
+          e.preventDefault()
+          d.loading = true
+          return handleLogout()
+        },
+      })
+    }
+  }
+]
+onMounted(async () => {
+  await fetchUserInfo(loginStatus.value)
+})
+watch(loginStatus, async (newLoginStatus, oldLoginStatus) => {
+  await fetchUserInfo(newLoginStatus)
+})
+const handleLogout = async () => {
+  const resp = await fetch("/api/user/logout/", {
+    method: "POST",
+  })
+  const data = await resp.json()
+  message.success("成功退出登录，欢迎您下次再来")
+  loginStatus.value = false
+  return data
+}
+
+// Update Window width on update
+const pageWidth = ref(window.innerWidth)
+const onPageWidthUpdate = () => {
+  pageWidth.value = window.innerWidth
+}
+const isMobile = computed(() => pageWidth.value <= 800)
+onMounted(() => {
+  window.addEventListener('resize', onPageWidthUpdate)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', onPageWidthUpdate)
+})
+
+// Menus
+const handleLogoClick = () => {
+  if (route.path === '/') {
+    message.info("您已经在主页了")
+    return
+  }
+  router.push('/')
+}
+
+const handleUpdateMobileMenu = () => {
+  mobilePopoverRef.value.setShow(false)
+}
+
+// Mobile Menu
+const mobilePopoverRef = ref(null)
+
+// Dialog for outer href
+const dialog = useDialog()
+
+// Menu Options
+const menuOptions = [
+  {
+    key: 'courseReview',
+    text: '课程评价',
+    icon: renderIcon(Pencil),
+    children: [
+      {
+        key: 'reviewTimeline',
+        text: '主页',
+        path: '/review'
+      },
+      {
+        key: 'reviewCourse',
+        text: '课程',
+        path: '/review/course',
+      },
+      {
+        key: 'reviewTeacher',
+        text: '教师',
+        path: '/review/teacher',
+      },
+    ],
+  },
+  {
+    key: 'resourceDownload',
+    text: '资料下载',
+    icon: renderIcon(CloudDownload),
+    onclick: () => {
+      dialog.create({
+        icon: renderIcon(OpenOutline),
+        title: "打开外部链接",
+        content: "在新的标签页打开资料下载页面（虽然也是我们的）",
+        positiveText: "打开",
+        negativeText: "算了",
+        onPositiveClick(e) {
+          window.open('https://resour.nwu.icu', "_blank")
+        },
+      })
+    }
+  },
+  {
     key: 'about',
-    icon: renderIcon(About),
-    disabled: false,
+    text: '关于',
+    icon: renderIcon(InformationCircleOutline),
+    path: '/about',
   },
-  {
-    label: '登录',
-    key: 'Login',
-    type: "info",
-    icon: renderIcon(Login),
-    disabled: false,
-  },]
-const handlePositiveClick = () => {
-  window.open('https://resour.nwu.icu', '_blank');
-}
+]
 
+const mobileMenuHomeButton = [{
+  key: 'home',
+  text: '主页',
+  icon: renderIcon(Home),
+  path: '/',
+}]
+
+const mobileMenuLoginButton = [{
+  key: 'login',
+  text: '登录/注册',
+  path: '/login',
+  icon: renderIcon(LogIn),
+}]
+
+
+const style = computed(() => {
+  return isMobile.value
+      ? {
+        '--side-padding': '16px',
+        'grid-template-columns': 'auto 1fr auto'
+      }
+      : {
+        '--side-padding': '32px',
+        'grid-template-columns':
+            'calc(272px - var(--side-padding)) 1fr auto'
+      }
+})
 </script>
 
-<style>
-.navbar {
+<style scoped>
+.nav {
+  display: grid;
+  grid-template-rows: calc(var(--header-height) - 1px);
+  align-items: center;
+  padding: 0 var(--side-padding);
+}
+
+.ui-logo {
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 左右对齐 */
+  font-size: 18px;
+}
+
+.ui-logo > img {
+  margin-right: 12px;
+  height: 32px;
+  width: 32px;
+}
+
+.nav-menu {
   width: 100%;
-  height: 50px;
-  background-color: white;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
+  padding-left: 36px;
+  overflow: hidden;
+  flex-grow: 0;
+  flex-shrink: 1;
 }
 
-
-.left-button {
-  margin-left: 1.5rem; /* 左侧按钮距离网页边缘22px */
-  flex: 0;
+.nav-picker {
+  margin-right: 4px;
 }
 
-.right-button {
-  margin-right: 1.5rem; /* 右侧按钮距离网页边缘22px */
-  flex: 0;
+.nav-picker.padded {
+  padding: 0 10px;
 }
 
-.right-button_mobile {
-  display: none;
-  margin-right: 1.5rem;
+.nav-picker:last-child {
+  margin-right: 0;
 }
 
-.center-buttons {
-  flex: 1;
+.nav-end {
   display: flex;
-  justify-content: center; /* 中间按钮居中 */
-  gap: 10px; /* 增加按钮间距 */
+  align-items: center;
 }
+</style>
 
-@media (max-width: 768px) {
-
-  .center-buttons {
-    display: none;
-  }
-
-  .right-button {
-    display: none;
-  }
-
-  .right-button_mobile {
-    display: initial;
-  }
+<style>
+.nav-menu .n-menu-item,
+.nav-menu .n-submenu,
+.nav-menu .n-menu-item-content {
+  height: calc(var(--header-height) - 1px) !important;
 }
 </style>

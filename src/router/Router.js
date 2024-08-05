@@ -1,9 +1,33 @@
 import {createRouter, createWebHistory} from "vue-router";
 import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
-import Reset from "@/views/Reset.vue";
-import Register from "@/views/Register.vue";
-import ReviewTimeline from "@/views/ReviewTimeline.vue";
+import {checkLoginStatus} from "@/lib/logins";
+import Logout from "@/views/Logout.vue";
+import Review from "@/views/courseReview/Review.vue";
+import Profile from "@/views/user/Profile.vue";
+
+const courseReviewRoutes = [
+  {
+    path: '/review',
+    component: Review,
+    pathTitle: '课程评价|首页 - 时间线',
+  }
+]
+
+const userRoutes = [
+  {
+    path: "/login",
+    name: 'login',
+    component: Login,
+    pageTitle: "登录/注册",
+  },
+  {
+    path: "/user/profile",
+    name: "用户资料",
+    component: Profile,
+    pageTitle: '用户资料',
+  }
+]
 
 const routes = [
   {
@@ -23,26 +47,8 @@ const routes = [
     component: About,
     pageTitle: '关于'
   },
-  {
-    path: "/login",
-    name: 'login',
-    component: Login
-  },
-  {
-    path: "/reset",
-    name: 'reset',
-    component: Reset
-  },
-  {
-    path: "/register",
-    name: 'register',
-    component: Register
-  },
-  {
-    path: "/review",
-    name: 'review',
-    component: ()=> import('@/views/courseReview/Review.vue')
-  },
+  ...courseReviewRoutes,
+  ...userRoutes
 ];
 
 const Router = createRouter({
@@ -51,7 +57,18 @@ const Router = createRouter({
 });
 
 Router.beforeEach((to, from, next) => {
+  // Change title
   document.title = routes.filter(it => it.path === to.path)[0]?.pageTitle ?? 'NWU.ICU'
+  // Check for login required
+  const loginStatus = checkLoginStatus()
+  routes.forEach(route => {
+    if (route.path === to.path) {
+      if (route.needLogin && !loginStatus) {
+        next({name: 'login'})
+      }
+    }
+  })
+  // Finally
   next();
 });
 

@@ -36,10 +36,10 @@ export default defineComponent({
           label: '退出登录',
           key: 'logout',
           icon: renderIcon(LogoutIcon)
-        }
-      ]
+        },
+      ],
     }
-  }
+  },
 })
 </script>
 

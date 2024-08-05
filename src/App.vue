@@ -1,14 +1,18 @@
 <template>
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
   <n-loading-bar-provider>
     <n-message-provider>
       <n-notification-provider>
         <n-modal-provider>
           <n-dialog-provider>
-            <Navbar />
-            <div class="all-page">            
-              <div class="content">
-                <RouterView />
-              </div>
+            <div class="all-page">
+              <n-layout>
+                <NavBar/>
+
+                <div class="content">
+                  <RouterView/>
+                </div>
+              </n-layout>
             </div>
 
             <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
@@ -17,10 +21,12 @@
       </n-notification-provider>
     </n-message-provider>
   </n-loading-bar-provider>
+  </n-config-provider>
 </template>
 
 <script lang="ts" setup>
-import Navbar from "@/components/NavBar.vue";
+import NavBar from "@/components/NavBar.vue";
+import {dateZhCN, zhCN} from 'naive-ui'
 </script>
 
 <style scoped>
@@ -32,14 +38,10 @@ import Navbar from "@/components/NavBar.vue";
   margin-bottom: 3rem;
 }
 
-.nav-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
+.content {
+  margin-top: 65px; /* 这个值应等于导航栏的高度 */
+  flex-grow: 1;
 }
-
 
 
 .home_footer {
