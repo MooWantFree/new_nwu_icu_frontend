@@ -34,9 +34,10 @@ import NavBar from "@/components/NavBar.vue";
 }
 
 .content {
-  margin-top: 65px; /* 这个值应等于导航栏的高度 */
-  flex-grow: 1;
+  /* margin-top: 65px; 
+  flex-grow: 1; */
 }
+/* 这个值应等于导航栏的高度 */
 
 .home_footer {
   text-align: center;
