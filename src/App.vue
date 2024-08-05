@@ -1,4 +1,5 @@
 <template>
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
   <n-loading-bar-provider>
     <n-message-provider>
       <n-notification-provider>
@@ -20,10 +21,12 @@
       </n-notification-provider>
     </n-message-provider>
   </n-loading-bar-provider>
+  </n-config-provider>
 </template>
 
 <script lang="ts" setup>
 import NavBar from "@/components/NavBar.vue";
+import {dateZhCN, zhCN} from 'naive-ui'
 </script>
 
 <style scoped>
@@ -32,6 +35,7 @@ import NavBar from "@/components/NavBar.vue";
   flex-direction: column;
   min-height: 90vh;
 }
+
 
 .home_footer {
   text-align: center;
