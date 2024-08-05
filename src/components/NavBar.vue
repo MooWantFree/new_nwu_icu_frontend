@@ -1,16 +1,17 @@
 <template>
-  <n-layout-header bordered class="nav" :style="style">
-    <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-      <img alt="logo image" src="@/assets/logo.svg"/>
-      <n-button color="#000000" dashed>NWU.ICU</n-button>
-    </n-text>
+  <n-layout-header bordered class="nav" :style="style" style="display: flex; justify-content: space-around">
     <div
         :style="
-        !isMobile ? 'display: flex; align-items: center; overflow: hidden;'
-        : 'margin-left: auto'
+        !isMobile ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
+        : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
         "
     >
-      <template v-if="!isMobile">
+      
+      <template v-if="!isMobile" style="display: flex; align-items: center">
+        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
+        <img alt="logo image" src="@/assets/logo.svg"/>
+        <n-button color="#000000" dashed>NWU.ICU</n-button>
+      </n-text>
         <!--        PC NaviBars: left-->
         <div class="nav-bar-pc-left" style="margin-left: auto">
           <n-menu
@@ -65,6 +66,10 @@
         </n-modal>
       </template>
       <template v-else>
+        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
+        <img alt="logo image" src="@/assets/logo.svg"/>
+        <n-button color="#000000" dashed>NWU.ICU</n-button>
+      </n-text>
         <n-popover
             ref="mobilePopoverRef"
             style="padding: 0; width: 288px"
@@ -101,7 +106,7 @@
           <template #footer>
             <n-menu
                 :value="activeKey"
-                :options="mobileMenuLoginButton"
+                :options="mobileMenuUserAreaButtons"
                 :indent="18"
                 :render-label="renderMenuLabel"
                 @update:value="handleUpdateMobileMenu"
@@ -146,7 +151,7 @@ const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重
 // Login popup in PC
 const showLoginPopup = ref(false)
 const handleLoginSuccess = (data: UserInfo) => {
-  const displayName = data.message.nickname ?? data.message.username ?? ""
+  const displayName = data?.message?.nickname ?? data?.message?.username ?? ""
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
   showLoginPopup.value = false
   loginStatus.value = true
@@ -172,6 +177,20 @@ const fetchUserInfo = async (loginStatus: boolean) => {
   if (!resp.ok) userInfo.value = null
   userInfo.value = await resp.json()
 }
+const handleLogoutButtonClick = () => {
+  const d = dialog.create({
+    icon: renderIcon(LogOut),
+    title: "退出登录",
+    content: "确定要退出登录吗",
+    positiveText: "确定",
+    negativeText: "算了",
+    onPositiveClick(e) {
+      e.preventDefault()
+      d.loading = true
+      return handleLogout()
+    },
+  })
+}
 const userAvatarDropdownOptions = [
   {
     label: '用户资料',
@@ -190,18 +209,7 @@ const userAvatarDropdownOptions = [
     key: 'logout',
     icon: renderIcon(LogOut),
     onclick: () => {
-      const d = dialog.create({
-        icon: renderIcon(LogOut),
-        title: "退出登录",
-        content: "确定要退出登录吗",
-        positiveText: "确定",
-        negativeText: "算了",
-        onPositiveClick(e) {
-          e.preventDefault()
-          d.loading = true
-          return handleLogout()
-        },
-      })
+      handleLogoutButtonClick()
     }
   }
 ]
@@ -263,7 +271,7 @@ const menuOptions = [
       {
         key: 'reviewTimeline',
         text: '主页',
-        path: '/review'
+        path: '/review/timeline'
       },
       {
         key: 'reviewCourse',
@@ -316,6 +324,25 @@ const mobileMenuLoginButton = [{
   icon: renderIcon(LogIn),
 }]
 
+const mobileMenuUserButtons = [
+  {
+    key: 'profile',
+    text: '用户资料',
+    icon: renderIcon(Person),
+    path: '/user/profile',
+  },
+  {
+    key: 'logout',
+    text: '退出登录',
+    icon: renderIcon(LogOut),
+    onclick: handleLogoutButtonClick,
+  }
+]
+
+const mobileMenuUserAreaButtons = computed(() => {
+  return loginStatus.value ? mobileMenuUserButtons : mobileMenuLoginButton
+})
+
 
 const style = computed(() => {
   return isMobile.value
@@ -332,12 +359,12 @@ const style = computed(() => {
 </script>
 
 <style scoped>
-.nav {
+/* .nav {
   display: grid;
   grid-template-rows: calc(var(--header-height) - 1px);
   align-items: center;
   padding: 0 var(--side-padding);
-}
+} */
 
 .ui-logo {
   cursor: pointer;

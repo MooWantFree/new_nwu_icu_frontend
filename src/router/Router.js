@@ -2,7 +2,6 @@ import {createRouter, createWebHistory} from "vue-router";
 import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
 import {checkLoginStatus} from "@/lib/logins";
-import Logout from "@/views/Logout.vue";
 import Review from "@/views/courseReview/Review.vue";
 import Profile from "@/views/user/Profile.vue";
 
