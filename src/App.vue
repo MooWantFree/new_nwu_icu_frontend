@@ -33,13 +33,16 @@ import {dateZhCN, zhCN} from 'naive-ui'
 .all-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 70vh;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
 }
 
 .content {
   margin-top: 65px; /* 这个值应等于导航栏的高度 */
   flex-grow: 1;
 }
+
 
 .home_footer {
   text-align: center;
