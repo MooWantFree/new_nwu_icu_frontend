@@ -1,44 +1,52 @@
 <template>
-
   <div class="all-review-items">
     <div class="review-avatar">
       <n-avatar
-            round
-            size="large"
-            :src="props.author.avatar_url"
-            fallback-src="https://www.loliapi.com/acg/pp/"
-        />
+          round
+          size="large"
+          :src="review.author.avatar_url"
+          fallback-src="https://www.loliapi.com/acg/pp/"
+      />
     </div>
     <div class="review-container">
       <div class="review-operation-time">
         <div>
-          <span style="color: #18A058;">{{ props.author.name }}</span>
-          <span style="color: #999999;">{{ props.edited ? '&nbsp;更新了点评&nbsp;' : '&nbsp;点评了&nbsp;' }}</span>
-          <router-link :to="`/review/course/${props.course.course_id}`">
-            <span style="color: #18A058;">{{ props.course.course_name }}</span>
+          <template v-if="review.author.id > 0">
+            <router-link :to="`/user/profile/${review.author.id}`">
+              <span style="color: #18A058;">{{ review.author.name }}</span>
+            </router-link>
+          </template>
+          <template v-else>
+            <span style="color: #18A058;">{{ review.author.name }}</span>
+          </template>
+
+          <span style="color: #999999;">{{ review.edited ? '&nbsp;更新了点评&nbsp;' : '&nbsp;点评了&nbsp;' }}</span>
+          <router-link :to="`/review/course/${review.course.id}`">
+            <span style="color: #18A058;">{{ review.course.name }}</span>
           </router-link>
         </div>
 
         <n-tooltip placement="bottom" trigger="hover">
           <template #trigger>
-            <n-time :time="new Date(props.datetime)" type="relative"/>
+            <n-time :time="new Date(review.datetime)" type="relative"/>
           </template>
-          <span>{{ new Date(props.datetime).toLocaleDateString() }}</span>
+          <span>{{ new Date(review.datetime).toLocaleDateString() }}</span>
         </n-tooltip>
       </div>
       <span style="color: #999999;">任课教师: </span>
-      <template v-for="(teacher,index) in props.teachers">
-        <router-link :to="`/review/teacher/${teacher.teacher_id}`">
-          <span style="color: #18A058;">{{ teacher.teacher_name }}</span>
-        </router-link>{{ index < props.teachers.length - 1 ? ',' : '' }}
+      <template v-for="(teacher,index) in review.teachers">
+        <router-link :to="`/review/teacher/${teacher.id}`">
+          <span style="color: #18A058;">{{ teacher.name }}</span>
+        </router-link>
+        {{ index < review.teachers.length - 1 ? ',' : '' }}
       </template>
       <div class="review-content">
-        <span style="color: #808080;">{{ props.content }}</span>
+        <span style="color: #808080;">{{ review.content }}</span>
 
 
       </div>
       <div>
-        <router-link :to="`/review/course/${props.course.course_id}`">
+        <router-link :to="`/review/course/${review.course.id}`">
           <span style="color: #2e2e2e;">>>更多</span>
         </router-link>
       </div>
@@ -52,26 +60,12 @@
 <script lang="ts" setup>
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import type {LatestCourseReview, Review} from "@/types/courseReview";
 
 dayjs.extend(relativeTime);
 
 const props = defineProps<{
-  author: {
-    id: number,
-    name: string,
-    avatar_url: string,
-  };
-  datetime: string;
-  course: {
-    course_name: string;
-    course_id: number;
-  };
-  content: string;
-  teachers: {
-    teacher_name: string;
-    teacher_id: number;
-  }[];
-  edited: boolean;
+  review?: Review
 }>();
 
 </script>
