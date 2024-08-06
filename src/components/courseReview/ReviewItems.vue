@@ -1,13 +1,23 @@
 <template>
   <div class="all-review-items">
     <div class="review-avatar">
-      <n-avatar
-          round
-          size="large"
-          :src="`/api/download/${review.author.avatar_uuid}`"
-          fallback-src="https://www.loliapi.com/acg/pp/"
-      />
-<!--      TODO: fix fallback-->
+
+      <n-tooltip trigger="hover">
+        <template #trigger>
+          <n-badge dot type="info" :show="review.is_student" class="hov">
+            <n-avatar
+                round
+                size="large"
+                :src="`/api/download/${review.author.avatar_uuid}`"
+                fallback-src="https://www.loliapi.com/acg/pp/"
+            />
+          </n-badge>
+
+        </template>
+        <p style="margin: 0" v-if="review.is_student">西大邮箱认证用户</p>
+        <p style="margin: 0" v-else>普通用户</p>
+      </n-tooltip>
+
     </div>
     <div class="review-container">
       <div class="review-operation-time">
@@ -62,7 +72,7 @@
 <script lang="ts" setup>
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import type {LatestCourseReview, Review} from "@/types/courseReview";
+import type {Review} from "@/types/courseReview";
 
 dayjs.extend(relativeTime);
 

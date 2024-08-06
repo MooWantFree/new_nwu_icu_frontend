@@ -2,7 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import About from "@/views/About.vue";
 import Login from "@/views/Login.vue";
 import {checkLoginStatus} from "@/lib/logins";
-import Review from "@/views/courseReview/Review.vue";
+import Review from "@/views/courseReview/ReviewTimeline.vue";
 import Profile from "@/views/user/Profile.vue";
 
 const courseReviewRoutes = [
