@@ -26,6 +26,7 @@ type Review = {
       id: number,
   }[],
     edited: boolean,
+  is_student: boolean,
 }
 
 export {LatestCourseReview, Review}
