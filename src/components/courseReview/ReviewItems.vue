@@ -18,8 +18,6 @@
         <p style="margin: 0" v-else>普通用户</p>
       </n-tooltip>
 
-
-      <!--      TODO: fix fallback-->
     </div>
     <div class="review-container">
       <div class="review-operation-time">
