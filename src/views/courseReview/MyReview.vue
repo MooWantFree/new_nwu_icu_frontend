@@ -21,7 +21,7 @@ import MyReviewItems from "@/components/courseReview/MyReviewItems.vue";
 
 const myReviews = ref<MyReviews | null>(null);
 const myReview = ref<Review[] | null>(null);
-let counter = ref<number>(6);
+const counter = ref<number>(6);
 const myReviewsReq = async () => {
   try {
     const resp = await fetch(`/api/review/my-review`)
@@ -41,8 +41,8 @@ const handleLoad = () => {
 
 }
 
-onMounted(() => {
-  myReviewsReq();
+onMounted(async () => {
+  await myReviewsReq();
 
 });
 
