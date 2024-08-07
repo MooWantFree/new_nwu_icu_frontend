@@ -61,7 +61,7 @@
 
   </div>
   <div class="flex justify-center items-center" v-else>
-    <p>划到底了~~~</p>
+    <p>期待你评价更多~</p>
   </div>
 </template>
 

@@ -1,17 +1,27 @@
 <template>
-
-  <template v-if="myReviews">
-    <n-infinite-scroll class="h-37.5" :distance="10" @load="handleLoad">
-      <div v-for="review in myReview" class="item">
+  <n-infinite-scroll class="h-37.5" :distance="10" @load="handleLoad">
+    <template v-if="myReviews">
+      <div v-for="review in myReview" :key="review.id" class="flex mb-2.5 flex-col">
         <MyReviewItems :review="review"/>
         <div class="w-23/24 mx-auto h-0.1 pb-8">
           <n-divider class="border-b border-dashed border-customGray" :dashed="true"/>
         </div>
       </div>
-    </n-infinite-scroll>
-  </template>
-
+    </template>
+    <template v-else>
+      <div v-for="n in 5" :key="n" class="flex mb-2.5 flex-col">
+        <div class="pr-4 pl-4 pt-4">
+          <n-skeleton text :repeat="5"/>
+          <br>
+          <div class="w-23/24 mx-auto h-0.1 pb-8">
+            <n-divider class="border-b border-dashed border-customGray" :dashed="true"/>
+          </div>
+        </div>
+      </div>
+    </template>
+  </n-infinite-scroll>
 </template>
+
 
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
