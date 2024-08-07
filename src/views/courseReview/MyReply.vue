@@ -15,7 +15,7 @@
 
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
-import {MyReviews, Review} from "@/types/myReview";
+import type {MyReviews, Review} from "@/types/myReview";
 import MyReviewItems from "@/components/courseReview/MyReviewItems.vue";
 
 
@@ -24,7 +24,7 @@ const myReview = ref<Review[] | null>(null);
 let counter = ref<number>(6);
 const myReviewsReq = async () => {
   try {
-    const resp = await fetch(`/api/review/my-review`)
+    const resp = await fetch(`/api/review/my-review-reply/`)
     myReviews.value = await resp.json()
     myReview.value = myReviews.value.message.reviews.slice(0, counter.value)
   } catch (error) {

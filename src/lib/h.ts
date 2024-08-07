@@ -24,7 +24,13 @@ const renderMenuLabel = (option: MenuOption) => {
   }else {
     return h(
       'span',
-      option.text??option.label
+      h(
+        'span',
+        {
+          style: option.meta?.style
+        },
+        {default: () => option.text??option.label}
+      )
     )
   }
 }

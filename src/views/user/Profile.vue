@@ -6,13 +6,10 @@
           <div class="cursor-pointer">
             <n-tooltip trigger="hover">
               <template #trigger>
-                <n-badge value="V">
-                  <n-avatar :bordered="true" round :size="256" :src="`/api/download/${profileData.message.avatar}`"/>
-                </n-badge>
+                <n-avatar :bordered="true" round :size="256" :src="`/api/download/${profileData.message.avatar}`"/>
               </template>
               点击更换头像
             </n-tooltip>
-
           </div>
 
           <div class="pt-4">
@@ -46,8 +43,17 @@
 
 
         <div class=" flex-3 rounded-md">
-          <p>已发表的课程评价</p>
-          <MyReview/>
+          <div class="flex justify-start">
+            <p :class="mySelect === 1 ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'" @click="mySelect = 1">
+              我的课程评价
+            </p>
+            <p class=" text-2xl">&nbsp;|&nbsp;</p>
+            <p :class="mySelect === 2 ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'" @click="mySelect = 2">
+              我的回复
+            </p>
+          </div>
+          <MyReview v-if="mySelect === 1"/>
+          <MyReply v-else-if="mySelect === 2"/>
         </div>
       </div>
     </div>
@@ -61,8 +67,9 @@ import {nextTick, onMounted, ref} from 'vue';
 import type {InputInst, UploadFileInfo} from 'naive-ui';
 import {useMessage} from 'naive-ui';
 import {CreateOutline} from "@vicons/ionicons5"
+import MyReply from "@/views/courseReview/MyReply.vue";
 import MyReview from "@/views/courseReview/MyReview.vue";
-
+import type {UserProfile} from '@/types/userProfile'
 const message = useMessage();
 const editNicknameFlag = ref(false)
 const editEmailFlag = ref(false)
@@ -71,6 +78,7 @@ const inputInstNicknameRef = ref<InputInst | null>(null)
 const inputInstEmailRef = ref<InputInst | null>(null)
 const inputInstNwuEmailRef = ref<InputInst | null>(null)
 const nickname = ref<string>()
+const mySelect = ref<number>(1);
 const showReview = ref(false)
 const email = ref<string>()
 const nwuEmail = ref<string>()
@@ -172,48 +180,12 @@ const handleFinish = async ({file, event}: {
   message.success("上传头像成功")
 }
 
-interface UserProfile {
-  message: {
-    id: number;
-    username: string;
-    email: string;
-    date_joined: number;
-    nickname: string;
-    avatar: string;
-    nwu_email: string;
-    bio: string;
-  }
-}
 
-interface Review {
-  id: number;
-  anonymous: boolean;
-  datetime: string;
-  course: {
-    course_name: string;
-    course_id: number;
-  };
-  like: {
-    like: number;
-    dislike: number;
-  };
-  content: {
-    current_content: string;
-    content_history: string[];
-  };
-  teachers: {
-    teacher_name: string;
-    teacher_id: number;
-  }[];
-  semester: string;
-}
 
-interface Message {
-  reviews: Review[];
-}
+
 
 const profileData = ref<UserProfile | null>(null);
-const reviewData = ref<Message[]>(null);
+
 const profileReq = async () => {
   try {
     const resp = await fetch('/api/user/profile/', {
@@ -230,24 +202,10 @@ const profileReq = async () => {
     console.error('Failed to fetch profile:', error);
   }
 };
-const reviewReq = async () => {
-  try {
-    const resp = await fetch('/api/review/my-review', {
-      method: 'GET',
-    });
-    if (!resp.ok) {
-      console.error('Failed to fetch profile:', resp.statusText);
-      return;
-    }
-    reviewData.value = await resp.json();
-  } catch (error) {
-    console.error('Failed to fetch profile:', error);
-  }
-};
 
 onMounted(() => {
   profileReq();
-  reviewReq();
+
 });
 </script>
 <style scoped>
