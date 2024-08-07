@@ -41,7 +41,7 @@
           <template #trigger>
             <n-time :time="new Date(review.datetime)" type="relative"/>
           </template>
-          <span>{{ new Date(review.datetime).toLocaleDateString() }}</span>
+          <n-time :time="new Date(review.datetime)" format="yyyy-MM-dd hh:mm:ss"/>
 <!--          TODO: More readable-->
         </n-tooltip>
       </div>
