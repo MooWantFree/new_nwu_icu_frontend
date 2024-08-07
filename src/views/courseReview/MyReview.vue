@@ -59,13 +59,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.item {
-  display: flex;
-  margin-bottom: 10px;
-  flex-direction: column;
-}
-
-.item:last-child {
-  margin-bottom: 0;
-}
 </style>
