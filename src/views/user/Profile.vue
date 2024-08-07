@@ -1,13 +1,13 @@
 <template>
   <template v-if="profileData">
-    <div class="parent">
-      <div class="my-profile">
-        <div class="user-info">
-          <div class="user-avatar">
+    <div class="flex justify-center">
+      <div class="flex flex-row justify-center w-4/5 pt-8">
+        <div class="flex flex-1 flex-col justify-center justify-items-center">
+          <div class="cursor-pointer">
             <n-tooltip trigger="hover">
               <template #trigger>
                 <n-badge value="V">
-                  <n-avatar round :size="300" :src="`/api/download/${profileData.message.avatar}`"/>
+                  <n-avatar :bordered="true" round :size="256" :src="`/api/download/${profileData.message.avatar}`"/>
                 </n-badge>
               </template>
               点击更换头像
@@ -15,22 +15,25 @@
 
           </div>
 
-          <div class="user-all-name">
-            <div class="username">
-              <p>{{ profileData.message.username }}</p>
-            </div>
-            <div class="nickname">
-              <p>{{ profileData.message.nickname }}</p>
-            </div>
-
+          <div class="pt-4">
+            <p class="pt-2 text-3xl text-black font-semibold">{{ profileData.message.nickname }}</p>
+            <p class="text-xl text-zinc-400 ">@{{ profileData.message.username }}</p>
+            <p class="pt-2 text-xl">{{ profileData.message.bio }}</p>
           </div>
 
-          <div class="bio">
-            <p>{{ profileData.message.bio }}</p>
+          <div class="pt-4 ">
+            <n-button secondary class="w-4/5 border border-black">
+              <template #icon>
+                <n-icon>
+                  <CreateOutline/>
+                </n-icon>
+              </template>
+              <p class="text-center font-semibold flex-grow text-base">
+                编辑个人资料</p>
+            </n-button>
           </div>
-
-          <n-button secondary strong>编辑个人资料</n-button>
-          <p>第 {{ profileData.message.id }} 位用户, 加入于
+          <div class="pt-4 text-base">
+            <p>第 {{ profileData.message.id }} 位用户, 加入于
             <n-tooltip trigger="hover">
               <template #trigger>
                 <n-time :time="new Date(profileData.message.date_joined)" type="relative"/>
@@ -39,9 +42,12 @@
             </n-tooltip>
           </p>
         </div>
+        </div>
 
-        <div class="review">
-          <p>占位符</p>
+
+        <div class=" flex-3 rounded-md">
+          <p>已发表的课程评价</p>
+          <MyReview/>
         </div>
       </div>
     </div>
@@ -54,6 +60,8 @@
 import {nextTick, onMounted, ref} from 'vue';
 import type {InputInst, UploadFileInfo} from 'naive-ui';
 import {useMessage} from 'naive-ui';
+import {CreateOutline} from "@vicons/ionicons5"
+import MyReview from "@/views/courseReview/MyReview.vue";
 
 const message = useMessage();
 const editNicknameFlag = ref(false)
@@ -243,66 +251,5 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.parent {
-  display: flex;
-  justify-content: center;
-}
-
-.my-profile {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  justify-items: center;
-  align-items: center;
-  width: 80%;
-  padding-top: 2rem;
-}
-
-.user-info {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: center;
-  justify-items: center;
-}
-
-.user-all-name {
-  padding-top: 1rem;
-
-}
-
-.username {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.nickname {
-  font-size: 1.25rem;
-  font-weight: 300;
-  color: #636c76;
-}
-.bio{
-  font-size: 1rem;
-
-}
-
-.review {
-  background-color: grey;
-  flex: 2
-}
-
-.pointer {
-  cursor: pointer;
-}
-
-
-.user-all-name p {
-  margin: 0;
-  padding: 0;
-}
-
-.user-avatar {
-  cursor: pointer;
-}
 
 </style>
