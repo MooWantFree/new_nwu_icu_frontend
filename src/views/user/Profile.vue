@@ -72,7 +72,6 @@ import {CreateOutline} from "@vicons/ionicons5"
 import MyReply from "@/views/courseReview/MyReply.vue";
 import MyReview from "@/views/courseReview/MyReview.vue";
 import type {UserProfile} from '@/types/userProfile'
-import MyTimeLine from "@/views/courseReview/MyTimeLine.vue";
 
 const message = useMessage();
 const editNicknameFlag = ref(false)

@@ -3,19 +3,28 @@ interface Like {
   dislike: number;
 }
 
+interface ReplyContent {
+  id: number;
+  content: string;
+}
+
+interface Course {
+  id: number;
+  name: string;
+  semester: string;
+}
+
 interface Reply {
   id: number;
   content: string;
-}
-
-interface Message {
-  id: number;
-  content: string;
   datetime: string;
-  reply: Reply;
+  course: Course;
+  reply: ReplyContent;
   like: Like;
 }
 
-interface ResponseData {
-  message: Message[];
+interface Replies {
+  message: Reply[];
 }
+
+export {Replies, Reply}
