@@ -1,7 +1,7 @@
 <template>
   <n-infinite-scroll class="h-37.5" :distance="10" @load="handleLoad">
     <template v-if="myReviews">
-      <div v-for="review in myReview" :key="review.id" class="flex mb-2.5 flex-col">
+      <div v-for="review in myReview" class="flex mb-2.5 flex-col">
         <MyReviewItems :review="review"/>
         <div class="w-23/24 mx-auto h-0.1 pb-8">
           <n-divider class="border-b border-dashed border-customGray" :dashed="true"/>
