@@ -44,16 +44,18 @@
 
         <div class=" flex-3 rounded-md">
           <div class="flex justify-start">
-            <p :class="mySelect === 1 ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'" @click="mySelect = 1">
+            <p :class="mySelect === 'review' ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'"
+               @click="mySelect = 'review'">
               我的课程评价
             </p>
             <p class=" text-2xl">&nbsp;|&nbsp;</p>
-            <p :class="mySelect === 2 ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'" @click="mySelect = 2">
+            <p :class="mySelect === 'reply' ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'"
+               @click="mySelect = 'reply'">
               我的回复
             </p>
           </div>
-          <MyReview v-if="mySelect === 1"/>
-          <MyReply v-else-if="mySelect === 2"/>
+          <MyReview v-if="mySelect === 'review'"/>
+          <MyReply v-else-if="mySelect === 'reply'"/>
         </div>
       </div>
     </div>
@@ -70,6 +72,7 @@ import {CreateOutline} from "@vicons/ionicons5"
 import MyReply from "@/views/courseReview/MyReply.vue";
 import MyReview from "@/views/courseReview/MyReview.vue";
 import type {UserProfile} from '@/types/userProfile'
+
 const message = useMessage();
 const editNicknameFlag = ref(false)
 const editEmailFlag = ref(false)
@@ -78,7 +81,7 @@ const inputInstNicknameRef = ref<InputInst | null>(null)
 const inputInstEmailRef = ref<InputInst | null>(null)
 const inputInstNwuEmailRef = ref<InputInst | null>(null)
 const nickname = ref<string>()
-const mySelect = ref<number>(1);
+const mySelect = ref<string>('review');
 const showReview = ref(false)
 const email = ref<string>()
 const nwuEmail = ref<string>()
