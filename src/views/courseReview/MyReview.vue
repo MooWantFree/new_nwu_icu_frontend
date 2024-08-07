@@ -1,5 +1,5 @@
 <template>
-  <n-infinite-scroll class="h-37.5" :distance="10" @load="handleLoad">
+  <n-infinite-scroll class="h-37.5" :distance="30" @load="handleLoad">
     <template v-if="myReviews">
       <div v-for="review in myReview" class="flex mb-2.5 flex-col">
         <MyReviewItems :review="review"/>

@@ -2,7 +2,7 @@
   <template v-if="profileData">
     <div class="flex justify-center">
       <div class="flex flex-row justify-center w-4/5 pt-8">
-        <div class="flex flex-1 flex-col justify-center justify-items-center">
+        <div class="flex flex-1 flex-col justify-center justify-items-center ">
           <div class="cursor-pointer">
             <n-tooltip trigger="hover">
               <template #trigger>
@@ -43,7 +43,7 @@
 
 
         <div class=" flex-3 rounded-md">
-          <div class="flex justify-start">
+          <div class="flex justify-start pb-4">
             <p :class="mySelect === 'review' ? 'font-semibold text-2xl' : 'font-thin text-2xl cursor-pointer'"
                @click="mySelect = 'review'">
               我的课程评价
@@ -72,6 +72,7 @@ import {CreateOutline} from "@vicons/ionicons5"
 import MyReply from "@/views/courseReview/MyReply.vue";
 import MyReview from "@/views/courseReview/MyReview.vue";
 import type {UserProfile} from '@/types/userProfile'
+import MyTimeLine from "@/views/courseReview/MyTimeLine.vue";
 
 const message = useMessage();
 const editNicknameFlag = ref(false)

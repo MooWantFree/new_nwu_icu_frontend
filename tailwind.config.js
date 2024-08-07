@@ -23,6 +23,8 @@ export default {
             colors: {
                 customGray: '#999999',
                 customBlue: '#337AB7',
+                contentGray: '#777777',
+                hrefBlue: '#18a058',
             },
         },
     },

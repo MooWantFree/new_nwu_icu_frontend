@@ -3,27 +3,31 @@
     <div class="pr-4 pl-4 pt-4 rounded flex flex-row">
       <div class="flex flex-col w-full flex-7">
         <p><strong>课程名称: </strong>
-          <router-link :to="`/review/course/${review.course.course_id}`">
-            <span style="color: #18A058;">{{ review.course.course_name }} ({{ review.semester }})</span>
+          <router-link :to="`/review/course/${review.course.id}`">
+            <span class="text-hrefBlue underline">{{ review.course.name }} ({{ review.course.semester }})</span>
           </router-link>
         </p>
         <p><strong>教师名字: </strong>
-          <span v-for="teacher in review.teachers" :key="teacher.teacher_id">
-            <router-link :to="`/course/teacher/${teacher.teacher_id}`">
-            <span style="color: #18A058;">{{ teacher.teacher_name }}</span>
+          <span v-for="(teacher, index) in review.teachers" :key="teacher.id">
+          <router-link :to="`/course/teacher/${teacher.id}`">
+            <span class="text-hrefBlue underline">{{ teacher.name }}</span>
           </router-link>
-        </span>
+          <span v-if="index < review.teachers.length - 1">, </span>
+          </span>
         </p>
 
-        <p><strong>匿名状态: </strong> {{ review.anonymous ? '是' : '否' }}</p>
+
         <div class="flex flex-row">
           <p class="whitespace-nowrap pr-1"><strong>当前内容: </strong></p>
+          <div>
+            <p class="text-contentGray">{{ review.content.current_content }}
 
-          <p>{{ review.content.current_content }}
-            <n-icon size="20">
-              <ArrowRedoOutline/>
-            </n-icon>
           </p>
+            <router-link :to="`/review/course/${review.course.id}`">
+              <p class="text-hrefBlue">>>查看原帖</p>
+            </router-link>
+          </div>
+
         </div>
 
 
@@ -46,6 +50,18 @@
       </div>
       <div class="flex flex-row items-start flex-1 w-full justify-end">
 
+        <div class="flex justify-center items-center h-full">
+          <n-tooltip trigger="hover" v-if="review.anonymous">
+            <template #trigger>
+              <n-icon size="80">
+                <EyeOff/>
+              </n-icon>
+            </template>
+            <p>匿名发表, 可在右侧修改匿名状态</p>
+          </n-tooltip>
+        </div>
+
+
         <n-dropdown class="justify-items-start" trigger="click" :options="options" @select="handleSelect" :render-label="renderMenuLabel" >
           <n-button text>
             <template #icon>
@@ -67,11 +83,12 @@
 
 <script lang="ts" setup>
 import {Component, h} from 'vue'
-import {NIcon, NText, useMessage} from 'naive-ui'
+import {NIcon, useMessage} from 'naive-ui'
 import {
-  ArrowRedoOutline,
   CreateOutline,
   EllipsisVerticalSharp,
+  EyeOff,
+  EyeOutline,
   ThumbsDown,
   ThumbsUp,
   TimeOutline,
@@ -96,6 +113,9 @@ const renderIcon = (icon: Component) => {
     }
   }
 }
+const props = defineProps<{
+  review?: Review
+}>()
 const options = [
   {
     label: '编辑',
@@ -105,7 +125,13 @@ const options = [
   {
     label: '编辑历史',
     key: 'editHistory',
-    icon: renderIcon(TimeOutline)
+    icon: renderIcon(TimeOutline),
+    disabled: !props.review || props.review.content?.content_history?.length === 0,
+  },
+  {
+    label: '更改匿名状态',
+    key: 'editHistory',
+    icon: renderIcon(EyeOutline),
   },
   {
     key: 'deleteReview',
@@ -118,9 +144,7 @@ const options = [
     }
   }
 ]
-const props = defineProps<{
-  review?: Review
-}>()
+
 const handleSelect = (key: string | number) => {
   message.info(String(key))
 }
