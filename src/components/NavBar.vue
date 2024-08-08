@@ -42,7 +42,7 @@
                 </n-avatar>
               </template>
               <template v-else>
-                <n-avatar round :src="`/api/download/${userInfo.message.avatar}`">
+                <n-avatar round :src="`/api/download/${avatar_url}`">
                   <template #fallback>
                     <img src="https://www.loliapi.com/acg/pp/" />
                   </template>
@@ -120,23 +120,24 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, onMounted, onUnmounted, ref, watch} from "vue";
+import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 import {NIcon, NModal, useDialog, useMessage} from "naive-ui";
 import {useRoute, useRouter} from "vue-router";
 import {
   CloudDownload,
   Home,
   InformationCircleOutline,
-  LogIn, LogOut,
+  LogIn,
+  LogOut,
   MenuOutline,
   OpenOutline,
   Pencil,
   Person,
-
 } from "@vicons/ionicons5";
 import Login from "@/components/LoginForm.vue";
 import {checkLoginStatus} from "@/lib/logins";
 import {renderIcon, renderMenuLabel} from "@/lib/h";
+import {avatar_url} from '@/lib/avatar'
 
 const route = useRoute()
 const router = useRouter()
@@ -176,6 +177,8 @@ const fetchUserInfo = async (loginStatus: boolean) => {
   const resp = await fetch("/api/user/profile/")
   if (!resp.ok) userInfo.value = null
   userInfo.value = await resp.json()
+  avatar_url.value = userInfo.value.message.avatar
+
 }
 const handleLogoutButtonClick = () => {
   const d = dialog.create({
