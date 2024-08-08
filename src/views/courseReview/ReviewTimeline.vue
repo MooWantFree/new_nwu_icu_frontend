@@ -47,7 +47,7 @@ const pageLength = ref(5)
 const router = useRouter()
 const route = useRoute()
 
-const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: number = 0) => {
+const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: number = 1) => {
   const searchParams = new URLSearchParams({
     currentPage: currentPage.toString(),
     pageSize: pageSize.toString(),

@@ -24,7 +24,7 @@
 
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue';
 import {MyReviews, Review} from "@/types/myReview";
 import MyReviewItems from "@/components/courseReview/MyReviewItems.vue";
 
@@ -36,7 +36,8 @@ const myReviewsReq = async () => {
   try {
     const resp = await fetch(`/api/review/my-review`)
     myReviews.value = await resp.json()
-    myReview.value = myReviews.value.message.reviews.slice(0, counter.value)
+    myReview.value = myReviews.value.message.reviews.length > 0 ?
+        myReviews.value.message.reviews.slice(0, counter.value) : [null]
   } catch (error) {
     console.error('Failed to load reviews:', error)
   }

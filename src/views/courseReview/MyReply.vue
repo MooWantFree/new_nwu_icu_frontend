@@ -1,6 +1,5 @@
 <template>
 
-
     <n-infinite-scroll class="h-37.5" :distance="10" @load="handleLoad">
       <template v-if="myReplies">
         <div v-for="reply in myReplyArray" class="item">
@@ -24,23 +23,21 @@
       </template>
     </n-infinite-scroll>
 
-
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue';
 import type {Replies, Reply} from "@/types/myReply";
 import MyReplyItems from "@/components/courseReview/MyReplyItems.vue";
 
-
 const myReplies = ref<Replies | null>(null);
-const myReplyArray = ref<Reply[] | null>(null)
+const myReplyArray = ref<Reply[] | null>(null);
 let counter = ref<number>(6);
 const myReviewsReq = async () => {
   try {
-    const resp = await fetch(`/api/review/my-review-reply/`)
-    myReplies.value = await resp.json()
-    myReplyArray.value = myReplies.value.message.slice(0, counter.value)
+    const resp = await fetch(`/api/review/my-review-reply/`);
+    myReplies.value = await resp.json();
+    myReplyArray.value = myReplies.value.message.length > 0 ? myReplies.value.message.slice(0, counter.value) : [null];
   } catch (error) {
     console.error('Failed to load reviews:', error)
   }
