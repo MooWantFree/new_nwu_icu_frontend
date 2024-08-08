@@ -3,8 +3,9 @@ interface Review {
   anonymous: boolean;
   datetime: string;
   course: {
-    course_name: string;
-    course_id: number;
+    name: string;
+    id: number;
+    semester: string;
   };
   like: {
     like: number;
@@ -15,10 +16,10 @@ interface Review {
     content_history: string[];
   };
   teachers: {
-    teacher_name: string;
-    teacher_id: number;
+    name: string;
+    id: number;
   }[];
-  semester: string;
+
 }
 
 interface MyReviews {

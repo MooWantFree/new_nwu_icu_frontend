@@ -27,12 +27,13 @@ const renderMenuLabel = (option: MenuOption) => {
       h(
         'span',
         {
-          style: option.meta?.style
+          style: (option.meta as { style?: any })?.style
         },
-        {default: () => option.text??option.label}
+        {default: () => option.text ?? option.label}
       )
     )
   }
+
 }
 
 export {renderIcon, renderMenuLabel}
