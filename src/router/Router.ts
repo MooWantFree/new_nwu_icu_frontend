@@ -1,5 +1,6 @@
-import {createRouter, createWebHistory} from "vue-router";
+import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
 import {checkLoginStatus} from "@/lib/logins";
+import {nextTick} from "vue";
 
 const courseReviewRoutes = [
   {
@@ -9,7 +10,7 @@ const courseReviewRoutes = [
       pageTitle: '课程评价|首页 - 时间线',
     }
   }
-]
+] as RouteRecordRaw[]
 
 const userRoutes = [
   {
@@ -30,9 +31,11 @@ const userRoutes = [
         pageTitle: '用户资料',
       }
   }
-]
+] as RouteRecordRaw[]
 
 const routes = [
+  ...courseReviewRoutes,
+  ...userRoutes,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
@@ -56,9 +59,7 @@ const routes = [
       pageTitle: '关于'
     }
   },
-  ...courseReviewRoutes,
-  ...userRoutes
-];
+] as RouteRecordRaw[]
 
 const Router = createRouter({
   history: createWebHistory(),
@@ -67,12 +68,11 @@ const Router = createRouter({
 
 Router.beforeEach((to, from, next) => {
   // Change title
-  document.title = routes.filter(it => it.path === to.path)[0]?.meta?.pageTitle ?? 'NWU.ICU'
+  nextTick(() => document.title = to.meta?.pageTitle as string ?? 'NWU.ICU')
   // Check for login required
   const loginStatus = checkLoginStatus()
   routes.forEach(route => {
     if (route.path === to.path) {
-      // @ts-expect-error
       if (route.meta?.requiresAuth && !loginStatus) {
         next({name: 'login'})
       }
