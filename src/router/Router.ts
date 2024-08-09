@@ -1,15 +1,13 @@
 import {createRouter, createWebHistory} from "vue-router";
-import About from "@/views/About.vue";
-import Login from "@/views/Login.vue";
 import {checkLoginStatus} from "@/lib/logins";
-import Review from "@/views/courseReview/ReviewTimeline.vue";
-import Profile from "@/views/user/Profile.vue";
 
 const courseReviewRoutes = [
   {
     path: '/review',
-    component: Review,
-    pathTitle: '课程评价|首页 - 时间线',
+    component: () => import("@/views/courseReview/ReviewTimeline.vue"),
+    meta: {
+      pageTitle: '课程评价|首页 - 时间线',
+    }
   }
 ]
 
@@ -17,14 +15,20 @@ const userRoutes = [
   {
     path: "/login",
     name: 'login',
-    component: Login,
-    pageTitle: "登录/注册",
+    component: () => import("@/views/Login.vue"),
+    meta: {
+      pageTitle: "登录/注册",
+    }
   },
   {
     path: "/user/profile",
     name: "用户资料",
-    component: Profile,
-    pageTitle: '用户资料',
+    component: () => import("@/views/user/Profile.vue"),
+    meta:
+      {
+        requiresAuth: true,
+        pageTitle: '用户资料',
+      }
   }
 ]
 
@@ -32,19 +36,25 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
-    pageTitle: '主页'
+    meta: {
+      pageTitle: '主页'
+    }
   },
   {
     path: '/home',
     name: 'home',
     component: () => import('@/views/Home.vue'),
-    pageTitle: '主页'
+    meta: {
+      pageTitle: '主页'
+    }
   },
   {
     path: "/about",
     name: 'about',
-    component: About,
-    pageTitle: '关于'
+    component: () => import("@/views/About.vue"),
+    meta: {
+      pageTitle: '关于'
+    }
   },
   ...courseReviewRoutes,
   ...userRoutes
@@ -57,12 +67,13 @@ const Router = createRouter({
 
 Router.beforeEach((to, from, next) => {
   // Change title
-  document.title = routes.filter(it => it.path === to.path)[0]?.pageTitle ?? 'NWU.ICU'
+  document.title = routes.filter(it => it.path === to.path)[0]?.meta?.pageTitle ?? 'NWU.ICU'
   // Check for login required
   const loginStatus = checkLoginStatus()
   routes.forEach(route => {
     if (route.path === to.path) {
-      if (route.needLogin && !loginStatus) {
+      // @ts-expect-error
+      if (route.meta?.requiresAuth && !loginStatus) {
         next({name: 'login'})
       }
     }
