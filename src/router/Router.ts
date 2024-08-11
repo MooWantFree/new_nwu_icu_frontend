@@ -4,7 +4,7 @@ import {nextTick} from "vue";
 
 const courseReviewRoutes = [
   {
-    path: '/review',
+    path: '/review/timeline',
     component: () => import("@/views/courseReview/ReviewTimeline.vue"),
     meta: {
       pageTitle: '课程评价|首页 - 时间线',
