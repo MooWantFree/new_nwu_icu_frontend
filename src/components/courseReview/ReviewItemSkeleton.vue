@@ -5,24 +5,14 @@
           round
           size="large"
       >
-        占位符
       </n-avatar>
     </div>
     <div class="review-container">
-      <div class="review-operation-time">
-        <div>
-
-        </div>
-      </div>
-      <n-skeleton size="medium"/>
-      <div class="review-content">
-        <n-skeleton size="medium"/>
-        <n-skeleton size="medium"/>
-      </div>
-      <div>
-        <n-skeleton size="medium"/>
-
-      </div>
+      <n-skeleton />
+      <br />
+      <n-skeleton />
+      <br />
+      <n-skeleton />
     </div>
 
   </div>
