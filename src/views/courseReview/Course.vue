@@ -1,9 +1,10 @@
 <template>
-  <main class="min-h-screen bg-gray-100" v-if="!courseLoading">
+  <CourseSkeleton v-if="courseLoading" />
+  <main class="min-h-screen bg-gray-100" v-else>
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
-        <CourseMeta :course-data="courseData" :loading="false"/>
-        <CourseReviews :course-data="courseData" :loading="false"/>
+        <CourseMeta :course-data="courseData" :loading="courseLoading"/>
+        <CourseReviews :course-data="courseData" :loading="courseLoading"/>
       </div>
       <aside class="space-y-6">
         <CourseTeachers :course-data="courseData"/>
@@ -21,6 +22,7 @@ import CourseMeta from "@/components/courseReview/course/CourseMeta.vue";
 import CourseReviews from "@/components/courseReview/course/CourseReviews.vue";
 import CourseTeachers from "@/components/courseReview/course/CourseTeachers.vue";
 import CourseAlike from "@/components/courseReview/course/CourseAlike.vue";
+import CourseSkeleton from "@/components/courseReview/course/CourseSkeleton.vue";
 
 const router = useRouter()
 const route = useRoute()
