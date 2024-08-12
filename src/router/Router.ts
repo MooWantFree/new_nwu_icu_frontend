@@ -9,6 +9,13 @@ const courseReviewRoutes = [
     meta: {
       pageTitle: '课程评价|首页 - 时间线',
     }
+  },
+  {
+    path: '/review/course/:id',
+    component: () => import("@/views/courseReview/Course.vue"),
+    meta: {
+      pateTitle: '课程评价',
+    }
   }
 ] as RouteRecordRaw[]
 
