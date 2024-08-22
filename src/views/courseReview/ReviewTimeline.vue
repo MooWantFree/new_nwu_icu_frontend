@@ -1,40 +1,43 @@
 <template>
-  <div class="review-list">
-    <template v-if="loading">
-      <template v-for="i in pageLength" :key="i">
-        <review-item-skeleton/>
-      </template>
-    </template>
-    <template v-else>
-      <review-items
-          v-for="(review, index) in reviews"
-          :review="review"
-          :key="index"
-      />
-    </template>
-  </div>
-  <div class="pagination" v-if="totalReviewCount !== 0">
-    <n-pagination
-        style="margin-left: auto;margin-right: auto;margin-top: 2rem"
-        :item-count="totalReviewCount"
-        :page-solt="7"
-        :page-size="5"
-        @update:page="onPageUpdate"
-        v-model:page="currentPage"
-    >
-      <template #prefix="{ itemCount, startIndex, endIndex }">
-        共{{ itemCount }}个点评
-      </template>
-    </n-pagination>
+  <div class="bg-gray-100">
+    <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">时间线</h1>
+        <div class="space-y-6">
+          <review-item-skeleton v-for="i in Array(pageLength)" :key="i" v-if="loading"/>
+          <template v-else>
+            <review-item
+                v-for="(review, index) in reviews"
+                :review="review"
+                :key="index"
+            />
+          </template>
+        </div>
+        <div v-if="totalReviewCount !== 0" class="flex items-center justify-center">
+          <n-pagination
+              class="my-5"
+              :item-count="totalReviewCount"
+              :page-solt="7"
+              :page-size="5"
+              @update:page="onPageUpdate"
+              v-model:page="currentPage"
+          >
+            <template #prefix="{ itemCount, startIndex, endIndex }">
+              共{{ itemCount }}个点评
+            </template>
+          </n-pagination>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
-import ReviewItems from "@/components/courseReview/ReviewItems.vue";
+import ReviewItem from "@/components/courseReview/timeline/ReviewItem.vue"
 import {useMessage} from "naive-ui";
 import {LatestCourseReview} from "@/types/courseReview";
-import ReviewItemSkeleton from "@/components/courseReview/ReviewItemSkeleton.vue";
+import ReviewItemSkeleton from "@/components/courseReview/timeline/ReviewItemSkeleton.vue";
 import {useRoute, useRouter} from "vue-router";
 
 const message = useMessage()
@@ -83,16 +86,4 @@ const onPageUpdate = async (page: number) => {
 </script>
 
 <style scoped>
-.review-list {
-  display: flex;
-  flex-direction: column;
-  width: 60%;
-  justify-content: center;
-  margin: 0 auto;
-  background-color: white;
-}
-
-.pagination {
-  display: flex;
-}
 </style>
