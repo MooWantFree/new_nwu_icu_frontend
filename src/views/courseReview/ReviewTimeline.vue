@@ -4,7 +4,9 @@
       <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-900 mb-8">时间线</h1>
         <div class="space-y-6">
-          <review-item-skeleton v-for="i in Array(pageLength)" :key="i" v-if="loading"/>
+          <template  v-if="loading">
+            <review-item-skeleton v-for="index in pageLength" :key="index" />
+          </template>
           <template v-else>
             <review-item
                 v-for="(review, index) in reviews"

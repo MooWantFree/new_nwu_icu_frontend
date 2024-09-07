@@ -6,7 +6,7 @@
             round
             size="large"
         >
-          <!--        :src="teacher.id"-->
+          <!--        TODO:src="teacher.id"-->
           PlaceHolder
         </n-avatar>
         <router-link :to="`/review/teacher/${teacher.id}`" #="{ navigate, href }" custom >

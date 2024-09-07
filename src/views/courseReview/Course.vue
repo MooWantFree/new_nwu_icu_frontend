@@ -19,7 +19,7 @@ import {useRoute, useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
 import {CourseData} from "@/types/courses";
 import CourseMeta from "@/components/courseReview/course/CourseMeta.vue";
-import CourseReviews from "@/components/courseReview/course/CourseReviews.vue";
+import CourseReviews from "@/components/courseReview/course/courseReviews/CourseReviews.vue";
 import CourseTeachers from "@/components/courseReview/course/CourseTeachers.vue";
 import CourseAlike from "@/components/courseReview/course/CourseAlike.vue";
 import CourseSkeleton from "@/components/courseReview/course/CourseSkeleton.vue";

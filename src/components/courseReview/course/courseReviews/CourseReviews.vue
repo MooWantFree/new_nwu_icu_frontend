@@ -1,6 +1,9 @@
 <template>
   <div class="p-6 mt-6 bg-white rounded-md shadow-md">
-    <h2 class="text-xl font-bold">点评</h2>
+    <div class="flex">
+      <h2 class="text-xl font-bold">点评</h2>
+      <n-button @click="handleNewReviewButtonClicked" class="ml-auto" type="primary">提交一条新的点评</n-button>
+    </div>
     <div class="flex items-center mt-4 space-x-4">
       <p class="whitespace-nowrap">排序</p>
       <n-select :options="sortSelectorOptions" v-model:value="sortSelectorValue"/>
@@ -8,7 +11,7 @@
       <n-select :options="semesterSelectorOptions" v-model:value="semesterSelectorValue"/>
       <p class="whitespace-nowrap">评分</p>
       <n-select :options="rankSelectorOptions" v-model:value="rankSelectorValue"/>
-      <n-button>课程学期评分趋势</n-button>
+      <n-button @click="handleSemesterRankingChartButtonClicked">课程学期评分趋势</n-button>
     </div>
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
@@ -17,7 +20,7 @@
       <div v-if="reviewsDisplayed.length === 0">
         <n-empty size="huge" description="暂时没有内容呢">
           <template #extra>
-            <n-button size="large">
+            <n-button size="large" @click="handleNewReviewButtonClicked">
               新建一个评价
             </n-button>
           </template>
@@ -30,7 +33,7 @@
 <script lang="ts" setup>
 import {ref, defineProps, computed} from "vue";
 import {CourseData} from "@/types/courses";
-import CourseReviewItem from "@/components/courseReview/course/CourseReviewItem.vue";
+import CourseReviewItem from "@/components/courseReview/course/courseReviews/CourseReviewItem.vue";
 
 const props = defineProps<{
   courseData: CourseData,
@@ -132,4 +135,14 @@ const reviewsDisplayed = computed(() => props.courseData.reviews.filter(review =
         )
     )
 )
+
+// 课程学期评分趋势
+const handleSemesterRankingChartButtonClicked = () => {
+
+}
+
+// New review
+const handleNewReviewButtonClicked = () => {
+
+}
 </script>
