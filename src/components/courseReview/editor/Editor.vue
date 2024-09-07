@@ -1,5 +1,5 @@
 <template>
-  <Milkdown />
+  <Milkdown :editable="false" />
 </template>
 <script setup lang="ts">
 import {Milkdown, useEditor} from "@milkdown/vue"
@@ -12,6 +12,7 @@ useEditor((root)=>
       .make()
       .config(ctx => {
         ctx.set(rootCtx, root)
+        ctx.set(defaultValueCtx, "# test")
       })
       .config(nord)
       .use(commonmark)

@@ -11,6 +11,7 @@
                   :src="`/api/download/${review.author.avatar_uuid}`"
                   fallback-src="https://www.loliapi.com/acg/pp/"
               />
+              <!-- TODO: change the fallback url -->
             </n-badge>
 
           </template>
@@ -34,7 +35,6 @@
                 <n-time :time="new Date(review.datetime)" type="relative"/>
               </template>
               <n-time :time="new Date(review.datetime)" format="yyyy-MM-dd hh:mm:ss"/>
-              <!--          TODO: More readable-->
             </n-tooltip>
           </p>
         </div>

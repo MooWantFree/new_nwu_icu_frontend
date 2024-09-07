@@ -57,8 +57,9 @@
           <n-input v-model:value="signUpFormValue.repeatPassword" placeholder="请重复密码" type="password"
                    show-password-on="click"/>
         </n-form-item-row>
+        <!-- TODO: Fix the style -->
         <n-form-item-row label="验证码" path="captcha">
-          <div style="display: flex">
+          <div class="flex justify-space">
             <n-input
                 v-model:value="signUpFormValue.captcha"
                 placeholder="请输入验证码"
@@ -188,7 +189,7 @@ const validatePasswordStrength = (rule: FormItemRule, value: string) => {
   return true
 }
 const signUpFormRules: FormRules = {
-  username: [{
+  username: [{ // TODO: 验证用户名是否重复
     required: true,
     validator: (rule: FormItemRule, value: string) => {
       if (!value) {
@@ -295,15 +296,27 @@ const captchaInfo = ref({
   key: "",
   imageUrl: "",
 })
+const captchaLoading = ref(false)
+
+// TODO: Handle the captcha reloading 
 const updateCaptcha = async () => {
-  const req = await fetch("/api/captcha")
-  if (!req.ok) {
-    // TODO
+  captchaLoading.value = true
+  try {
+    const req = await fetch("/api/captcha")
+    if (!req.ok) {
+      throw new Error("Failed to fetch captcha")
+    }
+    const data = await req.json()
+    captchaInfo.value.key = data.key
+    captchaInfo.value.imageUrl = data.image_url
+  } catch (error) {
+    message.error("获取验证码失败，请重试。")
+    console.error(error)
+  } finally {
+    captchaLoading.value = false
   }
-  const data = await req.json()
-  captchaInfo.value.key = data.key
-  captchaInfo.value.imageUrl = data.image_url
 }
+
 onMounted(async () => {
   await updateCaptcha()
 })

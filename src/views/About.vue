@@ -1,14 +1,7 @@
 <template>
-
-    <Markdown/>
-
+  <Render content="Test"/>
 </template>
 
 <script lang="ts" setup>
-
-import Markdown from '@/components/Markdown.vue';
-import {onBeforeMount} from "vue";
-
-
-
+import Render from '@/components/courseReview/editor/Render.vue';
 </script>

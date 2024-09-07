@@ -66,6 +66,14 @@ const routes = [
       pageTitle: '关于'
     }
   },
+  {
+    path: "/editor",
+    name: 'editor',
+    component: () => import("@/views/courseReview/Editor.vue"),
+    meta: {
+      pageTitle: '编辑器'
+    }
+  },
 ] as RouteRecordRaw[]
 
 const Router = createRouter({
