@@ -66,6 +66,14 @@ const routes = [
       pageTitle: '关于'
     }
   },
+  {
+    path: "/user/activate",
+    name: "userActivate",
+    component: () => import("@/views/user/UserActivate.vue"),
+    meta: {
+      pageTitle: "用户激活"
+    }
+  }
 ] as RouteRecordRaw[]
 
 const Router = createRouter({
