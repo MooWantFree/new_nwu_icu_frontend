@@ -54,7 +54,7 @@
             </p>
           </div>
           <span class="text-sm text-gray-500 ml-2">
-            #{{ reverseReplies ? review.reply.length - index : index + 1 }}
+            #{{ reverseReplies ? index + 1 : review.reply.length - index }}
           </span>
         </div>
       </div>
