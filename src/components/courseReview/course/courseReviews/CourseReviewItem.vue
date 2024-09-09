@@ -31,17 +31,17 @@
           <span>(最后修改于: <n-time :time="new Date(review.modified_time)" />)</span>
         </div>
       </div>
-      <n-button v-if="isLoggedIn" text @click="toggleReply" class="text-blue-600 hover:text-blue-800">
-        {{ showReply ? '取消回复' : '回复' }}
-      </n-button>
     </div>
     <div class="mt-4">
       <div class="flex justify-between items-center mb-2">
         <h4 class="font-semibold text-gray-900">评论</h4>
         <!-- TODO: Change color -->
-        <n-button text @click="toggleReplyOrder" class="text-blue-600 hover:text-blue-800">
+         <div>
+          <span>排序：</span>
+          <n-button text @click="toggleReplyOrder" class="text-blue-600 hover:text-blue-800">
           {{ reverseReplies ? '最新回复' : '最早回复' }}
         </n-button>
+         </div>
       </div>
       <div class="space-y-2">
         <div v-for="(reply, index) in (reverseReplies ? [...review.reply].reverse() : review.reply)" :key="reply.created_time" class="bg-gray-50 p-3 rounded-md flex justify-between items-start">
@@ -58,6 +58,11 @@
           </span>
         </div>
       </div>
+    </div>
+    <div class="flex justify-end mt-2 mx-2">
+      <n-button v-if="isLoggedIn" text @click="toggleReply" class="text-blue-600 hover:text-blue-800">
+        {{ showReply ? '取消回复' : '回复' }}
+      </n-button>
     </div>
     <CourseReviewItemReply v-if="showReply" :review="review" @close="toggleReply" class="mt-4" />
   </div>
