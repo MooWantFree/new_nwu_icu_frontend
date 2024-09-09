@@ -44,7 +44,7 @@
           :rules="signUpFormRules"
       >
         <n-form-item-row label="用户名" path="username">
-          <n-input v-model:value="signUpFormValue.username" placeholder="请输入用户名"/>
+          <n-input v-model:value="signUpFormValue.username" placeholder="请输入用户名" :loading="checkingUsername"/>
         </n-form-item-row>
         <n-form-item-row label="邮箱" path="email">
           <n-input v-model:value="signUpFormValue.email" placeholder="请输入邮箱"/>
@@ -169,6 +169,7 @@ const signUpFormValue = ref({
   email: "",
   captcha: "",
 })
+const checkingUsername = ref(false)
 const validatePasswordStartWith = (rule: FormItemRule, value: string): boolean => {
   return (
       !!signUpFormValue.value.password
@@ -190,7 +191,7 @@ const validatePasswordStrength = (rule: FormItemRule, value: string) => {
   return true
 }
 const checkUsernameAvailability = debounce(async (rule: FormItemRule, value: string): Promise<void> => {
-  console.log("Checking username availability:", value)
+  checkingUsername.value = true
   if (!value) return
   try {
     const response = await fetch('/api/user/username/', {
@@ -206,6 +207,8 @@ const checkUsernameAvailability = debounce(async (rule: FormItemRule, value: str
   } catch (error) {
     console.error('Error checking username availability:', error)
     throw error instanceof Error ? error : new Error('Unknown error')
+  } finally {
+    checkingUsername.value = false
   }
 }, 300)
 // FIXME: Fix the error 
@@ -221,11 +224,14 @@ const signUpFormRules: FormRules = {
         return new Error("请输入用户名")
       } else if (!/^[A-Za-z0-9_]{4,29}$/.test(value)) {
         return new Error("用户名应只包括字母、数字与下划线，且长度位于4与29之间")
+      } else if (/^\d+$/.test(value)) {
+        return new Error("用户名不能全为数字")
       }
       return true
     },
     trigger: ["blur", "input"],
-  }, {
+  }, 
+  {
     validator: checkUsernameAvailability,
     trigger: ["blur", "input"],
   }],
