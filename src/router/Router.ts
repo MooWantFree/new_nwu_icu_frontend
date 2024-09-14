@@ -11,10 +11,10 @@ const courseReviewRoutes = [
     }
   },
   {
-    path: '/review/course/:id',
+    path: '/review/course/:id(\\d+)',
     component: () => import("@/views/courseReview/Course.vue"),
     meta: {
-      pateTitle: '课程评价',
+      pageTitle: '课程评价',
     }
   }
 ] as RouteRecordRaw[]
@@ -40,9 +40,20 @@ const userRoutes = [
   }
 ] as RouteRecordRaw[]
 
+const systemInfoRoutes = [
+  {
+    path: '/:pathMatch(.*)*',
+    component: () => import('@/components/infoNErrors/404.vue'),
+    meta: {
+      pageTitle: '404'
+    }
+  }
+] as RouteRecordRaw[]
+
 const routes = [
   ...courseReviewRoutes,
   ...userRoutes,
+  ...systemInfoRoutes,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
@@ -64,6 +75,14 @@ const routes = [
     component: () => import("@/views/About.vue"),
     meta: {
       pageTitle: '关于'
+    }
+  },
+  {
+    path: "/editor",
+    name: 'editor',
+    component: () => import("@/views/courseReview/Editor.vue"),
+    meta: {
+      pageTitle: '编辑器'
     }
   },
   {
