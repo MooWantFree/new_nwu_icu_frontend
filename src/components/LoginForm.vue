@@ -145,7 +145,7 @@ const handleLoginButtonClick = (e: MouseEvent) => {
           }
         } else {
           const data = await resp.json()
-          props.onLoginSuccess(data)
+          props.onLoginSuccess(data?.message)
         }
       } catch (e) {
         message.error("网络错误，请重试或联系管理员\n" + e.message)

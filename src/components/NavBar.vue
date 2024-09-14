@@ -22,8 +22,9 @@
           />
         </div>
         <div class="nav-bar-pc-right" style="margin-left: auto">
-          <template v-if="!loginStatus">
+          <template v-if="!isLoggedIn">
             <n-button
+                :disabled="isLoading"
                 type="info"
                 @click="showLoginPopup = true"
             >
@@ -135,9 +136,10 @@ import {
   Person,
 } from "@vicons/ionicons5";
 import Login from "@/components/LoginForm.vue";
-import {checkLoginStatus} from "@/lib/logins";
 import {renderIcon, renderMenuLabel} from "@/lib/h";
 import {avatar_url} from '@/lib/avatar'
+import { useUser } from "@/lib/useUser";
+import { UserProfile } from "@/types/userProfile";
 
 const route = useRoute()
 const router = useRouter()
@@ -145,40 +147,15 @@ const message = useMessage()
 const activeKey = ref<string | null>(null)
 // TODO: activeKey: init it on page loaded
 
-
-// Login status
-const loginStatus = ref(checkLoginStatus()) // TODO: 退出登录后不会被重置
+const {isLoggedIn, fetchUserInfo, login, logout, userInfo, isLoading} = useUser()
 
 // Login popup in PC
 const showLoginPopup = ref(false)
-const handleLoginSuccess = (data: UserInfo) => {
-  const displayName = data?.message?.nickname ?? data?.message?.username ?? ""
+const handleLoginSuccess = (data: UserProfile["message"]) => {
+  login(data)
+  const displayName = data?.nickname ?? data?.username ?? ""
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
   showLoginPopup.value = false
-  loginStatus.value = true
-}
-// user avatar
-type UserInfo = {
-  message: {
-    "id": number,
-    "username": string,
-    "email": string,
-    "date_joined": string,
-    "nickname": string,
-    "avatar": string,
-  }
-}
-const userInfo = ref<UserInfo | null>(null)
-const fetchUserInfo = async (loginStatus: boolean) => {
-  if (!loginStatus) {
-    userInfo.value = null
-    return
-  }
-  const resp = await fetch("/api/user/profile/")
-  if (!resp.ok) userInfo.value = null
-  userInfo.value = await resp.json()
-  avatar_url.value = userInfo.value.message.avatar
-
 }
 const handleLogoutButtonClick = () => {
   const d = dialog.create({
@@ -216,20 +193,13 @@ const userAvatarDropdownOptions = [
     }
   }
 ]
-onMounted(async () => {
-  await fetchUserInfo(loginStatus.value)
-})
-watch(loginStatus, async (newLoginStatus, oldLoginStatus) => {
-  await fetchUserInfo(newLoginStatus)
-})
 const handleLogout = async () => {
   const resp = await fetch("/api/user/logout/", {
     method: "POST",
   })
-  const data = await resp.json()
+  await resp.json()
+  logout()
   message.success("成功退出登录，欢迎您下次再来")
-  loginStatus.value = false
-  return data
 }
 
 // Update Window width on update
@@ -343,7 +313,7 @@ const mobileMenuUserButtons = [
 ]
 
 const mobileMenuUserAreaButtons = computed(() => {
-  return loginStatus.value ? mobileMenuUserButtons : mobileMenuLoginButton
+  return isLoggedIn.value ? mobileMenuUserButtons : mobileMenuLoginButton
 })
 
 
