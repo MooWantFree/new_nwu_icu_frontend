@@ -26,13 +26,13 @@
               show-password-on="click"
           />
         </n-form-item-row>
-        <div style="display: flex">
-          <p style="margin-left: auto">
-            <!--          TODO-->
-            <RouterLink to="/reset">忘记密码</RouterLink>
-          </p>
+        <div class="flex justify-between items-center mt-2">
+          <n-checkbox v-model:checked="rememberMe">记住我</n-checkbox>
+          <n-button text type="primary" @click="goToForgotPassword">
+            忘记密码？
+          </n-button>
         </div>
-        <n-button type="primary" block secondary strong @click="handleLoginButtonClick" :loading="loadingRef">
+        <n-button type="primary" block secondary strong @click="handleLoginButtonClick" :loading="loadingRef" class="mt-4">
           登录
         </n-button>
       </n-form>
@@ -91,6 +91,9 @@
 import {FormInst, FormItemRule, FormRules, useMessage} from "naive-ui";
 import {nextTick, onMounted, ref} from "vue";
 import {debounce} from 'lodash-es';
+import { api } from "@/lib/requests";
+import { useRouter } from 'vue-router'
+import { LoginResponse } from "@/types/api/users";
 
 const props = defineProps<{
   onLoginSuccess: Function
@@ -99,6 +102,9 @@ const props = defineProps<{
 // Common parts
 const message = useMessage()
 const loadingRef = ref<boolean>(false)
+const router = useRouter()
+const rememberMe = ref(false)
+// TODO: How to handle the remember me?
 
 // Login part
 const loginFormRef = ref<FormInst | null>(null)
@@ -124,28 +130,18 @@ const handleLoginButtonClick = (e: MouseEvent) => {
   loginFormRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const resp = await fetch("/api/user/login/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            username: loginFormValue.value.username,
-            password: loginFormValue.value.password,
-          })
+        const { status, data } = await api.post<LoginResponse>("/api/user/login/", {
+          username: loginFormValue.value.username,
+          password: loginFormValue.value.password,
         })
-        if (!resp.ok) {
-          const data = await resp.json()
-          if (resp.status === 401) {
-            message.error("用户名或密码错误")
-          } else if (resp.status === 400) {
-            message.error("您已经登录")
-          } else {
-            throw new Error(JSON.stringify(data))
-          }
+        if (status === 401) {
+          message.error("用户名或密码错误")
+        } else if (status === 400) {
+          message.error("您已经登录")
+        } else if (status === 200) {
+          props.onLoginSuccess(data.message)
         } else {
-          const data = await resp.json()
-          props.onLoginSuccess(data?.message)
+          throw new Error(JSON.stringify(data))
         }
       } catch (e) {
         message.error("网络错误，请重试或联系管理员\n" + e.message)
@@ -354,6 +350,13 @@ const updateCaptcha = async () => {
 onMounted(async () => {
   await updateCaptcha()
 })
+
+const emit = defineEmits(['close-modal'])
+
+const goToForgotPassword = () => {
+  emit('close-modal')
+  router.push('/user/forget-password')
+}
 
 </script>
 
