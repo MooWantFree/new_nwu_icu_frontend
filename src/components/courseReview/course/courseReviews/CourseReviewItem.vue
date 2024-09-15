@@ -20,9 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <MilkdownProvider>
-        <Render :content="review.content" />
-      </MilkdownProvider>
+      <Editor :content="review.content" :allow-edit="false" :with-toolbar="false" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <div class="flex items-center space-x-2">
@@ -33,7 +31,7 @@
       </div>
     </div>
     <div class="mt-4">
-      <div class="flex justify-between items-center mb-2">
+      <div class="flex justify-between items-center mb-2" v-if="review.reply && review.reply.length > 0">
         <h4 class="font-semibold text-gray-900">评论</h4>
         <!-- TODO: Change color -->
          <div>
@@ -53,6 +51,7 @@
               <Time type="relative" :time="new Date(reply.created_time)" />
             </p>
           </div>
+          <!-- TODO: Hover to show a reply button, and add `> #${id}` to the reply content -->
           <span class="text-sm text-gray-500 ml-2">
             #{{ reverseReplies ? index + 1 : review.reply.length - index }}
           </span>
@@ -63,20 +62,22 @@
       <n-button v-if="isLoggedIn" text @click="toggleReply" class="text-blue-600 hover:text-blue-800">
         {{ showReply ? '取消回复' : '回复' }}
       </n-button>
+      <span v-else>
+        登录以后才能回复
+      </span>
     </div>
-    <CourseReviewItemReply v-if="showReply" :review="review" @close="toggleReply" class="mt-4" />
+    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" @close="toggleReply" class="mt-4" @replySubmitted="onReplySubmitted"/>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { Review } from "@/types/courses"
-import Render from "../../editor/Render.vue"
-import { MilkdownProvider } from "@milkdown/vue"
 import CourseReviewItemReply from "./CourseReviewItemReply.vue"
-import { ref, computed } from "vue"
+import { ref } from "vue"
 import Time from "@/components/shortcuts/Time.vue"
-import { checkLoginStatus } from "@/lib/logins"
 import { NButton } from 'naive-ui'
+import Editor from "../../editor/Editor.vue"
+import { useUser } from "@/lib/useUser"
 
 const props = defineProps<{
   review: Review,
@@ -90,12 +91,30 @@ const toggleReply = () => {
   // TODO:
 }
 
-const isLoggedIn = computed(() => checkLoginStatus())
 
 const reverseReplies = ref(false)
 
 const toggleReplyOrder = () => {
   reverseReplies.value = !reverseReplies.value
+}
+
+const {userInfo, isLoggedIn} = useUser()
+const onReplySubmitted = (content: string) => {
+  toggleReply()
+  // Push the new reply to the review's replies array
+  props.review.reply.unshift({
+    content,
+    created_time: new Date().toISOString(), // Changed 'created_at' to 'created_time'
+    created_by: {
+      id: userInfo.value.id,
+      name: userInfo.value.nickname ?? userInfo.value.username,
+      avatar: userInfo.value.avatar
+    },
+    like: {
+      like: 0,
+      dislike: 0
+    }
+  })
 }
 </script>
 
