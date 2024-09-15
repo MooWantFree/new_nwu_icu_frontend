@@ -6,7 +6,6 @@
         : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
         "
     >
-      
       <template v-if="!isMobile" style="display: flex; align-items: center">
         <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
         <img alt="logo image" src="@/assets/logo.svg"/>
@@ -43,7 +42,7 @@
                 </n-avatar>
               </template>
               <template v-else>
-                <n-avatar round :src="`/api/download/${avatar_url}`">
+                <n-avatar round :src="`/api/download/${userInfo.avatar}`">
                   <template #fallback>
                     <img src="https://www.loliapi.com/acg/pp/" />
                   </template>
@@ -55,7 +54,6 @@
         <n-modal
             v-model:show="showLoginPopup"
             preset="card"
-
             :mask-closable="false"
             title="登录/注册"
             style="width: 600px"
@@ -63,7 +61,10 @@
             size="huge"
             aria-modal="true"
         >
-          <Login :on-login-success="handleLoginSuccess"/>
+          <Login 
+            :on-login-success="handleLoginSuccess"
+            @close-modal="showLoginPopup = false"
+          />
         </n-modal>
       </template>
       <template v-else>
@@ -137,7 +138,6 @@ import {
 } from "@vicons/ionicons5";
 import Login from "@/components/LoginForm.vue";
 import {renderIcon, renderMenuLabel} from "@/lib/h";
-import {avatar_url} from '@/lib/avatar'
 import { useUser } from "@/lib/useUser";
 import { UserProfile } from "@/types/userProfile";
 
@@ -147,7 +147,7 @@ const message = useMessage()
 const activeKey = ref<string | null>(null)
 // TODO: activeKey: init it on page loaded
 
-const {isLoggedIn, fetchUserInfo, login, logout, userInfo, isLoading} = useUser()
+const {isLoggedIn, login, logout, userInfo, isLoading} = useUser()
 
 // Login popup in PC
 const showLoginPopup = ref(false)
