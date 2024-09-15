@@ -1,20 +1,22 @@
 <template>
   <div class="bg-gradient-to-br from-[#f0f0f0] to-[#e0e0e0] min-h-screen">
-    <main class="container mx-auto py-12 px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div v-for="section in sections" :key="section.title"
-        class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-6">
-        <div class="flex items-center gap-4 mb-4">
-          <div class="bg-primary rounded-full p-2">
-            <BookIcon class="w-6 h-6 text-primary-foreground" />
+    <main class="container mx-auto py-12 px-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+        <div v-for="section in sections" :key="section.title"
+          class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-6 flex flex-col">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="bg-primary rounded-full p-2">
+              <BookIcon class="w-6 h-6 text-primary-foreground" />
+            </div>
+            <h2 class="text-lg font-semibold">{{ section.title }}</h2>
           </div>
-          <h2 class="text-lg font-semibold">{{ section.title }}</h2>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <a v-for="item in section.items" :key="item.label"
-            class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-slate-500 hover:text-slate-50 transition-colors">
-            <component :is="item.icon" class="w-8 h-8" />
-            <span>{{ item.label }}</span>
-          </a>
+          <div class="grid grid-cols-2 gap-4 auto-rows-fr">
+            <a v-for="item in section.items" :key="item.label"
+              class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-slate-500 hover:text-slate-50 transition-colors">
+              <component :is="item.icon" class="w-8 h-8" />
+              <span>{{ item.label }}</span>
+            </a>
+          </div>
         </div>
       </div>
     </main>
@@ -69,9 +71,34 @@ const sections = [
     icon: TempIcon,
     items: [
       { label: 'News', icon: TempIcon },
-      { label: 'Events', icon: TempIcon },
-      { label: 'Contact', icon: TempIcon },
-      { label: 'Administration', icon: TempIcon }
+
+    ]
+  },
+  {
+    title: 'Quick Links',
+    color: 'muted',
+    icon: TempIcon,
+    items: [
+      { label: 'News', icon: TempIcon },
+
+    ]
+  },
+  {
+    title: 'Quick Links',
+    color: 'muted',
+    icon: TempIcon,
+    items: [
+      { label: 'News', icon: TempIcon },
+
+    ]
+  },
+  {
+    title: 'Quick Links',
+    color: 'muted',
+    icon: TempIcon,
+    items: [
+      { label: 'News', icon: TempIcon },
+
     ]
   },
   {
