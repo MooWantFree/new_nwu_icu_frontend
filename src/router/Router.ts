@@ -37,17 +37,42 @@ const userRoutes = [
         requiresAuth: true,
         pageTitle: '用户资料',
       }
+  },
+  {
+    path: "/user/forget-password",
+    name: 'forgetPassword',
+    component: () => import("@/views/user/ForgetPassword.vue"),
+    meta: {
+      pageTitle: "忘记密码",
+    }
   }
 ] as RouteRecordRaw[]
 
 const systemInfoRoutes = [
   {
     path: '/:pathMatch(.*)*',
+    name: '404',
     component: () => import('@/components/infoNErrors/404.vue'),
     meta: {
-      pageTitle: '404'
+      pageTitle: '404 - 页面未找到'
     }
-  }
+  },
+  {
+    path: '/403',
+    name: '403',
+    component: () => import('@/components/infoNErrors/403.vue'),
+    meta: {
+      pageTitle: '403 - 访问被拒绝'
+    }
+  },
+  {
+    path: '/500',
+    name: '500',
+    component: () => import('@/components/infoNErrors/500.vue'),
+    meta: {
+      pageTitle: '500 - 服务器错误'
+    }
+  },
 ] as RouteRecordRaw[]
 
 const routes = [
