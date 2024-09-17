@@ -23,6 +23,8 @@ import CourseReviews from "@/components/courseReview/course/courseReviews/Course
 import CourseTeachers from "@/components/courseReview/course/CourseTeachers.vue";
 import CourseAlike from "@/components/courseReview/course/CourseAlike.vue";
 import CourseSkeleton from "@/components/courseReview/course/CourseSkeleton.vue";
+import { api } from "@/lib/requests";
+import { CourseDataResponse } from "@/types/api/course";
 
 const router = useRouter()
 const route = useRoute()
@@ -31,16 +33,29 @@ const route = useRoute()
 const courseLoading = ref(true)
 
 // Fetch init data
-const courseData = ref<CourseData | null>()
+const courseData = ref<CourseData | null>(null)
 onMounted(async () => {
-  const url = `/api/review/course/${route.params.id}`
-  const resp = await fetch(url)
-  if (!resp.ok) {
-    // TODO
+  try {
+    const url = `/api/review/course/${route.params.id}`
+    const { status, data, content } = await api.get<CourseDataResponse>(url)
+    
+    if (status === 404) {
+      router.push({ name: '404' })
+      return
+    }
+    
+    if (status !== 200) {
+      throw new Error(`HTTP error! status: ${status}`)
+    }
+    
+    courseData.value = content
+    document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
+  } catch (error) {
+    console.error('Failed to fetch course data:', error)
+    router.push({ name: '500' })
+  } finally {
+    courseLoading.value = false
   }
-  courseData.value = (await resp.json()).message
-  document.title = "课程评价 - " + courseData.value.name + " | NWU.ICU"
-  courseLoading.value = false
 })
 
 </script>
