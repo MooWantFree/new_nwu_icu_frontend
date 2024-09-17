@@ -3,7 +3,5 @@ export type GetCaptchaResponseContent = {
     image_url: string
     key: string
   },
-  errors: {
-    
-  }
+  errors: []
 }

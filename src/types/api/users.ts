@@ -4,9 +4,6 @@ export type ResetPasswordResponse = {
   success: {
 
   },
-  errors: {
-    email: string[],
-  } & CaptchaError
 }
 
 export type LoginResponse = {
@@ -19,8 +16,11 @@ export type LoginResponse = {
     avatar: string
     bio: string | null
   },
-  errors: {
-    username?: string[],
-    password?: string[],
-  }
+  errors: 'username' | 'password'
+}
+
+export type RegisterResponse = {
+  success: {
+  },
+  errors: 'username' | 'email' | 'password' | CaptchaError
 }
