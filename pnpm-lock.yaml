@@ -14,6 +14,9 @@ importers:
       '@tiptap/extension-placeholder':
         specifier: ^2.7.1
         version: 2.7.1(@tiptap/core@2.7.1(@tiptap/pm@2.7.1))(@tiptap/pm@2.7.1)
+      '@tiptap/extension-underline':
+        specifier: ^2.7.2
+        version: 2.7.2(@tiptap/core@2.7.1(@tiptap/pm@2.7.1))
       '@tiptap/pm':
         specifier: ^2.7.1
         version: 2.7.1
@@ -486,6 +489,11 @@ packages:
 
   '@tiptap/extension-text@2.7.2':
     resolution: {integrity: sha512-VjzG7W53Lx2q8XV0rUHetVTQWDK28XTCTW3IzxYxHp2joB/k9q3xgE/5Vs+7DOLSHIKq2BmwQNyaE+XjUF5iYQ==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+
+  '@tiptap/extension-underline@2.7.2':
+    resolution: {integrity: sha512-c3tPjxOusNZAlF/LG2RcTOPQrpUEKSjB9xwpEIJa/pZ59zQdivOdZGdOoCe6zqkDOT+Sh7sBoQKKwzIPi1csTQ==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
@@ -1558,6 +1566,10 @@ snapshots:
       '@tiptap/core': 2.7.1(@tiptap/pm@2.7.1)
 
   '@tiptap/extension-text@2.7.2(@tiptap/core@2.7.1(@tiptap/pm@2.7.1))':
+    dependencies:
+      '@tiptap/core': 2.7.1(@tiptap/pm@2.7.1)
+
+  '@tiptap/extension-underline@2.7.2(@tiptap/core@2.7.1(@tiptap/pm@2.7.1))':
     dependencies:
       '@tiptap/core': 2.7.1(@tiptap/pm@2.7.1)
 

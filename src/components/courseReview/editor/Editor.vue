@@ -1,6 +1,7 @@
 <template>
+  <editor-toolbar :editor="editor" />
   <div class="max-w-none">
-    <editor-content :editor="editor"/>
+    <editor-content :editor="editor" />
   </div>
 </template>
 
@@ -8,12 +9,14 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
 import { ref, watch } from 'vue'
 import 'prosemirror-view/style/prosemirror.css'
 
-const { editable = true, placeholder = '在这里输入新内容...' } = defineProps<{
+const { editable = true, placeholder = '点击此处，在这里输入新内容...', showToolbar = true } = defineProps<{
   editable?: boolean,
-  placeholder?: string
+  placeholder?: string,
+  showToolbar?: boolean,
 }>()
 
 const emit = defineEmits<{
@@ -35,6 +38,7 @@ const editor = useEditor({
     Placeholder.configure({
       placeholder,
     }),
+    Underline,
   ],
   editorProps: {
     attributes: {
@@ -75,11 +79,9 @@ watch(() => content.value, (newContent) => {
   }
 }
 
-/* .tiptap {
-  blockquote {
-    border-left: 3px solid var(--gray-3);
-    margin: 1.5rem 0;
-    padding-left: 1rem;
-  }
-} */
+/* TODO: Not sure if this is a good fix */
+.tiptap > * {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 </style>
