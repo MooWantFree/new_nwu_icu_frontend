@@ -1,42 +1,61 @@
 <template>
-  <Milkdown />
+  <div class="prose max-w-none">
+    <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4" />
+  </div>
 </template>
+
 <script setup lang="ts">
-import { Milkdown, useEditor } from "@milkdown/vue"
-import { defaultValueCtx, Editor, rootCtx, editorViewOptionsCtx } from "@milkdown/core";
-import { nord } from "@milkdown/theme-nord";
-import { commonmark } from "@milkdown/preset-commonmark";
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import { ref, watch } from 'vue';
 
-const props = defineProps<{
-  content: string | null,
-  allowEdit: boolean,
-  withToolbar: boolean,
-}>()
+type EditorProps = {
+  editable?: boolean
+}
 
-useEditor((root) =>
-  Editor
-    .make()
-    .config(ctx => {
-      ctx.set(rootCtx, root)
-      // If content is provided, set the content to the editor
-      if (props.content) {
-        ctx.set(defaultValueCtx, props.content)
-      }
-      // If allowEdit is true, set the editor to be editable
-      if (props.allowEdit) {
-        ctx.update(editorViewOptionsCtx, (prev) => ({
-          ...prev,
-          editable: () => props.allowEdit,
-        }))
-      }
-      
-      if (props.withToolbar) {
+const props = withDefaults(defineProps<EditorProps>(), {
+  editable: true,
+})
 
-      }
-    })
-    .config(nord)
-    .use(commonmark)
-)
+const emit = defineEmits(['update:modelValue'])
+
+const content = defineModel()
+
+const editor = useEditor({
+  extensions: [
+    StarterKit,
+    Placeholder.configure({
+      placeholder: 'Start typing your content here...',
+    }),
+  ],
+  editorProps: {
+    attributes: {
+      class: 'focus:outline-none',
+    },
+  },
+  content: content.value,
+  editable: props.editable,
+  onUpdate: ({ editor }) => {
+    emit('update:modelValue', editor.getHTML())
+  },
+})
+
+watch(() => content.value, (newContent) => {
+  if (editor.value && newContent !== editor.value.getHTML()) {
+    editor.value.commands.setContent(newContent, false)
+  }
+})
+
 </script>
 
-<style scoped></style>
+<style>
+/* Add styles for the placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+</style>

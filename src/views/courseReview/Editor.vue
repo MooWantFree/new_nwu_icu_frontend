@@ -1,20 +1,11 @@
 <template>
-<div class="prose">
-  <Milkdown />
-</div>
+  <Editor v-model="content" />
 </template>
 
 <script setup lang="ts">
-import Milkdown from "@/components/courseReview/editor/Editor.vue";
-import "@milkdown/theme-nord/style.css"
+import Editor from '@/components/courseReview/editor/Editor.vue'
+import { ref, watch } from 'vue'
+
+const content = ref('<p>Hello World</p> ')
+
 </script>
-
-<style scoped>
-.milkdown {
-  @apply bg-slate-50 px-2 py-4 m-5 border rounded;
-}
-
-.editor {
-  @apply mx-auto;
-}
-</style>
