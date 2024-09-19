@@ -28,17 +28,23 @@
       </div>
     </div>
   </div>
+  <!-- TODO: mobile editor -->
+  <n-modal v-model:show="showEditor">
+    <n-card>
+      <Editor :content="null" :allowEdit="true" :withToolbar="true" />
+    </n-card>
+  </n-modal>
 </template>
 
 <script lang="ts" setup>
-import {ref, defineProps, computed} from "vue";
-import {CourseData} from "@/types/courses";
-import CourseReviewItem from "@/components/courseReview/course/courseReviews/CourseReviewItem.vue";
+import {ref, computed} from "vue"
+import {CourseData} from "@/types/courses"
+import CourseReviewItem from "@/components/courseReview/course/courseReviews/CourseReviewItem.vue"
+import Editor from "@/components/courseReview/editor/Editor.vue"
 
 const props = defineProps<{
   courseData: CourseData,
   loading: boolean,
-
 }>()
 // Reviews Toolbar
 // - sort
@@ -141,8 +147,9 @@ const handleSemesterRankingChartButtonClicked = () => {
 
 }
 
+const showEditor = ref(false)
 // New review
 const handleNewReviewButtonClicked = () => {
-
+  showEditor.value = true
 }
 </script>

@@ -9,28 +9,26 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@milkdown/core": "^7.5.0",
-    "@milkdown/ctx": "^7.5.0",
-    "@milkdown/preset-commonmark": "^7.5.0",
-    "@milkdown/prose": "^7.5.0",
-    "@milkdown/theme-nord": "^7.5.0",
-    "@milkdown/transformer": "^7.5.0",
-    "@milkdown/vue": "^7.5.0",
     "@tailwindcss/typography": "^0.5.14",
+    "@tiptap/extension-placeholder": "^2.7.1",
+    "@tiptap/extension-underline": "^2.7.2",
+    "@tiptap/pm": "^2.7.1",
+    "@tiptap/starter-kit": "^2.7.1",
+    "@tiptap/vue-3": "^2.7.1",
     "@vueuse/core": "^10.11.1",
-    "axios": "^1.7.2",
     "dayjs": "^1.11.11",
-    "vue": "^3.4.29",
-    "vue-router": "^4.0.13"
+    "vue": "^3.5.6",
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@vicons/ionicons5": "^0.12.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "autoprefixer": "^10.4.19",
-    "naive-ui": "^2.38.2",
+    "naive-ui": "^2.39.0",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.7",
     "vfonts": "^0.0.3",
-    "vite": "^5.3.1"
-  }
+    "vite": "^5.4.6"
+  },
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

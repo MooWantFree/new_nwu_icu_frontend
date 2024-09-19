@@ -5,7 +5,6 @@
         <n-notification-provider>
           <n-modal-provider>
             <n-dialog-provider>
-              <MilkdownProvider>
                 <div class="all-page">
                   <n-layout>
                     <NavBar/>
@@ -17,7 +16,6 @@
                 </div>
 
                 <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
-              </MilkdownProvider>
             </n-dialog-provider>
           </n-modal-provider>
         </n-notification-provider>
@@ -28,7 +26,6 @@
 
 <script lang="ts" setup>
 import NavBar from "@/components/NavBar.vue";
-import { MilkdownProvider } from '@milkdown/vue';
 import {dateZhCN, zhCN} from 'naive-ui'
 </script>
 
