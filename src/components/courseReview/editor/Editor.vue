@@ -1,6 +1,6 @@
 <template>
-  <div class="prose max-w-none">
-    <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4 mx-2" />
+  <div class="max-w-none">
+    <editor-content :editor="editor"/>
   </div>
 </template>
 
@@ -9,8 +9,9 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { ref, watch } from 'vue'
+import 'prosemirror-view/style/prosemirror.css'
 
-const { editable = true, placeholder = '在这里开始输入您的内容...' } = defineProps<{
+const { editable = true, placeholder = '在这里输入新内容...' } = defineProps<{
   editable?: boolean,
   placeholder?: string
 }>()
@@ -32,7 +33,7 @@ const editor = useEditor({
     } */
     // TODO: Mathematics
     Placeholder.configure({
-      placeholder: placeholder,
+      placeholder,
     }),
   ],
   editorProps: {
@@ -41,9 +42,9 @@ const editor = useEditor({
     },
   },
   autofocus: true,
-  injectCSS: false,
+  injectCSS: true,
   content: content.value,
-  editable: editable,
+  editable,
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
@@ -55,12 +56,11 @@ watch(() => content.value, (newContent) => {
   }
 })
 
-// FIXME: I don't think this is a good idea since it will let the cursor at the previous position
 </script>
 
 <style>
-/* Add styles for the placeholder */
-.ProseMirror p.is-editor-empty:first-child::before {
+/* Styles for the placeholder */
+.tiptap p.is-editor-empty:first-child::before {
   color: #adb5bd;
   content: attr(data-placeholder);
   float: left;
@@ -68,7 +68,18 @@ watch(() => content.value, (newContent) => {
   pointer-events: none;
 }
 
-.editor-wrapper {
-  cursor: text;
+.tiptap {
+  blockquote {
+    quotes: none;
+    font-style: normal;
+  }
 }
+
+/* .tiptap {
+  blockquote {
+    border-left: 3px solid var(--gray-3);
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+  }
+} */
 </style>
