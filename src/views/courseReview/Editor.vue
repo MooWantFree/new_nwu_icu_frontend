@@ -6,6 +6,6 @@
 import Editor from '@/components/courseReview/editor/Editor.vue'
 import { ref, watch } from 'vue'
 
-const content = ref('<p>Hello World</p> ')
+const content = ref('')
 
 </script>

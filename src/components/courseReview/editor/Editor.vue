@@ -1,6 +1,8 @@
 <template>
   <div class="prose max-w-none">
-    <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4" />
+    <div @click="focusEditor" class="editor-wrapper">
+      <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4 mx-2" />
+    </div>
   </div>
 </template>
 
@@ -8,34 +10,42 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { ref, watch } from 'vue';
+import { ref, watch } from 'vue'
 
-type EditorProps = {
-  editable?: boolean
-}
+const { editable = true, placeholder = '在这里开始输入您的内容...' } = defineProps<{
+  editable?: boolean,
+  placeholder?: string
+}>()
 
-const props = withDefaults(defineProps<EditorProps>(), {
-  editable: true,
-})
-
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
 
 const content = defineModel()
 
 const editor = useEditor({
   extensions: [
     StarterKit,
+    /* Not exists in StarterKit: {
+      Nodes: [Table, Task],
+      Marks: [Highlight, Link, Subscript, Superscript, TextStyle, Underline],
+      Functionality: [BubbleMenu, CharacterCount, Color, FloatingMenu, Focus, Undo/Redo
+                      Placeholder, Math, TableOfContents, TextAlign, Typography,]
+    } */
+   // TODO: Mathematics
     Placeholder.configure({
-      placeholder: 'Start typing your content here...',
+      placeholder: placeholder,
     }),
   ],
   editorProps: {
     attributes: {
-      class: 'focus:outline-none',
+      class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
     },
   },
+  autofocus: true,
+  injectCSS: false,
   content: content.value,
-  editable: props.editable,
+  editable: editable,
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
@@ -47,6 +57,10 @@ watch(() => content.value, (newContent) => {
   }
 })
 
+const focusEditor = () => {
+  editor.value?.commands.focus()
+}
+// FIXME: I don't think this is a good idea since it will let the cursor at the previous position
 </script>
 
 <style>
@@ -57,5 +71,9 @@ watch(() => content.value, (newContent) => {
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+.editor-wrapper {
+  cursor: text;
 }
 </style>
