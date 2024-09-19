@@ -1,8 +1,6 @@
 <template>
   <div class="prose max-w-none">
-    <div @click="focusEditor" class="editor-wrapper">
-      <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4 mx-2" />
-    </div>
+    <editor-content :editor="editor" class="min-h-[200px] border border-gray-300 rounded-md p-4 mx-2" />
   </div>
 </template>
 
@@ -21,7 +19,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
 }>()
 
-const content = defineModel()
+const content = defineModel<string>()
 
 const editor = useEditor({
   extensions: [
@@ -32,7 +30,7 @@ const editor = useEditor({
       Functionality: [BubbleMenu, CharacterCount, Color, FloatingMenu, Focus, Undo/Redo
                       Placeholder, Math, TableOfContents, TextAlign, Typography,]
     } */
-   // TODO: Mathematics
+    // TODO: Mathematics
     Placeholder.configure({
       placeholder: placeholder,
     }),
@@ -52,14 +50,11 @@ const editor = useEditor({
 })
 
 watch(() => content.value, (newContent) => {
-  if (editor.value && newContent !== editor.value.getHTML()) {
+  if (editor.value && newContent !== editor.value.getHTML() && newContent !== undefined) {
     editor.value.commands.setContent(newContent, false)
   }
 })
 
-const focusEditor = () => {
-  editor.value?.commands.focus()
-}
 // FIXME: I don't think this is a good idea since it will let the cursor at the previous position
 </script>
 
