@@ -9,6 +9,7 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import { ref, watch } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
@@ -40,6 +41,7 @@ const editor = useEditor({
       placeholder,
     }),
     Underline,
+    Image,
   ],
   editorProps: {
     attributes: {
