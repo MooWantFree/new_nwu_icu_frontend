@@ -1,5 +1,5 @@
 <template>
-  <editor-toolbar :editor="editor" />
+  <editor-toolbar :editor="editor" v-if="editor && showToolbar && editable" />
   <div class="max-w-none">
     <editor-content :editor="editor" />
   </div>
@@ -11,6 +11,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
 import { ref, watch } from 'vue'
+import EditorToolbar from './EditorToolbar.vue'
 import 'prosemirror-view/style/prosemirror.css'
 
 const { editable = true, placeholder = '点击此处，在这里输入新内容...', showToolbar = true } = defineProps<{

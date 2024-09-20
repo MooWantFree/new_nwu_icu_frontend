@@ -1,5 +1,5 @@
 <template>
-    <div class="flex space-x-4 mb-6 p-4 bg-white shadow-md rounded-lg">
+  <div class="flex space-x-4 mb-6 p-4 bg-white shadow-md rounded-lg">
     <button @click="editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-200': editor.isActive('bold') }"
       class="px-2 py-1 border rounded">Bold</button>
     <button @click="editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-200': editor.isActive('italic') }"
@@ -22,6 +22,6 @@ import { Editor } from '@tiptap/vue-3'
 import { ShallowRef } from 'vue';
 
 const { editor } = defineProps<{
-  editor: ShallowRef<Editor>
+  editor: Editor
 }>()
 </script>
