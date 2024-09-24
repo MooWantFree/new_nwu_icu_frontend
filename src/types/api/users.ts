@@ -1,4 +1,5 @@
 import { CaptchaError } from "."
+import { UserProfile } from "@/types/userProfile"
 
 export type ResetPasswordResponse = {
   success: {},
@@ -26,4 +27,9 @@ export type RegisterResponse = {
 export type CheckUsernameResponse = {
   success: {},
   errors: 'username'
+}
+
+export type UserProfileResponse = {
+  success: UserProfile,
+  errors: 'user',
 }

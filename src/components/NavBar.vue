@@ -105,7 +105,7 @@ const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 
 // Login popup in PC
 const showLoginPopup = ref(false)
-const handleLoginSuccess = (data: UserProfile["message"]) => {
+const handleLoginSuccess = (data: UserProfile) => {
   login(data)
   const displayName = data?.nickname ?? data?.username ?? ""
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)

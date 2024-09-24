@@ -1,7 +1,9 @@
 import { ref, readonly, onMounted, onUnmounted, watch } from 'vue'
 import { UserProfile } from '@/types/userProfile'
+import { api } from '@/lib/requests'
+import { UserProfileResponse } from '@/types/api/users'
 
-const userInfo = ref<UserProfile['message'] | null>(null)
+const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)
 const isLoading = ref(false)
 
@@ -57,10 +59,9 @@ export function useUser() {
   const fetchUserInfo = async () => {
     isLoading.value = true
     try {
-      const response = await fetch('/api/user/profile/')
-      if (response.ok) {
-        const data: UserProfile = await response.json()
-        login(data.message)
+      const response = await api.get<UserProfileResponse>('/api/user/profile/')
+      if (response.status === 200) {
+        login(response.content)
       } else {
         logout()
       }
@@ -72,7 +73,7 @@ export function useUser() {
     }
   }
 
-  const login = (data: UserProfile['message']) => {
+  const login = (data: UserProfile) => {
     userInfo.value = data
     isLoggedIn.value = true
     resetTimeout()
