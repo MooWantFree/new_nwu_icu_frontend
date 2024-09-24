@@ -1,9 +1,7 @@
 import { CaptchaError } from "."
 
 export type ResetPasswordResponse = {
-  success: {
-
-  },
+  success: {},
 }
 
 export type LoginResponse = {
@@ -23,4 +21,9 @@ export type RegisterResponse = {
   success: {
   },
   errors: 'username' | 'email' | 'password' | CaptchaError
+}
+
+export type CheckUsernameResponse = {
+  success: {},
+  errors: 'username'
 }

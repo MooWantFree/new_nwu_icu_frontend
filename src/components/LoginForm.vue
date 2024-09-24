@@ -93,7 +93,8 @@ import {nextTick, onMounted, ref} from "vue";
 import {debounce} from 'lodash-es';
 import { api } from "@/lib/requests";
 import { useRouter } from 'vue-router'
-import { LoginResponse } from "@/types/api/users";
+import { CheckUsernameResponse, LoginResponse, RegisterResponse } from "@/types/api/users";
+import { GetCaptchaResponse } from "@/types/api/captcha";
 
 const props = defineProps<{
   onLoginSuccess: Function
@@ -130,18 +131,15 @@ const handleLoginButtonClick = (e: MouseEvent) => {
   loginFormRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const { status, data } = await api.post<LoginResponse>("/api/user/login/", {
+        const { status, data, content, errors } = await api.post<LoginResponse>("/api/user/login/", {
           username: loginFormValue.value.username,
           password: loginFormValue.value.password,
         })
-        if (status === 401) {
-          message.error("用户名或密码错误")
-        } else if (status === 400) {
-          message.error("您已经登录")
-        } else if (status === 200) {
-          props.onLoginSuccess(data.message)
-        } else {
-          throw new Error(JSON.stringify(data))
+
+        if (!status.toString().startsWith('2')) {
+          for (const error of errors) {
+            message.error(`${error.field}: ${error.err_msg}`)
+          }
         }
       } catch (e) {
         message.error("网络错误，请重试或联系管理员\n" + e.message)
@@ -189,16 +187,13 @@ const validatePasswordStrength = (rule: FormItemRule, value: string) => {
 const checkUsernameAvailability = debounce(async (rule: FormItemRule, value: string): Promise<void> => {
   checkingUsername.value = true
   if (!value) return
+  if (value.length < 8) {
+    return
+  }
   try {
-    const response = await fetch('/api/user/username/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username: value }),
-    })
-    if (response.status === 400) {
-      throw new Error('用户名已被使用')
+    const {status, errors} = await api.post<CheckUsernameResponse>('/api/user/username/', { username: value })
+    if (status !== 200) {
+      throw new Error(errors.map(e=>`${e.field}: ${e.err_msg}`).join(', '))
     }
   } catch (error) {
     console.error('Error checking username availability:', error)
@@ -218,8 +213,8 @@ const signUpFormRules: FormRules = {
     validator: (rule: FormItemRule, value: string) => {
       if (!value) {
         return new Error("请输入用户名")
-      } else if (!/^[A-Za-z0-9_]{4,29}$/.test(value)) {
-        return new Error("用户名应只包括字母、数字与下划线，且长度位于4与29之间")
+      } else if (!/^[A-Za-z0-9_]{8,29}$/.test(value)) {
+        return new Error("用户名应只包括字母、数字与下划线，且长度位于8与29之间")
       } else if (/^\d+$/.test(value)) {
         return new Error("用户名不能全为数字")
       }
@@ -280,35 +275,35 @@ const handleSignUpButtonClick = (e: MouseEvent) => {
   signUpFormRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const resp = await fetch("/api/user/register/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            username: signUpFormValue.value.username,
-            password: signUpFormValue.value.password,
-            email: signUpFormValue.value.email,
-            captcha_value: signUpFormValue.value.captcha,
-            captcha_key: captchaInfo.value.key,
-          })
+        const { status, data, content, errors } = await api.post<RegisterResponse>("/api/user/register/", {
+          username: signUpFormValue.value.username,
+          password: signUpFormValue.value.password,
+          email: signUpFormValue.value.email,
+          captcha_value: signUpFormValue.value.captcha,
+          captcha_key: captchaInfo.value.key,
         })
-        if (!resp.ok) {
-          const data = await resp.json()
-          if (resp.status === 400) {
-            message.error(`注册失败: ${JSON.stringify(data.errors)}。请重试或联系管理员。`)
-            // TODO: More user friendly
-            return
+
+        if (status !== 200) {
+          if (errors) {
+            for (const error of errors) {
+              message.error(`${error.field}: ${error.err_msg}`)
+            }
+          } else {
+            message.error(`注册失败: ${data.message}。请重试或联系管理员。`)
           }
         } else {
-          message.info(`注册成功，请登录`)
+          message.success("注册成功，请登录")
           switchToSignInTabTrigger()
         }
       } catch (e) {
         message.error(`内部错误，请重试或联系管理员：${e.message}`)
+        console.error(e)
       } finally {
         loadingRef.value = false
       }
+    } else {
+      message.error("信息输入有误")
+      loadingRef.value = false
     }
   })
 }
@@ -332,16 +327,16 @@ const captchaLoading = ref(false)
 const updateCaptcha = async () => {
   captchaLoading.value = true
   try {
-    const req = await fetch("/api/captcha")
-    if (!req.ok) {
-      throw new Error("Failed to fetch captcha")
+    const { status, data, content, errors } = await api.get<GetCaptchaResponse>('/api/captcha/')
+    if (status === 200) {
+      captchaInfo.value.imageUrl = content.image_url
+      captchaInfo.value.key = content.key
+    } else {
+      message.error('获取验证码失败，请重试')
     }
-    const data = await req.json()
-    captchaInfo.value.key = data.key
-    captchaInfo.value.imageUrl = data.image_url
   } catch (error) {
-    message.error("获取验证码失败，请重试。")
-    console.error(error)
+    console.error('error: ', error)
+    message.error('获取验证码时发生错误，请重试')
   } finally {
     captchaLoading.value = false
   }
