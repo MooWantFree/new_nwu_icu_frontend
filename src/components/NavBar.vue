@@ -1,43 +1,30 @@
 <template>
   <n-layout-header bordered class="nav" :style="style" style="display: flex; justify-content: space-around">
-    <div
-        :style="
-        !isMobile ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
+    <div :style="!isMobile ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
         : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
-        "
-    >
+      ">
       <template v-if="!isMobile" style="display: flex; align-items: center">
         <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-        <img alt="logo image" src="@/assets/logo.svg"/>
-        <n-button color="#000000" dashed>NWU.ICU</n-button>
-      </n-text>
+          <img alt="logo image" src="@/assets/logo.svg" />
+          <n-button color="#000000" dashed>NWU.ICU</n-button>
+        </n-text>
         <!--        PC NaviBars: left-->
         <div class="nav-bar-pc-left" style="margin-left: auto">
-          <n-menu
-              :value="activeKey"
-              mode="horizontal"
-              :options="menuOptions"
-              :render-label="renderMenuLabel"
-          />
+          <n-menu :value="activeKey" mode="horizontal" :options="menuOptions" :render-label="renderMenuLabel" />
         </div>
         <div class="nav-bar-pc-right" style="margin-left: auto">
           <template v-if="!isLoggedIn">
-            <n-button
-                :disabled="isLoading"
-                type="info"
-                @click="showLoginPopup = true"
-            >
+            <n-button :disabled="isLoading" type="info" @click="showLoginPopup = true">
               登录/注册
             </n-button>
           </template>
           <template v-else>
             <n-dropdown :options="userAvatarDropdownOptions" :render-label="renderMenuLabel" trigger="hover">
-              <template v-if="userInfo===null">
+              <template v-if="userInfo === null">
                 <n-avatar round :style="{
                   color: 'yellow',
                   backgroundColor: 'red',
-                }"
-                >
+                }">
                   M
                 </n-avatar>
               </template>
@@ -45,75 +32,42 @@
                 <n-avatar round :src="`/api/download/${userInfo.avatar}`">
                   <template #fallback>
                     <img src="https://www.loliapi.com/acg/pp/" />
+                    <!-- TODO: Change it -->
                   </template>
                 </n-avatar>
               </template>
             </n-dropdown>
           </template>
         </div>
-        <n-modal
-            v-model:show="showLoginPopup"
-            preset="card"
-            :mask-closable="false"
-            title="登录/注册"
-            style="width: 600px"
-            :bordered="false"
-            size="huge"
-            aria-modal="true"
-        >
-          <Login 
-            :on-login-success="handleLoginSuccess"
-            @close-modal="showLoginPopup = false"
-          />
+        <n-modal v-model:show="showLoginPopup" preset="card" :mask-closable="false" title="登录/注册" style="width: 600px"
+          :bordered="false" size="huge" aria-modal="true">
+          <Login :on-login-success="handleLoginSuccess" @close-modal="showLoginPopup = false" />
         </n-modal>
       </template>
       <template v-else>
         <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-        <img alt="logo image" src="@/assets/logo.svg"/>
-        <n-button color="#000000" dashed>NWU.ICU</n-button>
-      </n-text>
-        <n-popover
-            ref="mobilePopoverRef"
-            style="padding: 0; width: 288px"
-            placement="bottom-end"
-            display-directive="show"
-            trigger="click"
-        >
+          <img alt="logo image" src="@/assets/logo.svg" />
+          <n-button color="#000000" dashed>NWU.ICU</n-button>
+        </n-text>
+        <n-popover ref="mobilePopoverRef" style="padding: 0; width: 288px" placement="bottom-end"
+          display-directive="show" trigger="click">
           <template #trigger>
             <n-icon size="20" style="margin-left: 20px">
-              <MenuOutline/>
+              <MenuOutline />
             </n-icon>
           </template>
           <template #header>
-            <n-menu
-                :value="activeKey"
-                :options="mobileMenuHomeButton"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-            />
+            <n-menu :value="activeKey" :options="mobileMenuHomeButton" :indent="18" :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu" accordion />
           </template>
           <div style="overflow: auto; max-height: 79vh">
             <!--            Mobile Menu-->
-            <n-menu
-                :value="activeKey"
-                :options="menuOptions"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-            />
+            <n-menu :value="activeKey" :options="menuOptions" :indent="18" :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu" accordion />
           </div>
           <template #footer>
-            <n-menu
-                :value="activeKey"
-                :options="mobileMenuUserAreaButtons"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-            />
+            <n-menu :value="activeKey" :options="mobileMenuUserAreaButtons" :indent="18" :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu" accordion />
           </template>
         </n-popover>
       </template>
@@ -122,9 +76,9 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, onUnmounted, ref, watch} from "vue";
-import {NIcon, NModal, useDialog, useMessage} from "naive-ui";
-import {useRoute, useRouter} from "vue-router";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { NIcon, NModal, useDialog, useMessage } from "naive-ui";
+import { useRoute, useRouter } from "vue-router";
 import {
   CloudDownload,
   Home,
@@ -137,7 +91,7 @@ import {
   Person,
 } from "@vicons/ionicons5";
 import Login from "@/components/LoginForm.vue";
-import {renderIcon, renderMenuLabel} from "@/lib/h";
+import { renderIcon, renderMenuLabel } from "@/lib/h";
 import { useUser } from "@/lib/useUser";
 import { UserProfile } from "@/types/userProfile";
 
@@ -147,7 +101,7 @@ const message = useMessage()
 const activeKey = ref<string | null>(null)
 // TODO: activeKey: init it on page loaded
 
-const {isLoggedIn, login, logout, userInfo, isLoading} = useUser()
+const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 
 // Login popup in PC
 const showLoginPopup = ref(false)
@@ -319,15 +273,15 @@ const mobileMenuUserAreaButtons = computed(() => {
 
 const style = computed(() => {
   return isMobile.value
-      ? {
-        '--side-padding': '16px',
-        'grid-template-columns': 'auto 1fr auto'
-      }
-      : {
-        '--side-padding': '32px',
-        'grid-template-columns':
-            'calc(272px - var(--side-padding)) 1fr auto'
-      }
+    ? {
+      '--side-padding': '16px',
+      'grid-template-columns': 'auto 1fr auto'
+    }
+    : {
+      '--side-padding': '32px',
+      'grid-template-columns':
+        'calc(272px - var(--side-padding)) 1fr auto'
+    }
 })
 </script>
 
@@ -346,7 +300,7 @@ const style = computed(() => {
   font-size: 18px;
 }
 
-.ui-logo > img {
+.ui-logo>img {
   margin-right: 12px;
   height: 32px;
   width: 32px;
