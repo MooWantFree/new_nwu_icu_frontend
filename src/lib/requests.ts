@@ -6,7 +6,7 @@ type RequestConfig = {
   data?: any
 }
 
-async function request<T extends ResponseBase>(config: RequestConfig): Promise<{ status: number, data: APIResponse<T>, content: T["success"] }> {
+async function request<T extends ResponseBase>(config: RequestConfig): Promise<{ status: number, data: APIResponse<T>, content: T["success"], errors?: APIResponse<T>["errors"] }> {
   const { method, url, data } = config
   const fullUrl = `${url}`
 
@@ -27,7 +27,7 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
     const response = await fetch(fullUrl, options)
     const result = await response.json()
 
-    return { status: response.status, data: result as APIResponse<T>, content: result.contents as T["success"] }
+    return { status: response.status, data: result as APIResponse<T>, content: result.contents as T["success"], errors: result.errors as APIResponse<T>["errors"] }
   } catch (error) {
     console.error('Request failed:', error)
     throw error
