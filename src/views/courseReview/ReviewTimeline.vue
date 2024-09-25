@@ -35,16 +35,17 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from "vue";
+import { onMounted, ref } from "vue"
 import ReviewItem from "@/components/courseReview/timeline/ReviewItem.vue"
-import {useMessage} from "naive-ui";
-import {LatestCourseReview} from "@/types/courseReview";
-import ReviewItemSkeleton from "@/components/courseReview/timeline/ReviewItemSkeleton.vue";
-import {useRoute, useRouter} from "vue-router";
+import { useMessage } from "naive-ui"
+import { LatestCourseReviewResponse } from "@/types/courseReview"
+import ReviewItemSkeleton from "@/components/courseReview/timeline/ReviewItemSkeleton.vue"
+import { useRoute, useRouter } from "vue-router"
+import { api } from "@/lib/requests"
 
 const message = useMessage()
 
-const reviews = ref<LatestCourseReview["content"]["reviews"]>()
+const reviews = ref<LatestCourseReviewResponse["success"]["reviews"]>()
 const totalReviewCount = ref(0)
 const loading = ref(true)
 const pageLength = ref(5)
@@ -58,14 +59,26 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
     pageSize: pageSize.toString(),
     desc: desc.toString(),
   })
-  const reqUrl = "/api/review/latest/?" + searchParams.toString()
-  const resp = await fetch(reqUrl)
-  if (!resp.ok) {
-    // TODO:
+  const reqUrl = "/api/assessment/review/?" + searchParams.toString()
+  
+  try {
+    const { status, content, errors } = await api.get<LatestCourseReviewResponse>(reqUrl)
+    
+    if (status !== 200) {
+      if (errors) {
+        message.error(errors.map(err => err.err_msg).join(', '))
+      } else {
+        message.error('Failed to fetch reviews')
+      }
+      return
+    }
+    
+    reviews.value = content.reviews
+    totalReviewCount.value = content.total
+  } catch (error) {
+    console.error('Error fetching reviews:', error)
+    message.error('An error occurred while fetching reviews')
   }
-  const data = await resp.json() as LatestCourseReview
-  reviews.value = data.content.reviews
-  totalReviewCount.value = data.content.total
 }
 
 onMounted(async () => {
@@ -86,6 +99,3 @@ const onPageUpdate = async (page: number) => {
   loading.value = false
 }
 </script>
-
-<style scoped>
-</style>

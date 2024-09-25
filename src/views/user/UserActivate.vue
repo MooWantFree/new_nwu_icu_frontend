@@ -52,15 +52,17 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { checkLoginStatus } from '@/lib/logins';
+import { useUser } from '@/lib/useUser'
+import { api } from '@/lib/requests';
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const user = useUser()
 
 const loading = ref(true)
 const success = ref(false)
@@ -68,10 +70,10 @@ const error = ref(null)
 
 onMounted(async () => {
   // Check if user is already logged in
-  const isLoggedIn = checkLoginStatus()
+  const isLoggedIn = user.isLoggedIn.value
   if (isLoggedIn) {
     message.success('您已登录，即将跳转至首页')
-    router.push('/') // Redirect to home page if already logged in
+    router.replace('/') // Redirect to home page if already logged in
     return
   }
   
@@ -85,18 +87,12 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch(`/api/user/register/?token=${token}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (response.ok) {
+    const {status,content, errors } = await api.get(`/user/register/?token=${token}`)
+    const errorText = errors.reduce((acc, cur) => acc + cur.err_msg, '')
+    if (status === 200) {
       success.value = true
     } else {
-      const data = await response.json()
-      error.value = data.message || '账户激活失败。请重试或联系支持。'
+      error.value = errorText || '账户激活失败。请重试或联系支持。'
     }
   } catch (err) {
     error.value = '发生错误。请稍后再试。'
