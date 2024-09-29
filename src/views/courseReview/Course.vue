@@ -4,7 +4,7 @@
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <CourseMeta :course-data="courseData" :loading="courseLoading"/>
-        <CourseReviews :course-data="courseData" :loading="courseLoading"/>
+        <CourseReviews :course-data="courseData" :loading="courseLoading" @reloadData="loadData"/>
       </div>
       <aside class="space-y-6">
         <CourseTeachers :course-data="courseData"/>
@@ -34,9 +34,9 @@ const courseLoading = ref(true)
 
 // Fetch init data
 const courseData = ref<CourseData | null>(null)
-onMounted(async () => {
+const loadData = async () => {
   try {
-    const url = `/api/review/course/${route.params.id}`
+    const url = `/api/assessment/course/${route.params.id}`
     const { status, data, content } = await api.get<CourseDataResponse>(url)
     
     if (status === 404) {
@@ -56,6 +56,10 @@ onMounted(async () => {
   } finally {
     courseLoading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadData()
 })
 
 </script>
