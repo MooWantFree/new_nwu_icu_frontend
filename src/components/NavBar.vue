@@ -41,7 +41,7 @@
         </div>
         <n-modal v-model:show="showLoginPopup" preset="card" :mask-closable="false" title="登录/注册" style="width: 600px"
           :bordered="false" size="huge" aria-modal="true">
-          <Login :on-login-success="handleLoginSuccess" @close-modal="showLoginPopup = false" />
+          <Login @login-success="handleLoginSuccess" @close-modal="showLoginPopup = false" />
         </n-modal>
       </template>
       <template v-else>

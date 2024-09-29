@@ -95,10 +95,7 @@ import { api } from "@/lib/requests";
 import { useRouter } from 'vue-router'
 import { CheckUsernameResponse, LoginResponse, RegisterResponse } from "@/types/api/users";
 import { GetCaptchaResponse } from "@/types/api/captcha";
-
-const props = defineProps<{
-  onLoginSuccess: Function
-}>()
+import { UserProfile } from "@/types/userProfile";
 
 // Common parts
 const message = useMessage()
@@ -140,6 +137,8 @@ const handleLoginButtonClick = (e: MouseEvent) => {
           for (const error of errors) {
             message.error(`${error.field}: ${error.err_msg}`)
           }
+        } else {
+          emit('login-success', content)
         }
       } catch (e) {
         message.error("网络错误，请重试或联系管理员\n" + e.message)
@@ -346,7 +345,10 @@ onMounted(async () => {
   await updateCaptcha()
 })
 
-const emit = defineEmits(['close-modal'])
+const emit = defineEmits<{
+  (e: 'close-modal'): void,
+  (e: 'login-success', data: UserProfile): void
+}>()
 
 const goToForgotPassword = () => {
   emit('close-modal')

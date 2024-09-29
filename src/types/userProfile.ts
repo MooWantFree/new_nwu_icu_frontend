@@ -5,7 +5,7 @@ interface UserProfile {
   date_joined: number;
   nickname: string;
   avatar: string;
-  nwu_email: string;
+  nwu_email?: string;
   bio: string;
 }
 export { UserProfile };
