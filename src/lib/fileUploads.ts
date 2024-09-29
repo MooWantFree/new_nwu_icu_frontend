@@ -20,7 +20,7 @@ export function useFileUpload() {
     try {
       const { status, data, content, errors } = await api.post<FileUploadResponse>('/api/upload/', formData)
 
-      if (status !== 200) {
+      if (status.toString().startsWith('4') || status.toString().startsWith('5')) {
         const errorMessages = []
         if(errors) {
           for (const err of errors) {
@@ -34,7 +34,7 @@ export function useFileUpload() {
 
       succeed.value = true
       message.value = data.message
-      imageUrl.value = content.file
+      imageUrl.value = `/api/download/${content.uuid}`
     } catch (error) {
       succeed.value = false
     } finally {

@@ -1,9 +1,6 @@
 export type FileUploadResponse = {
     success: {
-        id: string
-        file: string
-        uploaded_at: string
-        created_by: number
+        uuid: string
     }
     errors?: "file" | "login"
 }

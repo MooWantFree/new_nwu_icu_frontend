@@ -30,7 +30,12 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
   }
 
   if (data) {
-    mergedOptions.body = JSON.stringify(data)
+    if (data instanceof FormData || data instanceof File) {
+      delete mergedOptions.headers['Content-Type']
+      mergedOptions.body = data
+    } else {
+      mergedOptions.body = JSON.stringify(data)
+    }
   }
 
   try {

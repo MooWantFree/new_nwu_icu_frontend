@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { useEditor, EditorContent, Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
@@ -46,6 +46,7 @@ const editor = useEditor({
                       Placeholder, Math, TableOfContents, TextAlign, Typography,]
     } */
     // TODO: Mathematics
+    // TODO: CodeBlockLowlight
     Placeholder.configure({
       placeholder,
     }),
@@ -87,42 +88,22 @@ watch(() => content.value, (newContent) => {
   }
 })
 
-const handleFile = async (currentEditor, file, pos) => {
+const handleFile = async (currentEditor, file: File, pos: number) => {
   const { uploadFile, loading, succeed, imageUrl, errors } = useFileUpload()
   
   await uploadFile(file)
-  if (succeed.value && imageUrl.value) {
-    currentEditor.chain().insertContentAt(pos, {
+
+  if (succeed.value) {
+    if (succeed.value && imageUrl.value) {
+      currentEditor.chain().insertContentAt(pos, {
       type: 'image',
       attrs: {
         src: imageUrl.value,
       }
     }).run()
   } else if (errors.value.length > 0) {
-    message.error(`上传文件失败: ${errors.value.join(', ')}`)
-  }
-}
-
-const uploadFile = async (file: File) => {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  try {
-    const response = await api.post<FileUploadResponse>('/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-
-    if (response.status !== 200) {
-      const errorMessage = response.errors.reduce((acc, cur) => acc + cur, '')
-      message.error(`上传文件失败: ${errorMessage}`)
+      message.error(`上传文件失败: ${errors.value.join(', ')}`)
     }
-    return response.content
-  } catch (error) {
-    console.error('Error uploading file:', error)
-    message.error(`上传文件失败: ${error}`)
-    return null
   }
 }
 </script>
