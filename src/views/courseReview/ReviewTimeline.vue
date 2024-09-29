@@ -11,7 +11,7 @@
             <review-item
                 v-for="(review, index) in reviews"
                 :review="review"
-                :key="index"
+                :key="review.id"
             />
           </template>
         </div>
