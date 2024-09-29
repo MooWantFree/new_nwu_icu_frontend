@@ -27,8 +27,15 @@ export type Review = {
   homework: string;
   reward: string;
   semester: string;
+  author: Author;
   reply: Reply[];
 };
+
+type Author = {
+  avatar: string;
+  id: number;
+  name: string;
+}
 
 type Teacher = {
   id: number;
@@ -44,6 +51,7 @@ export type CourseData = {
   teachers: Teacher[];
   semester: string[];
   school: string;
+  request_user_review_id: number | null;
   rating_avg: string;
   normalized_rating_avg: string;
   reviews: Review[];

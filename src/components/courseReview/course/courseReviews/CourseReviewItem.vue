@@ -2,7 +2,7 @@
   <div class="bg-gray-100 rounded-lg shadow-md p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="text-xl font-bold text-gray-900">{{ review.name ?? "匿名用户" }}</h3>
+        <h3 class="text-xl font-bold text-gray-900">{{ review.author.name ?? "匿名用户" }}</h3>
         <div class="flex items-center space-x-2 mt-1">
           <div class="flex items-center">
             <n-rate readonly allow-half :default-value="review.rating" />
@@ -23,6 +23,9 @@
       <Editor :editable="false" :default-content="review.content" :show-toolbar="false" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
+      <n-button v-if="isAuthor" type="error" size="small" @click="handleDelete" class="mr-auto">
+        删除评价
+      </n-button>
       <div class="flex items-center space-x-2">
         <Time :time="new Date(review.created_time)" />
         <div v-if="review.edited">
@@ -75,22 +78,30 @@ import { Review } from "@/types/courses"
 import CourseReviewItemReply from "./CourseReviewItemReply.vue"
 import { ref } from "vue"
 import Time from "@/components/shortcuts/Time.vue"
-import { NButton } from 'naive-ui'
+import { NButton, useMessage } from 'naive-ui'
 import Editor from "../../editor/Editor.vue"
 import { useUser } from "@/lib/useUser"
+import { api } from "@/lib/requests"
+import { computed } from "vue"
 
 const props = defineProps<{
   review: Review,
 }>()
 
+const emit = defineEmits(['reviewDeleted'])
+
+const message = useMessage()
+
 // Display the reply box or not
 const showReply = ref(false)
+const isAuthor = computed(() => {
+  return props.review.author.id === userInfo.value.id
+})
 
 const toggleReply = () => {
   showReply.value = !showReply.value;
   // TODO:
 }
-
 
 const reverseReplies = ref(false)
 
@@ -98,7 +109,7 @@ const toggleReplyOrder = () => {
   reverseReplies.value = !reverseReplies.value
 }
 
-const {userInfo, isLoggedIn} = useUser()
+const { userInfo, isLoggedIn } = useUser()
 const onReplySubmitted = (content: string) => {
   toggleReply()
   // Push the new reply to the review's replies array
@@ -115,6 +126,23 @@ const onReplySubmitted = (content: string) => {
       dislike: 0
     }
   })
+}
+
+const handleDelete = async () => {
+  if (confirm('你确定你想要删除这条评价吗？删除以后不可恢复！')) {
+    try {
+      const response = await api.delete(`/api/assessment/review/${props.review.id}`)
+      if (response.status === 200) {
+        message.success('评价已成功删除')
+        emit('reviewDeleted', props.review.id)
+      } else {
+        throw new Error(response.errors.reduce((acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n', ''))
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error)
+      message.error('删除评价失败，请稍后重试\n' + error)
+    }
+  }
 }
 </script>
 

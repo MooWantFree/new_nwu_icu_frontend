@@ -16,14 +16,18 @@
         </div>
         <n-button class="w-full sm:w-auto" @click="handleSemesterRankingChartButtonClicked">课程学期评分趋势</n-button>
       </div>
-      <n-button class="w-full sm:w-auto mt-4 sm:mt-0" type="primary" color="#18a058"
+      <n-button v-if="!userReviewed" class="w-full sm:w-auto mt-4 sm:mt-0" type="primary" color="#18a058"
         @click="handleNewReviewButtonClicked">
         新建一个评价
+      </n-button>
+      <n-button v-else class="w-full sm:w-auto mt-4 sm:mt-0" type="primary" color="#18a058"
+        @click="handleEditReviewButtonClicked">
+        编辑我的评价
       </n-button>
     </div>
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
-        <CourseReviewItem :review="review" />
+        <CourseReviewItem :review="review" @reviewDeleted="handleReviewDeleted"/>
       </div>
       <div v-if="reviewsDisplayed.length === 0">
         <n-empty size="huge" description="暂时没有内容呢">
@@ -37,7 +41,7 @@
     </div>
   </div>
   <ReviewEditorModal v-model="showEditor" :course-data="props.courseData" @submit="handleSubmitReview"
-    :submitting="isSubmittingReview" />
+    :submitting="isSubmittingReview" :init-content="initContent" />
 </template>
 
 <script setup lang="ts">
@@ -48,6 +52,7 @@ import ReviewEditorModal from "@/components/courseReview/course/courseReviews/Re
 import { api } from "@/lib/requests"
 import { NewReviewRequest, NewReviewResponse } from "@/types/api/review"
 import { useMessage } from 'naive-ui'
+import { useUser } from "@/lib/useUser"
 
 const emit = defineEmits<{
   (e: 'reloadData'): void
@@ -68,6 +73,7 @@ enum SortMethods {
 }
 
 const message = useMessage()
+const { userInfo } = useUser()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -166,6 +172,9 @@ const isSubmittingReview = ref(false)
 const handleNewReviewButtonClicked = () => {
   showEditor.value = true
 }
+const handleReviewDeleted = (reviewId: number) => {
+  emit('reloadData')
+}
 
 const handleSubmitReview = async (content: NewReviewRequest) => {
   isSubmittingReview.value = true
@@ -184,5 +193,33 @@ const handleSubmitReview = async (content: NewReviewRequest) => {
   } finally {
     isSubmittingReview.value = false
   }
+}
+
+const userReviewed = computed(() => {
+  return !!props.courseData.request_user_review_id
+})
+
+const initContent = computed<NewReviewRequest | null>(() => {
+  const userReview = props.courseData.reviews.find(review => review.id === props.courseData.request_user_review_id)
+  if (userReview) {
+    return {
+      course: props.courseData.id,
+      content: userReview.content,
+      rating: userReview.rating,
+      anonymous: false,
+      difficulty: Number(userReview.difficulty),
+      grade: Number(userReview.grade),
+      homework: Number(userReview.homework),
+      reward: Number(userReview.reward),
+      semester: Number(userReview.semester)
+    }
+  }
+  // Return a default NewReviewRequest if no user review is found
+  return null
+  // TODO: What if we use pagination?
+})
+
+const handleEditReviewButtonClicked = () => {
+  showEditor.value = true
 }
 </script>

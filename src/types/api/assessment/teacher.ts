@@ -17,6 +17,7 @@ export type TeacherResponse = {
         id: number
         name: string
         school: string
+        description?: string
     }
     course_list: TeacherCourse[]
   }

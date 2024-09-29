@@ -1,10 +1,3 @@
-type MyReview = {
-  id: number
-  title: string
-  content: string
-  created_at: string
-}
-
 export type NewReviewRequest = {
   course: number
   content: string
@@ -25,3 +18,14 @@ export type NewReviewResponse = {
   // errors: 
   // TODO: LoginRequiredError
 }
+
+export type DeleteReviewRequest = {
+  review_id: number
+}
+
+export type DeleteReviewResponse = {
+  success: {
+  },
+  errors: 'auth' | 'review' | 'login'
+}
+
