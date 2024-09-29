@@ -16,6 +16,13 @@ const courseReviewRoutes = [
     meta: {
       pageTitle: '课程评价',
     }
+  },
+  {
+    path: '/review/teacher/:id(\\d+)',
+    component: () => import("@/views/courseReview/Teacher.vue"),
+    meta: {
+      pageTitle: '教师评价',
+    }
   }
 ] as RouteRecordRaw[]
 
