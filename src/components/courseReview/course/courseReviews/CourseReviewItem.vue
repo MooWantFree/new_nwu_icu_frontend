@@ -20,7 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Editor :content="review.content" :allow-edit="false" :with-toolbar="false" />
+      <Editor :editable="false" :default-content="review.content" :show-toolbar="false" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <div class="flex items-center space-x-2">

@@ -14,11 +14,16 @@ import Underline from '@tiptap/extension-underline'
 import { ref, watch } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import 'prosemirror-view/style/prosemirror.css'
+import FileHandler from '@tiptap-pro/extension-file-handler'
+import { AllowedMimeTypes } from './vars'
+import { useFileUpload } from '@/lib/fileUploads'
+import { useMessage } from 'naive-ui'
 
-const { editable = true, placeholder = '点击此处，在这里输入新内容...', showToolbar = true } = defineProps<{
+const { editable = true, placeholder = '点击此处，在这里输入新内容...', showToolbar = true, defaultContent = '' } = defineProps<{
   editable?: boolean,
   placeholder?: string,
   showToolbar?: boolean,
+  defaultContent?: string,
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +31,10 @@ const emit = defineEmits<{
 }>()
 
 const content = defineModel<string>()
+if (defaultContent) {
+  content.value = defaultContent
+}
+const message = useMessage()
 
 const editor = useEditor({
   extensions: [
@@ -39,6 +48,21 @@ const editor = useEditor({
     // TODO: Mathematics
     Placeholder.configure({
       placeholder,
+    }),
+    FileHandler.configure({
+      allowedMimeTypes: AllowedMimeTypes,
+      onPaste: async (currentEditor, files, htmlContent) => {
+        if (htmlContent) {
+          console.log(htmlContent)
+          return
+        }
+        for (const file of files) {
+          await handleFile(currentEditor, file, currentEditor.state.selection.anchor)
+        }
+      },
+      onDrop: (currentEditor, files, pos) => {
+        files.forEach(file => handleFile(currentEditor, file, pos))
+      }
     }),
     Underline,
     Image,
@@ -63,6 +87,44 @@ watch(() => content.value, (newContent) => {
   }
 })
 
+const handleFile = async (currentEditor, file, pos) => {
+  const { uploadFile, loading, succeed, imageUrl, errors } = useFileUpload()
+  
+  await uploadFile(file)
+  if (succeed.value && imageUrl.value) {
+    currentEditor.chain().insertContentAt(pos, {
+      type: 'image',
+      attrs: {
+        src: imageUrl.value,
+      }
+    }).run()
+  } else if (errors.value.length > 0) {
+    message.error(`上传文件失败: ${errors.value.join(', ')}`)
+  }
+}
+
+const uploadFile = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await api.post<FileUploadResponse>('/api/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    if (response.status !== 200) {
+      const errorMessage = response.errors.reduce((acc, cur) => acc + cur, '')
+      message.error(`上传文件失败: ${errorMessage}`)
+    }
+    return response.content
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    message.error(`上传文件失败: ${error}`)
+    return null
+  }
+}
 </script>
 
 <style>
@@ -80,10 +142,14 @@ watch(() => content.value, (newContent) => {
     quotes: none;
     font-style: normal;
   }
+  p {
+    @apply text-base
+  }
+  @apply ml-2
 }
 
 /* TODO: Not sure if this is a good fix */
-.tiptap > * {
+.tiptap * {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }

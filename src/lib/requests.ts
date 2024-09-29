@@ -4,13 +4,14 @@ type RequestConfig = {
   method: "GET" | "POST" | "PUT" | "DELETE"
   url: string
   data?: any
+  options?: RequestInit
 }
 
 async function request<T extends ResponseBase>(config: RequestConfig): Promise<{ status: number, data: APIResponse<T>, content: T["success"], errors?: APIResponse<T>["errors"] }> {
-  const { method, url, data } = config
+  const { method, url, data, options: customOptions } = config
   const fullUrl = `${url}`
 
-  const options: RequestInit = {
+  const defaultOptions: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -19,12 +20,21 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
     credentials: 'include'
   }
 
+  const mergedOptions: RequestInit = {
+    ...defaultOptions,
+    ...customOptions,
+    headers: {
+      ...defaultOptions.headers,
+      ...customOptions?.headers
+    }
+  }
+
   if (data) {
-    options.body = JSON.stringify(data)
+    mergedOptions.body = JSON.stringify(data)
   }
 
   try {
-    const response = await fetch(fullUrl, options)
+    const response = await fetch(fullUrl, mergedOptions)
     const result = await response.json()
 
     return { status: response.status, data: result as APIResponse<T>, content: result.contents as T["success"], errors: result.errors as APIResponse<T>["errors"] }
@@ -39,9 +49,9 @@ function getCsrfToken(): string {
 }
 
 export const api = {
-  get: <T extends ResponseBase>(url: string) => request<T>({ method: 'GET', url }),
-  post: <T extends ResponseBase>(url: string, data: any) => request<T>({ method: 'POST', url, data }),
-  put: <T extends ResponseBase>(url: string, data: any) => request<T>({ method: 'PUT', url, data }),
-  delete: <T extends ResponseBase>(url: string) => request<T>({ method: 'DELETE', url })
+  get: <T extends ResponseBase>(url: string, options?: RequestInit) => request<T>({ method: 'GET', url, options }),
+  post: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'POST', url, data, options }),
+  put: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'PUT', url, data, options }),
+  delete: <T extends ResponseBase>(url: string, options?: RequestInit) => request<T>({ method: 'DELETE', url, options })
 }
 

@@ -68,7 +68,7 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
       if (errors) {
         message.error(errors.map(err => err.err_msg).join(', '))
       } else {
-        message.error('Failed to fetch reviews')
+        message.error('获取点评失败，请重试')
       }
       return
     }
@@ -77,7 +77,7 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
     totalReviewCount.value = content.total
   } catch (error) {
     console.error('Error fetching reviews:', error)
-    message.error('An error occurred while fetching reviews')
+    message.error('获取点评失败，请重试')
   }
 }
 
