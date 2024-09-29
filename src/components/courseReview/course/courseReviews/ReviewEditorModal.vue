@@ -80,6 +80,8 @@ import { NewReviewRequest } from "@/types/api/review"
 import { CourseData } from "@/types/courses"
 import { computed, ref } from "vue"
 import { useMessage } from 'naive-ui'
+import { SemesterListResponse } from '@/types/api/course'
+import { api } from '@/lib/requests'
 
 const message = useMessage()
 
@@ -87,6 +89,7 @@ const props = defineProps<{
   courseData: CourseData,
   modelValue: boolean,
   submitting: boolean,
+  initContent: NewReviewRequest | null,
 }>()
 
 const emit = defineEmits<{
@@ -94,22 +97,30 @@ const emit = defineEmits<{
   (e: 'submit', content: NewReviewRequest): void
 }>()
 
-const content = ref('')
-const isAnonymous = ref(false)
-const rating = ref(0)
-const selectedSemester = ref(null)
-const difficulty = ref(3)
-const homework = ref(3)
-const grade = ref(3)
-const reward = ref(3)
+const content = ref(props.initContent?.content || '')
+const isAnonymous = ref(props.initContent?.anonymous || false)
+const rating = ref(props.initContent?.rating || 0)
+const selectedSemester = ref(props.initContent?.semester || null)
+const difficulty = ref(props.initContent?.difficulty || 3)
+const homework = ref(props.initContent?.homework || 3)
+const grade = ref(props.initContent?.grade || 3)
+const reward = ref(props.initContent?.reward || 3)
+const semesterData = ref<SemesterListResponse['success']|null>(null)
 
-const semesterOptions = computed(() => 
-  // props.courseData.semester.map(semester => ({
-  //   label: semester,
-  //   value: semester
-  // }))
-  ['最新学期']
-)
+onMounted(async () => {
+  const response = await api.get<SemesterListResponse>('/api/assessment/semester/')
+  semesterData.value = response.content
+})
+
+const semesterOptions = computed(() => {
+  if (!semesterData.value) return []
+  return Object.entries(semesterData.value)
+    .reverse()
+    .map(([key, value]) => ({
+      label: value,
+      value: Number(key)
+    }))
+})
 
 const submitReview = () => {
   const reviewData: NewReviewRequest = {
@@ -127,8 +138,7 @@ const submitReview = () => {
 }
 
 const closeModal = () => {
-  console.log(content.value.trim())
-  if (content.value.trim() || content.value.trim() === '<p></p>') {
+  if (content.value.trim() && content.value.trim() !== '<p></p>' && content.value !== props.initContent?.content) {
     if (confirm('你有未保存的内容。确定要关闭吗？')) {
       emit('update:modelValue', false)
     }
