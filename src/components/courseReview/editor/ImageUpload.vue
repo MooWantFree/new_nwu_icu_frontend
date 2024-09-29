@@ -12,8 +12,8 @@
           @click="$refs.fileInput.click()"
         >
           <p v-if="!selectedFile">将图片拖放到此处，粘贴剪贴板内容或点击选择</p>
-          <div v-else class="flex items-center justify-center">
-            <img :src="previewUrl" alt="已选择的图片" class="max-h-32 max-w-full mr-2">
+          <div v-else class="flex flex-col items-center">
+            <img :src="previewUrl" alt="已选择的图片" class="max-h-32 max-w-full mb-2">
             <span class="text-sm text-gray-600">{{ selectedFile.name }}</span>
           </div>
           <input
