@@ -59,7 +59,7 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
     pageSize: pageSize.toString(),
     desc: desc.toString(),
   })
-  const reqUrl = "/api/assessment/review/?" + searchParams.toString()
+  const reqUrl = "/api/assessment/latest-review/?" + searchParams.toString()
   
   try {
     const { status, content, errors } = await api.get<LatestCourseReviewResponse>(reqUrl)
