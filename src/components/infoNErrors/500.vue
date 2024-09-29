@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  message?: string
-}>()
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+const message = route.query.message || ''
 </script>

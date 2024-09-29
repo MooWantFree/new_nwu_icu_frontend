@@ -52,7 +52,7 @@ onMounted(async () => {
     document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
   } catch (error) {
     console.error('Failed to fetch course data:', error)
-    router.push({ name: '500' })
+    router.push({ name: '500', query: {message: error} })
   } finally {
     courseLoading.value = false
   }
