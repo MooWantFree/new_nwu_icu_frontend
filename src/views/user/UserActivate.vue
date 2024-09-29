@@ -87,7 +87,7 @@ onMounted(async () => {
   }
 
   try {
-    const {status,content, errors } = await api.get(`/user/register/?token=${token}`)
+    const {status,content, errors } = await api.get(`/api/user/register/?token=${token}`)
     const errorText = errors.reduce((acc, cur) => acc + cur.err_msg, '')
     if (status === 200) {
       success.value = true
