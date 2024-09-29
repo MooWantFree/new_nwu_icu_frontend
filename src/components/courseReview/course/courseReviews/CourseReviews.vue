@@ -1,17 +1,25 @@
 <template>
   <div class="p-6 mt-6 bg-white rounded-md shadow-md">
-    <div class="flex">
-      <h2 class="text-xl font-bold">点评</h2>
-      <n-button @click="handleNewReviewButtonClicked" class="ml-auto" type="primary">提交一条新的点评</n-button>
-    </div>
-    <div class="flex items-center mt-4 space-x-4">
-      <p class="whitespace-nowrap">排序</p>
-      <n-select :options="sortSelectorOptions" v-model:value="sortSelectorValue"/>
-      <p class="whitespace-nowrap">学期</p>
-      <n-select :options="semesterSelectorOptions" v-model:value="semesterSelectorValue"/>
-      <p class="whitespace-nowrap">评分</p>
-      <n-select :options="rankSelectorOptions" v-model:value="rankSelectorValue"/>
-      <n-button @click="handleSemesterRankingChartButtonClicked">课程学期评分趋势</n-button>
+    <div class="flex flex-col space-y-4 mt-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4">
+      <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+        <div class="flex items-center space-x-2">
+          <p class="whitespace-nowrap">排序</p>
+          <n-select class="flex-grow" :options="sortSelectorOptions" v-model:value="sortSelectorValue" />
+        </div>
+        <div class="flex items-center space-x-2">
+          <p class="whitespace-nowrap">学期</p>
+          <n-select class="flex-grow" :options="semesterSelectorOptions" v-model:value="semesterSelectorValue" />
+        </div>
+        <div class="flex items-center space-x-2">
+          <p class="whitespace-nowrap">评分</p>
+          <n-select class="flex-grow" :options="rankSelectorOptions" v-model:value="rankSelectorValue" />
+        </div>
+        <n-button class="w-full sm:w-auto" @click="handleSemesterRankingChartButtonClicked">课程学期评分趋势</n-button>
+      </div>
+      <n-button class="w-full sm:w-auto mt-4 sm:mt-0" type="primary" color="#18a058"
+        @click="handleNewReviewButtonClicked">
+        新建一个评价
+      </n-button>
     </div>
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
@@ -28,19 +36,22 @@
       </div>
     </div>
   </div>
-  <!-- TODO: mobile editor -->
-  <n-modal v-model:show="showEditor">
-    <n-card>
-      <Editor :content="null" :allowEdit="true" :withToolbar="true" />
-    </n-card>
-  </n-modal>
+  <ReviewEditorModal v-model="showEditor" :course-data="props.courseData" @submit="handleSubmitReview"
+    :submitting="isSubmittingReview" />
 </template>
 
-<script lang="ts" setup>
-import {ref, computed} from "vue"
-import {CourseData} from "@/types/courses"
+<script setup lang="ts">
+import { ref, computed } from "vue"
+import { CourseData } from "@/types/courses"
 import CourseReviewItem from "@/components/courseReview/course/courseReviews/CourseReviewItem.vue"
-import Editor from "@/components/courseReview/editor/Editor.vue"
+import ReviewEditorModal from "@/components/courseReview/course/courseReviews/ReviewEditorModal.vue"
+import { api } from "@/lib/requests"
+import { NewReviewRequest, NewReviewResponse } from "@/types/api/review"
+import { useMessage } from 'naive-ui'
+
+const emit = defineEmits<{
+  (e: 'reloadData'): void
+}>()
 
 const props = defineProps<{
   courseData: CourseData,
@@ -55,6 +66,8 @@ enum SortMethods {
   HighestRated,
   LowestRated,
 }
+
+const message = useMessage()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -133,13 +146,13 @@ const rankSelectorOptions = computed(() => [
 
 // - calculate result
 const reviewsDisplayed = computed(() => props.courseData.reviews.filter(review => (
-            (semesterSelectorValue.value === 'all' || review.semester === semesterSelectorValue.value) &&
-            (rankSelectorValue.value === Rank.All || (
-                rankSelectorValue.value + 0.5 > review.rating &&
-                rankSelectorValue.value - 0.5 <= review.rating
-            ))
-        )
-    )
+  (semesterSelectorValue.value === 'all' || review.semester === semesterSelectorValue.value) &&
+  (rankSelectorValue.value === Rank.All || (
+    rankSelectorValue.value + 0.5 > review.rating &&
+    rankSelectorValue.value - 0.5 <= review.rating
+  ))
+)
+)
 )
 
 // 课程学期评分趋势
@@ -148,8 +161,28 @@ const handleSemesterRankingChartButtonClicked = () => {
 }
 
 const showEditor = ref(false)
+const isSubmittingReview = ref(false)
 // New review
 const handleNewReviewButtonClicked = () => {
   showEditor.value = true
+}
+
+const handleSubmitReview = async (content: NewReviewRequest) => {
+  isSubmittingReview.value = true
+  try {
+    const { status, data, content: responseContent } = await api.post<NewReviewResponse>('/api/assessment/review/', content)
+
+    if (status !== 200) {
+      throw new Error('Failed to submit review')
+    }
+    emit('reloadData')
+
+    showEditor.value = false
+  } catch (error) {
+    console.error("Failed to submit review:", error)
+    message.error('评价提交失败，请重试')
+  } finally {
+    isSubmittingReview.value = false
+  }
 }
 </script>

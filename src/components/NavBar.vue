@@ -94,6 +94,7 @@ import Login from "@/components/LoginForm.vue";
 import { renderIcon, renderMenuLabel } from "@/lib/h";
 import { useUser } from "@/lib/useUser";
 import { UserProfile } from "@/types/userProfile";
+import { api } from "@/lib/requests";
 
 const route = useRoute()
 const router = useRouter()
@@ -148,10 +149,12 @@ const userAvatarDropdownOptions = [
   }
 ]
 const handleLogout = async () => {
-  const resp = await fetch("/api/user/logout/", {
-    method: "POST",
-  })
-  await resp.json()
+  const {status} = await api.post("/api/user/logout/", {})
+  if (status !== 200) {
+    message.error("退出登录失败，请稍后再试")
+    logout()
+    return
+  }
   logout()
   message.success("成功退出登录，欢迎您下次再来")
 }

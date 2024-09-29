@@ -12,7 +12,7 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       '/api': {
-        target: 'https://tempnwuicu.nwu.icu',
+        target: 'https://ahh.nwu.icu',
         changeOrigin: true,
       }
     }

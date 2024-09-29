@@ -24,9 +24,10 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { NAvatar, NInput, NCheckbox, NButton } from 'naive-ui'
+import { NInput, NButton } from 'naive-ui'
 import { Review } from "@/types/courses"
-import { useMessage } from 'naive-ui'; 
+import { useMessage } from 'naive-ui'
+import { api } from '@/lib/requests'
 
 const message = useMessage()
 
@@ -34,36 +35,27 @@ const props = defineProps<{
   review: Review
 }>()
 
-// TODO: Figure out what did here
 const emit = defineEmits<{
   (e: 'replySubmitted', content: string): void
   (e: 'close'): void
 }>()
 
 const loadingRef = ref(false)
-
 const replyContent = ref('')
+
 const submitReply = async () => {
   loadingRef.value = true
   try {
-    const response = await fetch(`/api/review/reply/${props.review.id}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
-      },
-      body: JSON.stringify({ content: replyContent.value })
+    const { status, data } = await api.post(`/api/review/reply/${props.review.id}/`, {
+      content: replyContent.value
     })
 
-    if (!response.ok) {
+    if (status !== 200) {
       throw new Error('Network response was not ok')
     }
 
-    const data = await response.json()
     if (data.message === "成功创建课程评价回复") {
-      // Emit an event to notify parent component
       emit('replySubmitted', replyContent.value)
-      // Show success message
       message.success('回复已成功发表')
     } else {
       throw new Error('Unexpected server response')
@@ -71,10 +63,9 @@ const submitReply = async () => {
   } catch (error) {
     console.error('Error submitting reply:', error)
     message.error('发表回复时出错，请稍后重试')
+  } finally {
+    replyContent.value = ''
+    loadingRef.value = false
   }
-  // After submit
-  replyContent.value = ''
-  loadingRef.value = false
-  // TODO: emit event and show what replied
 }
 </script>

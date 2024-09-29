@@ -136,6 +136,7 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB in bytes
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MESSAGE_IMAGE_EXTENSION_NOT_ALLOW = '只支持 JPEG, PNG, GIF 和 WebP 格式的图片'
 const MESSAGE_IMAGE_FILE_SIZE_EXCEED = '文件大小不能超过25MB'
+
 </script>
 
 <style scoped>
