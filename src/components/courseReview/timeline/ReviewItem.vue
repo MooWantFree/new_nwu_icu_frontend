@@ -20,14 +20,10 @@
         </n-tooltip>
         <div class="ml-3">
           <h2 class="text-lg font-semibold text-gray-900">
-            <template v-if="review.author.id > 0">
-              <router-link :to="`/user/profile/${review.author.id}`">
-                <span class="link">{{ review.author.name }}</span>
-              </router-link>
-            </template>
-            <template v-else>
-              <span>{{ review.author.name }}</span>
-            </template>
+            <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`" class="link">
+              {{ review.author.name }}
+            </router-link>
+            <span v-else>{{ review.author.name }}</span>
           </h2>
           <p class="text-sm text-gray-500">
             <n-tooltip placement="bottom" trigger="hover">
@@ -55,9 +51,9 @@
           </p>
         </div>
       </div>
-      <p class="text-gray-600 mb-4">
-        {{ review.content }}
-      </p>
+      <div class="text-gray-600 mb-4 relative">
+        <Viewer :content="review.content" />
+      </div>
       <div class="flex items-center justify-between text-sm">
         <span class="text-gray-500"></span>
         <button class="link font-medium">更多...</button>
@@ -66,17 +62,18 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import type {Review} from "@/types/courseReview";
+<script setup lang="ts">
+import { ref } from 'vue'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import type { Review } from "@/types/courseReview"
+import Viewer from "@/components/courseReview/editor/Viewer.vue"
 
-dayjs.extend(relativeTime);
+dayjs.extend(relativeTime)
 
 const props = defineProps<{
-  review?: Review
-}>();
-
+  review: Review
+}>()
 </script>
 
 <style lang="postcss">

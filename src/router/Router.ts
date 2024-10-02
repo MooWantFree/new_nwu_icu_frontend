@@ -23,6 +23,13 @@ const courseReviewRoutes = [
     meta: {
       pageTitle: '教师评价',
     }
+  },
+  {
+    path: '/review/course',
+    component: () => import("@/views/courseReview/CourseList.vue"),
+    meta: {
+      pageTitle: '课程评价|课程列表',
+    }
   }
 ] as RouteRecordRaw[]
 
@@ -52,7 +59,15 @@ const userRoutes = [
     meta: {
       pageTitle: "忘记密码",
     }
-  }
+  },
+  {
+    path: "/user/activate",
+    name: "userActivate",
+    component: () => import("@/views/user/UserActivate.vue"),
+    meta: {
+      pageTitle: "用户激活"
+    }
+  },
 ] as RouteRecordRaw[]
 
 const systemInfoRoutes = [
@@ -109,22 +124,6 @@ const routes = [
       pageTitle: '关于'
     }
   },
-  {
-    path: "/editor",
-    name: 'editor',
-    component: () => import("@/views/courseReview/Editor.vue"),
-    meta: {
-      pageTitle: '编辑器'
-    }
-  },
-  {
-    path: "/user/activate",
-    name: "userActivate",
-    component: () => import("@/views/user/UserActivate.vue"),
-    meta: {
-      pageTitle: "用户激活"
-    }
-  }
 ] as RouteRecordRaw[]
 
 const Router = createRouter({
