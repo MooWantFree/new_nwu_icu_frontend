@@ -1,6 +1,6 @@
 <template>
   <div ref="editorContainer">
-    <editor-toolbar :editor="editor" v-if="editor && showToolbar && editable" />
+    <editor-toolbar :editor="editor" v-if="editor && showToolbar" />
     <div class="max-w-none">
       <editor-content :editor="editor" />
     </div>
@@ -20,11 +20,8 @@ import FileHandler from '@tiptap-pro/extension-file-handler'
 import { AllowedMimeTypes } from './vars'
 import { useFileUpload } from '@/lib/fileUploads'
 import { useMessage } from 'naive-ui'
-import { onMounted } from 'vue'
-import { nextTick } from 'vue'
 
-const { editable = true, placeholder = '点击此处，在这里输入新内容...', showToolbar = true, defaultContent = '' } = defineProps<{
-  editable?: boolean,
+const { placeholder = '点击此处，在这里输入新内容...', showToolbar = true, defaultContent = '' } = defineProps<{
   placeholder?: string,
   showToolbar?: boolean,
   defaultContent?: string,
@@ -32,7 +29,6 @@ const { editable = true, placeholder = '点击此处，在这里输入新内容.
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
-  (e: 'content-loaded', contentHeight: number): void
 }>()
 
 const content = defineModel<string>()
@@ -81,7 +77,6 @@ const editor = useEditor({
   autofocus: true,
   injectCSS: true,
   content: content.value,
-  editable,
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
@@ -112,15 +107,6 @@ const handleFile = async (currentEditor, file: File, pos: number) => {
   }
 }
 
-const editorContainer = ref<HTMLElement | null>(null)
-
-onMounted(async () => {
-  await nextTick()
-  if (editorContainer.value) {
-    const contentHeight = editorContainer.value.scrollHeight
-    emit('content-loaded', contentHeight)
-  }
-})
 </script>
 
 <style>

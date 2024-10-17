@@ -20,7 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Editor :editable="false" :default-content="review.content" :show-toolbar="false" />
+      <Viewer :value="review.content" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <n-button v-if="isAuthor" type="error" size="small" @click="handleDelete" class="mr-auto">
@@ -79,7 +79,7 @@ import CourseReviewItemReply from "./CourseReviewItemReply.vue"
 import { ref } from "vue"
 import Time from "@/components/shortcuts/Time.vue"
 import { NButton, useMessage } from 'naive-ui'
-import Editor from "../../editor/Editor.vue"
+import Viewer from "@/components/tiptap/viewer/Viewer.vue"
 import { useUser } from "@/lib/useUser"
 import { api } from "@/lib/requests"
 import { computed } from "vue"

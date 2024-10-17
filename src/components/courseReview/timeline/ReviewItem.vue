@@ -52,7 +52,7 @@
         </div>
       </div>
       <div class="text-gray-600 mb-4 relative">
-        <Viewer :content="review.content" />
+        <Viewer :value="review.content" />
       </div>
       <div class="flex items-center justify-between text-sm">
         <span class="text-gray-500"></span>
@@ -63,11 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { Review } from "@/types/courseReview"
-import Viewer from "@/components/courseReview/editor/Viewer.vue"
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 
 dayjs.extend(relativeTime)
 
