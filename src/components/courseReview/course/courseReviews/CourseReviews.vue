@@ -14,7 +14,9 @@
           <p class="whitespace-nowrap">评分</p>
           <n-select class="flex-grow" :options="rankSelectorOptions" v-model:value="rankSelectorValue" />
         </div>
-        <n-button class="w-full sm:w-auto" @click="handleSemesterRankingChartButtonClicked">课程学期评分趋势</n-button>
+        <button @click="showRatingTrendModal = true" class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+          课程学期评分趋势
+        </button>
       </div>
       <n-button v-if="!userReviewed" class="w-full sm:w-auto mt-4 sm:mt-0" type="primary" color="#18a058"
         @click="handleNewReviewButtonClicked">
@@ -25,6 +27,22 @@
         编辑我的评价
       </n-button>
     </div>
+    
+    <!-- Rating Trend Modal -->
+    <div v-if="showRatingTrendModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">课程评分趋势</h2>
+          <button @click="showRatingTrendModal = false" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <CourseRatingTrend :ratingData="ratingTrendData" />
+      </div>
+    </div>
+    
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
         <CourseReviewItem :review="review" @reviewDeleted="handleReviewDeleted"/>
@@ -40,7 +58,7 @@
       </div>
     </div>
   </div>
-  <ReviewEditorModal v-model="showEditor" :course-data="props.courseData" @submit="handleSubmitReview"
+  <ReviewEditorModal v-if="showEditor" v-model="showEditor" :course-data="props.courseData" @submit="handleSubmitReview"
     :submitting="isSubmittingReview" :init-content="initContent" />
 </template>
 
@@ -53,6 +71,7 @@ import { api } from "@/lib/requests"
 import { NewReviewRequest, NewReviewResponse } from "@/types/api/review"
 import { useMessage } from 'naive-ui'
 import { useUser } from "@/lib/useUser"
+import CourseRatingTrend from '@/components/courseReview/course/CourseRatingTrend.vue'
 
 const emit = defineEmits<{
   (e: 'reloadData'): void
@@ -163,7 +182,7 @@ const reviewsDisplayed = computed(() => props.courseData.reviews.filter(review =
 
 // 课程学期评分趋势
 const handleSemesterRankingChartButtonClicked = () => {
-
+  showRatingTrend.value = !showRatingTrend.value
 }
 
 const showEditor = ref(false)
@@ -222,4 +241,15 @@ const initContent = computed<NewReviewRequest | null>(() => {
 const handleEditReviewButtonClicked = () => {
   showEditor.value = true
 }
+
+// Add these new refs and computed properties
+const showRatingTrend = ref(false)
+const showRatingTrendModal = ref(false)
+
+const ratingTrendData = computed(() => {
+  return props.courseData.reviews.map(review => ({
+    date: review.created_time,
+    rating: review.rating
+  }))
+})
 </script>

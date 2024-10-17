@@ -18,9 +18,11 @@
     "@tiptap/starter-kit": "^2.7.1",
     "@tiptap/vue-3": "^2.7.1",
     "@vueuse/core": "^10.11.1",
+    "apexcharts": "^3.54.0",
     "dayjs": "^1.11.11",
     "vue": "^3.5.6",
-    "vue-router": "^4.4.5"
+    "vue-router": "^4.4.5",
+    "vue3-apexcharts": "^1.6.0"
   },
   "devDependencies": {
     "@vicons/ionicons5": "^0.12.0",
