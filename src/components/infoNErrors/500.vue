@@ -15,7 +15,12 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const route = useRoute()
-const message = route.query.message || ''
+const message = computed(()=>{
+  let message = route.query.message || ''
+  if (Array.isArray(message)) message = message.join("\n")
+  return decodeURI(message)
+})
 </script>

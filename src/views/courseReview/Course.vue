@@ -50,11 +50,11 @@ const loadData = async () => {
     
     courseData.value = content
     document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
+    courseLoading.value = false
   } catch (error) {
     console.error('Failed to fetch course data:', error)
-    router.push({ name: '500', query: {message: error} })
+    router.push({ name: '500', query: {message: encodeURI(error)} })
   } finally {
-    courseLoading.value = false
   }
 }
 
