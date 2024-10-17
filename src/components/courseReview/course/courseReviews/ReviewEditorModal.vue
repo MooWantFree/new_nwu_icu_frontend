@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue'
-import Editor from "@/components/courseReview/editor/Editor.vue"
+import Editor from '@/components/tiptap/editor/Editor.vue'
 import { NewReviewRequest } from "@/types/api/review"
 import { CourseData } from "@/types/courses"
 import { computed, ref } from "vue"
@@ -107,8 +107,10 @@ const grade = ref(props.initContent?.grade || 3)
 const reward = ref(props.initContent?.reward || 3)
 const semesterData = ref<SemesterListResponse['success']|null>(null)
 
+const semesterListRequest = api.get<SemesterListResponse>('/api/assessment/semester/')
+
 onMounted(async () => {
-  const response = await api.get<SemesterListResponse>('/api/assessment/semester/')
+  const response = await semesterListRequest
   semesterData.value = response.content
 })
 
@@ -122,7 +124,13 @@ const semesterOptions = computed(() => {
     }))
 })
 
-const submitReview = () => {
+const submitReview = async () => {
+  await semesterListRequest
+  if (!semesterData.value) {
+    message.info('正在加载学期数据，请稍候进行提交...')
+    return
+  }
+
   const reviewData: NewReviewRequest = {
     course: props.courseData.id,
     content: content.value,
