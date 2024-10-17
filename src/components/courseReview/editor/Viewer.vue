@@ -25,7 +25,7 @@ import ExpandButton from "./ExpandButton.vue"
 
 const {content, needExpand = true} = defineProps<{
   content: string
-  needExpand: boolean
+  needExpand?: boolean
 }>()
 
 const expanded = ref(false)
