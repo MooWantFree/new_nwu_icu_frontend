@@ -10,7 +10,7 @@
       <div class="p-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">关于我们</h1>
         <div class="prose prose-lg prose-indigo max-w-none">
-          <Viewer :content="content" :need-expand="false" />
+          <Viewer :value="content" :need-expand="false" />
         </div>
       </div>
     </div>
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import Viewer from '@/components/courseReview/editor/Viewer.vue'
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import { api } from '@/lib/requests'
 import { AboutResponse } from '@/types/api/texts'
 import { ref, onMounted } from 'vue'
