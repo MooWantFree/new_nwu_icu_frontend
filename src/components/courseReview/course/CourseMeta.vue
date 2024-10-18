@@ -7,7 +7,7 @@
     <div class="mt-4">
       <div class="flex items-center space-x-2">
         <div class="flex items-center">
-          <n-rate readonly :allow-half="true" :default-value="courseData.rating_avg"/>
+          <n-rate readonly :allow-half="true" :default-value="Number(courseData.rating_avg)"/>
         </div>
         <div class="text-lg font-bold">{{ courseData.rating_avg }}</div>
         <div class="text-sm text-gray-600">({{ courseData.reviews.length }}人评价)</div>
