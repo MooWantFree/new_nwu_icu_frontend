@@ -21,17 +21,13 @@
 </template>
 
 <script setup lang="ts">
-import { useEditor, EditorContent, Editor } from '@tiptap/vue-3'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-import { ref } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import 'prosemirror-view/style/prosemirror.css'
-import { onMounted } from 'vue'
-import { nextTick } from 'vue'
 import ExpandButton from './ExpandButton.vue'
-import { useTemplateRef } from 'vue'
-import { watch } from 'vue'
 
 const { value = '', needExpand = true } = defineProps<{
   value: string,

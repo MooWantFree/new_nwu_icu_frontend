@@ -15,16 +15,16 @@
 </template>
 
 <script setup lang="ts">
-import {useRoute, useRouter} from "vue-router";
-import {onMounted, ref} from "vue";
-import {CourseData} from "@/types/courses";
-import CourseMeta from "@/components/courseReview/course/CourseMeta.vue";
-import CourseReviews from "@/components/courseReview/course/courseReviews/CourseReviews.vue";
-import CourseTeachers from "@/components/courseReview/course/CourseTeachers.vue";
-import CourseAlike from "@/components/courseReview/course/CourseAlike.vue";
-import CourseSkeleton from "@/components/courseReview/course/CourseSkeleton.vue";
-import { api } from "@/lib/requests";
-import { CourseDataResponse } from "@/types/api/course";
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { CourseData } from '@/types/courses'
+import { api } from '@/lib/requests'
+import { CourseDataResponse } from '@/types/api/course'
+import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'
+import CourseReviews from '@/components/courseReview/course/courseReviews/CourseReviews.vue'
+import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
+import CourseAlike from '@/components/courseReview/course/CourseAlike.vue'
+import CourseSkeleton from '@/components/courseReview/course/CourseSkeleton.vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -69,14 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
-import { CourseData } from "@/types/courses"
-import CourseReviewItem from "@/components/courseReview/course/courseReviews/CourseReviewItem.vue"
-import ReviewEditorModal from "@/components/courseReview/course/courseReviews/ReviewEditorModal.vue"
-import { api } from "@/lib/requests"
-import { NewReviewRequest, NewReviewResponse } from "@/types/api/review"
+import { ref, computed } from 'vue'
 import { useMessage } from 'naive-ui'
-import { useUser } from "@/lib/useUser"
+import { useUser } from '@/lib/useUser'
+import { api } from '@/lib/requests'
+import { CourseData } from '@/types/courses'
+import { NewReviewRequest, NewReviewResponse } from '@/types/api/review'
+import CourseReviewItem from '@/components/courseReview/course/courseReviews/CourseReviewItem.vue'
+import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
 import CourseRatingTrend from '@/components/courseReview/course/CourseRatingTrend.vue'
 
 const emit = defineEmits<{
