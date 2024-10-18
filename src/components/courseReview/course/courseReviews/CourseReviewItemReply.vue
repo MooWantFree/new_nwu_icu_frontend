@@ -32,7 +32,8 @@ import { api } from '@/lib/requests'
 const message = useMessage()
 
 const props = defineProps<{
-  review: Review
+  review: Review,
+  replyTo: number,
 }>()
 
 const emit = defineEmits<{
@@ -46,8 +47,10 @@ const replyContent = ref('')
 const submitReply = async () => {
   loadingRef.value = true
   try {
-    const { status, data } = await api.post(`/api/review/reply/${props.review.id}/`, {
-      content: replyContent.value
+    const { status, data } = await api.post(`/api/assessment/reply/`, {
+      content: replyContent.value,
+      review_id: props.review.id,
+
     })
 
     if (status !== 200) {
@@ -60,11 +63,11 @@ const submitReply = async () => {
     } else {
       throw new Error('Unexpected server response')
     }
+    replyContent.value = ''
   } catch (error) {
     console.error('Error submitting reply:', error)
     message.error('发表回复时出错，请稍后重试')
   } finally {
-    replyContent.value = ''
     loadingRef.value = false
   }
 }

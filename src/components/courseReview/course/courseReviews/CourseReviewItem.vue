@@ -20,7 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Viewer :value="review.content" />
+      <Viewer :value="review.content"/>
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <!-- Dropdown Menu -->
@@ -63,9 +63,6 @@
           </div>
         </div>
       </div>
-      <!-- <n-button v-if="isAuthor" type="error" size="small" @click="handleDelete" class="mr-auto">
-        删除评价
-      </n-button> -->
       <div class="flex items-center space-x-2">
         <Time :time="new Date(review.created_time)" />
         <div v-if="review.edited">
@@ -86,7 +83,7 @@
       </div>
       <div class="space-y-2">
         <div v-for="(reply, index) in (reverseReplies ? [...review.reply].reverse() : review.reply)"
-          :key="reply.created_time" class="bg-gray-50 p-3 rounded-md flex justify-between items-start">
+          :key="reply.created_time" class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group">
           <div>
             <p class="text-sm text-gray-700">
               {{ reply.created_by.name }}: {{ reply.content }}
@@ -95,22 +92,30 @@
               <Time type="relative" :time="new Date(reply.created_time)" />
             </p>
           </div>
-          <!-- TODO: Hover to show a reply button, and add `> #${id}` to the reply content -->
           <span class="text-sm text-gray-500 ml-2">
             #{{ reverseReplies ? index + 1 : review.reply.length - index }}
           </span>
+          <!-- TODO: Review this -->
+          <n-button 
+            v-if="isLoggedIn" 
+            text 
+            @click="() => toggleReply(index)" 
+            class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800"
+          >
+            回复
+          </n-button>
         </div>
       </div>
     </div>
     <div class="flex justify-end mt-2 mx-2">
-      <n-button v-if="isLoggedIn" text @click="toggleReply" class="text-blue-600 hover:text-blue-800">
+      <n-button v-if="isLoggedIn" text @click="()=>toggleReply()" class="text-blue-600 hover:text-blue-800">
         {{ showReply ? '取消回复' : '回复' }}
       </n-button>
       <span v-else>
         登录以后才能回复
       </span>
     </div>
-    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" @close="toggleReply" class="mt-4"
+    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" :reply-to="replyTarget" @close="toggleReply" class="mt-4"
       @replySubmitted="onReplySubmitted" />
   </div>
 </template>
@@ -145,9 +150,10 @@ const isAuthor = computed(() => {
   return props.review.author.id === userInfo.value.id
 })
 
-const toggleReply = () => {
+const replyTarget = ref(0)
+const toggleReply = (replyTo: number = 0) => {
+  replyTarget.value = replyTo
   showReply.value = !showReply.value;
-  // TODO:
 }
 
 const reverseReplies = ref(false)
