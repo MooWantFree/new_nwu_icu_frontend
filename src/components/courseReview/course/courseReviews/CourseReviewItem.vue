@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 rounded-lg shadow-md p-6">
+  <div class="bg-gray-100 rounded-lg shadow-md p-6" ref="courseReviewItem">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-xl font-bold text-gray-900">{{ review.author.name ?? "匿名用户" }}</h3>
@@ -20,7 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Viewer :value="review.content"/>
+      <Viewer :value="review.content" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <!-- Dropdown Menu -->
@@ -96,27 +96,23 @@
             #{{ reverseReplies ? index + 1 : review.reply.length - index }}
           </span>
           <!-- TODO: Review this -->
-          <n-button 
-            v-if="isLoggedIn" 
-            text 
-            @click="() => toggleReply(index)" 
-            class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800"
-          >
+          <n-button v-if="isLoggedIn" text @click="() => toggleReply(index)"
+            class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800">
             回复
           </n-button>
         </div>
       </div>
     </div>
     <div class="flex justify-end mt-2 mx-2">
-      <n-button v-if="isLoggedIn" text @click="()=>toggleReply()" class="text-blue-600 hover:text-blue-800">
+      <n-button v-if="isLoggedIn" text @click="() => toggleReply()" class="text-blue-600 hover:text-blue-800">
         {{ showReply ? '取消回复' : '回复' }}
       </n-button>
       <span v-else>
         登录以后才能回复
       </span>
     </div>
-    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" :reply-to="replyTarget" @close="toggleReply" class="mt-4"
-      @replySubmitted="onReplySubmitted" />
+    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" :reply-to="replyTarget" @close="toggleReply"
+      class="mt-4" @replySubmitted="onReplySubmitted" />
   </div>
 </template>
 
