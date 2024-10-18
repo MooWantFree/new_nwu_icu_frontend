@@ -2,18 +2,19 @@
   <div class="relative">
     <div :class="{ 'max-h-60 overflow-hidden': !expanded && needExpand }">
       <div ref="editorContainer">
-        <editor-toolbar :editor="editor" v-if="editor" />
         <div class="max-w-none">
           <editor-content :editor="editor" />
         </div>
       </div>
     </div>
     <div v-if="!expanded && isContentOverflowing && needExpand"
-      class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent flex items-end justify-center">
+      class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-300 to-transparent flex items-end justify-center">
       <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <div class="mt-3"></div>
     </div>
     <div v-if="expanded && isContentOverflowing && needExpand" class="flex justify-center w-full mt-4 mb-6">
       <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <div class="mt-3"></div>
     </div>
   </div>
 
@@ -29,6 +30,8 @@ import 'prosemirror-view/style/prosemirror.css'
 import { onMounted } from 'vue'
 import { nextTick } from 'vue'
 import ExpandButton from './ExpandButton.vue'
+import { useTemplateRef } from 'vue'
+import { watch } from 'vue'
 
 const { value = '', needExpand = true } = defineProps<{
   value: string,
@@ -60,8 +63,7 @@ const editor = useEditor({
   content: value,
 })
 
-const editorContainer = ref<HTMLElement | null>(null)
-
+const editorContainer = ref<HTMLElement | null>()
 onMounted(async () => {
   await nextTick()
   if (editorContainer.value) {
