@@ -26,9 +26,9 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue';
-import type {Replies, Reply} from "@/types/myReply";
-import MyReplyItems from "@/components/courseReview/MyReplyItems.vue";
+import { onMounted, ref } from 'vue'
+import type { Replies, Reply } from '@/types/myReply'
+import MyReplyItems from '@/components/courseReview/MyReplyItems.vue'
 
 const myReplies = ref<Replies | null>(null);
 const myReplyArray = ref<Reply[] | null>(null);

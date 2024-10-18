@@ -85,11 +85,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch, computed, ref } from 'vue'
 import Editor from '@/components/tiptap/editor/Editor.vue'
-import { NewReviewRequest } from "@/types/api/review"
-import { CourseData } from "@/types/courses"
-import { computed, ref } from "vue"
+import { NewReviewRequest } from '@/types/api/review'
+import { CourseData } from '@/types/courses'
 import { SemesterListResponse } from '@/types/api/course'
 import { api } from '@/lib/requests'
 

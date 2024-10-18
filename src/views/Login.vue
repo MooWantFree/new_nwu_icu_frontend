@@ -11,11 +11,11 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeMount } from 'vue'
+import { useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
 import LoginForm from '@/components/LoginForm.vue'
-import {useRouter} from "vue-router";
-import {useMessage} from "naive-ui";
-import {onBeforeMount} from "vue";
-import {checkLoginStatus} from "@/lib/logins";
+import { checkLoginStatus } from '@/lib/logins'
 
 const router = useRouter()
 const message = useMessage()

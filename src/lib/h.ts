@@ -1,6 +1,6 @@
-import {Component, h} from "vue";
-import {MenuOption, NIcon} from "naive-ui";
-import {RouterLink} from "vue-router";
+import { h, Component } from 'vue'
+import { NIcon, MenuOption } from 'naive-ui'
+import { RouterLink } from 'vue-router'
 
 const renderIcon = (icon: Component) => {
   return () => h(NIcon, null, {default: () => h(icon)})

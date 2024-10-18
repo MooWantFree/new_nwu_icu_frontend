@@ -15,10 +15,10 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
-import { CourseData } from '@/types/courses'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/lib/requests'
+import { CourseData } from '@/types/courses'
 import { CourseDataResponse } from '@/types/api/course'
 import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'
 import CourseReviews from '@/components/courseReview/course/courseReviews/CourseReviews.vue'

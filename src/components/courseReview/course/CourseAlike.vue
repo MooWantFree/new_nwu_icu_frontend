@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import {CourseData} from "@/types/courses";
+import {CourseData} from '@/types/courses'
 
 const props = defineProps<{
   courseData: CourseData

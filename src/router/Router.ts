@@ -1,6 +1,6 @@
-import {createRouter, createWebHistory, RouteRecordRaw} from "vue-router";
-import {checkLoginStatus} from "@/lib/logins";
-import {nextTick} from "vue";
+import { nextTick } from 'vue'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { checkLoginStatus } from '@/lib/logins'
 
 const courseReviewRoutes = [
   {

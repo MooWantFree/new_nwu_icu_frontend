@@ -71,10 +71,10 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { api } from '@/lib/requests'
-import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
-import { TeacherResponse } from '@/types/api/assessment/teacher'
 import { NButton } from 'naive-ui'
+import { api } from '@/lib/requests'
+import { TeacherResponse } from '@/types/api/assessment/teacher'
+import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
 
 const route = useRoute()
 const router = useRouter()

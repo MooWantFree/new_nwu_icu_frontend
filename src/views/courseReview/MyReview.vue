@@ -24,9 +24,9 @@
 
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue';
-import {MyReviews, Review} from "@/types/myReview";
-import MyReviewItems from "@/components/courseReview/MyReviewItems.vue";
+import MyReviewItems from '@/components/courseReview/MyReviewItems.vue'
+import { MyReviews, Review } from '@/types/myReview'
+import { onMounted, ref } from 'vue'
 
 
 const myReviews = ref<MyReviews | null>(null);

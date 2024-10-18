@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Editor } from '@tiptap/vue-3'
-import { ref } from 'vue';
-import ImageUpload from './ImageUpload.vue';
+import ImageUpload from './ImageUpload.vue'
 
 const { editor } = defineProps<{
   editor: Editor

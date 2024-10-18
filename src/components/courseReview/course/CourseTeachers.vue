@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-import {CourseData} from "@/types/courses";
+import type { CourseData } from '@/types/courses'
 
 const props = defineProps<{
   courseData: CourseData,

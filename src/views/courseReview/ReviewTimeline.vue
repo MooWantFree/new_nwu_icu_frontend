@@ -35,13 +35,13 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue"
-import ReviewItem from "@/components/courseReview/timeline/ReviewItem.vue"
-import { useMessage } from "naive-ui"
-import { LatestCourseReviewResponse } from "@/types/courseReview"
-import ReviewItemSkeleton from "@/components/courseReview/timeline/ReviewItemSkeleton.vue"
-import { useRoute, useRouter } from "vue-router"
-import { api } from "@/lib/requests"
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { api } from '@/lib/requests'
+import type { LatestCourseReviewResponse } from '@/types/courseReview'
+import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
+import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSkeleton.vue'
 
 const message = useMessage()
 

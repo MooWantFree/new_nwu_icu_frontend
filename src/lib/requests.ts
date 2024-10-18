@@ -1,4 +1,4 @@
-import { APIResponse, ResponseBase } from "@/types/api"
+import { ResponseBase, APIResponse } from '@/types/api'
 
 type RequestConfig = {
   method: "GET" | "POST" | "PUT" | "DELETE"

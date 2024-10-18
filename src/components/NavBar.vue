@@ -76,9 +76,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { NIcon, NModal, useDialog, useMessage } from "naive-ui";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { NIcon, NModal, useDialog, useMessage } from 'naive-ui'
 import {
   CloudDownload,
   Home,
@@ -89,12 +89,12 @@ import {
   OpenOutline,
   Pencil,
   Person,
-} from "@vicons/ionicons5";
-import Login from "@/components/LoginForm.vue";
-import { renderIcon, renderMenuLabel } from "@/lib/h";
-import { useUser } from "@/lib/useUser";
-import { UserProfile } from "@/types/userProfile";
-import { api } from "@/lib/requests";
+} from '@vicons/ionicons5'
+import { renderIcon, renderMenuLabel } from '@/lib/h'
+import { useUser } from '@/lib/useUser'
+import { UserProfile } from '@/types/userProfile'
+import { api } from '@/lib/requests'
+import Login from '@/components/LoginForm.vue'
 
 const route = useRoute()
 const router = useRouter()

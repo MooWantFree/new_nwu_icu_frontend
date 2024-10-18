@@ -8,18 +8,18 @@
 </template>
 
 <script setup lang="ts">
-import { useEditor, EditorContent, Editor } from '@tiptap/vue-3'
+import { watch } from 'vue'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-import { ref, watch } from 'vue'
-import EditorToolbar from './EditorToolbar.vue'
-import 'prosemirror-view/style/prosemirror.css'
 import FileHandler from '@tiptap-pro/extension-file-handler'
-import { AllowedMimeTypes } from './vars'
 import { useFileUpload } from '@/lib/fileUploads'
 import { useMessage } from 'naive-ui'
+import EditorToolbar from './EditorToolbar.vue'
+import { AllowedMimeTypes } from './vars'
+import 'prosemirror-view/style/prosemirror.css'
 
 const { placeholder = '点击此处，在这里输入新内容...', showToolbar = true, defaultContent = '' } = defineProps<{
   placeholder?: string,

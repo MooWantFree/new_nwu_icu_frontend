@@ -87,15 +87,14 @@
 </template>
 
 <script lang="ts" setup>
-
-import {FormInst, FormItemRule, FormRules, useMessage} from "naive-ui";
-import {nextTick, onMounted, ref} from "vue";
-import {debounce} from 'lodash-es';
-import { api } from "@/lib/requests";
+import { nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CheckUsernameResponse, LoginResponse, RegisterResponse } from "@/types/api/users";
-import { GetCaptchaResponse } from "@/types/api/captcha";
-import { UserProfile } from "@/types/userProfile";
+import { debounce } from 'lodash-es'
+import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
+import { api } from '@/lib/requests'
+import { CheckUsernameResponse, LoginResponse, RegisterResponse } from '@/types/api/users'
+import { GetCaptchaResponse } from '@/types/api/captcha'
+import { UserProfile } from '@/types/userProfile'
 
 // Common parts
 const message = useMessage()

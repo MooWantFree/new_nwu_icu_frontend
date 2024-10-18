@@ -18,10 +18,10 @@
 </template>
 
 <script setup lang="ts">
-import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import { ref, onMounted } from 'vue'
 import { api } from '@/lib/requests'
 import { AboutResponse } from '@/types/api/texts'
-import { ref, onMounted } from 'vue'
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 
 const content = ref<string | null>(null)
 

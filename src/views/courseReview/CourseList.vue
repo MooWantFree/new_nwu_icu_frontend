@@ -45,10 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { CourseDataInCourseList, CourseListResponse } from '@/types/api/course';
+import { CourseDataInCourseList, CourseListResponse } from '@/types/api/course'
 
 const message = useMessage()
 

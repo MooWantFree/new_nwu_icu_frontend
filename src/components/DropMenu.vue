@@ -5,10 +5,10 @@
 </template>
 
 <script lang="ts">
-import type {Component} from 'vue'
-import {defineComponent, h} from 'vue'
-import {NIcon} from 'naive-ui'
-import {LogOutOutline as LogoutIcon, Pencil as EditIcon, PersonCircleOutline as UserIcon} from '@vicons/ionicons5'
+import { defineComponent, h } from 'vue'
+import { NIcon } from 'naive-ui'
+import { LogOutOutline as LogoutIcon, Pencil as EditIcon, PersonCircleOutline as UserIcon } from '@vicons/ionicons5'
+import type { Component } from 'vue'
 
 const renderIcon = (icon: Component) => {
   return () => {

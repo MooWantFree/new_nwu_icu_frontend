@@ -1,5 +1,5 @@
-import { CaptchaError } from "."
-import { UserProfile } from "@/types/userProfile"
+import { UserProfile } from '@/types/userProfile'
+import { CaptchaError } from '.'
 
 export type ResetPasswordResponse = {
   success: {},

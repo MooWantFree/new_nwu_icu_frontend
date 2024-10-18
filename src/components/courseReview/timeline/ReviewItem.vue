@@ -60,10 +60,10 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import type { Review } from '@/types/courseReview'
-import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import { useRouter } from 'vue-router'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import type { Review } from '@/types/courseReview'
 
 dayjs.extend(relativeTime)
 

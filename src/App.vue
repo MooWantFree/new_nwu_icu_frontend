@@ -25,8 +25,8 @@
 </template>
 
 <script lang="ts" setup>
-import NavBar from "@/components/NavBar.vue";
-import {dateZhCN, zhCN} from 'naive-ui'
+import { zhCN, dateZhCN } from 'naive-ui'
+import NavBar from '@/components/NavBar.vue'
 </script>
 
 <style scoped>

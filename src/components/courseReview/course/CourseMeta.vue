@@ -59,8 +59,8 @@
 </template>
 
 <script setup lang="ts">
-import {HeartOutline, ThumbsDownOutline, ThumbsUpOutline} from "@vicons/ionicons5";
-import type {CourseData} from "@/types/courses";
+import { HeartOutline, ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
+import type { CourseData } from '@/types/courses'
 
 const props = defineProps<{
   courseData: CourseData,

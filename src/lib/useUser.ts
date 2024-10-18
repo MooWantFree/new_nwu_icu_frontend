@@ -1,7 +1,7 @@
-import { ref, readonly, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, readonly } from 'vue'
 import { UserProfile } from '@/types/userProfile'
-import { api } from '@/lib/requests'
 import { UserProfileResponse } from '@/types/api/users'
+import { api } from '@/lib/requests'
 
 const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)

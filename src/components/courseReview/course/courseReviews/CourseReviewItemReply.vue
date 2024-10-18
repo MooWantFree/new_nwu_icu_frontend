@@ -24,9 +24,8 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { NInput, NButton } from 'naive-ui'
-import { Review } from "@/types/courses"
-import { useMessage } from 'naive-ui'
+import { NInput, NButton, useMessage } from 'naive-ui'
+import { Review } from '@/types/courses'
 import { api } from '@/lib/requests'
 
 const message = useMessage()
