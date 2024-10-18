@@ -52,7 +52,7 @@ const submitReply = async () => {
       parent_id: props.replyTo,
     })
 
-    if (status !== 200) {
+    if (status !== 201) {
       throw new Error('Network response was not ok')
     }
 
