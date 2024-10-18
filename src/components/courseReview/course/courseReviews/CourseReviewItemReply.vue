@@ -50,7 +50,7 @@ const submitReply = async () => {
     const { status, data } = await api.post(`/api/assessment/reply/`, {
       content: replyContent.value,
       review_id: props.review.id,
-
+      parent_id: props.replyTo,
     })
 
     if (status !== 200) {
