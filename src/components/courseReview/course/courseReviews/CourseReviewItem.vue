@@ -158,7 +158,7 @@ onMounted(async () => {
 // Display the reply box or not
 const showReply = ref(false)
 const isAuthor = computed(() => {
-  return props.review.author.id === userInfo.value.id
+  return props.review.author.id === userInfo.value?.id
 })
 
 const replyTarget = ref(0)
