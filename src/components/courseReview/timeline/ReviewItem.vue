@@ -65,14 +65,20 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import type { Review } from "@/types/courseReview"
+import type { Review } from '@/types/courseReview'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import { useRouter } from 'vue-router'
 
 dayjs.extend(relativeTime)
 
 const props = defineProps<{
   review: Review
 }>()
+const router = useRouter()
+
+const handleMoreButtonClick = () => {
+  router.push({ name: 'courseReviewItem', params: { id: props.review.course.id }, hash: `#review-${props.review.id}` })
+}
 </script>
 
 <style lang="postcss">

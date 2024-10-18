@@ -121,17 +121,15 @@
 </template>
 
 <script lang="ts" setup>
-import { Review } from "@/types/courses"
-import CourseReviewItemReply from "./CourseReviewItemReply.vue"
-import { onUnmounted, ref } from "vue"
-import Time from "@/components/shortcuts/Time.vue"
+import { Review } from '@/types/courses'
+import { onMounted, onUnmounted, ref, computed, watch, useTemplateRef, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { NButton, useMessage } from 'naive-ui'
-import Viewer from "@/components/tiptap/viewer/Viewer.vue"
-import { useUser } from "@/lib/useUser"
-import { api } from "@/lib/requests"
-import { computed } from "vue"
-import { watch } from "vue"
-import { useTemplateRef } from "vue"
+import { useUser } from '@/lib/useUser'
+import { api } from '@/lib/requests'
+import Time from '@/components/shortcuts/Time.vue'
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import CourseReviewItemReply from './CourseReviewItemReply.vue'
 
 const props = defineProps<{
   review: Review,
@@ -143,6 +141,19 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const route = useRoute()
+const courseReviewItem = useTemplateRef('courseReviewItem')
+
+// Scroll if has hash
+onMounted(async () => {
+  const hash = route.hash
+  if (hash && hash.includes(`review-${props.review.id}`)) {
+    await nextTick()
+    if (courseReviewItem.value) {
+      courseReviewItem.value.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+})
 
 // Display the reply box or not
 const showReply = ref(false)
