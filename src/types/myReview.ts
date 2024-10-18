@@ -1,31 +1,28 @@
-interface Review {
-  id: number;
-  anonymous: boolean;
-  datetime: string;
+type Review = {
+  id: number
+  anonymous: boolean
+  datetime: string
   course: {
-    name: string;
-    id: number;
-    semester: string;
-  };
+    name: string
+    id: number
+    semester: string
+  }
   like: {
-    like: number;
-    dislike: number;
-  };
+    like: number
+    dislike: number
+  }
   content: {
-    current_content: string;
-    content_history: string[];
-  };
+    current_content: string
+    content_history: string[]
+  }
   teachers: {
-    name: string;
-    id: number;
-  }[];
-
+    name: string
+    id: number
+  }[]
 }
 
-interface MyReviews {
-  message: { reviews: Review[]; }
-
+type MyReviews = {
+  message: { reviews: Review[] }
 }
 
-
-export {MyReviews, Review}
+export { MyReviews, Review }
