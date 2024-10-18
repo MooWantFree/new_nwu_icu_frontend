@@ -57,7 +57,6 @@ const editor = useEditor({
       class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
     },
   },
-  autofocus: true,
   injectCSS: true,
   editable: false,
   content: value,
