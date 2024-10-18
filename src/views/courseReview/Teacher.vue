@@ -19,7 +19,7 @@
             </div>
           </div>
 
-          <p class="mx-5 text-gray-700">{{ teacher.description || '暂无描述' }}</p>
+          <p class="mx-5 text-gray-700">{{ teacher.teacher_info.description || '暂无描述' }}</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
