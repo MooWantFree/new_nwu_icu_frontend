@@ -132,7 +132,10 @@ const props = defineProps<{
   review: Review,
 }>()
 
-const emit = defineEmits(['reviewDeleted'])
+const emit = defineEmits<{
+  (e: 'reviewDeleted', id: number): void,
+  (e: 'reviewEdit'): void,
+}>()
 
 const message = useMessage()
 
@@ -199,6 +202,10 @@ watch(showDropdownMenu, (newValue) => {
   }
 })
 
+const handleEdit = () => {
+  emit('reviewEdit')
+  showDropdownMenu.value = false
+}
 
 const handleDelete = async () => {
   if (confirm('你确定你想要删除这条评价吗？删除以后不可恢复！')) {

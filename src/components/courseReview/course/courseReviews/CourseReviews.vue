@@ -47,7 +47,7 @@
 
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
-        <CourseReviewItem :review="review" @reviewDeleted="handleReviewDeleted" />
+        <CourseReviewItem :review="review" @reviewDeleted="handleReviewDeleted" @review-edit="handleEditReviewButtonClicked"/>
       </div>
       <div v-if="reviewsDisplayed.length === 0">
         <n-empty size="huge" description="暂时没有内容呢">
