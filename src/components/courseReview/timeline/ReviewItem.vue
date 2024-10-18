@@ -4,13 +4,9 @@
       <div class="flex items-center mb-4">
         <n-tooltip trigger="hover">
           <template #trigger>
-            <n-badge :show="review.is_student" class="hov" value="V" :offset="[-5,33]" color="green">
-              <n-avatar
-                  round
-                  size="large"
-                  :src="`/api/download/${review.author.avatar_uuid}`"
-                  fallback-src="https://www.loliapi.com/acg/pp/"
-              />
+            <n-badge :show="review.is_student" class="hov" value="V" :offset="[-5, 33]" color="green">
+              <n-avatar round size="large" :src="`/api/download/${review.author.avatar_uuid}`"
+                fallback-src="https://www.loliapi.com/acg/pp/" />
               <!-- TODO: change the fallback url -->
             </n-badge>
 
@@ -28,9 +24,9 @@
           <p class="text-sm text-gray-500">
             <n-tooltip placement="bottom" trigger="hover">
               <template #trigger>
-                <n-time :time="new Date(review.datetime)" type="relative"/>
+                <n-time :time="new Date(review.datetime)" type="relative" />
               </template>
-              <n-time :time="new Date(review.datetime)" format="yyyy-MM-dd hh:mm:ss"/>
+              <n-time :time="new Date(review.datetime)" format="yyyy-MM-dd hh:mm:ss" />
             </n-tooltip>
           </p>
         </div>
@@ -40,14 +36,14 @@
               <span class="link">{{ review.course.name }}</span>
             </router-link>
           </h2>
-          <p>[
-            <template v-for="(teacher,index) in review.teachers">
+          <p>
+            [
+            <template v-for="(teacher, index) in review.teachers">
               <router-link :to="`/review/teacher/${teacher.id}`">
                 <span class="link">{{ teacher.name }}</span>
               </router-link>
-              {{ index < review.teachers.length - 1 ? ',' : '' }}
-            </template>
-            ]
+              {{ index < review.teachers.length - 1 ? ',' : '' }} </template>
+                ]
           </p>
         </div>
       </div>
@@ -56,7 +52,7 @@
       </div>
       <div class="flex items-center justify-between text-sm">
         <span class="text-gray-500"></span>
-        <button class="link font-medium">更多...</button>
+        <button @click="handleMoreButtonClick" class="link font-medium">更多...</button>
       </div>
     </div>
   </div>
