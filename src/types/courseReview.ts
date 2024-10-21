@@ -8,7 +8,7 @@ type LatestCourseReviewResponse = {
 type Review = {
   id: number
   author: {
-    name: string
+    nickname: string
     id: number
     avatar_uuid: string
   }

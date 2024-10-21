@@ -17,9 +17,9 @@
         <div class="ml-3">
           <h2 class="text-lg font-semibold text-gray-900">
             <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`" class="link">
-              {{ review.author.name }}
+              {{ review.author.nickname }}
             </router-link>
-            <span v-else>{{ review.author.name }}</span>
+            <span v-else>{{ review.author.nickname }}</span>
           </h2>
           <p class="text-sm text-gray-500">
             <n-tooltip placement="bottom" trigger="hover">
