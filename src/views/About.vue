@@ -5,7 +5,7 @@
       <p class="text-center text-gray-600">加载中...</p>
     </div>
   </div>
-  <div v-else class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div v-else class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
       <div class="p-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">关于我们</h1>

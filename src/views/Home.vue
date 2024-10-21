@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gradient-to-br from-[#f0f0f0] to-[#e0e0e0] min-h-screen">
+  <div class="min-h-screen">
     <main class="container mx-auto py-12 px-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
         <div v-for="section in sections" :key="section.title"

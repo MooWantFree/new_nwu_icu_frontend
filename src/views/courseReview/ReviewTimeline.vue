@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-gray-100">
-    <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="">
+    <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-900 mb-8">时间线</h1>
         <div class="space-y-6">
