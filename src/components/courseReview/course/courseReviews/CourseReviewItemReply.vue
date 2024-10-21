@@ -3,19 +3,16 @@
     <div class="flex items-start space-x-4">
       <!-- <n-avatar round size="small" src="/path/to/user/avatar.jpg" /> -->
       <div class="flex-grow">
-        <n-input
-          v-model:value="replyContent"
-          type="textarea"
-          placeholder="写下你的回复..."
-          :autosize="{ minRows: 2, maxRows: 6 }"
-          class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-          :disabled="loadingRef"
-          :loading="loadingRef"
-        />
+        <textarea ref="textarea" v-model="replyContent" placeholder="写下你的回复..."
+          class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+          :class="{ 'cursor-not-allowed': loadingRef, 'opacity-50': loadingRef }" :disabled="loadingRef"
+          rows="2"></textarea>
         <div class="mt-2 flex justify-end items-center">
-          <n-button type="primary" @click="submitReply" :disabled="!replyContent.trim()" :loading="loadingRef">
+          <button @click="submitReply" :disabled="!replyContent.trim() || loadingRef"
+            class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            :class="{ 'cursor-not-allowed': !replyContent.trim() || loadingRef, 'opacity-50': loadingRef }">
             发表回复
-          </n-button>
+          </button>
         </div>
       </div>
     </div>
@@ -23,7 +20,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import { NInput, NButton, useMessage } from 'naive-ui'
 import { Review } from '@/types/courses'
 import { api } from '@/lib/requests'
@@ -42,6 +39,7 @@ const emit = defineEmits<{
 
 const loadingRef = ref(false)
 const replyContent = ref('')
+const textareaRef = useTemplateRef('textarea')
 
 const submitReply = async () => {
   loadingRef.value = true
@@ -70,4 +68,12 @@ const submitReply = async () => {
     loadingRef.value = false
   }
 }
+
+const focus = () => {
+  if (textareaRef.value) {
+    textareaRef.value.focus()
+  }
+}
+
+defineExpose({focus})
 </script>

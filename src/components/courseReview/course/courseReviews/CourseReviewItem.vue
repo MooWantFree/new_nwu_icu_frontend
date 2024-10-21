@@ -2,7 +2,10 @@
   <div class="bg-gray-100 rounded-lg shadow-md p-6" ref="courseReviewItem">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="text-xl font-bold text-gray-900">{{ review.author.name ?? "匿名用户" }}</h3>
+        <div class="flex items-center">
+          <img :src="`/api/download/${review.author.avatar}`" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+          <h3 class="text-xl font-bold text-gray-900">{{ review.author.name ?? "匿名用户" }}</h3>
+        </div>
         <div class="flex items-center space-x-2 mt-1">
           <div class="flex items-center">
             <n-rate readonly allow-half :default-value="review.rating" />
@@ -20,7 +23,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Viewer :value="review.content"/>
+      <Viewer :value="review.content" />
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <!-- Dropdown Menu -->
@@ -36,7 +39,7 @@
         </button>
 
         <div v-if="showDropdownMenu" id="dropdownMenu"
-          class=" origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+          class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
           role="menu" aria-orientation="vertical" aria-labelledby="dropdownButton" tabindex="-1">
           <div class="py-1" role="none">
             <button @click="handleEdit"
@@ -72,7 +75,7 @@
     </div>
     <div class="mt-4">
       <div class="flex justify-between items-center mb-2" v-if="review.reply && review.reply.length > 0">
-        <h4 class="font-semibold text-gray-900">评论</h4>
+        <h3 class="font-semibold text-gray-900 text-lg">评论</h3>
         <!-- TODO: Change color -->
         <div>
           <span>排序：</span>
@@ -92,14 +95,18 @@
               <Time type="relative" :time="new Date(reply.created_time)" />
             </p>
           </div>
-          <span class="text-sm text-gray-500 ml-2">
+          <div v-if="isLoggedIn" class="relative">
+            <span class="text-sm text-gray-500 ml-2 group-hover:hidden">
+              #{{ reverseReplies ? index + 1 : review.reply.length - index }}
+            </span>
+            <n-button text @click="() => toggleReply(index)"
+              class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800">
+              回复
+            </n-button>
+          </div>
+          <span v-else class="text-sm text-gray-500 ml-2">
             #{{ reverseReplies ? index + 1 : review.reply.length - index }}
           </span>
-          <!-- TODO: Review this -->
-          <n-button v-if="isLoggedIn" text @click="() => toggleReply(index)"
-            class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800">
-            回复
-          </n-button>
         </div>
       </div>
     </div>
@@ -111,8 +118,8 @@
         登录以后才能回复
       </span>
     </div>
-    <CourseReviewItemReply v-if="isLoggedIn && showReply" :review="review" :reply-to="replyTarget" @close="toggleReply"
-      class="mt-4" @replySubmitted="onReplySubmitted" />
+    <CourseReviewItemReply ref="replyTextArea" v-if="isLoggedIn && showReply" :review="review" :reply-to="replyTarget"
+      @close="toggleReply" class="mt-4" @replySubmitted="onReplySubmitted" />
   </div>
 </template>
 
@@ -158,9 +165,13 @@ const isAuthor = computed(() => {
 })
 
 const replyTarget = ref(0)
+const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
   replyTarget.value = replyTo
-  showReply.value = !showReply.value;
+  showReply.value = !showReply.value
+  nextTick(() => {
+    replyTextArea.value.focus()
+  })
 }
 
 const reverseReplies = ref(false)
