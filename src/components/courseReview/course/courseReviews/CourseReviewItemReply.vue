@@ -4,7 +4,7 @@
       <!-- <n-avatar round size="small" src="/path/to/user/avatar.jpg" /> -->
       <div class="flex-grow">
         <textarea ref="textarea" v-model="replyContent" placeholder="写下你的回复..."
-          class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+          class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 focus:outline-none"
           :class="{ 'cursor-not-allowed': loadingRef, 'opacity-50': loadingRef }" :disabled="loadingRef"
           rows="2"></textarea>
         <div class="mt-2 flex justify-end items-center">

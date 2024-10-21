@@ -168,10 +168,18 @@ const replyTarget = ref(0)
 const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
   replyTarget.value = replyTo
-  showReply.value = !showReply.value
-  nextTick(() => {
-    replyTextArea.value.focus()
-  })
+  if (replyTo !== 0) {
+    if (!showReply.value) {
+      showReply.value = !showReply.value
+    }
+  } else {
+    showReply.value = !showReply.value
+  }
+  if (showReply.value) {
+    nextTick(() => {
+      replyTextArea.value?.focus()
+    })
+  }
 }
 
 const reverseReplies = ref(false)
