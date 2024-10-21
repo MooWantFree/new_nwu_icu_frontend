@@ -38,7 +38,7 @@ const userRoutes = [
   {
     path: "/login",
     name: 'login',
-    component: () => import("@/views/Login.vue"),
+    component: () => import("@/views/user/Login.vue"),
     meta: {
       pageTitle: "登录/注册",
     }
