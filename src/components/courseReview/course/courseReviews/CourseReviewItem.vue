@@ -20,7 +20,7 @@
       </p>
     </div>
     <div class="text-gray-800 mb-4">
-      <Viewer :value="review.content" />
+      <Viewer :value="review.content"/>
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <!-- Dropdown Menu -->

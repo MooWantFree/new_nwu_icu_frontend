@@ -8,7 +8,7 @@
       </div>
     </div>
     <div v-if="!expanded && isContentOverflowing && needExpand"
-      class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-300 to-transparent flex items-end justify-center">
+      :class="[`${expandColor}`, 'absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t to-transparent flex items-end justify-center']">
       <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
       <div class="mt-3"></div>
     </div>
@@ -29,7 +29,8 @@ import Underline from '@tiptap/extension-underline'
 import ExpandButton from './ExpandButton.vue'
 import 'prosemirror-view/style/prosemirror.css'
 
-const { value = '', needExpand = true } = defineProps<{
+const { value = '', needExpand = true, expandColor = 'from-gray-100' } = defineProps<{
+  expandColor?: string,
   value: string,
   needExpand?: boolean,
 }>()
