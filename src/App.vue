@@ -5,17 +5,19 @@
         <n-notification-provider>
           <n-modal-provider>
             <n-dialog-provider>
-                <div class="all-page">
+              <div>
+                <div class="flex flex-col min-h-screen">
                   <n-layout>
-                    <NavBar/>
-
-                    <div class="content">
-                      <RouterView/>
+                    <NavBar />
+                    <div class="bg-gray-200">
+                      <div class="flex-grow">
+                        <RouterView />
+                      </div>
+                      <div class="text-center py-4">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
                     </div>
                   </n-layout>
                 </div>
-
-                <div class="home_footer">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
+              </div>
             </n-dialog-provider>
           </n-modal-provider>
         </n-notification-provider>
@@ -28,17 +30,3 @@
 import { zhCN, dateZhCN } from 'naive-ui'
 import NavBar from '@/components/NavBar.vue'
 </script>
-
-<style scoped>
-.all-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 90vh;
-}
-
-
-.home_footer {
-  text-align: center;
-  line-height: 10vh;
-}
-</style>
