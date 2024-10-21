@@ -9,32 +9,23 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent, onMounted, ref} from 'vue'
-import {NumberAnimationInst} from 'naive-ui'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { NumberAnimationInst } from 'naive-ui'
 
-export default defineComponent({
-  setup () {
-    const numberAnimationInstRef = ref<NumberAnimationInst | null>(null)
+const numberAnimationInstRef = ref<NumberAnimationInst | null>(null)
 
-    // 计算从2019-06-08到今天的天数
-    const calculateDaysAlive = (): number => {
-      const startDate = new Date('2019-06-08')
-      const diffTime = Math.abs(new Date().getTime() - startDate.getTime())
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    }
+// 计算从2019-06-08到今天的天数
+const calculateDaysAlive = (): number => {
+  const startDate = new Date('2019-06-08')
+  const diffTime = Math.abs(new Date().getTime() - startDate.getTime())
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
 
-    const daysAlive = ref(calculateDaysAlive())
+const daysAlive = ref(calculateDaysAlive())
 
-    onMounted(() => {
-      numberAnimationInstRef.value?.play()
-    })
-
-    return {
-      numberAnimationInstRef,
-      daysAlive
-    }
-  }
+onMounted(() => {
+  numberAnimationInstRef.value?.play()
 })
 </script>
 
