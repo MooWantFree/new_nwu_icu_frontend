@@ -30,3 +30,15 @@ export type SemesterListResponse = {
     [key: string]: string
   }
 }
+
+export type ReplyCreateResponse = {
+  success: {
+    reply_id: number
+  },
+  errors: "reply"
+}
+
+export type ReplyDeleteResponse = {
+  success: {},
+  errors: "review"
+}

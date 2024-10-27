@@ -131,13 +131,13 @@ const userAvatarDropdownOptions = [
     label: '用户资料',
     key: 'profile',
     icon: renderIcon(Person),
-    path: '/user/profile',
+    path: `/user/me`, // TODO: Figure out what is better
   },
   {
     label: '编辑用户资料',
     key: 'editProfile',
     icon: renderIcon(Pencil),
-    path: '/user/profile/edit',
+    path: '/user/edit',
   },
   {
     label: '退出登录',

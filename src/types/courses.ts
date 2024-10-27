@@ -4,6 +4,8 @@ type LikeDislike = {
 }
 
 type Reply = {
+  id: number,
+  parent: number,
   content: string
   created_time: string
   created_by: {

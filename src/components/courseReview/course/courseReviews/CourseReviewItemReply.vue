@@ -24,6 +24,7 @@ import { ref, useTemplateRef } from 'vue'
 import { NInput, NButton, useMessage } from 'naive-ui'
 import { Review } from '@/types/courses'
 import { api } from '@/lib/requests'
+import type { ReplyCreateResponse } from '@/types/api/course';
 
 const message = useMessage()
 
@@ -33,7 +34,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'replySubmitted', content: string): void
+  (e: 'replySubmitted', content: string, parent: number): void
   (e: 'close'): void
 }>()
 
@@ -44,7 +45,8 @@ const textareaRef = useTemplateRef('textarea')
 const submitReply = async () => {
   loadingRef.value = true
   try {
-    const { status, data } = await api.post(`/api/assessment/reply/`, {
+    // TODO: Types
+    const { status, data } = await api.post<ReplyCreateResponse>(`/api/assessment/reply/`, {
       content: replyContent.value,
       review_id: props.review.id,
       parent_id: props.replyTo,
@@ -55,7 +57,7 @@ const submitReply = async () => {
     }
 
     if (data.message === "成功创建课程评价回复") {
-      emit('replySubmitted', replyContent.value)
+      emit('replySubmitted', replyContent.value, props.replyTo)
       message.success('回复已成功发表')
     } else {
       throw new Error('Unexpected server response')

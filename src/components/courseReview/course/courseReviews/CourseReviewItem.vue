@@ -4,6 +4,7 @@
       <div>
         <div class="flex items-center">
           <img :src="`/api/download/${review.author.avatar}`" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+          <!-- FIXME: Handle network errors -->
           <h3 class="text-xl font-bold text-gray-900">{{ review.author.name ?? "匿名用户" }}</h3>
         </div>
         <div class="flex items-center space-x-2 mt-1">
@@ -89,17 +90,48 @@
           :key="reply.created_time" class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group">
           <div>
             <p class="text-sm text-gray-700">
-              {{ reply.created_by.name }}: {{ reply.content }}
+              <span>
+                <router-link v-if="reply.created_by.id > 0" :to="`/user/${reply.created_by.id}`"
+                  class="text-blue-600 hover:underline">
+                  {{ reply.created_by.name }}
+                </router-link>
+                <span v-else>
+                  {{ reply.created_by.name }}
+                </span>
+              </span>
+              <span v-if="reply.parent > 0">
+                回复了
+                <router-link v-if="review.reply.find(it => it.id === reply.parent)?.created_by.id > 0"
+                  :to="`/user/${review.reply.find(it => it.id === reply.parent)?.created_by.id}`"
+                  class="text-blue-600 hover:underline">
+                  {{ review.reply.find(it => it.id === reply.parent)?.created_by.name }}
+                </router-link>
+                (
+                <a class="text-blue-600 hover:underline" @click="handleJmpClick(review.reply.findIndex(it => it.id === reply.parent))">
+                  #{{ reverseReplies ? review.reply.findIndex(it => it.id === reply.parent) + 1 : review.reply.length -
+                  review.reply.findIndex(it => it.id === reply.parent) }}
+                </a>
+                )
+              </span>
+              <span>
+                : {{ reply.content }}
+              </span>
             </p>
             <p class="text-xs text-gray-500 mt-1">
               <Time type="relative" :time="new Date(reply.created_time)" />
+              &nbsp;
+              <n-button v-if="isAuthor" text @click="() => handleDeleteReply(reply.id)"
+                class="text-red-600 hover:text-red-800">
+                <!-- FIXME: Why hover become green? -->
+                删除
+              </n-button>
             </p>
           </div>
           <div v-if="isLoggedIn" class="relative">
             <span class="text-sm text-gray-500 ml-2 group-hover:hidden">
               #{{ reverseReplies ? index + 1 : review.reply.length - index }}
             </span>
-            <n-button text @click="() => toggleReply(index)"
+            <n-button text @click="() => toggleReply(reply.id)"
               class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800">
               回复
             </n-button>
@@ -127,12 +159,13 @@
 import { Review } from '@/types/courses'
 import { onMounted, onUnmounted, ref, computed, watch, useTemplateRef, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { NButton, useMessage } from 'naive-ui'
+import { NButton, useMessage, useDialog } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
 import Time from '@/components/shortcuts/Time.vue'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import CourseReviewItemReply from './CourseReviewItemReply.vue'
+import type { ReplyDeleteResponse } from '@/types/api/course'
 
 const props = defineProps<{
   review: Review,
@@ -144,6 +177,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const dialog = useDialog()
 const route = useRoute()
 const courseReviewItem = useTemplateRef('courseReviewItem')
 
@@ -189,10 +223,12 @@ const toggleReplyOrder = () => {
 }
 
 const { userInfo, isLoggedIn } = useUser()
-const onReplySubmitted = (content: string) => {
+const onReplySubmitted = (content: string, parent: number) => {
   toggleReply()
   // Push the new reply to the review's replies array
   props.review.reply.unshift({
+    id: props.review.reply.length + 1,
+    parent,
     content,
     created_time: new Date().toISOString(), // Changed 'created_at' to 'created_time'
     created_by: {
@@ -240,20 +276,37 @@ const handleEdit = () => {
 }
 
 const handleDelete = async () => {
-  if (confirm('你确定你想要删除这条评价吗？删除以后不可恢复！')) {
-    try {
-      const response = await api.delete(`/api/assessment/review/${props.review.id}`)
-      if (response.status === 200) {
-        message.success('评价已成功删除')
-        emit('reviewDeleted', props.review.id)
-      } else {
-        throw new Error(response.errors.reduce((acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n', ''))
+  // FIXME: Still not able to work
+  dialog.warning({
+    title: '确认删除',
+    content: '你确定你想要删除这条评价吗？删除以后不可恢复！',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        const response = await api.delete<ReplyDeleteResponse>(`/api/assessment/reply/`)
+        if (response.status === 200) {
+          message.success('评价已成功删除')
+          // TODO: Handle the reply delete item
+        } else {
+          throw new Error(response.errors.reduce((acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n', ''))
+        }
+      } catch (error) {
+        console.error('Error deleting reply:', error)
+        message.error('删除评价失败，请稍后重试\n' + error)
       }
-    } catch (error) {
-      console.error('Error deleting review:', error)
-      message.error('删除评价失败，请稍后重试\n' + error)
     }
+  })
+}
+
+const handleDeleteReply = async (repyId: number) => {
+  if (confirm(`你确定要删掉这条回复吗？！`)) {
+    
   }
+}
+
+const handleJmpClick = (targetReplyId: number) => {
+  // TODO
 }
 </script>
 

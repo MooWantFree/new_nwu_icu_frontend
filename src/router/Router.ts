@@ -43,13 +43,23 @@ const userRoutes = [
       pageTitle: "登录/注册",
     }
   },
+  // {
+  //   path: "/user/edit",
+  //   name: "编辑用户资料",
+  //   component: () => import("@/views/user/Edit.vue"),
+  //   meta:
+  //     {
+  //       requiresAuth: true,
+  //       pageTitle: '编辑用户资料',
+  //     }
+  // },
   {
-    path: "/user/profile",
+    path: "/user/:id(\\d+)",
     name: "用户资料",
     component: () => import("@/views/user/Profile.vue"),
     meta:
       {
-        requiresAuth: true,
+        requiresAuth: false,
         pageTitle: '用户资料',
       }
   },
