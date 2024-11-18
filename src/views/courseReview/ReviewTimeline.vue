@@ -45,7 +45,7 @@ import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSke
 
 const message = useMessage()
 
-const reviews = ref<LatestCourseReviewResponse["success"]["reviews"]>()
+const reviews = ref<LatestCourseReviewResponse["success"]["results"]>()
 const totalReviewCount = ref(0)
 const loading = ref(true)
 const pageLength = ref(5)
@@ -73,8 +73,8 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
       return
     }
     
-    reviews.value = content.reviews
-    totalReviewCount.value = content.total
+    reviews.value = content.results
+    totalReviewCount.value = content.count
   } catch (error) {
     console.error('Error fetching reviews:', error)
     message.error('获取点评失败，请重试')
