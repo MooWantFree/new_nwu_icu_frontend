@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/lib/requests'
 import { CourseData } from '@/types/courses'
@@ -35,12 +35,13 @@ const courseLoading = ref(true)
 // Fetch init data
 const courseData = ref<CourseData | null>(null)
 const loadData = async () => {
+  courseLoading.value = true
   try {
-    const url = `/api/assessment/course/${route.params.id}`
+    const url = `/api/assessment/course/${route.params.id}/`
     const { status, data, content } = await api.get<CourseDataResponse>(url)
     
     if (status === 404) {
-      router.push({ name: '404' })
+      await router.push({name: '404'})
       return
     }
     
@@ -53,10 +54,19 @@ const loadData = async () => {
     courseLoading.value = false
   } catch (error) {
     console.error('Failed to fetch course data:', error)
-    router.push({ name: '500', query: {message: encodeURI(error)} })
+    await router.push({name: '500', query: {message: encodeURI(error)}})
   } finally {
   }
 }
+
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      await loadData()
+    }
+  }
+)
 
 onMounted(async () => {
   await loadData()
