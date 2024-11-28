@@ -176,10 +176,10 @@
       </div>
       <div class="space-y-2">
         <div
-          v-for="(reply, index) in reverseReplies
-            ? [...review.reply].reverse()
-            : review.reply"
-          :key="reply.created_time"
+          v-for="(reply, index) in orderedReplies"
+          ref="replies"
+          :key="reply.id"
+          :data-id="reply.id"
           class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
         >
           <div>
@@ -200,37 +200,29 @@
                 回复了
                 <router-link
                   v-if="
-                    review.reply.find((it) => it.id === reply.parent)
+                    orderedReplies.find((it) => it.id === reply.parent)
                       ?.created_by.id > 0
                   "
                   :to="`/user/${
-                    review.reply.find((it) => it.id === reply.parent)
+                    orderedReplies.find((it) => it.id === reply.parent)
                       ?.created_by.id
                   }`"
                   class="text-blue-600 hover:underline"
                 >
                   {{
-                    review.reply.find((it) => it.id === reply.parent)
+                    orderedReplies.find((it) => it.id === reply.parent)
                       ?.created_by.name
                   }}
                 </router-link>
                 (
-                <a
+                <button
                   class="text-blue-600 hover:underline"
                   @click="
-                    handleJmpClick(
-                      review.reply.findIndex((it) => it.id === reply.parent)
-                    )
+                    handleJmpClick(reply.id)
                   "
                 >
-                  #{{
-                    reverseReplies
-                      ? review.reply.findIndex((it) => it.id === reply.parent) +
-                        1
-                      : review.reply.length -
-                        review.reply.findIndex((it) => it.id === reply.parent)
-                  }}
-                </a>
+                  #{{ reply.floorNumber }}
+                </button>
                 )
               </span>
               <span> : {{ reply.content }} </span>
@@ -251,7 +243,7 @@
           </div>
           <div v-if="isLoggedIn" class="relative">
             <span class="text-sm text-gray-500 ml-2 group-hover:hidden">
-              #{{ reverseReplies ? index + 1 : review.reply.length - index }}
+              #{{ reply.floorNumber}}
             </span>
             <n-button
               text
@@ -282,7 +274,7 @@
       ref="replyTextArea"
       v-if="isLoggedIn && showReply"
       :review="review"
-      :reply-to="replyTarget"
+      :reply-to="orderedReplies.find((it) => it.id === replyTarget)?.floorNumber"
       @close="toggleReply"
       class="mt-4"
       @replySubmitted="onReplySubmitted"
@@ -364,6 +356,17 @@ const reverseReplies = ref(false);
 const toggleReplyOrder = () => {
   reverseReplies.value = !reverseReplies.value;
 };
+
+const orderedReplies = computed(() => {
+  const replies = [...props.review.reply].reverse().map((it, index) => {
+    return {
+      ...it,
+      floorNumber: index + 1,
+    };
+  });
+  
+  return reverseReplies.value ? replies.reverse() : replies;
+});
 
 const { userInfo, isLoggedIn } = useUser();
 const onReplySubmitted = (content: string, parent: number) => {
@@ -456,8 +459,17 @@ const handleDeleteReply = async (repyId: number) => {
   }
 };
 
+const repliesRefs = useTemplateRef("replies");
+
 const handleJmpClick = (targetReplyId: number) => {
-  // TODO
+  if (repliesRefs.value) {
+    const targetElement = repliesRefs.value.find(
+      (el) => el.getAttribute("data-id") === targetReplyId.toString()
+    );
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 };
 </script>
 

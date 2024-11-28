@@ -3,6 +3,9 @@
     <div class="flex items-start space-x-4">
       <!-- <n-avatar round size="small" src="/path/to/user/avatar.jpg" /> -->
       <div class="flex-grow">
+        <div class="mb-2 text-sm text-gray-600" v-if="props.replyTo">
+          回复给(#{{ replyTo }}):
+        </div>
         <textarea ref="textarea" v-model="replyContent" placeholder="写下你的回复..."
           class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 focus:outline-none"
           :class="{ 'cursor-not-allowed': loadingRef, 'opacity-50': loadingRef }" :disabled="loadingRef"
@@ -21,10 +24,10 @@
 
 <script lang="ts" setup>
 import { ref, useTemplateRef } from 'vue'
-import { NInput, NButton, useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 import { Review } from '@/types/courses'
 import { api } from '@/lib/requests'
-import type { ReplyCreateResponse } from '@/types/api/course';
+import type { ReplyCreateResponse } from '@/types/api/course'
 
 const message = useMessage()
 
@@ -45,7 +48,6 @@ const textareaRef = useTemplateRef('textarea')
 const submitReply = async () => {
   loadingRef.value = true
   try {
-    // TODO: Types
     const { status, data } = await api.post<ReplyCreateResponse>(`/api/assessment/reply/`, {
       content: replyContent.value,
       review_id: props.review.id,
