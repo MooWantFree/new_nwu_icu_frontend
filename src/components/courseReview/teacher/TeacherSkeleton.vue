@@ -38,6 +38,3 @@
     </div>
   </template>
   
-  <script setup lang="ts">
-  // No setup needed for this skeleton component
-  </script>
