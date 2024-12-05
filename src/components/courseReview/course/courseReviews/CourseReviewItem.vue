@@ -3,14 +3,24 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="flex items-center">
+          <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`">
+            <img
+              :src="`/api/download/${review.author.avatar}`"
+              alt="Avatar"
+              class="w-8 h-8 rounded-full mr-2"
+            />
+          </router-link>
           <img
+            v-else
             :src="`/api/download/${review.author.avatar}`"
             alt="Avatar"
             class="w-8 h-8 rounded-full mr-2"
           />
-          <!-- FIXME: Handle network errors -->
           <h3 class="text-xl font-bold text-gray-900">
-            {{ review.author.name ?? "匿名用户" }}
+            <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`" class="text-blue-600 hover:underline">
+              {{ review.author.nickname }}
+            </router-link>
+            <span v-else>匿名用户</span>
           </h3>
         </div>
         <div class="flex items-center space-x-2 mt-1">
@@ -254,7 +264,7 @@
           </div>
           <span v-else class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0 z-50">
               #{{ reply.floorNumber }}
-          </span>
+            </span>
         </div>
       </div>
     </div>

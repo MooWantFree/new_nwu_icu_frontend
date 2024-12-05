@@ -4,7 +4,7 @@
       <!-- <n-avatar round size="small" src="/path/to/user/avatar.jpg" /> -->
       <div class="flex-grow">
         <div class="mb-2 text-sm text-gray-600" v-if="props.replyTo">
-          回复给(#{{ replyTo }}):
+          回复给(#{{ replyTargetFloor }}):
         </div>
         <textarea ref="textarea" v-model="replyContent" placeholder="写下你的回复..."
           class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 focus:outline-none"
@@ -34,10 +34,11 @@ const message = useMessage()
 const props = defineProps<{
   review: Review,
   replyTo: number,
+  replyTargetFloor: number,
 }>()
 
 const emit = defineEmits<{
-  (e: 'replySubmitted', content: string, parent: number): void
+  (e: 'replySubmitted', content: string, parent: number, replyId: number): void
   (e: 'close'): void
 }>()
 
@@ -59,7 +60,7 @@ const submitReply = async () => {
     }
 
     if (data.message === "成功创建课程评价回复") {
-      emit('replySubmitted', replyContent.value, props.replyTo)
+      emit('replySubmitted', replyContent.value, props.replyTo, data.contents.reply_id)
       message.success('回复已成功发表')
     } else {
       throw new Error('Unexpected server response')
