@@ -218,14 +218,14 @@
                 <button
                   class="text-blue-600 hover:underline"
                   @click="
-                    handleJmpClick(reply.id)
+                    handleJmpClick(reply.parent)
                   "
                 >
-                  #{{ reply.floorNumber }}
+                  #{{ orderedReplies.find((it) => it.id === reply.parent)?.floorNumber }}
                 </button>
                 )
               </span>
-              <span> : {{ reply.content }} </span>
+              <span class="text-gray-800 break-words whitespace-normal"> : {{ reply.content }}</span>
             </p>
             <p class="text-xs text-gray-500 mt-1">
               <Time type="relative" :time="new Date(reply.created_time)" />
@@ -241,20 +241,19 @@
               </n-button>
             </p>
           </div>
-          <div v-if="isLoggedIn" class="relative">
-            <span class="text-sm text-gray-500 ml-2 group-hover:hidden">
-              #{{ reply.floorNumber}}
+          <div v-if="isLoggedIn" class="relative mx-1 z-50">
+            <span class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0">
+              #{{ reply.floorNumber }}
             </span>
-            <n-button
-              text
+            <button
               @click="() => toggleReply(reply.id)"
-              class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 hover:text-blue-800"
+              class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
             >
               回复
-            </n-button>
+            </button>
           </div>
-          <span v-else class="text-sm text-gray-500 ml-2">
-            #{{ reverseReplies ? index + 1 : review.reply.length - index }}
+          <span v-else class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0 z-50">
+              #{{ reply.floorNumber }}
           </span>
         </div>
       </div>
@@ -274,7 +273,8 @@
       ref="replyTextArea"
       v-if="isLoggedIn && showReply"
       :review="review"
-      :reply-to="orderedReplies.find((it) => it.id === replyTarget)?.floorNumber"
+      :reply-to="replyTarget"
+      :reply-target-floor="orderedReplies.find((it) => it.id === replyTarget)?.floorNumber"
       @close="toggleReply"
       class="mt-4"
       @replySubmitted="onReplySubmitted"
@@ -369,11 +369,11 @@ const orderedReplies = computed(() => {
 });
 
 const { userInfo, isLoggedIn } = useUser();
-const onReplySubmitted = (content: string, parent: number) => {
+const onReplySubmitted = (content: string, parent: number, replyId: number) => {
   toggleReply();
   // Push the new reply to the review's replies array
   props.review.reply.unshift({
-    id: props.review.reply.length + 1,
+    id: replyId,
     parent,
     content,
     created_time: new Date().toISOString(),
@@ -422,7 +422,7 @@ const handleEdit = () => {
   showDropdownMenu.value = false;
 };
 
-const handleDelete = async () => {
+const handleDelete = () => {
   // FIXME: Still not able to work
   dialog.warning({
     title: "确认删除",
@@ -468,9 +468,15 @@ const handleJmpClick = (targetReplyId: number) => {
     );
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetElement.classList.add('transition-transform', 'duration-300', 'scale-110');
+      setTimeout(() => {
+        targetElement.classList.remove('scale-110');
+        targetElement.classList.add('scale-100');
+      }, 300);
+      setTimeout(() => {
+        targetElement.classList.remove('transition-transform', 'duration-300', 'scale-100');
+      }, 600);
     }
   }
 };
 </script>
-
-<style scoped></style>
