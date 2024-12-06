@@ -2,7 +2,7 @@
   <div class="p-6 bg-white rounded-md shadow-md">
     <h3 class="text-lg font-bold">其他老师的「{{ courseData.name }}」课</h3>
     <ul class="mt-2 space-y-2 text-sm text-gray-600">
-      <li v-for="course in courseData.other_dup_name_course" :key="course.id">
+      <li v-for="course in courseData.other_dup_name_course" :key="course.course_id">
         <router-link :to="{
           name: 'courseReviewItem',
           params: { id: course.course_id }
@@ -22,7 +22,7 @@
             name: 'courseReviewItem',
             params: { id: course.id }
           }" class="hover:underline text-blue-600">
-            {{ course.name }}
+            「{{ course.name }}」
           </router-link>
         </li>
       </ul>
