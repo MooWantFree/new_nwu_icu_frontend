@@ -319,7 +319,7 @@
           </div>
           <span
             v-else
-            class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0 z-50"
+            class="text-sm text-gray-500 ml-2"
           >
             #{{ reply.floorNumber }}
           </span>
