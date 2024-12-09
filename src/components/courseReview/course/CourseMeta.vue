@@ -40,18 +40,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
+import { useUser } from '@/lib/useUser'
 import type { CourseData } from '@/types/courses'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { ReplyLikeResponse } from '@/types/api/course'
 
 const message = useMessage()
+const { isLoggedIn } = useUser()
 const props = defineProps<{
   courseData: CourseData,
   loading: boolean,
 }>()
 
-const isButtonDisabled = ref(false)
+const isButtonDisabled = ref(isLoggedIn ? false : true)
 
 const handleRecommendButtonClick = async () => {
   if (isButtonDisabled.value) return
