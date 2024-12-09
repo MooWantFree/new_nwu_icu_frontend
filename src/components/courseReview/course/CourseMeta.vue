@@ -47,16 +47,20 @@ import { api } from '@/lib/requests'
 import { ReplyLikeResponse } from '@/types/api/course'
 
 const message = useMessage()
-const { isLoggedIn } = useUser()
+const { isLoading, isLoggedIn } = useUser()
 const props = defineProps<{
   courseData: CourseData,
   loading: boolean,
 }>()
 
-const isButtonDisabled = ref(isLoggedIn ? false : true)
+const isButtonDisabled = ref(false)
 
 const handleRecommendButtonClick = async () => {
   if (isButtonDisabled.value) return
+  if (!isLoggedIn.value) {
+    message.error('请先登录')
+    return
+  }
   isButtonDisabled.value = true
   const resp = await api.post<ReplyLikeResponse>('/api/assessment/course/like/', {
     course_id: props.courseData.id,
@@ -85,6 +89,10 @@ const handleRecommendButtonClick = async () => {
 
 const handleDisRecommendButtonClick = async () => {
   if (isButtonDisabled.value) return
+  if (!isLoggedIn.value) {
+    message.error('请先登录')
+    return
+  }
   isButtonDisabled.value = true
   const resp = await api.post<ReplyLikeResponse>('/api/assessment/course/like/', {
     course_id: props.courseData.id,
