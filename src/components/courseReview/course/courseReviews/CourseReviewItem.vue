@@ -2,8 +2,11 @@
   <div class="bg-gray-100 rounded-lg shadow-md p-6" ref="courseReviewItem">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <div class="flex items-center">
-          <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`">
+        <div class="flex items-center relative">
+          <router-link
+            v-if="review.author.id > 0"
+            :to="`/user/profile/${review.author.id}`"
+          >
             <img
               :src="`/api/download/${review.author.avatar}`"
               alt="Avatar"
@@ -17,11 +20,16 @@
             class="w-8 h-8 rounded-full mr-2"
           />
           <h3 class="text-xl font-bold text-gray-900">
-            <router-link v-if="review.author.id > 0" :to="`/user/profile/${review.author.id}`" class="text-blue-600 hover:underline">
+            <router-link
+              v-if="review.author.id > 0"
+              :to="`/user/profile/${review.author.id}`"
+              class="text-blue-600 hover:underline"
+            >
               {{ review.author.nickname }}
             </router-link>
             <span v-else>匿名用户</span>
           </h3>
+          <span v-if="isAuthor" class="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">我的评价</span>
         </div>
         <div class="flex items-center space-x-2 mt-1">
           <div class="flex items-center">
@@ -32,43 +40,86 @@
       </div>
     </div>
     <div class="text-gray-700 mb-4">
-      <p class="space-x-4">
+      <div class="space-x-4">
         <div class="flex flex-wrap gap-4">
           <span class="flex items-center">
             <span class="mr-2">课程难度：</span>
             <div class="flex">
-              <svg v-for="i in 3" :key="i" class="w-4 h-4" :class="i <= review.difficulty ? 'text-yellow-400' : 'text-gray-300'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              <svg
+                v-for="i in 3"
+                :key="i"
+                class="w-4 h-4"
+                :class="
+                  i <= review.difficulty ? 'text-yellow-400' : 'text-gray-300'
+                "
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
               </svg>
             </div>
           </span>
           <span class="flex items-center">
             <span class="mr-2">作业多少：</span>
             <div class="flex">
-              <svg v-for="i in 3" :key="i" class="w-4 h-4" :class="i <= review.homework ? 'text-yellow-400' : 'text-gray-300'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              <svg
+                v-for="i in 3"
+                :key="i"
+                class="w-4 h-4"
+                :class="
+                  i <= review.homework ? 'text-yellow-400' : 'text-gray-300'
+                "
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
               </svg>
             </div>
           </span>
           <span class="flex items-center">
             <span class="mr-2">给分好坏：</span>
             <div class="flex">
-              <svg v-for="i in 3" :key="i" class="w-4 h-4" :class="i <= review.grade ? 'text-yellow-400' : 'text-gray-300'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              <svg
+                v-for="i in 3"
+                :key="i"
+                class="w-4 h-4"
+                :class="i <= review.grade ? 'text-yellow-400' : 'text-gray-300'"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
               </svg>
             </div>
           </span>
           <span class="flex items-center">
             <span class="mr-2">收获大小：</span>
             <div class="flex">
-              <svg v-for="i in 3" :key="i" class="w-4 h-4" :class="i <= review.reward ? 'text-yellow-400' : 'text-gray-300'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              <svg
+                v-for="i in 3"
+                :key="i"
+                class="w-4 h-4"
+                :class="
+                  i <= review.reward ? 'text-yellow-400' : 'text-gray-300'
+                "
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
               </svg>
             </div>
           </span>
         </div>
-      </p>
+      </div>
     </div>
+    <!-- TODO: Make it beautiful -->
     <div class="text-gray-800 mb-4">
       <Viewer :value="review.content" />
     </div>
@@ -227,32 +278,36 @@
                 (
                 <button
                   class="text-blue-600 hover:underline"
-                  @click="
-                    handleJmpClick(reply.parent)
-                  "
+                  @click="handleJmpClick(reply.parent)"
                 >
-                  #{{ orderedReplies.find((it) => it.id === reply.parent)?.floorNumber }}
+                  #{{
+                    orderedReplies.find((it) => it.id === reply.parent)
+                      ?.floorNumber
+                  }}
                 </button>
                 )
               </span>
-              <span class="text-gray-800 break-words whitespace-normal"> : {{ reply.content }}</span>
+              <span class="text-gray-800 break-words whitespace-normal">
+                : {{ reply.content }}
+              </span>
             </p>
             <p class="text-xs text-gray-500 mt-1">
               <Time type="relative" :time="new Date(reply.created_time)" />
               &nbsp;
-              <n-button
-                v-if="isAuthor"
+              <button
+                v-if="reply.created_by.id === userInfo.id"
                 text
                 @click="() => handleDeleteReply(reply.id)"
-                class="text-red-600 hover:text-red-800"
+                class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
               >
-                <!-- FIXME: Why hover become green? -->
                 删除
-              </n-button>
+              </button>
             </p>
           </div>
           <div v-if="isLoggedIn" class="relative mx-1 z-50">
-            <span class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0">
+            <span
+              class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0"
+            >
               #{{ reply.floorNumber }}
             </span>
             <button
@@ -262,9 +317,12 @@
               回复
             </button>
           </div>
-          <span v-else class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0 z-50">
-              #{{ reply.floorNumber }}
-            </span>
+          <span
+            v-else
+            class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0 z-50"
+          >
+            #{{ reply.floorNumber }}
+          </span>
         </div>
       </div>
     </div>
@@ -284,7 +342,9 @@
       v-if="isLoggedIn && showReply"
       :review="review"
       :reply-to="replyTarget"
-      :reply-target-floor="orderedReplies.find((it) => it.id === replyTarget)?.floorNumber"
+      :reply-target-floor="
+        orderedReplies.find((it) => it.id === replyTarget)?.floorNumber
+      "
       @close="toggleReply"
       class="mt-4"
       @replySubmitted="onReplySubmitted"
@@ -374,7 +434,7 @@ const orderedReplies = computed(() => {
       floorNumber: index + 1,
     };
   });
-  
+
   return reverseReplies.value ? replies.reverse() : replies;
 });
 
@@ -433,7 +493,6 @@ const handleEdit = () => {
 };
 
 const handleDelete = () => {
-  // FIXME: Still not able to work
   dialog.warning({
     title: "确认删除",
     content: "你确定你想要删除这条评价吗？删除以后不可恢复！",
@@ -442,11 +501,12 @@ const handleDelete = () => {
     onPositiveClick: async () => {
       try {
         const response = await api.delete<ReplyDeleteResponse>(
-          `/api/assessment/reply/`
+          `/api/assessment/review/`,
+          { review_id: props.review.id }
         );
         if (response.status === 200) {
           message.success("评价已成功删除");
-          // TODO: Handle the reply delete item
+          emit("reviewDeleted", props.review.id);
         } else {
           throw new Error(
             response.errors.reduce(
@@ -456,7 +516,7 @@ const handleDelete = () => {
           );
         }
       } catch (error) {
-        console.error("Error deleting reply:", error);
+        console.error("Error deleting review:", error);
         message.error("删除评价失败，请稍后重试\n" + error);
       }
     },
@@ -465,26 +525,35 @@ const handleDelete = () => {
 
 const handleDeleteReply = async (repyId: number) => {
   if (confirm(`你确定要删掉这条回复吗？！`)) {
-    // TODO
+    // TODO: Delete the reply
   }
 };
 
 const repliesRefs = useTemplateRef("replies");
 
-const handleJmpClick = (targetReplyId: number) => {
+const handleJmpClick = async (targetReplyId: number) => {
   if (repliesRefs.value) {
     const targetElement = repliesRefs.value.find(
       (el) => el.getAttribute("data-id") === targetReplyId.toString()
     );
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      targetElement.classList.add('transition-transform', 'duration-300', 'scale-110');
+      await nextTick();
+      targetElement.classList.add(
+        "transition-transform",
+        "duration-300",
+        "scale-110"
+      );
       setTimeout(() => {
-        targetElement.classList.remove('scale-110');
-        targetElement.classList.add('scale-100');
+        targetElement.classList.remove("scale-110");
+        targetElement.classList.add("scale-100");
       }, 300);
       setTimeout(() => {
-        targetElement.classList.remove('transition-transform', 'duration-300', 'scale-100');
+        targetElement.classList.remove(
+          "transition-transform",
+          "duration-300",
+          "scale-100"
+        );
       }, 600);
     }
   }
