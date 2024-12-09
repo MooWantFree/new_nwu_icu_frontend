@@ -295,7 +295,7 @@
               <Time type="relative" :time="new Date(reply.created_time)" />
               &nbsp;
               <button
-                v-if="reply.created_by.id === userInfo.id"
+                v-if="isLoggedIn && reply.created_by.id === userInfo.id"
                 text
                 @click="() => handleDeleteReply(reply.id)"
                 class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
