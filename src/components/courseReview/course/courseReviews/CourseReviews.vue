@@ -195,6 +195,10 @@ const showEditor = ref(false)
 const isSubmittingReview = ref(false)
 // New review
 const handleNewReviewButtonClicked = () => {
+  if (!isLoggedIn.value) {
+    message.error('请先登录')
+    return
+  }
   showEditor.value = true
 }
 const handleReviewDeleted = (reviewId: number) => {
@@ -245,6 +249,10 @@ const initContent = computed<NewReviewRequest | null>(() => {
 })
 
 const handleEditReviewButtonClicked = () => {
+  if (!isLoggedIn.value) {
+    message.error('请先登录')
+    return
+  }
   showEditor.value = true
 }
 
