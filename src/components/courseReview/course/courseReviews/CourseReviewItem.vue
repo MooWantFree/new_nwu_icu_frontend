@@ -539,6 +539,7 @@ const handleJmpClick = async (targetReplyId: number) => {
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
       await nextTick();
+      // FIXME: Await element scroll into view
       targetElement.classList.add(
         "transition-transform",
         "duration-300",
