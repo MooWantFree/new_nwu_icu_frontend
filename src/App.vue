@@ -9,7 +9,7 @@
                 <div class="flex flex-col min-h-screen">
                   <n-layout>
                     <NavBar />
-                    <div class="bg-gray-150">
+                    <div class="bg-gray-100">
                       <div class="flex-grow">
                         <RouterView />
                       </div>
