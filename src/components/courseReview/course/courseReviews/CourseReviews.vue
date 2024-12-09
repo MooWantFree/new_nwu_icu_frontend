@@ -98,7 +98,7 @@ enum SortMethods {
 }
 
 const message = useMessage()
-const { userInfo } = useUser()
+const { userInfo, isLoading, isLoggedIn } = useUser()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -207,8 +207,9 @@ const handleReviewDeleted = (reviewId: number) => {
 
 const handleSubmitReview = async (content: NewReviewRequest) => {
   isSubmittingReview.value = true
+  const request = initContent.value ? api.put : api.post
   try {
-    const { status, data, content: responseContent } = await api.post<NewReviewResponse>('/api/assessment/review/', content)
+    const { status, data, content: responseContent } = await request<NewReviewResponse>('/api/assessment/review/', content)
 
     if (status !== 200) {
       throw new Error('Failed to submit review')
