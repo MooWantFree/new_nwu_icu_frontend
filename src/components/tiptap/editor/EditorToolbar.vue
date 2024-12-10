@@ -116,6 +116,7 @@
       </div> -->
     </div>
     <ImageUpload v-if="showImageUpload" @close="showImageUpload = false" @upload="handleImageUpload" />
+    <InsertLink v-model="showLinkModal" @submit="handleLinkSubmit" />
   </div>
 </template>
 
@@ -123,6 +124,7 @@
 import { ref } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import ImageUpload from './ImageUpload.vue'
+import InsertLink from './InsertLink.vue'
 import { onClickOutside } from '@vueuse/core'
 import {
   ChevronDown as ChevronDownIcon,
@@ -193,15 +195,33 @@ const handleAlignSelect = (key: string) => {
   editor.chain().focus().setTextAlign(key).run()
 }
 
-const addLink = () => {
-  const url = window.prompt('Enter URL')
-  if (url) {
-    editor.chain().focus().setLink({ href: url }).run()
-  }
-}
-
 const handleImageUpload = (imageData: string) => {
   editor.chain().focus().setImage({ src: imageData }).run()
   showImageUpload.value = false
+}
+
+const showLinkModal = ref(false)
+const selectedText = ref('')
+
+const handleLinkSubmit = ({ url, text }: { url: string, text: string }) => {
+  // FIXME: Not work properly
+  if (text) {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'text',
+        text: text,
+        marks: [
+          {
+            type: 'link',
+            attrs: { href: url }
+          }
+        ]
+      })
+      .run()
+  } else {
+    editor.chain().focus().setLink({ href: url }).run()
+  }
 }
 </script>
