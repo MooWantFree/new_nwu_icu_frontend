@@ -22,7 +22,7 @@
               :page-solt="7"
               :page-size="5"
               @update:page="onPageUpdate"
-              v-model:page="currentPage"
+              v-model:page="page"
           >
             <template #prefix="{ itemCount, startIndex, endIndex }">
               共{{ itemCount }}个点评
@@ -53,9 +53,9 @@ const pageLength = ref(5)
 const router = useRouter()
 const route = useRoute()
 
-const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: number = 1) => {
+const fetchReviews = async (page: number, pageSize: number = 5, desc: number = 1) => {
   const searchParams = new URLSearchParams({
-    currentPage: currentPage.toString(),
+    page: page.toString(),
     pageSize: pageSize.toString(),
     desc: desc.toString(),
   })
@@ -83,13 +83,13 @@ const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: num
 
 onMounted(async () => {
   loading.value = true
-  await fetchReviews(currentPage.value)
+  await fetchReviews(page.value)
   loading.value = false
 })
 
 // Page
 const queryPage = parseInt(route.query.page as string)
-const currentPage = ref(isNaN(queryPage) ? 1 : queryPage)
+const page = ref(isNaN(queryPage) ? 1 : queryPage)
 const onPageUpdate = async (page: number) => {
   loading.value = true
   await Promise.all([
