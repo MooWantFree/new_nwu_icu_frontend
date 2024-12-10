@@ -1,20 +1,119 @@
 <template>
-  <div class="flex space-x-4 mb-6 p-4 bg-white shadow-md rounded-lg">
-    <button @click="editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-200': editor.isActive('bold') }"
-      class="px-2 py-1 border rounded">粗体</button>
-    <button @click="editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-200': editor.isActive('italic') }"
-      class="px-2 py-1 border rounded">斜体</button>
-    <button @click="editor.chain().focus().toggleUnderline().run()"
-      :class="{ 'bg-gray-200': editor.isActive('underline') }" class="px-2 py-1 border rounded">下划线</button>
-    <button @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-      :class="{ 'bg-gray-200': editor.isActive('heading', { level: 1 }) }" class="px-2 py-1 border rounded">一级标题</button>
-    <button @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-      :class="{ 'bg-gray-200': editor.isActive('heading', { level: 2 }) }" class="px-2 py-1 border rounded">二级标题</button>
-    <button @click="editor.chain().focus().toggleBulletList().run()"
-      :class="{ 'bg-gray-200': editor.isActive('bulletList') }" class="px-2 py-1 border rounded">无序列表</button>
-    <button @click="editor.chain().focus().toggleOrderedList().run()"
-      :class="{ 'bg-gray-200': editor.isActive('orderedList') }" class="px-2 py-1 border rounded">有序列表</button>
-    <button @click="showImageUpload = true" class="px-2 py-1 border rounded">添加图片</button>
+  <div class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg">
+   <div class="flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+        <div class="relative">
+          <button 
+            class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
+            @click="showFontDropdown = !showFontDropdown"
+          >
+            Aa
+            <chevron-down-icon class="w-4 h-4" />
+          </button>
+          <div v-if="showFontDropdown" class="absolute left-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <button 
+              v-for="option in fontOptions" 
+              :key="option.key"
+              @click="handleFontSelect(option.key); showFontDropdown = false"
+              class="w-full px-4 py-2 text-left hover:bg-gray-100"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('bold') }"
+          @click="editor.chain().focus().toggleBold().run()"
+        >
+          <bold-icon class="w-4 h-4" />
+        </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('italic') }"
+          @click="editor.chain().focus().toggleItalic().run()"
+        >
+          <italic-icon class="w-4 h-4" />
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+        <div class="relative">
+          <button 
+            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            @click="showAlignDropdown = !showAlignDropdown"
+          >
+            <align-left-icon class="w-4 h-4" />
+          </button>
+          <div v-if="showAlignDropdown" class="absolute left-0 z-10 w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <button 
+              v-for="option in alignmentOptions" 
+              :key="option.key"
+              @click="handleAlignSelect(option.key); showAlignDropdown = false"
+              class="w-full px-4 py-2 text-left hover:bg-gray-100"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('bulletList') }"
+          @click="editor.chain().focus().toggleBulletList().run()"
+        >
+          <list-icon class="w-4 h-4" />
+        </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('orderedList') }"
+          @click="editor.chain().focus().toggleOrderedList().run()"
+        >
+          <list-ordered-icon class="w-4 h-4" />
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          @click="editor.chain().focus().toggleTaskList().run()"
+        >
+          <check-square-icon class="w-4 h-4" />
+        </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          @click="addLink"
+        >
+          <link-icon class="w-4 h-4" />
+        </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          @click="showImageUpload = true"
+        >
+          <image-icon class="w-4 h-4" />
+        </button>
+        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+          <at-sign-icon class="w-4 h-4" />
+        </button>
+        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+          <smile-icon class="w-4 h-4" />
+        </button>
+        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+          <layout-grid-icon class="w-4 h-4" />
+        </button>
+        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+          <code-icon class="w-4 h-4" />
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1 px-2">
+        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+          <plus-icon class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
     <ImageUpload v-if="showImageUpload" @close="showImageUpload = false" @upload="handleImageUpload" />
   </div>
 </template>
@@ -23,12 +122,70 @@
 import { ref } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import ImageUpload from './ImageUpload.vue'
+import {
+  ChevronDown as ChevronDownIcon,
+  Bold as BoldIcon,
+  Italic as ItalicIcon,
+  AlignLeft as AlignLeftIcon,
+  List as ListIcon,
+  ListOrdered as ListOrderedIcon,
+  CheckSquare as CheckSquareIcon,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  AtSign as AtSignIcon,
+  Smile as SmileIcon,
+  LayoutGrid as LayoutGridIcon,
+  Code as CodeIcon,
+  Plus as PlusIcon,
+} from 'lucide-vue-next'
 
 const { editor } = defineProps<{
   editor: Editor
 }>()
 
 const showImageUpload = ref(false)
+const showFontDropdown = ref(false)
+const showAlignDropdown = ref(false)
+
+const fontOptions = [
+  { label: '正文', key: 'normal' },
+  { label: '标题 1', key: 'h1' },
+  { label: '标题 2', key: 'h2' },
+  { label: '标题 3', key: 'h3' },
+]
+
+const alignmentOptions = [
+  { label: '左对齐', key: 'left' },
+  { label: '居中', key: 'center' },
+  { label: '右对齐', key: 'right' },
+]
+
+const handleFontSelect = (key: string) => {
+  switch (key) {
+    case 'h1':
+      editor.chain().focus().toggleHeading({ level: 1 }).run()
+      break
+    case 'h2':
+      editor.chain().focus().toggleHeading({ level: 2 }).run()
+      break
+    case 'h3':
+      editor.chain().focus().toggleHeading({ level: 3 }).run()
+      break
+    default:
+      editor.chain().focus().setParagraph().run()
+  }
+}
+
+const handleAlignSelect = (key: string) => {
+  editor.chain().focus().setTextAlign(key).run()
+}
+
+const addLink = () => {
+  const url = window.prompt('Enter URL')
+  if (url) {
+    editor.chain().focus().setLink({ href: url }).run()
+  }
+}
 
 const handleImageUpload = (imageData: string) => {
   editor.chain().focus().setImage({ src: imageData }).run()
