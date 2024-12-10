@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg">
    <div class="flex flex-wrap items-center gap-2">
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <div class="relative">
+        <div class="relative" ref="fontDropdownRef">
           <button 
             class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showFontDropdown = !showFontDropdown"
@@ -41,12 +41,13 @@
       </div>
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <div class="relative">
+        <div class="relative" ref="alignDropdownRef">
           <button 
-            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showAlignDropdown = !showAlignDropdown"
           >
             <align-left-icon class="w-4 h-4" />
+            <chevron-down-icon class="w-4 h-4" />
           </button>
           <div v-if="showAlignDropdown" class="absolute left-0 z-10 w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
             <button 
@@ -108,11 +109,11 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-1 px-2">
+      <!-- <div class="flex items-center gap-1 px-2">
         <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
           <plus-icon class="w-4 h-4" />
         </button>
-      </div>
+      </div> -->
     </div>
     <ImageUpload v-if="showImageUpload" @close="showImageUpload = false" @upload="handleImageUpload" />
   </div>
@@ -122,6 +123,7 @@
 import { ref } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import ImageUpload from './ImageUpload.vue'
+import { onClickOutside } from '@vueuse/core'
 import {
   ChevronDown as ChevronDownIcon,
   Bold as BoldIcon,
@@ -146,6 +148,17 @@ const { editor } = defineProps<{
 const showImageUpload = ref(false)
 const showFontDropdown = ref(false)
 const showAlignDropdown = ref(false)
+
+const fontDropdownRef = ref<HTMLElement | null>(null)
+const alignDropdownRef = ref<HTMLElement | null>(null)
+
+onClickOutside(fontDropdownRef, () => {
+  showFontDropdown.value = false
+})
+
+onClickOutside(alignDropdownRef, () => {
+  showAlignDropdown.value = false
+})
 
 const fontOptions = [
   { label: '正文', key: 'normal' },

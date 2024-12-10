@@ -1,8 +1,8 @@
 <template>
-  <div ref="editorContainer">
-    <editor-toolbar :editor="editor" v-if="editor && showToolbar" />
-    <div class="max-w-none">
-      <editor-content :editor="editor" />
+  <div ref="editorContainer" class="relative bg-white rounded-lg shadow-sm">
+    <editor-toolbar :editor="editor" v-if="editor && showToolbar" class="border-b border-gray-200 p-2" />
+    <div class="max-w-none p-4">
+      <editor-content :editor="editor" class="prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl" />
     </div>
   </div>
 </template>
