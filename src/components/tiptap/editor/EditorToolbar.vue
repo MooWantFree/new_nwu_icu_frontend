@@ -1,11 +1,12 @@
 <template>
   <div class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg">
-   <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
         <div class="relative" ref="fontDropdownRef">
           <button 
             class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showFontDropdown = !showFontDropdown"
+            title="字体选项"
           >
             Aa
             <chevron-down-icon class="w-4 h-4" />
@@ -28,6 +29,7 @@
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bold') }"
           @click="editor.chain().focus().toggleBold().run()"
+          title="粗体"
         >
           <bold-icon class="w-4 h-4" />
         </button>
@@ -35,6 +37,7 @@
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('italic') }"
           @click="editor.chain().focus().toggleItalic().run()"
+          title="斜体"
         >
           <italic-icon class="w-4 h-4" />
         </button>
@@ -45,6 +48,7 @@
           <button 
             class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showAlignDropdown = !showAlignDropdown"
+            title="对齐选项"
           >
             <align-left-icon class="w-4 h-4" />
             <chevron-down-icon class="w-4 h-4" />
@@ -64,6 +68,7 @@
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bulletList') }"
           @click="editor.chain().focus().toggleBulletList().run()"
+          title="无序列表"
         >
           <list-icon class="w-4 h-4" />
         </button>
@@ -71,6 +76,7 @@
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('orderedList') }"
           @click="editor.chain().focus().toggleOrderedList().run()"
+          title="有序列表"
         >
           <list-ordered-icon class="w-4 h-4" />
         </button>
@@ -80,31 +86,46 @@
         <button 
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="editor.chain().focus().toggleTaskList().run()"
+          title="任务列表"
         >
           <check-square-icon class="w-4 h-4" />
         </button>
         <button 
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="addLink"
+          title="添加链接"
         >
           <link-icon class="w-4 h-4" />
         </button>
         <button 
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="showImageUpload = true"
+          title="上传图片"
         >
           <image-icon class="w-4 h-4" />
         </button>
-        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          title="提及"
+        >
           <at-sign-icon class="w-4 h-4" />
         </button>
-        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          title="表情"
+        >
           <smile-icon class="w-4 h-4" />
         </button>
-        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          title="表格"
+        >
           <layout-grid-icon class="w-4 h-4" />
         </button>
-        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          title="代码块"
+        >
           <code-icon class="w-4 h-4" />
         </button>
       </div>
