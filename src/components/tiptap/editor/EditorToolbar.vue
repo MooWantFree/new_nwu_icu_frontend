@@ -41,6 +41,22 @@
         >
           <italic-icon class="w-4 h-4" />
         </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('strike') }"
+          @click="editor.chain().focus().toggleStrike().run()"
+          title="删除线"
+        >
+          <strikethrough-icon class="w-4 h-4" />
+        </button>
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('underline') }"
+          @click="editor.chain().focus().toggleUnderline().run()"
+          title="下划线"
+        >
+          <underline-icon class="w-4 h-4" />
+        </button>
       </div>
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
@@ -104,37 +120,49 @@
         >
           <image-icon class="w-4 h-4" />
         </button>
+        <div class="relative" ref="emojiPickerRef">
+          <button 
+            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            @click="showEmojiPicker = !showEmojiPicker"
+            title="表情"
+          >
+            <smile-icon class="w-4 h-4" />
+          </button>
+          <EmojiPicker
+            v-if="showEmojiPicker"
+            @select="insertEmoji"
+          />
+        </div>
+        <div class="relative" ref="tableInsertRef">
+          <button 
+            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            @click="showTableInsert = !showTableInsert"
+            title="表格"
+          >
+            <layout-grid-icon class="w-4 h-4" />
+          </button>
+          <InsertTable
+            v-if="showTableInsert"
+            @insert="insertTable"
+          />
+        </div>
         <button 
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          title="提及"
-        >
-          <at-sign-icon class="w-4 h-4" />
-        </button>
-        <button 
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          title="表情"
-        >
-          <smile-icon class="w-4 h-4" />
-        </button>
-        <button 
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          title="表格"
-        >
-          <layout-grid-icon class="w-4 h-4" />
-        </button>
-        <button 
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          title="代码块"
+          :class="{ 'bg-gray-100': editor.isActive('code') }"
+          @click="editor.chain().focus().toggleCode().run()"
+          title="行内代码"
         >
           <code-icon class="w-4 h-4" />
         </button>
-      </div>
-
-      <!-- <div class="flex items-center gap-1 px-2">
-        <button class="p-2 text-gray-700 rounded hover:bg-gray-100">
-          <plus-icon class="w-4 h-4" />
+        <button 
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          :class="{ 'bg-gray-100': editor.isActive('codeBlock') }"
+          @click="editor.chain().focus().toggleCodeBlock().run()"
+          title="代码块"
+        >
+          <file-code-icon class="w-4 h-4" />
         </button>
-      </div> -->
+      </div>
     </div>
     <ImageUpload v-if="showImageUpload" @close="showImageUpload = false" @upload="handleImageUpload" />
     <InsertLink v-model="showLinkModal" @submit="handleLinkSubmit" />
@@ -146,21 +174,25 @@ import { ref } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import ImageUpload from './ImageUpload.vue'
 import InsertLink from './InsertLink.vue'
+import EmojiPicker from './EmojiPicker.vue'
+import InsertTable from './InsertTable.vue'
 import { onClickOutside } from '@vueuse/core'
 import {
   ChevronDown as ChevronDownIcon,
   Bold as BoldIcon,
   Italic as ItalicIcon,
+  Strikethrough as StrikethroughIcon,
+  Underline as UnderlineIcon,
   AlignLeft as AlignLeftIcon,
   List as ListIcon,
   ListOrdered as ListOrderedIcon,
   CheckSquare as CheckSquareIcon,
   Link as LinkIcon,
   Image as ImageIcon,
-  AtSign as AtSignIcon,
   Smile as SmileIcon,
   LayoutGrid as LayoutGridIcon,
   Code as CodeIcon,
+  FileCode as FileCodeIcon,
   Plus as PlusIcon,
 } from 'lucide-vue-next'
 
@@ -171,9 +203,13 @@ const { editor } = defineProps<{
 const showImageUpload = ref(false)
 const showFontDropdown = ref(false)
 const showAlignDropdown = ref(false)
+const showEmojiPicker = ref(false)
+const showTableInsert = ref(false)
 
 const fontDropdownRef = ref<HTMLElement | null>(null)
 const alignDropdownRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<HTMLElement | null>(null)
+const tableInsertRef = ref<HTMLElement | null>(null)
 
 onClickOutside(fontDropdownRef, () => {
   showFontDropdown.value = false
@@ -181,6 +217,14 @@ onClickOutside(fontDropdownRef, () => {
 
 onClickOutside(alignDropdownRef, () => {
   showAlignDropdown.value = false
+})
+
+onClickOutside(emojiPickerRef, () => {
+  showEmojiPicker.value = false
+})
+
+onClickOutside(tableInsertRef, () => {
+  showTableInsert.value = false
 })
 
 const fontOptions = [
@@ -219,6 +263,17 @@ const handleAlignSelect = (key: string) => {
 const handleImageUpload = (imageData: string) => {
   editor.chain().focus().setImage({ src: imageData }).run()
   showImageUpload.value = false
+}
+
+const insertEmoji = (emoji: string) => {
+  editor.chain().focus().insertContent(emoji).run()
+  showEmojiPicker.value = false
+}
+
+const insertTable = (rows: number, cols: number) => {
+  // FIXME: Not work properly
+  editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
+  showTableInsert.value = false
 }
 
 const showLinkModal = ref(false)
