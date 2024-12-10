@@ -42,3 +42,14 @@ export type ReplyDeleteResponse = {
   success: {},
   errors: "review"
 }
+
+export type ReplyLikeResponse = {
+  success: {
+    name: string,
+    id: number,
+    like: {
+      like: number,
+      dislike: number
+    }
+  }
+}

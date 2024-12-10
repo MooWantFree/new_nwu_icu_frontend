@@ -1,5 +1,6 @@
 type LikeDislike = {
   like: number
+  user_option: number
   dislike: number
 }
 
@@ -24,10 +25,10 @@ export type Review = {
   created_time: string
   edited: boolean
   like: LikeDislike
-  difficulty: string
-  grade: string
-  homework: string
-  reward: string
+  difficulty: number
+  grade: number
+  homework: number
+  reward: number
   semester: string
   author: Author
   reply: Reply[]
@@ -36,13 +37,14 @@ export type Review = {
 type Author = {
   avatar: string
   id: number
-  name: string
+  nickname: string
 }
 
 type Teacher = {
   id: number
   name: string
   school: string
+  course?: Course[]
 }
 
 export type CourseData = {
@@ -54,7 +56,18 @@ export type CourseData = {
   semester: string[]
   school: string
   request_user_review_id: number | null
+  like: LikeDislike
   rating_avg: string
   normalized_rating_avg: string
   reviews: Review[]
+  other_dup_name_course: {
+    course_id: number
+    teacher_name: string
+    rating: number
+  }[]
+}
+
+type Course = {
+  id: number
+  name: string
 }

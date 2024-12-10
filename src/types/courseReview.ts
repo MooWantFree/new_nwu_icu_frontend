@@ -13,6 +13,7 @@ type Review = {
     nickname: string
     id: number
     avatar_uuid: string
+    anonymous: boolean
   }
   datetime: string
   course: {

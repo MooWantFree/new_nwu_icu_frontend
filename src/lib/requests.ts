@@ -7,6 +7,7 @@ type RequestConfig = {
   options?: RequestInit
 }
 
+
 async function request<T extends ResponseBase>(config: RequestConfig): Promise<{ status: number, data: APIResponse<T>, content: T["success"], errors?: APIResponse<T>["errors"] }> {
   const { method, url, data, options: customOptions } = config
   const fullUrl = `${url}`
@@ -57,6 +58,6 @@ export const api = {
   get: <T extends ResponseBase>(url: string, options?: RequestInit) => request<T>({ method: 'GET', url, options }),
   post: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'POST', url, data, options }),
   put: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'PUT', url, data, options }),
-  delete: <T extends ResponseBase>(url: string, options?: RequestInit) => request<T>({ method: 'DELETE', url, options })
+  delete: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'DELETE', url, data, options })
 }
 
