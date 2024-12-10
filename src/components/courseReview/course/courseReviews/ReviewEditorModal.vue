@@ -224,7 +224,7 @@ const closeModal = () => {
     content.value.trim() !== "<p></p>" &&
     content.value !== props.initContent?.content
   ) {
-    if (confirm("你有未保存的内容。确定要关闭吗？")) {
+    if (confirm("你有未保存的内容。确定要关闭吗？\n\n！！！你的未保存内容将丢失！！！")) {
       emit("update:modelValue", false);
     }
   } else {
