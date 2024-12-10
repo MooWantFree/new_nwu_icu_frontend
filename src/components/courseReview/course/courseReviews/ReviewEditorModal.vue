@@ -4,7 +4,8 @@
   >
     <div class="relative w-full max-w-3xl mx-auto my-6 px-4 sm:px-0">
       <div
-        class="relative flex flex-col w-full bg-white border-0 rounded-lg shadow-lg outline-none focus:outline-none max-h-[90vh]"
+        class="relative flex flex-col w-full bg-white border-0 rounded-lg shadow-lg outline-none focus:outline-none"
+        style="height: 92vh;"
       >
         <div
           class="flex items-start justify-between p-4 sm:p-5 border-b border-solid border-gray-300 rounded-t"
@@ -26,80 +27,16 @@
         <div
           v-if="!loading"
           class="relative p-4 sm:p-6 flex-auto overflow-y-auto"
+          style="height: calc(80vh - 140px);"
         >
-          <div class="mt-4 border rounded-lg shadow-sm overflow-hidden">
-            <div class="bg-gray-50 p-2 border-b">
-              <h4 class="text-sm font-medium text-gray-700">评价详情</h4>
-            </div>
-            <div class="p-4 space-y-4">
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="flex-1">
-                  <label for="rating" class="block mb-1 text-sm font-medium text-gray-700">总体评分</label>
-                  <Rate :max="5" v-model="rating" class="w-full" />
-                </div>
-                <div class="flex-1">
-                  <label for="semester" class="block mb-1 text-sm font-medium text-gray-700">学期</label>
-                  <n-select
-                    id="semester"
-                    v-model:value="selectedSemester"
-                    :options="semesterOptions"
-                    class="w-full"
-                  />
-                </div>
-              </div>
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="flex-1">
-                  <label for="difficulty" class="block mb-1 text-sm font-medium text-gray-700">课程难度</label>
-                  <Rate
-                    id="difficulty"
-                    v-model="difficulty"
-                    :max="3"
-                  />
-                </div>
-                <div class="flex-1">
-                  <label for="homework" class="block mb-1 text-sm font-medium text-gray-700">作业多少</label>
-                  <Rate
-                    id="homework"
-                    v-model="homework"
-                    :max="3"
-                  />
-                </div>
-              </div>
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="flex-1">
-                  <label for="grade" class="block mb-1 text-sm font-medium text-gray-700">给分好坏</label>
-                  <Rate
-                    id="grade"
-                    v-model="grade"
-                    :max="3"
-                  />
-                </div>
-                <div class="flex-1">
-                  <label for="reward" class="block mb-1 text-sm font-medium text-gray-700">收获大小</label>
-                  <Rate
-                    id="reward"
-                    v-model="reward"
-                    :max="3"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mt-4 border rounded-lg shadow-sm overflow-hidden">
-            <div class="bg-gray-50 p-2 border-b">
-              <h4 class="text-sm font-medium text-gray-700">评价内容</h4>
-            </div>
-            <div class="p-4">
-              <Editor
-                v-model="content"
-                :allowEdit="true"
-                :withToolbar="true"
-                class="min-h-[200px]"
-              />
-            </div>
-          </div>
+          <Editor
+            v-model="content"
+            :allowEdit="true"
+            :withToolbar="true"
+            class="h-full"
+          />
         </div>
-        <div v-else class="relative p-4 sm:p-6 flex-auto overflow-y-auto">
+        <div v-else class="relative p-4 sm:p-6 flex-auto overflow-y-auto" style="height: calc(80vh - 140px);">
           <div class="flex items-center justify-center h-full">
             <div className="flex flex-col items-center">
               <div
@@ -191,6 +128,7 @@ onMounted(async () => {
   const response = await semesterListRequest;
   semesterData.value = response.content;
   loading.value = false;
+  document.body.style.overflow = 'hidden';
 });
 
 const semesterOptions = computed(() => {
@@ -224,7 +162,11 @@ const closeModal = () => {
     content.value.trim() !== "<p></p>" &&
     content.value !== props.initContent?.content
   ) {
-    if (confirm("你有未保存的内容。确定要关闭吗？\n\n！！！你的未保存内容将丢失！！！")) {
+    if (
+      confirm(
+        "你有未保存的内容。确定要关闭吗？\n\n！！！你的未保存内容将丢失！！！"
+      )
+    ) {
       emit("update:modelValue", false);
     }
   } else {
@@ -244,6 +186,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("beforeunload", handleBeforeUnload);
+  document.body.style.overflow = 'auto';
 });
 
 watch(
