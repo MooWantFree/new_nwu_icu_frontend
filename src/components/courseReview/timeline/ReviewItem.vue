@@ -5,9 +5,7 @@
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-badge :show="review.is_student" class="hov" value="V" :offset="[-5, 33]" color="green">
-              <n-avatar round size="large" :src="`/api/download/${review.author.avatar_uuid}`"
-                fallback-src="https://www.loliapi.com/acg/pp/" />
-              <!-- TODO: change the fallback url -->
+              <n-avatar round size="large" :src="`/api/download/${review.author.avatar_uuid}`"/>
             </n-badge>
 
           </template>
