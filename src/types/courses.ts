@@ -45,6 +45,7 @@ type Teacher = {
   id: number
   name: string
   school: string
+  avatar?: string
   course?: Course[]
 }
 
