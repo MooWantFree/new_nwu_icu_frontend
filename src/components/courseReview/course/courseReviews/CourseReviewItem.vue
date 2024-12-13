@@ -42,7 +42,7 @@
     <div class="text-gray-700 mb-4">
       <div class="space-x-4">
         <div class="flex flex-wrap gap-4">
-          <span class="flex items-center">
+          <span class="flex items-center" :title="ratingTooltip(review.difficulty)">
             <span class="mr-2">课程难度：</span>
             <div class="flex">
               <svg
@@ -61,7 +61,7 @@
               </svg>
             </div>
           </span>
-          <span class="flex items-center">
+          <span class="flex items-center" :title="ratingTooltip(review.homework)">
             <span class="mr-2">作业多少：</span>
             <div class="flex">
               <svg
@@ -80,14 +80,16 @@
               </svg>
             </div>
           </span>
-          <span class="flex items-center">
+          <span class="flex items-center" :title="ratingTooltip(review.grade)">
             <span class="mr-2">给分好坏：</span>
             <div class="flex">
               <svg
                 v-for="i in 3"
                 :key="i"
                 class="w-4 h-4"
-                :class="i <= review.grade ? 'text-yellow-400' : 'text-gray-300'"
+                :class="
+                  i <= review.grade ? 'text-yellow-400' : 'text-gray-300'
+                "
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -97,7 +99,7 @@
               </svg>
             </div>
           </span>
-          <span class="flex items-center">
+          <span class="flex items-center" :title="ratingTooltip(review.reward)">
             <span class="mr-2">收获大小：</span>
             <div class="flex">
               <svg
@@ -370,6 +372,7 @@ import { api } from "@/lib/requests";
 import Time from "@/components/tinyComponents/Time.vue";
 import Viewer from "@/components/tiptap/viewer/Viewer.vue";
 import CourseReviewItemReply from "./CourseReviewItemReply.vue";
+import { ratingTooltip } from "../tooltips";
 import type { ReplyDeleteResponse } from "@/types/api/course";
 
 const props = defineProps<{

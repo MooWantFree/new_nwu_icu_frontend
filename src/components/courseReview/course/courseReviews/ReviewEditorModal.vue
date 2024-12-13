@@ -175,6 +175,7 @@ import { SemesterListResponse } from '@/types/api/course'
 import { api } from '@/lib/requests'
 import Rate from '@/components/tinyComponents/Rate.vue'
 import { ChevronUp, ChevronDown } from 'lucide-vue-next'
+import { ratingTooltip } from '../tooltips'
 
 const props = defineProps<{
   courseData: CourseData
@@ -223,19 +224,6 @@ watch(
 const semesterListRequest = api.get<SemesterListResponse>(
   '/api/assessment/semester/'
 )
-
-const ratingTooltip = (rating: number) => {
-  switch (rating) {
-    case 3:
-      return '很好'
-    case 2:
-      return '还行'
-    case 1:
-      return '差'
-    default:
-      return ''
-  }
-}
 
 const loading = ref(true)
 onMounted(async () => {
