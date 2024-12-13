@@ -2,7 +2,7 @@
   <div class="p-6 bg-white rounded-md shadow-md">
     <h1 class="text-2xl font-bold">{{ courseData.name }}</h1>
     <div class="mt-2 text-sm text-gray-600 space-y-0.5">
-      <span v-for="semester in courseData.semester">{{ semester }}</span>
+      <span v-for="semester in courseData.semester">{{ semester }}&nbsp;</span>
     </div>
     <div class="mt-4">
       <div class="flex items-center space-x-2">
