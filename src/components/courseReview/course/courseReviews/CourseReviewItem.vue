@@ -212,7 +212,7 @@
         <div v-if="review.edited">
           <span
             >(最后修改于:
-            <n-time :time="new Date(review.modified_time)" />)</span
+            <Time :time="new Date(review.modified_time)" />)</span
           >
         </div>
       </div>
@@ -367,7 +367,7 @@ import { useRoute } from "vue-router";
 import { NButton, useMessage, useDialog } from "naive-ui";
 import { useUser } from "@/lib/useUser";
 import { api } from "@/lib/requests";
-import Time from "@/components/shortcuts/Time.vue";
+import Time from "@/components/tinyComponents/Time.vue";
 import Viewer from "@/components/tiptap/viewer/Viewer.vue";
 import CourseReviewItemReply from "./CourseReviewItemReply.vue";
 import type { ReplyDeleteResponse } from "@/types/api/course";
