@@ -23,6 +23,12 @@ import { useMessage } from 'naive-ui'
 import EditorToolbar from './EditorToolbar.vue'
 import { AllowedMimeTypes } from './vars'
 import 'prosemirror-view/style/prosemirror.css'
+import TextAlign from '@tiptap/extension-text-align'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
+import Link from '@tiptap/extension-link'
 
 const {
   placeholder = '点击此处，在这里输入新内容...',
@@ -79,6 +85,22 @@ const editor = useEditor({
     }),
     Underline,
     Image,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-blue-500 hover:text-blue-600',
+      },
+      defaultProtocol: 'https',
+    }),
   ],
   editorProps: {
     attributes: {
@@ -140,20 +162,60 @@ const handleFile = async (currentEditor, file: File, pos: number) => {
   pointer-events: none;
 }
 
-.tiptap {
-  blockquote {
-    quotes: none;
-    font-style: normal;
-  }
-  p {
-    @apply text-base;
-  }
-  @apply ml-2;
+/* Table styles */
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
 }
 
-/* TODO: Not sure if this is a good fix */
-.tiptap * {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+.ProseMirror td,
+.ProseMirror th {
+  border: 2px solid #ced4da;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.ProseMirror th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  text-align: left;
+}
+
+.ProseMirror .selectedCell:after {
+  background: rgba(200, 200, 255, 0.4);
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.ProseMirror .column-resize-handle {
+  background-color: #adf;
+  bottom: -2px;
+  position: absolute;
+  right: -2px;
+  pointer-events: none;
+  top: 0;
+  width: 4px;
+}
+
+.tableWrapper {
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+
+.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
 }
 </style>

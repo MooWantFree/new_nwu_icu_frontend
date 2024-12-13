@@ -21,7 +21,7 @@
               v-for="option in fontOptions"
               :key="option.key"
               @click="
-                handleFontSelect(option.key)
+                handleFontSelect(option.key);
                 showFontDropdown = false
               "
               class="w-full px-4 py-2 text-left hover:bg-gray-100"
@@ -85,7 +85,7 @@
               v-for="option in alignmentOptions"
               :key="option.key"
               @click="
-                handleAlignSelect(option.key)
+                handleAlignSelect(option.key);
                 showAlignDropdown = false
               "
               class="w-full px-4 py-2 text-left hover:bg-gray-100"
@@ -113,16 +113,16 @@
       </div>
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <button
+        <!-- <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="editor.chain().focus().toggleTaskList().run()"
           title="任务列表"
         >
           <check-square-icon class="w-4 h-4" />
-        </button>
+        </button> -->
         <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          @click="addLink"
+          @click="showLinkModal = true"
           title="添加链接"
         >
           <link-icon class="w-4 h-4" />
@@ -269,7 +269,6 @@ const handleFontSelect = (key: string) => {
 }
 
 const handleAlignSelect = (key: string) => {
-  // FIXME: Not work properly
   editor.chain().focus().setTextAlign(key).run()
 }
 

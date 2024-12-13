@@ -24,6 +24,12 @@
       <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
       <div class="mt-3"></div>
     </div>
+    <LinkConfirmModal
+      :show="showModal"
+      :url="currentUrl"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
@@ -35,6 +41,13 @@ import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import ExpandButton from './ExpandButton.vue'
 import 'prosemirror-view/style/prosemirror.css'
+import TextAlign from '@tiptap/extension-text-align'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
+import Link from '@tiptap/extension-link'
+import LinkConfirmModal from './LinkConfirmModal.vue'
 
 const {
   value = '',
@@ -59,11 +72,39 @@ const editor = useEditor({
     // TODO: CodeBlockLowlight
     Underline,
     Image,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    Link.configure({
+      openOnClick: false,
+      defaultProtocol: 'https',
+      autolink: false,
+      HTMLAttributes: {
+        class: 'text-blue-500 hover:text-blue-600',
+      },
+    }),
   ],
   editorProps: {
     attributes: {
       class:
         'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
+    },
+    handleClick: (view, pos, event) => {
+      // FIXME: Jump before clicked
+      const link = (event.target as HTMLElement).closest('a')
+      if (link) {
+        event.preventDefault()
+        const href = link.getAttribute('href')
+        if (href) {
+          showLinkConfirm(href)
+        }
+      }
     },
   },
   injectCSS: true,
@@ -92,6 +133,23 @@ const checkContentOverflow = (contentHeight: number) => {
 
 const toggleExpand = () => {
   expanded.value = !expanded.value
+}
+
+const showModal = ref(false)
+const currentUrl = ref('')
+
+const showLinkConfirm = (url: string) => {
+  currentUrl.value = url
+  showModal.value = true
+}
+
+const handleConfirm = () => {
+  window.open(currentUrl.value, '_blank')
+  showModal.value = false
+}
+
+const handleCancel = () => {
+  showModal.value = false
 }
 </script>
 
