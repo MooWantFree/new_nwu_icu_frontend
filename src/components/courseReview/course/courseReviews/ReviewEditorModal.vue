@@ -145,18 +145,23 @@
                 class="mr-2"
               />
               <label for="anonymous" class="mr-4">匿名发布</label>
-              <button
-                class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-white uppercase transition-all duration-150 ease-linear rounded shadow outline-none bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center"
-                type="button"
-                @click="submitReview"
-                :disabled="submitting || loading"
-              >
-                <div
-                  v-if="submitting"
-                  class="mr-2 w-5 h-5 border-t-2 border-white rounded-full animate-spin"
-                ></div>
-                {{ submitting ? '提交中...' : '提交' }}
-              </button>
+              <div class="flex flex-col">
+                <div v-if="!isFormValid" class="text-red-500 text-sm mb-2">
+                  请填写内容，并选择评分及学期
+                </div>
+                <button
+                  class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-white uppercase transition-all duration-150 ease-linear rounded shadow outline-none bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center"
+                  type="button"
+                  @click="submitReview"
+                  :disabled="submitting || loading || !isFormValid"
+                >
+                  <div
+                    v-if="submitting"
+                    class="mr-2 w-5 h-5 border-t-2 border-white rounded-full animate-spin"
+                  ></div>
+                  {{ submitting ? '提交中...' : '提交' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -293,4 +298,16 @@ watch(
 )
 
 const showRatingsSelector = ref(false)
+
+const isFormValid = computed(() => {
+  return (
+    content.value.trim() &&
+    rating.value > 0 &&
+    difficulty.value > 0 &&
+    homework.value > 0 &&
+    grade.value > 0 &&
+    reward.value > 0 &&
+    selectedSemester.value !== null
+  )
+})
 </script>
