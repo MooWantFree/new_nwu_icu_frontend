@@ -38,6 +38,7 @@ type Author = {
   avatar: string
   id: number
   nickname: string
+  anonymous: boolean
 }
 
 type Teacher = {
