@@ -232,20 +232,22 @@ const handleSubmitReview = async (content: NewReviewRequest) => {
 const userReviewed = computed(() => {
   return !!props.courseData.request_user_review_id
 })
-
-const initContent = computed<NewReviewRequest | null>(() => {
+type InitContent = Omit<NewReviewRequest, 'semester'> & {
+  semester: string
+}
+const initContent = computed<InitContent | null>(() => {
   const userReview = props.courseData.reviews.find(review => review.id === props.courseData.request_user_review_id)
   if (userReview) {
     return {
       course: props.courseData.id,
       content: userReview.content,
       rating: userReview.rating,
-      anonymous: false,
+      anonymous: userReview.author.anonymous,
       difficulty: Number(userReview.difficulty),
       grade: Number(userReview.grade),
       homework: Number(userReview.homework),
       reward: Number(userReview.reward),
-      semester: Number(userReview.semester)
+      semester: userReview.semester,
     }
   }
   // Return a default NewReviewRequest if no user review is found
