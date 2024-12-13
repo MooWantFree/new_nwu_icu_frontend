@@ -1,9 +1,11 @@
 <template>
-  <div class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg">
+  <div
+    class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg"
+  >
     <div class="flex flex-wrap items-center gap-2">
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
         <div class="relative" ref="fontDropdownRef">
-          <button 
+          <button
             class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showFontDropdown = !showFontDropdown"
             title="字体选项"
@@ -11,11 +13,17 @@
             Aa
             <chevron-down-icon class="w-4 h-4" />
           </button>
-          <div v-if="showFontDropdown" class="absolute left-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <button 
-              v-for="option in fontOptions" 
+          <div
+            v-if="showFontDropdown"
+            class="absolute left-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+          >
+            <button
+              v-for="option in fontOptions"
               :key="option.key"
-              @click="handleFontSelect(option.key); showFontDropdown = false"
+              @click="
+                handleFontSelect(option.key)
+                showFontDropdown = false
+              "
               class="w-full px-4 py-2 text-left hover:bg-gray-100"
             >
               {{ option.label }}
@@ -25,7 +33,7 @@
       </div>
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bold') }"
           @click="editor.chain().focus().toggleBold().run()"
@@ -33,7 +41,7 @@
         >
           <bold-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('italic') }"
           @click="editor.chain().focus().toggleItalic().run()"
@@ -41,7 +49,7 @@
         >
           <italic-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('strike') }"
           @click="editor.chain().focus().toggleStrike().run()"
@@ -49,7 +57,7 @@
         >
           <strikethrough-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('underline') }"
           @click="editor.chain().focus().toggleUnderline().run()"
@@ -61,7 +69,7 @@
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
         <div class="relative" ref="alignDropdownRef">
-          <button 
+          <button
             class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showAlignDropdown = !showAlignDropdown"
             title="对齐选项"
@@ -69,18 +77,24 @@
             <align-left-icon class="w-4 h-4" />
             <chevron-down-icon class="w-4 h-4" />
           </button>
-          <div v-if="showAlignDropdown" class="absolute left-0 z-10 w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <button 
-              v-for="option in alignmentOptions" 
+          <div
+            v-if="showAlignDropdown"
+            class="absolute left-0 z-10 w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+          >
+            <button
+              v-for="option in alignmentOptions"
               :key="option.key"
-              @click="handleAlignSelect(option.key); showAlignDropdown = false"
+              @click="
+                handleAlignSelect(option.key)
+                showAlignDropdown = false
+              "
               class="w-full px-4 py-2 text-left hover:bg-gray-100"
             >
               {{ option.label }}
             </button>
           </div>
         </div>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bulletList') }"
           @click="editor.chain().focus().toggleBulletList().run()"
@@ -88,7 +102,7 @@
         >
           <list-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('orderedList') }"
           @click="editor.chain().focus().toggleOrderedList().run()"
@@ -99,21 +113,21 @@
       </div>
 
       <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="editor.chain().focus().toggleTaskList().run()"
           title="任务列表"
         >
           <check-square-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="addLink"
           title="添加链接"
         >
           <link-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="showImageUpload = true"
           title="上传图片"
@@ -121,32 +135,26 @@
           <image-icon class="w-4 h-4" />
         </button>
         <div class="relative" ref="emojiPickerRef">
-          <button 
+          <button
             class="p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showEmojiPicker = !showEmojiPicker"
             title="表情"
           >
             <smile-icon class="w-4 h-4" />
           </button>
-          <EmojiPicker
-            v-if="showEmojiPicker"
-            @select="insertEmoji"
-          />
+          <EmojiPicker v-if="showEmojiPicker" @select="insertEmoji" />
         </div>
         <div class="relative" ref="tableInsertRef">
-          <button 
+          <button
             class="p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showTableInsert = !showTableInsert"
             title="表格"
           >
             <layout-grid-icon class="w-4 h-4" />
           </button>
-          <InsertTable
-            v-if="showTableInsert"
-            @insert="insertTable"
-          />
+          <InsertTable v-if="showTableInsert" @insert="insertTable" />
         </div>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('code') }"
           @click="editor.chain().focus().toggleCode().run()"
@@ -154,7 +162,7 @@
         >
           <code-icon class="w-4 h-4" />
         </button>
-        <button 
+        <button
           class="p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('codeBlock') }"
           @click="editor.chain().focus().toggleCodeBlock().run()"
@@ -164,7 +172,11 @@
         </button>
       </div>
     </div>
-    <ImageUpload v-if="showImageUpload" @close="showImageUpload = false" @upload="handleImageUpload" />
+    <ImageUpload
+      v-if="showImageUpload"
+      @close="showImageUpload = false"
+      @upload="handleImageUpload"
+    />
     <InsertLink v-model="showLinkModal" @submit="handleLinkSubmit" />
   </div>
 </template>
@@ -257,6 +269,7 @@ const handleFontSelect = (key: string) => {
 }
 
 const handleAlignSelect = (key: string) => {
+  // FIXME: Not work properly
   editor.chain().focus().setTextAlign(key).run()
 }
 
@@ -279,7 +292,7 @@ const insertTable = (rows: number, cols: number) => {
 const showLinkModal = ref(false)
 const selectedText = ref('')
 
-const handleLinkSubmit = ({ url, text }: { url: string, text: string }) => {
+const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
   // FIXME: Not work properly
   if (text) {
     editor
@@ -291,9 +304,9 @@ const handleLinkSubmit = ({ url, text }: { url: string, text: string }) => {
         marks: [
           {
             type: 'link',
-            attrs: { href: url }
-          }
-        ]
+            attrs: { href: url },
+          },
+        ],
       })
       .run()
   } else {

@@ -38,7 +38,7 @@
           </div>
 
           <p class="mx-5 text-gray-700">
-            {{ teacher.teacher_info.description || "暂无描述" }}
+            {{ teacher.teacher_info.description || '暂无描述' }}
           </p>
         </div>
 
@@ -59,15 +59,15 @@
                 </router-link>
               </h3>
               <p class="text-gray-600 mb-2">
-                {{ course.course.semester || "未知学期" }}
+                {{ course.course.semester || '未知学期' }}
               </p>
               <!-- TODO: what if semester list is too long -->
               <p class="text-gray-700 mb-4">
-                {{ course.course.description || "暂无课程描述" }}
+                {{ course.course.description || '暂无课程描述' }}
               </p>
               <div class="flex justify-between items-start mb-2">
                 <span class="text-sm text-gray-500"
-                  >课程编号: {{ course.course.code || "未知" }}</span
+                  >课程编号: {{ course.course.code || '未知' }}</span
                 >
                 <div class="flex flex-col items-end">
                   <div class="flex items-center mb-1">
@@ -118,42 +118,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useMessage } from "naive-ui";
-import { NButton } from "naive-ui";
-import { api } from "@/lib/requests";
-import { TeacherResponse } from "@/types/api/assessment/teacher";
-import TeacherSkeleton from "@/components/courseReview/teacher/TeacherSkeleton.vue";
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { NButton } from 'naive-ui'
+import { api } from '@/lib/requests'
+import { TeacherResponse } from '@/types/api/assessment/teacher'
+import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
 
-const route = useRoute();
-const router = useRouter();
-const message = useMessage();
+const route = useRoute()
+const router = useRouter()
+const message = useMessage()
 
-const teacher = ref<TeacherResponse["success"] | null>(null);
-const loading = ref(true);
+const teacher = ref<TeacherResponse['success'] | null>(null)
+const loading = ref(true)
 
 const fetchTeacherData = async () => {
-  const teacherId = route.params.id;
+  const teacherId = route.params.id
   try {
     const { status, content } = await api.get<TeacherResponse>(
       `/api/assessment/teacher/${teacherId}/`
-    );
+    )
     if (status === 200) {
-      teacher.value = content;
+      teacher.value = content
     } else if (status === 404) {
-      router.push("/404");
-      return;
+      router.push('/404')
+      return
     } else {
-      throw new Error("Failed to fetch teacher data");
+      throw new Error('Failed to fetch teacher data')
     }
   } catch (error) {
-    console.error("Error fetching teacher data:", error);
-    message.error("获取教师信息失败，请稍后重试");
+    console.error('Error fetching teacher data:', error)
+    message.error('获取教师信息失败，请稍后重试')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-onMounted(fetchTeacherData);
+onMounted(fetchTeacherData)
 </script>

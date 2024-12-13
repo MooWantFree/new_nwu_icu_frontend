@@ -11,7 +11,9 @@ let timeoutId: NodeJS.Timeout | null = null
 
 export function useUser() {
   const checkLoginStatus = () => {
-    const cookieExists = document.cookie.split(';').some(item => item.trim().startsWith('sessionid='))
+    const cookieExists = document.cookie
+      .split(';')
+      .some((item) => item.trim().startsWith('sessionid='))
     if (!cookieExists) {
       logout()
       return
@@ -31,7 +33,7 @@ export function useUser() {
   const getSessionTimeout = (): number | null => {
     const userSessionCookie = document.cookie
       .split(';')
-      .find(cookie => cookie.trim().startsWith('sessionid='))
+      .find((cookie) => cookie.trim().startsWith('sessionid='))
 
     if (userSessionCookie) {
       const [, cookieValue] = userSessionCookie.split('=')

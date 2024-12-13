@@ -1,6 +1,8 @@
 <template>
   <div class="emoji-picker">
-    <div class="grid grid-cols-8 gap-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-y-auto min-w-[320px]">
+    <div
+      class="grid grid-cols-8 gap-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-y-auto min-w-[320px]"
+    >
       <button
         v-for="emoji in commonEmojis"
         :key="emoji"

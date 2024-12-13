@@ -4,8 +4,10 @@
       <svg
         :class="[
           'w-5 h-5 cursor-pointer transition-all duration-200',
-          star <= (hoverRating || modelValue) ? 'text-yellow-400' : 'text-gray-300',
-          hoverRating === star ? 'transform scale-110' : ''
+          star <= (hoverRating || modelValue)
+            ? 'text-yellow-400'
+            : 'text-gray-300',
+          hoverRating === star ? 'transform scale-110' : '',
         ]"
         @click="updateRating(star)"
         @mouseenter="hoverRating = star"

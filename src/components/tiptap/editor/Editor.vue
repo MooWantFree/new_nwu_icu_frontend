@@ -2,7 +2,10 @@
   <div ref="editorContainer">
     <editor-toolbar :editor="editor" v-if="editor && showToolbar" />
     <div class="max-w-none p-4">
-      <editor-content :editor="editor" class="prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl" />
+      <editor-content
+        :editor="editor"
+        class="prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl"
+      />
     </div>
   </div>
 </template>
@@ -21,10 +24,14 @@ import EditorToolbar from './EditorToolbar.vue'
 import { AllowedMimeTypes } from './vars'
 import 'prosemirror-view/style/prosemirror.css'
 
-const { placeholder = '点击此处，在这里输入新内容...', showToolbar = true, defaultContent = '' } = defineProps<{
-  placeholder?: string,
-  showToolbar?: boolean,
-  defaultContent?: string,
+const {
+  placeholder = '点击此处，在这里输入新内容...',
+  showToolbar = true,
+  defaultContent = '',
+} = defineProps<{
+  placeholder?: string
+  showToolbar?: boolean
+  defaultContent?: string
 }>()
 
 const emit = defineEmits<{
@@ -59,19 +66,24 @@ const editor = useEditor({
           return
         }
         for (const file of files) {
-          await handleFile(currentEditor, file, currentEditor.state.selection.anchor)
+          await handleFile(
+            currentEditor,
+            file,
+            currentEditor.state.selection.anchor
+          )
         }
       },
       onDrop: (currentEditor, files, pos) => {
-        files.forEach(file => handleFile(currentEditor, file, pos))
-      }
+        files.forEach((file) => handleFile(currentEditor, file, pos))
+      },
     }),
     Underline,
     Image,
   ],
   editorProps: {
     attributes: {
-      class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
+      class:
+        'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
     },
   },
   autofocus: true,
@@ -82,31 +94,40 @@ const editor = useEditor({
   },
 })
 
-watch(() => content.value, (newContent) => {
-  if (editor.value && newContent !== editor.value.getHTML() && newContent !== undefined) {
-    editor.value.commands.setContent(newContent, false)
+watch(
+  () => content.value,
+  (newContent) => {
+    if (
+      editor.value &&
+      newContent !== editor.value.getHTML() &&
+      newContent !== undefined
+    ) {
+      editor.value.commands.setContent(newContent, false)
+    }
   }
-})
+)
 
 const handleFile = async (currentEditor, file: File, pos: number) => {
   const { uploadFile, loading, succeed, imageUrl, errors } = useFileUpload()
-  
+
   await uploadFile(file)
 
   if (succeed.value) {
     if (succeed.value && imageUrl.value) {
-      currentEditor.chain().insertContentAt(pos, {
-      type: 'image',
-      attrs: {
-        src: imageUrl.value,
-      }
-    }).run()
-  } else if (errors.value.length > 0) {
+      currentEditor
+        .chain()
+        .insertContentAt(pos, {
+          type: 'image',
+          attrs: {
+            src: imageUrl.value,
+          },
+        })
+        .run()
+    } else if (errors.value.length > 0) {
       message.error(`上传文件失败: ${errors.value.join(', ')}`)
     }
   }
 }
-
 </script>
 
 <style>
@@ -125,9 +146,9 @@ const handleFile = async (currentEditor, file: File, pos: number) => {
     font-style: normal;
   }
   p {
-    @apply text-base
+    @apply text-base;
   }
-  @apply ml-2
+  @apply ml-2;
 }
 
 /* TODO: Not sure if this is a good fix */

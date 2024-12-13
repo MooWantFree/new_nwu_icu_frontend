@@ -1,14 +1,20 @@
 import { ResponseBase, APIResponse } from '@/types/api'
 
 type RequestConfig = {
-  method: "GET" | "POST" | "PUT" | "DELETE"
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
   url: string
   data?: any
   options?: RequestInit
 }
 
-
-async function request<T extends ResponseBase>(config: RequestConfig): Promise<{ status: number, data: APIResponse<T>, content: T["success"], errors?: APIResponse<T>["errors"] }> {
+async function request<T extends ResponseBase>(
+  config: RequestConfig
+): Promise<{
+  status: number
+  data: APIResponse<T>
+  content: T['success']
+  errors?: APIResponse<T>['errors']
+}> {
   const { method, url, data, options: customOptions } = config
   const fullUrl = `${url}`
 
@@ -16,9 +22,9 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
     method,
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCsrfToken()
+      'X-CSRFToken': getCsrfToken(),
     },
-    credentials: 'include'
+    credentials: 'include',
   }
 
   const mergedOptions: RequestInit = {
@@ -26,8 +32,8 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
     ...customOptions,
     headers: {
       ...defaultOptions.headers,
-      ...customOptions?.headers
-    }
+      ...customOptions?.headers,
+    },
   }
 
   if (data) {
@@ -43,7 +49,12 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
     const response = await fetch(fullUrl, mergedOptions)
     const result = await response.json()
 
-    return { status: response.status, data: result as APIResponse<T>, content: result.contents as T["success"], errors: result.errors as APIResponse<T>["errors"] }
+    return {
+      status: response.status,
+      data: result as APIResponse<T>,
+      content: result.contents as T['success'],
+      errors: result.errors as APIResponse<T>['errors'],
+    }
   } catch (error) {
     console.error('Request failed:', error)
     throw error
@@ -51,13 +62,30 @@ async function request<T extends ResponseBase>(config: RequestConfig): Promise<{
 }
 
 function getCsrfToken(): string {
-  return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
+  return (
+    document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('csrftoken='))
+      ?.split('=')[1] || ''
+  )
 }
 
 export const api = {
-  get: <T extends ResponseBase>(url: string, options?: RequestInit) => request<T>({ method: 'GET', url, options }),
-  post: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'POST', url, data, options }),
-  put: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'PUT', url, data, options }),
-  delete: <T extends ResponseBase>(url: string, data: any, options?: RequestInit) => request<T>({ method: 'DELETE', url, data, options })
+  get: <T extends ResponseBase>(url: string, options?: RequestInit) =>
+    request<T>({ method: 'GET', url, options }),
+  post: <T extends ResponseBase>(
+    url: string,
+    data: any,
+    options?: RequestInit
+  ) => request<T>({ method: 'POST', url, data, options }),
+  put: <T extends ResponseBase>(
+    url: string,
+    data: any,
+    options?: RequestInit
+  ) => request<T>({ method: 'PUT', url, data, options }),
+  delete: <T extends ResponseBase>(
+    url: string,
+    data: any,
+    options?: RequestInit
+  ) => request<T>({ method: 'DELETE', url, data, options }),
 }
-

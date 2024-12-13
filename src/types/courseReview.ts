@@ -1,9 +1,9 @@
 type LatestCourseReviewResponse = {
   success: {
-    count: number,
-    max_page: number,
-    page: number,
-    results: Review[],
+    count: number
+    max_page: number
+    page: number
+    results: Review[]
   }
 }
 

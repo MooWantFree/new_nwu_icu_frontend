@@ -29,7 +29,11 @@
             </router-link>
             <span v-else>匿名用户</span>
           </h3>
-          <span v-if="isAuthor" class="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">我的评价</span>
+          <span
+            v-if="isAuthor"
+            class="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full"
+            >我的评价</span
+          >
         </div>
         <div class="flex items-center space-x-2 mt-1">
           <div class="flex items-center">
@@ -42,7 +46,10 @@
     <div class="text-gray-700 mb-4">
       <div class="space-x-4">
         <div class="flex flex-wrap gap-4">
-          <span class="flex items-center" :title="ratingTooltip(review.difficulty)">
+          <span
+            class="flex items-center"
+            :title="ratingTooltip(review.difficulty)"
+          >
             <span class="mr-2">课程难度：</span>
             <div class="flex">
               <svg
@@ -61,7 +68,10 @@
               </svg>
             </div>
           </span>
-          <span class="flex items-center" :title="ratingTooltip(review.homework)">
+          <span
+            class="flex items-center"
+            :title="ratingTooltip(review.homework)"
+          >
             <span class="mr-2">作业多少：</span>
             <div class="flex">
               <svg
@@ -87,9 +97,7 @@
                 v-for="i in 3"
                 :key="i"
                 class="w-4 h-4"
-                :class="
-                  i <= review.grade ? 'text-yellow-400' : 'text-gray-300'
-                "
+                :class="i <= review.grade ? 'text-yellow-400' : 'text-gray-300'"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -213,8 +221,7 @@
         <Time :time="new Date(review.created_time)" />
         <div v-if="review.edited">
           <span
-            >(最后修改于:
-            <Time :time="new Date(review.modified_time)" />)</span
+            >(最后修改于: <Time :time="new Date(review.modified_time)" />)</span
           >
         </div>
       </div>
@@ -233,7 +240,7 @@
             @click="toggleReplyOrder"
             class="text-blue-600 hover:text-blue-800"
           >
-            {{ reverseReplies ? "最新回复" : "最早回复" }}
+            {{ reverseReplies ? '最新回复' : '最早回复' }}
           </n-button>
         </div>
       </div>
@@ -319,10 +326,7 @@
               回复
             </button>
           </div>
-          <span
-            v-else
-            class="text-sm text-gray-500 ml-2"
-          >
+          <span v-else class="text-sm text-gray-500 ml-2">
             #{{ reply.floorNumber }}
           </span>
         </div>
@@ -335,7 +339,7 @@
         @click="() => toggleReply()"
         class="text-blue-600 hover:text-blue-800"
       >
-        {{ showReply ? "取消回复" : "回复" }}
+        {{ showReply ? '取消回复' : '回复' }}
       </n-button>
       <span v-else> 登录以后才能回复 </span>
     </div>
@@ -355,7 +359,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Review } from "@/types/courses";
+import { Review } from '@/types/courses'
 import {
   onMounted,
   onUnmounted,
@@ -364,87 +368,87 @@ import {
   watch,
   useTemplateRef,
   nextTick,
-} from "vue";
-import { useRoute } from "vue-router";
-import { NButton, useMessage, useDialog } from "naive-ui";
-import { useUser } from "@/lib/useUser";
-import { api } from "@/lib/requests";
-import Time from "@/components/tinyComponents/Time.vue";
-import Viewer from "@/components/tiptap/viewer/Viewer.vue";
-import CourseReviewItemReply from "./CourseReviewItemReply.vue";
-import { ratingTooltip } from "../tooltips";
-import type { ReplyDeleteResponse } from "@/types/api/course";
+} from 'vue'
+import { useRoute } from 'vue-router'
+import { NButton, useMessage, useDialog } from 'naive-ui'
+import { useUser } from '@/lib/useUser'
+import { api } from '@/lib/requests'
+import Time from '@/components/tinyComponents/Time.vue'
+import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import CourseReviewItemReply from './CourseReviewItemReply.vue'
+import { ratingTooltip } from '../tooltips'
+import type { ReplyDeleteResponse } from '@/types/api/course'
 
 const props = defineProps<{
-  review: Review;
-}>();
+  review: Review
+}>()
 
 const emit = defineEmits<{
-  (e: "reviewDeleted", id: number): void;
-  (e: 'replyDeleted',reviewId: number, replyId: number): void
-  (e: "reviewEdit"): void;
-}>();
+  (e: 'reviewDeleted', id: number): void
+  (e: 'replyDeleted', reviewId: number, replyId: number): void
+  (e: 'reviewEdit'): void
+}>()
 
-const message = useMessage();
-const dialog = useDialog();
-const route = useRoute();
-const courseReviewItem = useTemplateRef("courseReviewItem");
+const message = useMessage()
+const dialog = useDialog()
+const route = useRoute()
+const courseReviewItem = useTemplateRef('courseReviewItem')
 
 // Scroll if has hash
 onMounted(async () => {
-  const hash = route.hash;
+  const hash = route.hash
   if (hash && hash.includes(`review-${props.review.id}`)) {
-    await nextTick();
+    await nextTick()
     if (courseReviewItem.value) {
-      courseReviewItem.value.scrollIntoView({ behavior: "smooth" });
+      courseReviewItem.value.scrollIntoView({ behavior: 'smooth' })
     }
   }
-});
+})
 
 // Display the reply box or not
-const showReply = ref(false);
+const showReply = ref(false)
 const isAuthor = computed(() => {
-  return props.review.author.id === userInfo.value?.id;
-});
+  return props.review.author.id === userInfo.value?.id
+})
 
-const replyTarget = ref(0);
-const replyTextArea = useTemplateRef("replyTextArea");
+const replyTarget = ref(0)
+const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
-  replyTarget.value = replyTo;
+  replyTarget.value = replyTo
   if (replyTo !== 0) {
     if (!showReply.value) {
-      showReply.value = !showReply.value;
+      showReply.value = !showReply.value
     }
   } else {
-    showReply.value = !showReply.value;
+    showReply.value = !showReply.value
   }
   if (showReply.value) {
     nextTick(() => {
-      replyTextArea.value?.focus();
-    });
+      replyTextArea.value?.focus()
+    })
   }
-};
+}
 
-const reverseReplies = ref(false);
+const reverseReplies = ref(false)
 
 const toggleReplyOrder = () => {
-  reverseReplies.value = !reverseReplies.value;
-};
+  reverseReplies.value = !reverseReplies.value
+}
 
 const orderedReplies = computed(() => {
   const replies = [...props.review.reply].reverse().map((it, index) => {
     return {
       ...it,
       floorNumber: index + 1,
-    };
-  });
+    }
+  })
 
-  return reverseReplies.value ? replies.reverse() : replies;
-});
+  return reverseReplies.value ? replies.reverse() : replies
+})
 
-const { userInfo, isLoggedIn } = useUser();
+const { userInfo, isLoggedIn } = useUser()
 const onReplySubmitted = (content: string, parent: number, replyId: number) => {
-  toggleReply();
+  toggleReply()
   // Push the new reply to the review's replies array
   props.review.reply.unshift({
     id: replyId,
@@ -461,120 +465,125 @@ const onReplySubmitted = (content: string, parent: number, replyId: number) => {
       dislike: 0,
       user_option: 0,
     },
-  });
-};
+  })
+}
 
 // Dropdown menu
-const dropdownMenuRef = useTemplateRef("dropdownMenu");
-const showDropdownMenu = ref(false);
+const dropdownMenuRef = useTemplateRef('dropdownMenu')
+const showDropdownMenu = ref(false)
 const toggleDropdownMenu = () => {
-  handleDropdownMenuOpened();
-  showDropdownMenu.value = !showDropdownMenu.value;
-};
+  handleDropdownMenuOpened()
+  showDropdownMenu.value = !showDropdownMenu.value
+}
 const handleClickEvent = (e: MouseEvent) => {
   if (dropdownMenuRef && !dropdownMenuRef.value.contains(e.target as Node)) {
-    showDropdownMenu.value = false;
+    showDropdownMenu.value = false
   }
-};
+}
 const handleDropdownMenuClosed = () => {
-  document.removeEventListener("click", handleClickEvent);
-};
+  document.removeEventListener('click', handleClickEvent)
+}
 const handleDropdownMenuOpened = () => {
-  document.addEventListener("click", handleClickEvent);
-};
+  document.addEventListener('click', handleClickEvent)
+}
 onUnmounted(() => {
-  document.removeEventListener("click", handleClickEvent);
-});
+  document.removeEventListener('click', handleClickEvent)
+})
 watch(showDropdownMenu, (newValue) => {
   if (!newValue) {
-    handleDropdownMenuClosed();
+    handleDropdownMenuClosed()
   }
-});
+})
 
 const handleEdit = () => {
-  emit("reviewEdit");
-  showDropdownMenu.value = false;
-};
+  emit('reviewEdit')
+  showDropdownMenu.value = false
+}
 
 const handleDelete = () => {
   dialog.warning({
-    title: "确认删除",
-    content: "你确定你想要删除这条评价吗？删除以后不可恢复！",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: '确认删除',
+    content: '你确定你想要删除这条评价吗？删除以后不可恢复！',
+    positiveText: '确定',
+    negativeText: '取消',
     onPositiveClick: async () => {
       try {
         const response = await api.delete<ReplyDeleteResponse>(
           `/api/assessment/review/`,
           { review_id: props.review.id }
-        );
+        )
         if (response.status === 200) {
-          message.success("评价已成功删除");
-          emit("reviewDeleted", props.review.id);
+          message.success('评价已成功删除')
+          emit('reviewDeleted', props.review.id)
         } else {
           throw new Error(
             response.errors.reduce(
-              (acc, cur) => acc + cur.field + ": " + cur.err_msg + "\n",
-              ""
+              (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
+              ''
             )
-          );
+          )
         }
       } catch (error) {
-        console.error("Error deleting review:", error);
-        message.error("删除评价失败，请稍后重试\n" + error);
+        console.error('Error deleting review:', error)
+        message.error('删除评价失败，请稍后重试\n' + error)
       }
     },
-  });
-};
+  })
+}
 
 const handleDeleteReply = async (repyId: number) => {
   if (confirm(`你确定要删掉这条回复吗？！`)) {
     try {
       const resp = await api.delete('/api/assessment/reply/', {
         reply_id: repyId,
-        review_id: props.review.id
+        review_id: props.review.id,
       })
       if (resp.status === 200) {
         message.success('回复已成功删除')
         emit('replyDeleted', props.review.id, repyId)
       } else {
-        throw new Error(resp.errors.reduce((acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n', ''))
+        throw new Error(
+          resp.errors.reduce(
+            (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
+            ''
+          )
+        )
       }
     } catch (error) {
       console.error('Error deleting reply:', error)
       message.error('删除回复失败，请稍后重试\n' + error)
     }
   }
-};
+}
 
-const repliesRefs = useTemplateRef("replies");
+const repliesRefs = useTemplateRef('replies')
 
 const handleJmpClick = async (targetReplyId: number) => {
   if (repliesRefs.value) {
     const targetElement = repliesRefs.value.find(
-      (el) => el.getAttribute("data-id") === targetReplyId.toString()
-    );
+      (el) => el.getAttribute('data-id') === targetReplyId.toString()
+    )
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      await nextTick();
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      await nextTick()
       // FIXME: Await element scroll into view
       targetElement.classList.add(
-        "transition-transform",
-        "duration-300",
-        "scale-110"
-      );
+        'transition-transform',
+        'duration-300',
+        'scale-110'
+      )
       setTimeout(() => {
-        targetElement.classList.remove("scale-110");
-        targetElement.classList.add("scale-100");
-      }, 300);
+        targetElement.classList.remove('scale-110')
+        targetElement.classList.add('scale-100')
+      }, 300)
       setTimeout(() => {
         targetElement.classList.remove(
-          "transition-transform",
-          "duration-300",
-          "scale-100"
-        );
-      }, 600);
+          'transition-transform',
+          'duration-300',
+          'scale-100'
+        )
+      }, 600)
     }
   }
-};
+}
 </script>

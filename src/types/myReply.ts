@@ -27,4 +27,4 @@ type Replies = {
   message: Reply[]
 }
 
-export {Replies, Reply}
+export { Replies, Reply }

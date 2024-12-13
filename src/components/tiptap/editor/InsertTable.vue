@@ -1,5 +1,7 @@
 <template>
-  <div class="table-insert p-4 bg-white border border-gray-200 rounded-lg shadow-lg">
+  <div
+    class="table-insert p-4 bg-white border border-gray-200 rounded-lg shadow-lg"
+  >
     <div class="flex flex-col gap-4">
       <div class="flex gap-4">
         <div class="flex flex-col gap-2">

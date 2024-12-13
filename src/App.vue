@@ -13,7 +13,9 @@
                       <div class="flex-grow">
                         <RouterView />
                       </div>
-                      <div class="text-center py-4">2019-{{ new Date().getFullYear() }} NWU.ICU</div>
+                      <div class="text-center py-4">
+                        2019-{{ new Date().getFullYear() }} NWU.ICU
+                      </div>
                     </div>
                   </n-layout>
                 </div>

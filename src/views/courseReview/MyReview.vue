@@ -2,19 +2,25 @@
   <n-infinite-scroll class="h-37.5" :distance="30" @load="handleLoad">
     <template v-if="myReviews">
       <div v-for="review in myReview" class="flex mb-2.5 flex-col">
-        <MyReviewItems :review="review"/>
+        <MyReviewItems :review="review" />
         <div class="w-23/24 mx-auto h-0.1 pb-8">
-          <n-divider class="border-b border-dashed border-customGray" :dashed="true"/>
+          <n-divider
+            class="border-b border-dashed border-customGray"
+            :dashed="true"
+          />
         </div>
       </div>
     </template>
     <template v-else>
       <div v-for="n in 5" :key="n" class="flex mb-2.5 flex-col">
         <div class="pr-4 pl-4 pt-4">
-          <n-skeleton text :repeat="5"/>
-          <br>
+          <n-skeleton text :repeat="5" />
+          <br />
           <div class="w-23/24 mx-auto h-0.1 pb-8">
-            <n-divider class="border-b border-dashed border-customGray" :dashed="true"/>
+            <n-divider
+              class="border-b border-dashed border-customGray"
+              :dashed="true"
+            />
           </div>
         </div>
       </div>
@@ -22,22 +28,22 @@
   </n-infinite-scroll>
 </template>
 
-
 <script lang="ts" setup>
 import MyReviewItems from '@/components/courseReview/MyReviewItems.vue'
 import { MyReviews, Review } from '@/types/myReview'
 import { onMounted, ref } from 'vue'
 
-
-const myReviews = ref<MyReviews | null>(null);
-const myReview = ref<Review[] | null>(null);
-const counter = ref<number>(6);
+const myReviews = ref<MyReviews | null>(null)
+const myReview = ref<Review[] | null>(null)
+const counter = ref<number>(6)
 const myReviewsReq = async () => {
   try {
     const resp = await fetch(`/api/review/my-review`)
     myReviews.value = await resp.json()
-    myReview.value = myReviews.value.message.reviews.length > 0 ?
-        myReviews.value.message.reviews.slice(0, counter.value) : [null]
+    myReview.value =
+      myReviews.value.message.reviews.length > 0
+        ? myReviews.value.message.reviews.slice(0, counter.value)
+        : [null]
   } catch (error) {
     console.error('Failed to load reviews:', error)
   }
@@ -45,19 +51,15 @@ const myReviewsReq = async () => {
 const handleLoad = () => {
   counter.value = counter.value + 1
   if (counter.value > myReviews.value.message.reviews.length) {
-    console.log("no more data")
+    console.log('no more data')
   } else {
     myReview.value.push(myReviews.value.message.reviews[counter.value])
   }
-
 }
 
 onMounted(async () => {
-  await myReviewsReq();
-
-});
-
+  await myReviewsReq()
+})
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -7,7 +7,11 @@
         <div class="h-3 bg-gray-300 rounded w-1/5"></div>
       </div>
       <div class="flex space-x-1">
-        <div v-for="i in 5" :key="i" class="w-5 h-5 bg-gray-300 rounded-full"></div>
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-5 h-5 bg-gray-300 rounded-full"
+        ></div>
       </div>
     </div>
     <div class="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
@@ -23,5 +27,4 @@
   </div>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>

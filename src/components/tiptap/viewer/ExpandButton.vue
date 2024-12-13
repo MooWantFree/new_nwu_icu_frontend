@@ -26,9 +26,9 @@ defineEmits<{
 
 <style scoped>
 .expand-button {
-  transition: all 0.3s ease
+  transition: all 0.3s ease;
 }
 .expand-button:hover {
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 </style>

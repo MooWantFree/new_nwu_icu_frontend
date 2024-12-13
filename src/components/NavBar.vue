@@ -1,8 +1,17 @@
 <template>
-  <n-layout-header bordered class="nav" :style="style" style="display: flex; justify-content: space-around">
-    <div :style="!isMobile ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
-        : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
-      ">
+  <n-layout-header
+    bordered
+    class="nav"
+    :style="style"
+    style="display: flex; justify-content: space-around"
+  >
+    <div
+      :style="
+        !isMobile
+          ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
+          : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
+      "
+    >
       <template v-if="!isMobile" style="display: flex; align-items: center">
         <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
           <img alt="logo image" src="@/assets/logo.svg" />
@@ -10,21 +19,37 @@
         </n-text>
         <!--        PC NaviBars: left-->
         <div class="nav-bar-pc-left" style="margin-left: auto">
-          <n-menu :value="activeKey" mode="horizontal" :options="menuOptions" :render-label="renderMenuLabel" />
+          <n-menu
+            :value="activeKey"
+            mode="horizontal"
+            :options="menuOptions"
+            :render-label="renderMenuLabel"
+          />
         </div>
         <div class="nav-bar-pc-right" style="margin-left: auto">
           <template v-if="!isLoggedIn">
-            <n-button :disabled="isLoading" type="info" @click="showLoginPopup = true">
+            <n-button
+              :disabled="isLoading"
+              type="info"
+              @click="showLoginPopup = true"
+            >
               登录/注册
             </n-button>
           </template>
           <template v-else>
-            <n-dropdown :options="userAvatarDropdownOptions" :render-label="renderMenuLabel" trigger="hover">
+            <n-dropdown
+              :options="userAvatarDropdownOptions"
+              :render-label="renderMenuLabel"
+              trigger="hover"
+            >
               <template v-if="userInfo === null">
-                <n-avatar round :style="{
-                  color: 'yellow',
-                  backgroundColor: 'red',
-                }">
+                <n-avatar
+                  round
+                  :style="{
+                    color: 'yellow',
+                    backgroundColor: 'red',
+                  }"
+                >
                   M
                 </n-avatar>
               </template>
@@ -39,9 +64,20 @@
             </n-dropdown>
           </template>
         </div>
-        <n-modal v-model:show="showLoginPopup" preset="card" :mask-closable="false" title="登录/注册" style="width: 600px"
-          :bordered="false" size="huge" aria-modal="true">
-          <Login @login-success="handleLoginSuccess" @close-modal="showLoginPopup = false" />
+        <n-modal
+          v-model:show="showLoginPopup"
+          preset="card"
+          :mask-closable="false"
+          title="登录/注册"
+          style="width: 600px"
+          :bordered="false"
+          size="huge"
+          aria-modal="true"
+        >
+          <Login
+            @login-success="handleLoginSuccess"
+            @close-modal="showLoginPopup = false"
+          />
         </n-modal>
       </template>
       <template v-else>
@@ -49,25 +85,48 @@
           <img alt="logo image" src="@/assets/logo.svg" />
           <n-button color="#000000" dashed>NWU.ICU</n-button>
         </n-text>
-        <n-popover ref="mobilePopoverRef" style="padding: 0; width: 288px" placement="bottom-end"
-          display-directive="show" trigger="click">
+        <n-popover
+          ref="mobilePopoverRef"
+          style="padding: 0; width: 288px"
+          placement="bottom-end"
+          display-directive="show"
+          trigger="click"
+        >
           <template #trigger>
             <n-icon size="20" style="margin-left: 20px">
               <MenuOutline />
             </n-icon>
           </template>
           <template #header>
-            <n-menu :value="activeKey" :options="mobileMenuHomeButton" :indent="18" :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu" accordion />
+            <n-menu
+              :value="activeKey"
+              :options="mobileMenuHomeButton"
+              :indent="18"
+              :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu"
+              accordion
+            />
           </template>
           <div style="overflow: auto; max-height: 79vh">
             <!--            Mobile Menu-->
-            <n-menu :value="activeKey" :options="menuOptions" :indent="18" :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu" accordion />
+            <n-menu
+              :value="activeKey"
+              :options="menuOptions"
+              :indent="18"
+              :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu"
+              accordion
+            />
           </div>
           <template #footer>
-            <n-menu :value="activeKey" :options="mobileMenuUserAreaButtons" :indent="18" :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu" accordion />
+            <n-menu
+              :value="activeKey"
+              :options="mobileMenuUserAreaButtons"
+              :indent="18"
+              :render-label="renderMenuLabel"
+              @update:value="handleUpdateMobileMenu"
+              accordion
+            />
           </template>
         </n-popover>
       </template>
@@ -108,17 +167,17 @@ const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 const showLoginPopup = ref(false)
 const handleLoginSuccess = (data: UserProfile) => {
   login(data)
-  const displayName = data?.nickname ?? data?.username ?? ""
+  const displayName = data?.nickname ?? data?.username ?? ''
   message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
   showLoginPopup.value = false
 }
 const handleLogoutButtonClick = () => {
   const d = dialog.create({
     icon: renderIcon(LogOut),
-    title: "退出登录",
-    content: "确定要退出登录吗",
-    positiveText: "确定",
-    negativeText: "算了",
+    title: '退出登录',
+    content: '确定要退出登录吗',
+    positiveText: '确定',
+    negativeText: '算了',
     onPositiveClick(e) {
       e.preventDefault()
       d.loading = true
@@ -145,18 +204,18 @@ const userAvatarDropdownOptions = [
     icon: renderIcon(LogOut),
     onclick: () => {
       handleLogoutButtonClick()
-    }
-  }
+    },
+  },
 ]
 const handleLogout = async () => {
-  const {status} = await api.post("/api/user/logout/", {})
+  const { status } = await api.post('/api/user/logout/', {})
   if (status !== 200) {
-    message.error("退出登录失败，请稍后再试")
+    message.error('退出登录失败，请稍后再试')
     logout()
     return
   }
   logout()
-  message.success("成功退出登录，欢迎您下次再来")
+  message.success('成功退出登录，欢迎您下次再来')
 }
 
 // Update Window width on update
@@ -175,7 +234,7 @@ onUnmounted(() => {
 // Menus
 const handleLogoClick = () => {
   if (route.path === '/') {
-    message.info("您已经在主页了")
+    message.info('您已经在主页了')
     return
   }
   router.push('/')
@@ -201,7 +260,7 @@ const menuOptions = [
       {
         key: 'reviewTimeline',
         text: '主页',
-        path: '/review/timeline'
+        path: '/review/timeline',
       },
       {
         key: 'reviewCourse',
@@ -222,15 +281,15 @@ const menuOptions = [
     onclick: () => {
       dialog.create({
         icon: renderIcon(OpenOutline),
-        title: "打开外部链接",
-        content: "在新的标签页打开资料下载页面（虽然也是我们的）",
-        positiveText: "打开",
-        negativeText: "算了",
+        title: '打开外部链接',
+        content: '在新的标签页打开资料下载页面（虽然也是我们的）',
+        positiveText: '打开',
+        negativeText: '算了',
         onPositiveClick(e) {
-          window.open('https://resour.nwu.icu', "_blank")
+          window.open('https://resour.nwu.icu', '_blank')
         },
       })
-    }
+    },
   },
   {
     key: 'about',
@@ -240,19 +299,23 @@ const menuOptions = [
   },
 ]
 
-const mobileMenuHomeButton = [{
-  key: 'home',
-  text: '主页',
-  icon: renderIcon(Home),
-  path: '/',
-}]
+const mobileMenuHomeButton = [
+  {
+    key: 'home',
+    text: '主页',
+    icon: renderIcon(Home),
+    path: '/',
+  },
+]
 
-const mobileMenuLoginButton = [{
-  key: 'login',
-  text: '登录/注册',
-  path: '/login',
-  icon: renderIcon(LogIn),
-}]
+const mobileMenuLoginButton = [
+  {
+    key: 'login',
+    text: '登录/注册',
+    path: '/login',
+    icon: renderIcon(LogIn),
+  },
+]
 
 const mobileMenuUserButtons = [
   {
@@ -266,25 +329,23 @@ const mobileMenuUserButtons = [
     text: '退出登录',
     icon: renderIcon(LogOut),
     onclick: handleLogoutButtonClick,
-  }
+  },
 ]
 
 const mobileMenuUserAreaButtons = computed(() => {
   return isLoggedIn.value ? mobileMenuUserButtons : mobileMenuLoginButton
 })
 
-
 const style = computed(() => {
   return isMobile.value
     ? {
-      '--side-padding': '16px',
-      'grid-template-columns': 'auto 1fr auto'
-    }
+        '--side-padding': '16px',
+        'grid-template-columns': 'auto 1fr auto',
+      }
     : {
-      '--side-padding': '32px',
-      'grid-template-columns':
-        'calc(272px - var(--side-padding)) 1fr auto'
-    }
+        '--side-padding': '32px',
+        'grid-template-columns': 'calc(272px - var(--side-padding)) 1fr auto',
+      }
 })
 </script>
 
@@ -303,7 +364,7 @@ const style = computed(() => {
   font-size: 18px;
 }
 
-.ui-logo>img {
+.ui-logo > img {
   margin-right: 12px;
   height: 32px;
   width: 32px;

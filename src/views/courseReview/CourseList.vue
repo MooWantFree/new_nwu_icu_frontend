@@ -2,13 +2,17 @@
   <!-- TODO: Not Reviewed -->
   <div class="container mx-auto py-8 px-4">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">课程列表</h1>
-    
+
     <div class="mb-6 flex justify-end">
       <n-select v-model:value="sortBy" :options="sortOptions" class="w-48" />
     </div>
 
     <div v-if="loading" class="space-y-4">
-      <div v-for="i in 5" :key="i" class="bg-gray-200 rounded-md h-6 w-full animate-pulse"></div>
+      <div
+        v-for="i in 5"
+        :key="i"
+        class="bg-gray-200 rounded-md h-6 w-full animate-pulse"
+      ></div>
     </div>
 
     <div v-else-if="courses.length === 0" class="text-center text-gray-500">
@@ -16,9 +20,16 @@
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="course in paginatedCourses" :key="course.id" class="bg-white rounded-lg shadow-md p-6 transition duration-300 hover:shadow-lg">
+      <div
+        v-for="course in paginatedCourses"
+        :key="course.id"
+        class="bg-white rounded-lg shadow-md p-6 transition duration-300 hover:shadow-lg"
+      >
         <h2 class="text-xl font-semibold mb-2">
-          <router-link :to="`/review/course/${course.id}`" class="text-blue-600 hover:text-blue-800 transition duration-300">
+          <router-link
+            :to="`/review/course/${course.id}`"
+            class="text-blue-600 hover:text-blue-800 transition duration-300"
+          >
             {{ course.name }}
           </router-link>
         </h2>
@@ -26,7 +37,12 @@
         <p class="text-gray-600 mb-2">学期: {{ course.semester }}</p>
         <div class="flex items-center mb-2">
           <n-rate readonly :value="course.average_rating" :allow-half="true" />
-          <span class="ml-2 text-gray-600">{{ course.average_rating.toFixed(1) }} ({{ course.review_count }} 条评价)</span>
+          <span class="ml-2 text-gray-600"
+            >{{ course.average_rating.toFixed(1) }} ({{
+              course.review_count
+            }}
+            条评价)</span
+          >
         </div>
         <div class="text-sm text-gray-500">
           标准化评分: {{ course.normalized_rating.toFixed(2) }}
@@ -67,7 +83,9 @@ const sortOptions = [
 const fetchCourses = async () => {
   loading.value = true
   try {
-    const response = await api.get<CourseListResponse>('/api/assessment/courselist/')
+    const response = await api.get<CourseListResponse>(
+      '/api/assessment/courselist/'
+    )
     courses.value = response.content.courses
   } catch (error) {
     console.error('Error fetching courses:', error)
@@ -94,7 +112,9 @@ const sortedCourses = computed(() => {
   })
 })
 
-const totalPages = computed(() => Math.ceil(sortedCourses.value.length / itemsPerPage))
+const totalPages = computed(() =>
+  Math.ceil(sortedCourses.value.length / itemsPerPage)
+)
 
 const paginatedCourses = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage

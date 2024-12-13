@@ -41,10 +41,10 @@
 </template>
 
 <script lang="ts" setup>
-import { RouterLink } from "vue-router";
-import type { CourseData } from "@/types/courses";
+import { RouterLink } from 'vue-router'
+import type { CourseData } from '@/types/courses'
 
 const { courseData } = defineProps<{
-  courseData: CourseData;
-}>();
+  courseData: CourseData
+}>()
 </script>

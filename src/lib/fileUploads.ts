@@ -18,11 +18,15 @@ export function useFileUpload() {
     formData.append('file', file)
 
     try {
-      const { status, data, content, errors } = await api.post<FileUploadResponse>('/api/upload/', formData)
+      const { status, data, content, errors } =
+        await api.post<FileUploadResponse>('/api/upload/', formData)
 
-      if (status.toString().startsWith('4') || status.toString().startsWith('5')) {
+      if (
+        status.toString().startsWith('4') ||
+        status.toString().startsWith('5')
+      ) {
         const errorMessages = []
-        if(errors) {
+        if (errors) {
           for (const err of errors) {
             errorMessages.push(`${err.field}: ${err.err_msg}`)
           }

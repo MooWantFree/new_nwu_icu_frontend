@@ -8,7 +8,7 @@
         </div>
         <div class="p-6 mt-6 bg-white rounded-md shadow-md h-full">
           <n-skeleton text size="large" width="30%" />
-          <n-skeleton text size="medium" class="mt-5"/>
+          <n-skeleton text size="medium" class="mt-5" />
           <div class="mt-3" />
           <n-skeleton :repeat="18" class="" />
           <br />
@@ -17,10 +17,10 @@
       </div>
       <aside class="space-y-6">
         <div class="p-6 bg-white rounded-md shadow-md h-96">
-          <n-skeleton :repeat="16" text/>
+          <n-skeleton :repeat="16" text />
         </div>
         <div class="p-6 bg-white rounded-md shadow-md h-96">
-          <n-skeleton :repeat="16" text/>
+          <n-skeleton :repeat="16" text />
         </div>
       </aside>
     </div>

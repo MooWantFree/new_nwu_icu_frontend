@@ -3,12 +3,16 @@
   <main class="min-h-screen bg-gray-100" v-else>
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
-        <CourseMeta :course-data="courseData" :loading="courseLoading"/>
-        <CourseReviews :course-data="courseData" :loading="courseLoading" @reloadData="loadData"/>
+        <CourseMeta :course-data="courseData" :loading="courseLoading" />
+        <CourseReviews
+          :course-data="courseData"
+          :loading="courseLoading"
+          @reloadData="loadData"
+        />
       </div>
       <aside class="space-y-6">
-        <CourseTeachers :course-data="courseData"/>
-        <CourseAlike :course-data="courseData"/>
+        <CourseTeachers :course-data="courseData" />
+        <CourseAlike :course-data="courseData" />
       </aside>
     </div>
   </main>
@@ -39,22 +43,22 @@ const loadData = async () => {
   try {
     const url = `/api/assessment/course/${route.params.id}/`
     const { status, data, content } = await api.get<CourseDataResponse>(url)
-    
+
     if (status === 404) {
-      await router.push({name: '404'})
+      await router.push({ name: '404' })
       return
     }
-    
+
     if (status !== 200) {
       throw new Error(`HTTP error! status: ${status}`)
     }
-    
+
     courseData.value = content
     document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
     courseLoading.value = false
   } catch (error) {
     console.error('Failed to fetch course data:', error)
-    await router.push({name: '500', query: {message: encodeURI(error)}})
+    await router.push({ name: '500', query: { message: encodeURI(error) } })
   } finally {
   }
 }
@@ -71,8 +75,6 @@ watch(
 onMounted(async () => {
   await loadData()
 })
-
 </script>
 
-<style lang="postcss" scoped>
-</style>
+<style lang="postcss" scoped></style>

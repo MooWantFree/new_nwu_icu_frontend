@@ -7,13 +7,18 @@
     <div class="mt-4">
       <div class="flex items-center space-x-2">
         <div class="flex items-center">
-          <n-rate readonly :allow-half="true" :default-value="Number(courseData.rating_avg)"/>
+          <n-rate
+            readonly
+            :allow-half="true"
+            :default-value="Number(courseData.rating_avg)"
+          />
         </div>
         <div class="text-lg font-bold">{{ courseData.rating_avg }}</div>
-        <div class="text-sm text-gray-600">({{ courseData.reviews.length }}人评价)</div>
+        <div class="text-sm text-gray-600">
+          ({{ courseData.reviews.length }}人评价)
+        </div>
       </div>
-      <div class="mt-4 text-gray-400">
-      </div>
+      <div class="mt-4 text-gray-400"></div>
       <div class="flex mt-3">
         <div class="flex-1">
           <p>课程类别：{{ courseData.category }}</p>
@@ -24,11 +29,31 @@
       </div>
       <p class="mt-3">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
       <div class="flex items-center mt-4 space-x-2">
-        <button @click="handleRecommendButtonClick" :disabled="isButtonDisabled" :class="['flex items-center px-4 py-2 rounded transition-colors', courseData.like.user_option === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white', isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '']">
+        <button
+          @click="handleRecommendButtonClick"
+          :disabled="isButtonDisabled"
+          :class="[
+            'flex items-center px-4 py-2 rounded transition-colors',
+            courseData.like.user_option === 1
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white',
+            isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
+          ]"
+        >
           <ThumbsUpOutline class="w-5 h-5 mr-2" />
           <span>推荐({{ courseData.like.like }})</span>
         </button>
-        <button @click="handleDisRecommendButtonClick" :disabled="isButtonDisabled" :class="['flex items-center px-4 py-2 rounded transition-colors ml-2', courseData.like.user_option === -1 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white', isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '']">
+        <button
+          @click="handleDisRecommendButtonClick"
+          :disabled="isButtonDisabled"
+          :class="[
+            'flex items-center px-4 py-2 rounded transition-colors ml-2',
+            courseData.like.user_option === -1
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white',
+            isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
+          ]"
+        >
           <ThumbsDownOutline class="w-5 h-5 mr-2" />
           <span>不推荐({{ courseData.like.dislike }})</span>
         </button>
@@ -49,8 +74,8 @@ import { ReplyLikeResponse } from '@/types/api/course'
 const message = useMessage()
 const { isLoading, isLoggedIn } = useUser()
 const props = defineProps<{
-  courseData: CourseData,
-  loading: boolean,
+  courseData: CourseData
+  loading: boolean
 }>()
 
 const isButtonDisabled = ref(false)
@@ -62,14 +87,17 @@ const handleRecommendButtonClick = async () => {
     return
   }
   isButtonDisabled.value = true
-  const resp = await api.post<ReplyLikeResponse>('/api/assessment/course/like/', {
-    course_id: props.courseData.id,
-    like: 1,
-  })
+  const resp = await api.post<ReplyLikeResponse>(
+    '/api/assessment/course/like/',
+    {
+      course_id: props.courseData.id,
+      like: 1,
+    }
+  )
   if (resp.status === 200) {
     switch (props.courseData.like.user_option) {
       case -1:
-        // fall through
+      // fall through
       case 0:
         props.courseData.like.dislike = resp.content.like.dislike
         props.courseData.like.like = resp.content.like.like
@@ -94,14 +122,17 @@ const handleDisRecommendButtonClick = async () => {
     return
   }
   isButtonDisabled.value = true
-  const resp = await api.post<ReplyLikeResponse>('/api/assessment/course/like/', {
-    course_id: props.courseData.id,
-    like: -1,
-  })
+  const resp = await api.post<ReplyLikeResponse>(
+    '/api/assessment/course/like/',
+    {
+      course_id: props.courseData.id,
+      like: -1,
+    }
+  )
   if (resp.status === 200) {
     switch (props.courseData.like.user_option) {
       case 1:
-        // fall through
+      // fall through
       case 0:
         props.courseData.like.dislike = resp.content.like.dislike
         props.courseData.like.like = resp.content.like.like
