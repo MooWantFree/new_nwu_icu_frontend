@@ -378,6 +378,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "reviewDeleted", id: number): void;
+  (e: 'replyDeleted',reviewId: number, replyId: number): void
   (e: "reviewEdit"): void;
 }>();
 
@@ -525,7 +526,21 @@ const handleDelete = () => {
 
 const handleDeleteReply = async (repyId: number) => {
   if (confirm(`你确定要删掉这条回复吗？！`)) {
-    // TODO: Delete the reply
+    try {
+      const resp = await api.delete('/api/assessment/reply/', {
+        reply_id: repyId,
+        review_id: props.review.id
+      })
+      if (resp.status === 200) {
+        message.success('回复已成功删除')
+        emit('replyDeleted', props.review.id, repyId)
+      } else {
+        throw new Error(resp.errors.reduce((acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n', ''))
+      }
+    } catch (error) {
+      console.error('Error deleting reply:', error)
+      message.error('删除回复失败，请稍后重试\n' + error)
+    }
   }
 };
 
