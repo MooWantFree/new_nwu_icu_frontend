@@ -32,3 +32,6 @@ coverage
 # For private npm
 .npmrc
 .aider*
+
+# windsurf rules
+.windsurfrules
