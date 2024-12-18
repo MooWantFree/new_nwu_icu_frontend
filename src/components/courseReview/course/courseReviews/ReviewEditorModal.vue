@@ -299,8 +299,7 @@ watch(
 
 const showRatingsSelector = ref(false)
 
-const isFormValid = computed(() => {
-  return (
+const isFormValid = computed(() => (
     content.value.trim() &&
     rating.value > 0 &&
     difficulty.value > 0 &&
@@ -309,5 +308,5 @@ const isFormValid = computed(() => {
     reward.value > 0 &&
     selectedSemester.value !== null
   )
-})
+)
 </script>
