@@ -52,7 +52,31 @@ onMounted(async () => {
   if (hash && hash.includes(`review-${review.id}`)) {
     await nextTick()
     if (courseReviewItem.value) {
+      const scrollPromise = new Promise((resolve) => {
+        const scrollEndHandler = () => {
+          window.removeEventListener('scrollend', scrollEndHandler)
+          resolve(null)
+        }
+        window.addEventListener('scrollend', scrollEndHandler)
+      })
       courseReviewItem.value.scrollIntoView({ behavior: 'smooth' })
+      await scrollPromise
+      courseReviewItem.value.classList.add(
+        'transition-transform',
+        'duration-300',
+        'scale-110'
+      )
+      setTimeout(() => {
+        courseReviewItem.value.classList.remove('scale-110')
+        courseReviewItem.value.classList.add('scale-100')
+      }, 300)
+      setTimeout(() => {
+        courseReviewItem.value.classList.remove(
+          'transition-transform',
+          'duration-300',
+          'scale-100'
+        )
+      }, 600)
     }
   }
 })

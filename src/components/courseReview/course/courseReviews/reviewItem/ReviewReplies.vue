@@ -62,10 +62,7 @@
                 class="text-blue-600 hover:underline"
                 @click="handleJmpClick(reply.parent)"
               >
-                #{{
-                  orderedReplies.find((it) => it.id === reply.parent)
-                    ?.floorNumber
-                }}
+                #{{ orderedReplies.find((it) => it.id === reply.parent)?.floorNumber }}
               </button>
               )
             </span>
@@ -208,9 +205,18 @@ const handleJmpClick = async (targetReplyId: number) => {
       (el) => el.getAttribute('data-id') === targetReplyId.toString()
     )
     if (targetElement) {
+      const scrollPromise = new Promise((resolve) => {
+        const scrollEndHandler = () => {
+          window.removeEventListener('scrollend', scrollEndHandler)
+          resolve(null)
+        }
+        window.addEventListener('scrollend', scrollEndHandler)
+      })
+
       targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      await scrollPromise
       await nextTick()
-      // FIXME: Await element scroll into view
+
       targetElement.classList.add(
         'transition-transform',
         'duration-300',
