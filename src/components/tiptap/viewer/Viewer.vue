@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -113,10 +113,27 @@ const editor = useEditor({
 })
 
 const editorContainer = ref<HTMLElement | null>()
+let resizeObserver: ResizeObserver | null = null
+
 onMounted(async () => {
   await nextTick()
   if (editorContainer.value) {
     checkContentOverflow(editorContainer.value.scrollHeight)
+    
+    // Create and start the ResizeObserver
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        checkContentOverflow(entry.target.scrollHeight)
+      }
+    })
+    resizeObserver.observe(editorContainer.value)
+  }
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
   }
 })
 
