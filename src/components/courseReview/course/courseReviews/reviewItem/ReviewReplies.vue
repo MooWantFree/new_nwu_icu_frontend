@@ -86,6 +86,23 @@
             </button>
           </p>
         </div>
+        <div
+          class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
+          v-if="
+            jumpHistory.length > 0 &&
+            jumpHistory[jumpHistory.length - 1].to === reply.id
+          "
+          @click="handleJmpBackClick"
+        >
+          <button
+            class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            返回上一楼(#{{ orderedReplies.find((it) => it.id === jumpHistory[jumpHistory.length - 1].from)?.floorNumber }})
+          </button>
+        </div>
         <div v-if="isLoggedIn" class="relative mx-1 z-50">
           <span
             class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0"
@@ -97,16 +114,6 @@
             class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
           >
             回复
-          </button>
-          <button
-            v-if="
-              jumpHistory.length > 0 &&
-              jumpHistory[jumpHistory.length - 1].to === reply.id
-            "
-            @click="handleJmpBackClick"
-            class="absolute top-5 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
-          >
-            返回之前的楼层
           </button>
         </div>
         <span v-else class="text-sm text-gray-500 ml-2">
@@ -210,7 +217,7 @@ const handleDeleteReply = async (repyId: number) => {
 }
 
 const repliesRefs = useTemplateRef('replies')
-const jumpHistory = ref<{from: number, to: number}[]>([]) // Now stores reply IDs instead of floor numbers
+const jumpHistory = ref<{ from: number; to: number }[]>([]) // Now stores reply IDs instead of floor numbers
 
 const handleJmp = async (targetElement: HTMLElement) => {
   if (targetElement) {
