@@ -140,6 +140,13 @@ const routes = [
 const Router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior: (from, to, savedPosition) => {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  },
 });
 
 const { isLoggedIn } = useUser()
