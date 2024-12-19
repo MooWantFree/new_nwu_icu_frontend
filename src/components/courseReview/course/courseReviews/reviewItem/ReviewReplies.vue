@@ -4,17 +4,25 @@
       class="flex justify-between items-center mb-2"
       v-if="review.reply && review.reply.length > 0"
     >
-      <h3 class="font-semibold text-gray-900 text-lg">评论</h3>
-      <!-- TODO: Change color -->
+      <div class="flex items-center space-x-2">
+        <h3 class="font-semibold text-gray-900 text-lg">评论</h3>
+        <button
+          v-if="isLoggedIn"
+          @click="toggleReply(0)"
+          class="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer"
+        >
+          {{ showReply && replyTarget === 0 ? '取消回复' : '添加回复' }}
+        </button>
+      </div>
+
       <div>
         <span>排序：</span>
-        <n-button
-          text
+        <button
           @click="toggleReplyOrder"
-          class="text-blue-600 hover:text-blue-800"
+          class="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer"
         >
           {{ reverseReplies ? '最新回复' : '最早回复' }}
-        </n-button>
+        </button>
       </div>
     </div>
     <div class="space-y-2">
@@ -330,7 +338,11 @@ const orderedReplies = computed(() => {
 })
 
 const { userInfo, isLoggedIn } = useUser()
-const onReplySubmitted = async (content: string, parent: number, replyId: number) => {
+const onReplySubmitted = async (
+  content: string,
+  parent: number,
+  replyId: number
+) => {
   toggleReply()
   if (!userInfo.value) return
   // Push the new reply to the review's replies array
