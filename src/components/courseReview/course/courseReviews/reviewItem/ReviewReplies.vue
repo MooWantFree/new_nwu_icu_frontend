@@ -68,7 +68,7 @@
                 </button>
                 )
               </span>
-              <span class="text-gray-800 break-words whitespace-normal">
+              <span class="text-gray-800 break-all">
                 : {{ reply.content }}
               </span>
               </p>
@@ -109,7 +109,8 @@
                             fill="currentColor"></path>
                       </g>
                     </svg>
-                    <span>回复</span>
+                    <span v-if="replyTarget === reply.id && showReply && formerReplyTarget != 0 " class="font-black underline underline-offset-1">取消</span>
+                    <span v-else>回复</span>
                   </button>
                 </div>
               </div>
@@ -220,8 +221,6 @@ const formerReplyTarget = ref(0)
 const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
   replyTarget.value = replyTo
-  console.log(showReply.value)
-  console.log(replyTo)
   if (replyTo !== 0) {
     if (!showReply.value) {
       showReply.value = !showReply.value
