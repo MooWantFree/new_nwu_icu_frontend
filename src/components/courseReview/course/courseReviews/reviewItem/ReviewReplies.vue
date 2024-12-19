@@ -184,6 +184,7 @@ import { nextTick } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import ReviewReplyInput from './ReviewReplyInput.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const { review } = defineProps<{
   review: Review
