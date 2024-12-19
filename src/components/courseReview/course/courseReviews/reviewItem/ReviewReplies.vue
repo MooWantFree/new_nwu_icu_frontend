@@ -34,97 +34,112 @@
             <div class="flex flex-col flex-1">
               <div class="flex">
                 <p class="text-sm text-gray-700 flex-1">
-              <span>
-                <router-link
-                  v-if="reply.created_by.id > 0"
-                  :to="`/user/${reply.created_by.id}`"
-                  class="text-blue-600 hover:underline"
-                >
-                  {{ reply.created_by.name }}
-                </router-link>
-                <span v-else>
-                  {{ reply.created_by.name }}
-                </span>
-              </span>
-              <span v-if="reply.parent > 0">
-                回复了
-                <router-link
-                  v-if="
+                  <span>
+                    <router-link
+                      v-if="reply.created_by.id > 0"
+                      :to="`/user/${reply.created_by.id}`"
+                      class="text-blue-600 hover:underline"
+                    >
+                      {{ reply.created_by.name }}
+                    </router-link>
+                    <span v-else>
+                      {{ reply.created_by.name }}
+                    </span>
+                  </span>
+                  <span v-if="reply.parent > 0">
+                    回复了
+                    <router-link
+                      v-if="
                   orderedReplies.find((it) => it.id === reply.parent)
                     ?.created_by.id! > 0
                 "
-                  :to="`/user/${
-                    orderedReplies.find((it) => it.id === reply.parent)
-                      ?.created_by.id
-                  }`"
-                  class="text-blue-600 hover:underline"
+                      :to="`/user/${
+                        orderedReplies.find((it) => it.id === reply.parent)
+                          ?.created_by.id
+                      }`"
+                      class="text-blue-600 hover:underline"
+                    >
+                      {{
+                        orderedReplies.find((it) => it.id === reply.parent)
+                          ?.created_by.name
+                      }}
+                    </router-link>
+                    (
+                    <button
+                      class="text-blue-600 hover:underline"
+                      @click="handleJmpClick(reply.parent, reply.id)"
+                    >
+                      #{{
+                        orderedReplies.find((it) => it.id === reply.parent)
+                          ?.floorNumber
+                      }}
+                    </button>
+                    )
+                  </span>
+                  <span class="text-gray-800 break-all">
+                    : {{ reply.content }}
+                  </span>
+                </p>
+                <span class="text-sm text-gray-500 ml-4"
+                  >#{{ reply.floorNumber }}</span
                 >
-                  {{
-                    orderedReplies.find((it) => it.id === reply.parent)
-                      ?.created_by.name
-                  }}
-                </router-link>
-                (
-                <button
-                  class="text-blue-600 hover:underline"
-                  @click="handleJmpClick(reply.parent, reply.id)"
-                >
-                  #{{
-                    orderedReplies.find((it) => it.id === reply.parent)
-                      ?.floorNumber
-                  }}
-                </button>
-                )
-              </span>
-              <span class="text-gray-800 break-all">
-                : {{ reply.content }}
-              </span>
-              </p>
-              <span class="text-sm text-gray-500 ml-4">#{{ reply.floorNumber }}</span>
               </div>
               <div>
                 <div class="flex text-xs text-gray-500 mt-3">
-                  <Time type="relative" :time="new Date(reply.created_time)"/>
+                  <Time type="relative" :time="new Date(reply.created_time)" />
                   <div class="flex-grow"></div>
                   <button
-                      v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
-                      @click="() => handleDeleteReply(reply.id)"
-                      class=""
+                    v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
+                    @click="() => handleDeleteReply(reply.id)"
+                    class=""
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 32 32"
-                         class="inline-block w-4 h-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 32 32"
+                      class="inline-block w-4 h-4"
+                    >
                       <path d="M12 12h2v12h-2z" fill="currentColor"></path>
                       <path d="M18 12h2v12h-2z" fill="currentColor"></path>
-                      <path d="M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20z"
-                            fill="currentColor"></path>
+                      <path
+                        d="M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20z"
+                        fill="currentColor"
+                      ></path>
                       <path d="M12 2h8v2h-8z" fill="currentColor"></path>
                     </svg>
                     <span>删除</span>
                   </button>
                   <p>&nbsp;&nbsp;</p>
                   <button
-                      v-if="isLoggedIn"
-                      @click="() => toggleReply(reply.id)"
-                      class=""
+                    v-if="isLoggedIn"
+                    @click="() => toggleReply(reply.id)"
+                    class=""
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 20 20"
-                         class="inline-block w-4 h-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      class="inline-block w-4 h-4"
+                    >
                       <g fill="none">
                         <path
-                            d="M10.48 13.842h4.92c.896 0 1.6-.713 1.6-1.566v-6.71C17 4.713 16.296 4 15.4 4H4.6C3.704 4 3 4.713 3 5.566v6.71c0 .853.704 1.566 1.6 1.566h1.6V17h.003l.002-.001l4.276-3.157zM6.8 17.803a1.009 1.009 0 0 1-1.4-.199a.978.978 0 0 1-.199-.59v-2.172h-.6c-1.436 0-2.6-1.149-2.6-2.566v-6.71C2 4.149 3.164 3 4.6 3h10.8C16.836 3 18 4.149 18 5.566v6.71c0 1.418-1.164 2.566-2.6 2.566h-4.59l-4.011 2.961z"
-                            fill="currentColor"></path>
+                          d="M10.48 13.842h4.92c.896 0 1.6-.713 1.6-1.566v-6.71C17 4.713 16.296 4 15.4 4H4.6C3.704 4 3 4.713 3 5.566v6.71c0 .853.704 1.566 1.6 1.566h1.6V17h.003l.002-.001l4.276-3.157zM6.8 17.803a1.009 1.009 0 0 1-1.4-.199a.978.978 0 0 1-.199-.59v-2.172h-.6c-1.436 0-2.6-1.149-2.6-2.566v-6.71C2 4.149 3.164 3 4.6 3h10.8C16.836 3 18 4.149 18 5.566v6.71c0 1.418-1.164 2.566-2.6 2.566h-4.59l-4.011 2.961z"
+                          fill="currentColor"
+                        ></path>
                       </g>
                     </svg>
-                    <span v-if="replyTarget === reply.id && showReply && formerReplyTarget != 0 " class="font-black underline underline-offset-1">取消</span>
+                    <span
+                      v-if="
+                        replyTarget === reply.id &&
+                        showReply &&
+                        formerReplyTarget != 0
+                      "
+                      class="font-black underline underline-offset-1"
+                      >取消</span
+                    >
                     <span v-else>回复</span>
                   </button>
                 </div>
               </div>
             </div>
-
-
           </div>
           <!-- Jump Back Button -->
           <div
@@ -159,8 +174,6 @@
               }})
             </button>
           </div>
-
-
         </div>
         <ReviewReplyInput
           ref="replyTextArea"
@@ -184,7 +197,7 @@
       @click="() => toggleReply()"
       class="text-blue-600 hover:text-blue-800"
     >
-      {{ (showReply && formerReplyTarget == 0) ? '取消回复' : '回复' }}
+      {{ showReply && formerReplyTarget == 0 ? '取消回复' : '回复' }}
     </n-button>
     <span v-else> 登录以后才能回复 </span>
   </div>
@@ -204,11 +217,11 @@
 </template>
 
 <script lang="ts" setup>
-import {useUser} from '@/lib/useUser'
-import {Review} from '@/types/courses'
-import {computed, nextTick, ref, useTemplateRef} from 'vue'
-import {useMessage} from 'naive-ui'
-import {api} from '@/lib/requests'
+import { useUser } from '@/lib/useUser'
+import { Review } from '@/types/courses'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { useMessage } from 'naive-ui'
+import { api } from '@/lib/requests'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 
@@ -247,7 +260,7 @@ const toggleReply = (replyTo: number = 0) => {
   if (showReply.value) {
     nextTick(() => {
       if (replyTextArea.value && 'focus' in replyTextArea.value) {
-        replyTextArea.value.focus();
+        replyTextArea.value.focus()
       }
     })
   }
