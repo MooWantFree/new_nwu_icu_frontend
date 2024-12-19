@@ -1,6 +1,7 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { checkLoginStatus } from '@/lib/logins'
+import { useUser } from '@/lib/useUser'
 
 const courseReviewRoutes = [
   {
@@ -142,20 +143,16 @@ const Router = createRouter({
   routes,
 });
 
-Router.beforeEach((to, from, next) => {
+const { isLoggedIn } = useUser()
+
+Router.beforeEach(async (to, from) => {
   // Change title
   nextTick(() => document.title = to.meta?.pageTitle as string ?? 'NWU.ICU')
   // Check for login required
-  const loginStatus = checkLoginStatus()
-  routes.forEach(route => {
-    if (route.path === to.path) {
-      if (route.meta?.requiresAuth && !loginStatus) {
-        next({name: 'login'})
-      }
-    }
-  })
-  // Finally
-  next();
+  if (to.meta?.requiresAuth && !isLoggedIn.value) {
+    return {name: 'login'}
+  }
+  return
 });
 
 export default Router;
