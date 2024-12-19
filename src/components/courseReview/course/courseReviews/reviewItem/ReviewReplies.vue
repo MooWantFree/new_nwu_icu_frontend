@@ -18,123 +18,133 @@
       </div>
     </div>
     <div class="space-y-2">
-      <div
-        v-for="reply in orderedReplies"
-        ref="replies"
-        :key="reply.id"
-        :data-id="reply.id"
-        class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
-      >
-        <div>
-          <p class="text-sm text-gray-700">
-            <span>
-              <router-link
-                v-if="reply.created_by.id > 0"
-                :to="`/user/${reply.created_by.id}`"
-                class="text-blue-600 hover:underline"
-              >
-                {{ reply.created_by.name }}
-              </router-link>
-              <span v-else>
-                {{ reply.created_by.name }}
+      <div v-for="reply in orderedReplies" ref="replies" :key="reply.id">
+        <div
+          class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
+        >
+          <div>
+            <p class="text-sm text-gray-700">
+              <span>
+                <router-link
+                  v-if="reply.created_by.id > 0"
+                  :to="`/user/${reply.created_by.id}`"
+                  class="text-blue-600 hover:underline"
+                >
+                  {{ reply.created_by.name }}
+                </router-link>
+                <span v-else>
+                  {{ reply.created_by.name }}
+                </span>
               </span>
-            </span>
-            <span v-if="reply.parent > 0">
-              回复了
-              <router-link
-                v-if="
+              <span v-if="reply.parent > 0">
+                回复了
+                <router-link
+                  v-if="
                   orderedReplies.find((it) => it.id === reply.parent)
                     ?.created_by.id! > 0
                 "
-                :to="`/user/${
-                  orderedReplies.find((it) => it.id === reply.parent)
-                    ?.created_by.id
-                }`"
-                class="text-blue-600 hover:underline"
-              >
-                {{
-                  orderedReplies.find((it) => it.id === reply.parent)
-                    ?.created_by.name
-                }}
-              </router-link>
-              (
+                  :to="`/user/${
+                    orderedReplies.find((it) => it.id === reply.parent)
+                      ?.created_by.id
+                  }`"
+                  class="text-blue-600 hover:underline"
+                >
+                  {{
+                    orderedReplies.find((it) => it.id === reply.parent)
+                      ?.created_by.name
+                  }}
+                </router-link>
+                (
+                <button
+                  class="text-blue-600 hover:underline"
+                  @click="handleJmpClick(reply.parent, reply.id)"
+                >
+                  #{{
+                    orderedReplies.find((it) => it.id === reply.parent)
+                      ?.floorNumber
+                  }}
+                </button>
+                )
+              </span>
+              <span class="text-gray-800 break-words whitespace-normal">
+                : {{ reply.content }}
+              </span>
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              <Time type="relative" :time="new Date(reply.created_time)" />
+              &nbsp;
               <button
-                class="text-blue-600 hover:underline"
-                @click="handleJmpClick(reply.parent, reply.id)"
+                v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
+                text
+                @click="() => handleDeleteReply(reply.id)"
+                class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
               >
-                #{{
-                  orderedReplies.find((it) => it.id === reply.parent)
-                    ?.floorNumber
-                }}
+                删除
               </button>
-              )
-            </span>
-            <span class="text-gray-800 break-words whitespace-normal">
-              : {{ reply.content }}
-            </span>
-          </p>
-          <p class="text-xs text-gray-500 mt-1">
-            <Time type="relative" :time="new Date(reply.created_time)" />
-            &nbsp;
+            </p>
+          </div>
+          <!-- Jump Back Button -->
+          <div
+            class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
+            v-if="
+              jumpHistory.length > 0 &&
+              jumpHistory[jumpHistory.length - 1].to === reply.id
+            "
+            @click="handleJmpBackClick"
+          >
             <button
-              v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
-              text
-              @click="() => handleDeleteReply(reply.id)"
-              class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
+              class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
             >
-              删除
+              <svg
+                class="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+              </svg>
+              返回上一楼(#{{
+                orderedReplies.find(
+                  (it) => it.id === jumpHistory[jumpHistory.length - 1].from
+                )?.floorNumber
+              }})
             </button>
-          </p>
-        </div>
-        <!-- Jump Back Button -->
-        <div
-          class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
-          v-if="
-            jumpHistory.length > 0 &&
-            jumpHistory[jumpHistory.length - 1].to === reply.id
-          "
-          @click="handleJmpBackClick"
-        >
-          <button
-            class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
-          >
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          </div>
+          <div v-if="isLoggedIn" class="relative mx-1 z-50">
+            <span
+              class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              ></path>
-            </svg>
-            返回上一楼(#{{
-              orderedReplies.find(
-                (it) => it.id === jumpHistory[jumpHistory.length - 1].from
-              )?.floorNumber
-            }})
-          </button>
-        </div>
-        <div v-if="isLoggedIn" class="relative mx-1 z-50">
-          <span
-            class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0"
-          >
+              #{{ reply.floorNumber }}
+            </span>
+            <button
+              @click="() => toggleReply(reply.id)"
+              class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
+            >
+              回复
+            </button>
+          </div>
+          <span v-else class="text-sm text-gray-500 ml-2">
             #{{ reply.floorNumber }}
           </span>
-          <button
-            @click="() => toggleReply(reply.id)"
-            class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
-          >
-            回复
-          </button>
         </div>
-        <span v-else class="text-sm text-gray-500 ml-2">
-          #{{ reply.floorNumber }}
-        </span>
+        <ReviewReplyInput
+          ref="replyTextArea"
+          v-if="isLoggedIn && showReply && replyTarget === reply.id"
+          :review="review"
+          :reply-to="replyTarget"
+          :reply-target-floor="
+            orderedReplies.find((it) => it.id === replyTarget)?.floorNumber
+          "
+          @close="toggleReply"
+          class="mt-4"
+          @replySubmitted="onReplySubmitted"
+        />
       </div>
     </div>
   </div>
@@ -151,7 +161,7 @@
   </div>
   <ReviewReplyInput
     ref="replyTextArea"
-    v-if="isLoggedIn && showReply"
+    v-if="isLoggedIn && showReply && replyTarget === 0"
     :review="review"
     :reply-to="replyTarget"
     :reply-target-floor="
@@ -319,7 +329,7 @@ const orderedReplies = computed(() => {
 })
 
 const { userInfo, isLoggedIn } = useUser()
-const onReplySubmitted = (content: string, parent: number, replyId: number) => {
+const onReplySubmitted = async (content: string, parent: number, replyId: number) => {
   toggleReply()
   if (!userInfo.value) return
   // Push the new reply to the review's replies array
@@ -339,5 +349,7 @@ const onReplySubmitted = (content: string, parent: number, replyId: number) => {
       user_option: 0,
     },
   })
+  await nextTick()
+  await handleJmpClick(replyId, parent)
 }
 </script>
