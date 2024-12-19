@@ -97,8 +97,8 @@
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsUpOutline class="w-4 h-4 mr-1" />
-          <span>{{ review.like.like }} 认同</span>
+          <ThumbsUpOutline class="w-4 h-4 mr-1 inline-block" />
+          <span class="inline-block whitespace-nowrap">{{ review.like.like }}</span>
         </button>
         <button
           @click="()=>{handleLikeNDislike(LikeOption.Dislike)}"
@@ -112,12 +112,12 @@
           ]"
         >
           <ThumbsDownOutline class="w-4 h-4 mr-1" />
-          <span>{{ review.like.dislike }} 不认同</span>
+          <span>{{ review.like.dislike }}</span>
         </button>
       </div>
     </div>
 
-    <div class="flex items-center space-x-2">
+    <div class="flex flex-col items-center space-x-2">
       <Time :time="new Date(review.created_time)" />
       <div v-if="review.edited">
         <span
