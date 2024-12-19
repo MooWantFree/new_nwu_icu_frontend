@@ -68,13 +68,6 @@
       <div v-if="reviewsDisplayed.length === 0">
         <div class="text-center py-8">
           <p class="text-xl font-semibold mb-4">暂时没有内容呢</p>
-          <button
-            v-if="!userReviewed"
-            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            @click="handleNewReviewButtonClicked"
-          >
-            新建一个评价
-          </button>
         </div>
       </div>
     </div>
