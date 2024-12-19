@@ -120,7 +120,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { debounce } from 'lodash-es'
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
@@ -173,14 +173,16 @@ const handleLoginButtonClick = (e: MouseEvent) => {
         )
 
         if (!status.toString().startsWith('2')) {
-          for (const error of errors) {
+          for (const error of errors!) {
             message.error(`${error.field}: ${error.err_msg}`)
           }
         } else {
           emit('login-success', content)
         }
       } catch (e) {
+        if (e instanceof Error) {
         message.error('网络错误，请重试或联系管理员\n' + e.message)
+        }
         console.error(e)
       } finally {
         loadingRef.value = false
@@ -240,7 +242,7 @@ const checkUsernameAvailability = debounce(
       )
       if (status !== 200) {
         throw new Error(
-          errors.map((e) => `${e.field}: ${e.err_msg}`).join(', ')
+          errors?.map((e) => `${e.field}: ${e.err_msg}`).join(', ')
         )
       }
     } catch (error) {
@@ -364,12 +366,12 @@ const handleSignUpButtonClick = (e: MouseEvent) => {
     }
   })
 }
-const tabsRef = ref(null)
+const tabsRef = useTemplateRef("tabsRef")
 const tabsValueRef = ref()
 const switchToSignInTabTrigger = () => {
   tabsValueRef.value = 'sign-in'
   nextTick(() => {
-    tabsRef.value.syncBarPosition()
+    tabsRef.value?.syncBarPosition()
   })
 }
 

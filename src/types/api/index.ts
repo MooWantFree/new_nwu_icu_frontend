@@ -1,5 +1,6 @@
 export type ResponseBase = {
   success: object
+  request?: Record<string,string|number> 
   errors?: string[] | string
 }
 

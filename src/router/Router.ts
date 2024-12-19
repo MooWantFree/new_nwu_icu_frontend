@@ -1,6 +1,5 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { checkLoginStatus } from '@/lib/logins'
 import { useUser } from '@/lib/useUser'
 
 const courseReviewRoutes = [

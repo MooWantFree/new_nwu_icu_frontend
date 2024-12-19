@@ -135,7 +135,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NModal, useDialog, useMessage } from 'naive-ui'
 import {
@@ -241,11 +241,11 @@ const handleLogoClick = () => {
 }
 
 const handleUpdateMobileMenu = () => {
-  mobilePopoverRef.value.setShow(false)
+  mobilePopoverRef.value?.setShow(false)
 }
 
 // Mobile Menu
-const mobilePopoverRef = ref(null)
+const mobilePopoverRef = useTemplateRef('mobilePopoverRef')
 
 // Dialog for outer href
 const dialog = useDialog()

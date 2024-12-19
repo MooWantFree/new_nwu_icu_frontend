@@ -5,7 +5,7 @@ import type { FileUploadResponse } from '@/types/api/file'
 export function useFileUpload() {
   const loading = ref(false)
   const succeed = ref(false)
-  const errorsRef = ref([])
+  const errorsRef = ref<string[]>([])
   const imageUrl = ref('')
   const message = ref('')
 

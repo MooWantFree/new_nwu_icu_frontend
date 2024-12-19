@@ -5,7 +5,7 @@
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-badge
-              :show="review.is_student"
+              :show="review.author.is_student"
               class="hov"
               value="V"
               :offset="[-5, 33]"
@@ -18,7 +18,7 @@
               />
             </n-badge>
           </template>
-          <p style="margin: 0" v-if="review.is_student">西大邮箱认证用户</p>
+          <p style="margin: 0" v-if="review.author.is_student">西大邮箱认证用户</p>
           <p style="margin: 0" v-else>普通用户</p>
         </n-tooltip>
         <div class="ml-3">

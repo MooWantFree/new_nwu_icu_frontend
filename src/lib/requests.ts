@@ -38,7 +38,7 @@ async function request<T extends ResponseBase>(
 
   if (data) {
     if (data instanceof FormData || data instanceof File) {
-      delete mergedOptions.headers['Content-Type']
+      delete (mergedOptions.headers as Record<string, string>)['Content-Type']
       mergedOptions.body = data
     } else {
       mergedOptions.body = JSON.stringify(data)
@@ -75,17 +75,17 @@ export const api = {
     request<T>({ method: 'GET', url, options }),
   post: <T extends ResponseBase>(
     url: string,
-    data: any,
+    data: T['request'],
     options?: RequestInit
   ) => request<T>({ method: 'POST', url, data, options }),
   put: <T extends ResponseBase>(
     url: string,
-    data: any,
+    data: T['request'],
     options?: RequestInit
   ) => request<T>({ method: 'PUT', url, data, options }),
   delete: <T extends ResponseBase>(
     url: string,
-    data: any,
+    data: T['request'],
     options?: RequestInit
   ) => request<T>({ method: 'DELETE', url, data, options }),
 }

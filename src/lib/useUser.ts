@@ -20,7 +20,7 @@ export function useUser() {
     }
     // Check if the cookie is still valid
     const sessionTimeout = getSessionTimeout()
-    if (sessionTimeout <= 0 || !sessionTimeout) {
+    if ((sessionTimeout && sessionTimeout <= 0) || !sessionTimeout) {
       logout()
       return
     }
