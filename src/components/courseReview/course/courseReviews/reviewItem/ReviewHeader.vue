@@ -2,37 +2,34 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <div class="flex items-center relative">
-        <router-link
-          v-if="review.author.id > 0"
-          :to="`/user/profile/${review.author.id}`"
-        >
-          <img
-            :src="`/api/download/${review.author.avatar}`"
-            alt="Avatar"
-            class="w-8 h-8 rounded-full mr-2"
-          />
-        </router-link>
+        <div v-if="review.author.id > 0" class="relative group">
+          <router-link :to="`/user/profile/${review.author.id}`">
+            <img
+              :src="`/api/download/${review.author.avatar}`"
+              alt="Avatar"
+              class="w-10 h-10 rounded-full mr-3 border-2 border-transparent group-hover:border-blue-500 transition-all duration-300"
+            />
+          </router-link>
+        </div>
         <img
           v-else
           :src="`/api/download/${review.author.avatar}`"
-          alt="Avatar"
-          class="w-8 h-8 rounded-full mr-2"
+          alt="Anonymous Avatar"
+          class="w-10 h-10 rounded-full mr-3 border-2 border-gray-200"
         />
-        <h3 class="text-xl font-bold text-gray-900">
-          <router-link
-            v-if="review.author.id > 0"
-            :to="`/user/profile/${review.author.id}`"
-            class="text-blue-600 hover:underline"
-          >
-            {{ review.author.nickname }}
-          </router-link>
-          <span v-else>匿名用户</span>
-        </h3>
-        <span
-          v-if="isAuthor"
-          class="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full"
-          >我的评价</span
-        >
+        <div>
+          <h3 class="text-xl font-bold text-gray-900">
+            <router-link
+              v-if="review.author.id > 0"
+              :to="`/user/profile/${review.author.id}`"
+              class="text-blue-600 hover:text-blue-800 transition-colors duration-300"
+            >
+              {{ review.author.nickname }}
+            </router-link>
+            <span v-else class="text-gray-600">匿名用户</span>
+          </h3>
+          <span v-if="isAuthor" class="text-sm text-green-600 ml-2">(我的评价)</span>
+        </div>
       </div>
       <div class="flex items-center space-x-2 mt-1">
         <div class="flex items-center">
