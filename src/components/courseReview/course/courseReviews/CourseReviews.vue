@@ -121,7 +121,7 @@ enum SortMethods {
 }
 
 const message = useMessage()
-const { userInfo, isLoading, isLoggedIn } = useUser()
+const { isLoggedIn } = useUser()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -239,11 +239,11 @@ const handleNewReviewButtonClicked = () => {
   showEditor.value = true
 }
 
-const handleReviewDeleted = (reviewId: number) => {
+const handleReviewDeleted = () => {
   emit('reloadData')
 }
 
-const handleReplyDeleted = (reviewId: number, replyId: number) => {
+const handleReplyDeleted = () => {
   emit('reloadData')
 }
 
@@ -253,8 +253,6 @@ const handleSubmitReview = async (content: NewReviewRequest) => {
   try {
     const {
       status,
-      data,
-      content: responseContent,
     } = await request<NewReviewResponse>('/api/assessment/review/', content)
 
     if (status !== 200) {
