@@ -86,6 +86,7 @@
             </button>
           </p>
         </div>
+        <!-- Jump Back Button -->
         <div
           class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
           v-if="
@@ -97,10 +98,25 @@
           <button
             class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
           >
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              ></path>
             </svg>
-            返回上一楼(#{{ orderedReplies.find((it) => it.id === jumpHistory[jumpHistory.length - 1].from)?.floorNumber }})
+            返回上一楼(#{{
+              orderedReplies.find(
+                (it) => it.id === jumpHistory[jumpHistory.length - 1].from
+              )?.floorNumber
+            }})
           </button>
         </div>
         <div v-if="isLoggedIn" class="relative mx-1 z-50">
