@@ -201,7 +201,7 @@ const emit = defineEmits<{
 const content = ref(props.initContent?.content || '')
 const isAnonymous = ref(props.initContent?.anonymous || false)
 const rating = ref(props.initContent?.rating || 0)
-const selectedSemester = ref(null)
+const selectedSemester = ref<number | null>()
 const difficulty = ref(props.initContent?.difficulty || 0)
 const homework = ref(props.initContent?.homework || 0)
 const grade = ref(props.initContent?.grade || 0)
@@ -248,7 +248,7 @@ const submitReview = async () => {
     grade: grade.value,
     homework: homework.value,
     reward: reward.value,
-    semester: selectedSemester.value,
+    semester: selectedSemester.value!,
   }
   emit('submit', reviewData)
 }

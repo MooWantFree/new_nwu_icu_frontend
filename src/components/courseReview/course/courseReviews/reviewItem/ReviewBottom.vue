@@ -4,7 +4,7 @@
     <div
       v-if="isAuthor"
       class="relative inline-block text-left"
-      ref="dropdownMenu"
+      ref="dropdownMenuRef"
     >
       <button
         @click="toggleDropdownMenu"
@@ -96,7 +96,8 @@
 
 <script setup lang="ts">
 import { Review } from '@/types/courses'
-import { watch, onUnmounted, ref, useTemplateRef } from 'vue'
+import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import Time from '@/components/tinyComponents/Time.vue'
 
 const { review, isAuthor } = defineProps<{
@@ -109,37 +110,17 @@ const emit = defineEmits<{
   (e: 'reviewDelete'): void
 }>()
 
-const dropdownMenuRef = useTemplateRef('dropdownMenu')
+const dropdownMenuRef = ref(null)
+const showDropdownMenu = ref(false)
+
+onClickOutside(dropdownMenuRef, () => {
+  showDropdownMenu.value = false
+})
 
 const toggleDropdownMenu = () => {
-  handleDropdownMenuOpened()
   showDropdownMenu.value = !showDropdownMenu.value
 }
 
-// Dropdown menu
-const showDropdownMenu = ref(false)
-
-const handleClickEvent = (e: MouseEvent) => {
-  if (dropdownMenuRef && !dropdownMenuRef.value.contains(e.target as Node)) {
-    showDropdownMenu.value = false
-  }
-}
-const handleDropdownMenuClosed = () => {
-  document.removeEventListener('click', handleClickEvent)
-}
-const handleDropdownMenuOpened = () => {
-  document.addEventListener('click', handleClickEvent)
-}
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickEvent)
-})
-watch(showDropdownMenu, (newValue) => {
-  if (!newValue) {
-    handleDropdownMenuClosed()
-  }
-})
-
-// Event Trigger
 const handleEdit = () => {
   emit('reviewEdit')
   showDropdownMenu.value = false
