@@ -22,8 +22,10 @@
         <div
           class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
         >
-          <div>
-            <p class="text-sm text-gray-700">
+          <div class="flex flex-1">
+            <div class="flex flex-col flex-1">
+              <div class="flex">
+                <p class="text-sm text-gray-700 flex-1">
               <span>
                 <router-link
                   v-if="reply.created_by.id > 0"
@@ -69,19 +71,51 @@
               <span class="text-gray-800 break-words whitespace-normal">
                 : {{ reply.content }}
               </span>
-            </p>
-            <p class="text-xs text-gray-500 mt-1">
-              <Time type="relative" :time="new Date(reply.created_time)" />
-              &nbsp;
-              <button
-                v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
-                text
-                @click="() => handleDeleteReply(reply.id)"
-                class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
-              >
-                删除
-              </button>
-            </p>
+              </p>
+              <span class="text-sm text-gray-500 ml-4">#{{ reply.floorNumber }}</span>
+              </div>
+              <div>
+                <div class="flex text-xs text-gray-500 mt-3">
+                  <Time type="relative" :time="new Date(reply.created_time)"/>
+                  <div class="flex-grow"></div>
+                  <button
+                      v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
+                      @click="() => handleDeleteReply(reply.id)"
+                      class=""
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 32 32"
+                         class="inline-block w-4 h-4">
+                      <path d="M12 12h2v12h-2z" fill="currentColor"></path>
+                      <path d="M18 12h2v12h-2z" fill="currentColor"></path>
+                      <path d="M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20z"
+                            fill="currentColor"></path>
+                      <path d="M12 2h8v2h-8z" fill="currentColor"></path>
+                    </svg>
+                    <span>删除</span>
+                  </button>
+                  <p>&nbsp;&nbsp;</p>
+                  <button
+                      v-if="isLoggedIn"
+                      @click="() => toggleReply(reply.id)"
+                      class=""
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         class="inline-block w-4 h-4">
+                      <g fill="none">
+                        <path
+                            d="M10.48 13.842h4.92c.896 0 1.6-.713 1.6-1.566v-6.71C17 4.713 16.296 4 15.4 4H4.6C3.704 4 3 4.713 3 5.566v6.71c0 .853.704 1.566 1.6 1.566h1.6V17h.003l.002-.001l4.276-3.157zM6.8 17.803a1.009 1.009 0 0 1-1.4-.199a.978.978 0 0 1-.199-.59v-2.172h-.6c-1.436 0-2.6-1.149-2.6-2.566v-6.71C2 4.149 3.164 3 4.6 3h10.8C16.836 3 18 4.149 18 5.566v6.71c0 1.418-1.164 2.566-2.6 2.566h-4.59l-4.011 2.961z"
+                            fill="currentColor"></path>
+                      </g>
+                    </svg>
+                    <span>回复</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+
           </div>
           <!-- Jump Back Button -->
           <div
@@ -116,22 +150,8 @@
               }})
             </button>
           </div>
-          <div v-if="isLoggedIn" class="relative mx-1 z-50">
-            <span
-              class="text-sm text-gray-500 ml-2 transition-opacity duration-300 group-hover:opacity-0"
-            >
-              #{{ reply.floorNumber }}
-            </span>
-            <button
-              @click="() => toggleReply(reply.id)"
-              class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
-            >
-              回复
-            </button>
-          </div>
-          <span v-else class="text-sm text-gray-500 ml-2">
-            #{{ reply.floorNumber }}
-          </span>
+
+
         </div>
         <ReviewReplyInput
           ref="replyTextArea"
@@ -155,7 +175,7 @@
       @click="() => toggleReply()"
       class="text-blue-600 hover:text-blue-800"
     >
-      {{ showReply ? '取消回复' : '回复' }}
+      {{ (showReply && formerReplyTarget == 0) ? '取消回复' : '回复' }}
     </n-button>
     <span v-else> 登录以后才能回复 </span>
   </div>
@@ -175,14 +195,11 @@
 </template>
 
 <script lang="ts" setup>
-import { useUser } from '@/lib/useUser'
-import { Review } from '@/types/courses'
-import { computed } from 'vue'
-import { useTemplateRef } from 'vue'
-import { ref } from 'vue'
-import { nextTick } from 'vue'
-import { useMessage } from 'naive-ui'
-import { api } from '@/lib/requests'
+import {useUser} from '@/lib/useUser'
+import {Review} from '@/types/courses'
+import {computed, nextTick, ref, useTemplateRef} from 'vue'
+import {useMessage} from 'naive-ui'
+import {api} from '@/lib/requests'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 
@@ -199,21 +216,35 @@ const message = useMessage()
 // Display the reply box or not
 const showReply = ref(false)
 const replyTarget = ref(0)
+const formerReplyTarget = ref(0)
 const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
   replyTarget.value = replyTo
+  console.log(showReply.value)
+  console.log(replyTo)
   if (replyTo !== 0) {
     if (!showReply.value) {
       showReply.value = !showReply.value
+    } else {
+      if (replyTo === formerReplyTarget.value) {
+        showReply.value = !showReply.value
+      }
     }
   } else {
-    showReply.value = !showReply.value
+    if (formerReplyTarget.value !== 0) {
+      showReply.value = true
+    } else {
+      showReply.value = !showReply.value
+    }
   }
   if (showReply.value) {
     nextTick(() => {
-      replyTextArea.value?.focus()
+      if (replyTextArea.value && 'focus' in replyTextArea.value) {
+        replyTextArea.value.focus();
+      }
     })
   }
+  formerReplyTarget.value = replyTo
 }
 
 const reverseReplies = ref(false)
