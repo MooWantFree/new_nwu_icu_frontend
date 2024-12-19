@@ -62,7 +62,10 @@
                 class="text-blue-600 hover:underline"
                 @click="handleJmpClick(reply.parent)"
               >
-                #{{ orderedReplies.find((it) => it.id === reply.parent)?.floorNumber }}
+                #{{
+                  orderedReplies.find((it) => it.id === reply.parent)
+                    ?.floorNumber
+                }}
               </button>
               )
             </span>
@@ -205,16 +208,19 @@ const handleJmpClick = async (targetReplyId: number) => {
       (el) => el.getAttribute('data-id') === targetReplyId.toString()
     )
     if (targetElement) {
-      const scrollPromise = new Promise((resolve) => {
-        const scrollEndHandler = () => {
-          window.removeEventListener('scrollend', scrollEndHandler)
-          resolve(null)
-        }
-        window.addEventListener('scrollend', scrollEndHandler)
-      })
-
       targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      await scrollPromise
+      await new Promise<void>((resolve) => {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            observer.disconnect()
+            resolve()
+          }
+        })
+        observer.observe(targetElement)
+      })
+      // await the element to be in the viewport
+      await new Promise((resolve) => setTimeout(resolve, 200))
+
       await nextTick()
 
       targetElement.classList.add(
