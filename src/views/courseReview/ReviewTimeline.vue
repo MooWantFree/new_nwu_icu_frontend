@@ -24,6 +24,7 @@
           :page-slot="7"
           :page-size="pageSize"
           @update:page="onPageUpdate"
+          show-quick-jumper
         >
           <template #prefix="{ itemCount }">
             共{{ itemCount }}个点评
