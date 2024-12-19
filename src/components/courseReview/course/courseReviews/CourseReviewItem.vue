@@ -67,11 +67,11 @@ onMounted(async () => {
         'scale-110'
       )
       setTimeout(() => {
-        courseReviewItem.value.classList.remove('scale-110')
-        courseReviewItem.value.classList.add('scale-100')
+        courseReviewItem.value?.classList.remove('scale-110')
+        courseReviewItem.value?.classList.add('scale-100')
       }, 300)
       setTimeout(() => {
-        courseReviewItem.value.classList.remove(
+        courseReviewItem.value?.classList.remove(
           'transition-transform',
           'duration-300',
           'scale-100'
@@ -102,7 +102,7 @@ const handleDeleteReview = () => {
           emit('reviewDeleted', review.id)
         } else {
           throw new Error(
-            response.errors.reduce(
+            response.errors?.reduce(
               (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
               ''
             )

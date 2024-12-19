@@ -14,6 +14,7 @@ type Review = {
     id: number
     avatar_uuid: string
     anonymous: boolean
+    is_student: boolean
   }
   datetime: string
   course: {
@@ -26,7 +27,6 @@ type Review = {
     id: number
   }[]
   edited: boolean
-  is_student: boolean
 }
 
-export { LatestCourseReviewResponse, Review }
+export type { LatestCourseReviewResponse, Review }
