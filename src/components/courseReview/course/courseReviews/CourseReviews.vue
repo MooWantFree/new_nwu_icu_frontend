@@ -30,12 +30,12 @@
             v-model:value="rankSelectorValue"
           />
         </div>
-        <button
+        <!-- <button
           @click="showRatingTrendModal = true"
           class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           课程学期评分趋势
-        </button>
+        </button> -->
       </div>
       <n-button
         v-if="!userReviewed"
@@ -58,7 +58,7 @@
     </div>
 
     <!-- Rating Trend Modal -->
-    <div
+    <!-- <div
       v-if="showRatingTrendModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
@@ -87,7 +87,7 @@
         </div>
         <CourseRatingTrend :ratingData="ratingTrendData" />
       </div>
-    </div>
+    </div> -->
 
     <div class="mt-6 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
