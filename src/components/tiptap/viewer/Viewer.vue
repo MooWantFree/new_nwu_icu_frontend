@@ -1,8 +1,9 @@
+<!-- TODO: Remove tiptap dependency for viewer -->
 <template>
   <div class="relative">
     <div :class="{ 'max-h-60 overflow-hidden': !expanded && needExpand }">
       <div ref="editorContainer">
-        <div class="max-w-none">
+        <div class="max-w-none viewer">
           <editor-content :editor="editor" />
         </div>
       </div>
@@ -189,4 +190,8 @@ const handleCancel = () => {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
+/* 
+.viewer > * > .ProseMirror-selectednode {
+  outline: none !important;
+} */
 </style>
