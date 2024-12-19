@@ -48,7 +48,7 @@
   const props = defineProps<{
     review: Review
     replyTo: number
-    replyTargetFloor: number
+    replyTargetFloor?: number
   }>()
   
   const emit = defineEmits<{

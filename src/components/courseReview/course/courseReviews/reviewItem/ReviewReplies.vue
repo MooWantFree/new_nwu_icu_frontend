@@ -19,7 +19,7 @@
     </div>
     <div class="space-y-2">
       <div
-        v-for="(reply, index) in orderedReplies"
+        v-for="reply in orderedReplies"
         ref="replies"
         :key="reply.id"
         :data-id="reply.id"
@@ -44,7 +44,7 @@
               <router-link
                 v-if="
                   orderedReplies.find((it) => it.id === reply.parent)
-                    ?.created_by.id > 0
+                    ?.created_by.id! > 0
                 "
                 :to="`/user/${
                   orderedReplies.find((it) => it.id === reply.parent)
@@ -60,7 +60,7 @@
               (
               <button
                 class="text-blue-600 hover:underline"
-                @click="handleJmpClick(reply.parent)"
+                @click="handleJmpClick(reply.parent, reply.id)"
               >
                 #{{
                   orderedReplies.find((it) => it.id === reply.parent)
@@ -77,7 +77,7 @@
             <Time type="relative" :time="new Date(reply.created_time)" />
             &nbsp;
             <button
-              v-if="isLoggedIn && reply.created_by.id === userInfo.id"
+              v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
               text
               @click="() => handleDeleteReply(reply.id)"
               class="absolute text-sm text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
@@ -97,6 +97,16 @@
             class="absolute top-0 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
           >
             回复
+          </button>
+          <button
+            v-if="
+              jumpHistory.length > 0 &&
+              jumpHistory[jumpHistory.length - 1].to === reply.id
+            "
+            @click="handleJmpBackClick"
+            class="absolute top-5 right-0 text-sm text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-2 whitespace-nowrap"
+          >
+            返回之前的楼层
           </button>
         </div>
         <span v-else class="text-sm text-gray-500 ml-2">
@@ -154,7 +164,6 @@ const message = useMessage()
 
 // Display the reply box or not
 const showReply = ref(false)
-
 const replyTarget = ref(0)
 const replyTextArea = useTemplateRef('replyTextArea')
 const toggleReply = (replyTo: number = 0) => {
@@ -187,7 +196,7 @@ const handleDeleteReply = async (repyId: number) => {
         emit('replyDeleted', review.id, repyId)
       } else {
         throw new Error(
-          resp.errors.reduce(
+          resp.errors?.reduce(
             (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
             ''
           )
@@ -201,44 +210,72 @@ const handleDeleteReply = async (repyId: number) => {
 }
 
 const repliesRefs = useTemplateRef('replies')
+const jumpHistory = ref<{from: number, to: number}[]>([]) // Now stores reply IDs instead of floor numbers
 
-const handleJmpClick = async (targetReplyId: number) => {
-  if (repliesRefs.value) {
-    const targetElement = repliesRefs.value.find(
-      (el) => el.getAttribute('data-id') === targetReplyId.toString()
-    )
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      await new Promise<void>((resolve) => {
-        const observer = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting) {
-            observer.disconnect()
-            resolve()
-          }
-        })
-        observer.observe(targetElement)
+const handleJmp = async (targetElement: HTMLElement) => {
+  if (targetElement) {
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    await new Promise<void>((resolve) => {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect()
+          resolve()
+        }
       })
-      // await the element to be in the viewport
-      await new Promise((resolve) => setTimeout(resolve, 200))
+      observer.observe(targetElement)
+    })
+    // await the element to be in the viewport
+    await new Promise((resolve) => setTimeout(resolve, 200))
 
-      await nextTick()
+    await nextTick()
 
-      targetElement.classList.add(
+    targetElement.classList.add(
+      'transition-transform',
+      'duration-300',
+      'scale-110'
+    )
+    setTimeout(() => {
+      targetElement.classList.remove('scale-110')
+      targetElement.classList.add('scale-100')
+    }, 300)
+    setTimeout(() => {
+      targetElement.classList.remove(
         'transition-transform',
         'duration-300',
-        'scale-110'
+        'scale-100'
       )
-      setTimeout(() => {
-        targetElement.classList.remove('scale-110')
-        targetElement.classList.add('scale-100')
-      }, 300)
-      setTimeout(() => {
-        targetElement.classList.remove(
-          'transition-transform',
-          'duration-300',
-          'scale-100'
-        )
-      }, 600)
+    }, 600)
+  }
+}
+
+const handleJmpClick = async (
+  targetReplyId: number,
+  currentReplyId: number
+) => {
+  if (repliesRefs.value) {
+    const currentReplyIndex = review.reply
+      ?.toReversed()
+      .findIndex((reply) => reply.id === targetReplyId)
+    if (currentReplyIndex !== undefined && currentReplyIndex !== -1) {
+      jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
+      const targetElement = repliesRefs.value[currentReplyIndex]
+      handleJmp(targetElement)
+    }
+  }
+}
+
+const handleJmpBackClick = () => {
+  if (jumpHistory.value.length > 0) {
+    const previousReplyInfo = jumpHistory.value.pop()
+    if (previousReplyInfo !== undefined) {
+      // Find the index of the reply with the stored ID
+      const replyIndex = review.reply
+        ?.toReversed()
+        .findIndex((reply) => reply.id === previousReplyInfo.from)
+      if (replyIndex !== undefined && replyIndex !== -1 && repliesRefs.value) {
+        const targetElement = repliesRefs.value[replyIndex]
+        handleJmp(targetElement)
+      }
     }
   }
 }
@@ -261,6 +298,7 @@ const orderedReplies = computed(() => {
 const { userInfo, isLoggedIn } = useUser()
 const onReplySubmitted = (content: string, parent: number, replyId: number) => {
   toggleReply()
+  if (!userInfo.value) return
   // Push the new reply to the review's replies array
   review.reply.unshift({
     id: replyId,
