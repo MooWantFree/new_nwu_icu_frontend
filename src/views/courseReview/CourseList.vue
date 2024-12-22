@@ -2,6 +2,34 @@
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
     <h1 class="text-4xl font-bold mb-8 text-gray-900">课程列表</h1>
 
+    <div class="mb-8 flex flex-wrap items-center justify-end gap-4">
+      <select
+        v-model="courseType"
+        class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="" disabled selected>选择课程类型</option>
+        <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+      <select
+        v-model="orderBy"
+        class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="" disabled selected>选择排序方式</option>
+        <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+      <button
+        @click="handlePageChange(1)"
+        :disabled="loading"
+        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ loading ? '加载中...' : '应用筛选' }}
+      </button>
+    </div>
+
     <div v-if="loading" class="space-y-6">
       <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
         <div class="h-7 bg-gray-200 rounded-full w-3/4 mb-4"></div>
@@ -94,6 +122,22 @@ const data = ref<CourseListResponse['success'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
 
+const courseTypeOptions = [
+  { label: '全部课程', value: CourseType.All },
+  { label: '通识课', value: CourseType.General },
+  { label: '体育课', value: CourseType.Pe },
+  { label: '英语课', value: CourseType.English },
+  { label: '专业课', value: CourseType.Professional },
+  { label: '政治课', value: CourseType.Politics },
+  { label: '必修课', value: CourseType.Required },
+  { label: '选修课', value: CourseType.Optional },
+]
+
+const orderByOptions = [
+  { label: '评分排序', value: OrderBy.Rating },
+  { label: '热门排序', value: OrderBy.Popular },
+]
+
 const fetchCourses = async (page: number = 1) => {
   loading.value = true
   const requestParams = new URLSearchParams()
@@ -121,7 +165,7 @@ onMounted(async () => {
 
 const totalPages = computed(() => data.value?.num_pages || 1)
 const handlePageChange = async (page: number) => {
-  currentPage.value = page
-  await fetchCourses(page)
+    currentPage.value = page
+    await fetchCourses(page)
 }
 </script>
