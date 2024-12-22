@@ -1,32 +1,30 @@
 <template>
-  <div class="container mx-auto py-8 px-4">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">课程列表</h1>
+  <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-bold mb-8 text-gray-900">课程列表</h1>
 
-    <div v-if="loading" class="space-y-4">
-      <div v-for="i in 5" :key="i" class="mb-6">
-        <div class="bg-white rounded-lg shadow-md p-6 animate-pulse">
-          <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-          <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-          <div class="flex justify-between items-center mt-4">
-            <div class="h-8 bg-gray-200 rounded w-24"></div>
-            <div class="h-4 bg-gray-200 rounded w-16"></div>
-          </div>
+    <div v-if="loading" class="space-y-6">
+      <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
+        <div class="h-7 bg-gray-200 rounded-full w-3/4 mb-4"></div>
+        <div class="h-5 bg-gray-200 rounded-full w-1/2 mb-3"></div>
+        <div class="h-5 bg-gray-200 rounded-full w-2/3 mb-3"></div>
+        <div class="flex justify-between items-center mt-5">
+          <div class="h-9 bg-gray-200 rounded-full w-28"></div>
+          <div class="h-5 bg-gray-200 rounded-full w-20"></div>
         </div>
       </div>
     </div>
 
-    <div v-else-if="courses.length === 0" class="text-center text-gray-500">
+    <div v-else-if="courses.length === 0" class="text-center text-xl text-gray-500 my-12">
       暂无数据
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       <div
         v-for="course in courses"
         :key="course.id"
-        class="bg-white rounded-lg shadow-md p-6 transition duration-300 hover:shadow-lg"
+        class="bg-white rounded-xl shadow-md p-6 transition duration-300 hover:shadow-xl hover:transform hover:-translate-y-1"
       >
-        <h2 class="text-xl font-semibold mb-2">
+        <h2 class="text-2xl font-semibold mb-3">
           <router-link
             :to="`/review/course/${course.id}`"
             class="text-blue-600 hover:text-blue-800 transition duration-300"
@@ -34,30 +32,34 @@
             {{ course.name }}
           </router-link>
         </h2>
-        <p class="text-gray-600 mb-2">教师: {{ course.teacher }}</p>
-        <p class="text-gray-600 mb-2">学期: {{ course.semester }}</p>
-        <div class="flex items-center mb-2">
-          <n-rate readonly :value="course.average_rating" :allow-half="true" />
-          <span class="ml-2 text-gray-600"
-            >{{ course.average_rating.toFixed(1) }} ({{
-              course.review_count
-            }}
-            条评价)</span
-          >
+        <p class="text-gray-700 mb-2">教师: {{ course.teacher }}</p>
+        <p class="text-gray-700 mb-3">学期: {{ course.semester }}</p>
+        <div class="flex items-center mb-3">
+          <n-rate readonly :value="course.average_rating" :allow-half="true" size="medium" />
+          <span class="ml-3 text-gray-700 font-medium">
+            {{ course.average_rating.toFixed(1) }}
+            <span class="text-sm text-gray-500">({{ course.review_count }} 条评价)</span>
+          </span>
         </div>
-        <div class="text-sm text-gray-500">
+        <div class="text-sm font-medium text-gray-600">
           标准化评分: {{ course.normalized_rating.toFixed(2) }}
         </div>
       </div>
     </div>
 
-    <n-pagination
-      v-if="totalPages > 1"
-      v-model:page="currentPage"
-      :page-count="totalPages"
-      :on-update:page="handlePageChange"
-      class="mt-8"
-    />
+    <div class="flex justify-center mt-12" v-if="totalPages > 1">
+      <n-pagination
+        v-model:page="currentPage"
+        :page-count="totalPages"
+        :on-update:page="handlePageChange"
+        :page-slot="5"
+        show-quick-jumper
+      >
+        <template #prefix>
+          第 {{ currentPage }} 页 / 共 {{ totalPages }} 页
+        </template>
+      </n-pagination>
+    </div>
   </div>
 </template>
 
