@@ -21,7 +21,7 @@
           邮箱验证成功
         </h1>
         <p class="mt-4 text-muted-foreground">
-          恭喜，您已成功验证邮箱地址。您可以跳转到首页完成登录。
+          恭喜，邮箱地址已成功验证，可以跳转到首页完成登录。
         </p>
         <div class="mt-6">
           <router-link
