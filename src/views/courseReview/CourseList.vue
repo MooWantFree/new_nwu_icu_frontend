@@ -1,27 +1,28 @@
 <template>
-  <!-- TODO: Not Reviewed -->
   <div class="container mx-auto py-8 px-4">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">课程列表</h1>
 
-    <div class="mb-6 flex justify-end">
-      <n-select v-model:value="sortBy" :options="sortOptions" class="w-48" />
-    </div>
-
     <div v-if="loading" class="space-y-4">
-      <div
-        v-for="i in 5"
-        :key="i"
-        class="bg-gray-200 rounded-md h-6 w-full animate-pulse"
-      ></div>
+      <div v-for="i in 5" :key="i" class="mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6 animate-pulse">
+          <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div class="flex justify-between items-center mt-4">
+            <div class="h-8 bg-gray-200 rounded w-24"></div>
+            <div class="h-4 bg-gray-200 rounded w-16"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="courses.length === 0" class="text-center text-gray-500">
-      未找到课程。
+      暂无数据
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
-        v-for="course in paginatedCourses"
+        v-for="course in courses"
         :key="course.id"
         class="bg-white rounded-lg shadow-md p-6 transition duration-300 hover:shadow-lg"
       >
@@ -68,28 +69,45 @@ import { CourseDataInCourseList, CourseListResponse } from '@/types/api/course'
 
 const message = useMessage()
 
+enum OrderBy {
+  Rating = 'rating',
+  Popular = 'popular',
+}
+
+enum CourseType {
+  All = 'all',
+  General = 'general',
+  Pe = 'pe',
+  English = 'english',
+  Professional = 'professional',
+  Politics = 'politics',
+  Required = 'required',
+  Optional = 'optional',
+}
+
 const courses = ref<CourseDataInCourseList[]>([])
+const courseType = ref<CourseType>(CourseType.All)
+const orderBy = ref<OrderBy>(OrderBy.Rating)
+const data = ref<CourseListResponse['success'] | null>(null)
 const loading = ref(true)
-const sortBy = ref('name')
 const currentPage = ref(1)
-const itemsPerPage = 12
 
-const sortOptions = [
-  { label: '名称', value: 'name' },
-  { label: '评分', value: 'rating' },
-  { label: '评价数', value: 'reviews' },
-]
-
-const fetchCourses = async () => {
+const fetchCourses = async (page: number = 1) => {
   loading.value = true
+  const requestParams = new URLSearchParams()
+  requestParams.set('order_by', orderBy.value)
+  requestParams.set('course_type', courseType.value)
+  requestParams.set('page', page.toString())
+
   try {
     const response = await api.get<CourseListResponse>(
-      '/api/assessment/courselist/'
+      '/api/assessment/courselist/?' + requestParams
     )
     courses.value = response.content.courses
+    data.value = response.content
   } catch (error) {
     console.error('Error fetching courses:', error)
-    message.error('Failed to load courses. Please try again.')
+    message.error('网络错误，请重试')
   } finally {
     loading.value = false
   }
@@ -99,30 +117,9 @@ onMounted(async () => {
   await fetchCourses()
 })
 
-const sortedCourses = computed(() => {
-  return [...courses.value].sort((a, b) => {
-    if (sortBy.value === 'name') {
-      return a.name.localeCompare(b.name)
-    } else if (sortBy.value === 'rating') {
-      return b.average_rating - a.average_rating
-    } else if (sortBy.value === 'reviews') {
-      return b.review_count - a.review_count
-    }
-    return 0
-  })
-})
-
-const totalPages = computed(() =>
-  Math.ceil(sortedCourses.value.length / itemsPerPage)
-)
-
-const paginatedCourses = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return sortedCourses.value.slice(start, end)
-})
-
-const handlePageChange = (page: number) => {
+const totalPages = computed(() => data.value?.num_pages || 1)
+const handlePageChange = async (page: number) => {
   currentPage.value = page
+  await fetchCourses(page)
 }
 </script>
