@@ -155,10 +155,10 @@
                   @click="submitReview"
                   :disabled="submitting || loading || !isFormValid"
                 >
-                  <div
+                  <LoaderCircle
                     v-if="submitting"
-                    class="mr-2 w-5 h-5 border-t-2 border-white rounded-full animate-spin"
-                  ></div>
+                    class="mr-2 w-5 h-5 text-white animate-spin"
+                  />
                   {{ submitting ? '提交中...' : '提交' }}
                 </button>
               </div>
@@ -173,14 +173,14 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch, computed, ref } from 'vue'
-import Editor from '@/components/tiptap/editor/Editor.vue'
+import { api } from '@/lib/requests'
+import { ratingTooltip } from '../tooltips'
 import { NewReviewRequest } from '@/types/api/review'
 import { CourseData } from '@/types/courses'
 import { SemesterListResponse } from '@/types/api/course'
-import { api } from '@/lib/requests'
+import Editor from '@/components/tiptap/editor/Editor.vue'
 import Rate from '@/components/tinyComponents/Rate.vue'
-import { ChevronUp, ChevronDown } from 'lucide-vue-next'
-import { ratingTooltip } from '../tooltips'
+import { LoaderCircle, ChevronUp, ChevronDown } from 'lucide-vue-next'
 
 const props = defineProps<{
   courseData: CourseData
