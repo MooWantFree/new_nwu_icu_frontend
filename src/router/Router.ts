@@ -53,16 +53,16 @@ const userRoutes = [
   //       pageTitle: '编辑用户资料',
   //     }
   // },
-  {
-    path: "/user/:id(\\d+)",
-    name: "用户资料",
-    component: () => import("@/views/user/Profile.vue"),
-    meta:
-      {
-        requiresAuth: false,
-        pageTitle: '用户资料',
-      }
-  },
+  // {
+  //   path: "/user/:id(\\d+)",
+  //   name: "用户资料",
+  //   component: () => import("@/views/user/Profile.vue"),
+  //   meta:
+  //     {
+  //       requiresAuth: false,
+  //       pageTitle: '用户资料',
+  //     }
+  // },
   {
     path: "/user/forget-password",
     name: 'forgetPassword',
