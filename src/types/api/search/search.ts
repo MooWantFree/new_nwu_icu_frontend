@@ -6,10 +6,14 @@ import { MethodMap } from '../base'
 // 搜索
 export const APISearchQuery = z.object({
   keyword: z.string(),
-  type: z.enum(['review', 'course', 'teacher', 'resource']),
+  type: z.enum(['review', 'course', 'teacher']),
 })
-type ReviewSearchResult = {
-  course: string
+export type ReviewSearchResult = {
+  id: number
+  course: {
+    id: number
+    name: string
+  }
   content: string
   rating: number
   created_by: {
@@ -24,7 +28,7 @@ type ReviewSearchResult = {
   }
   semester: string
 }
-type CourseSearchResult = {
+export type CourseSearchResult = {
   id: number
   name: string
   teacher: string
@@ -42,13 +46,13 @@ type CourseSearchResult = {
   review_count: number
   latest_review_time: string | null
 }
-type TeacherSearchResult = {
+export type TeacherSearchResult = {
   id: number
   name: string
   school: string
   avatar_uuid: string
 }
-type ResourceSearchResult = {
+export type ResourceSearchResult = {
   id: number
   name: string
   size: number
