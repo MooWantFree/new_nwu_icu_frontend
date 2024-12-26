@@ -96,7 +96,7 @@ onMounted(async () => {
   }
 
   // Process activation process
-  const token = route.query.token
+  const token = route.query.token as string
 
   if (!token) {
     error.value = '激活令牌丢失'
@@ -105,9 +105,12 @@ onMounted(async () => {
   }
 
   try {
-    const { status, errors } = await api.get(
-      `/api/user/register/?token=${token}`
-    )
+    const { status, errors } = await api.get({
+      url: '/api/user/register/',
+      query: {
+        token: token,
+      },
+    }    )
     const errorText = errors?.reduce((acc, cur) => acc + cur.err_msg, '')
     if (status === 200) {
       success.value = true

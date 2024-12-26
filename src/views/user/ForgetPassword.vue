@@ -96,8 +96,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { GetCaptchaResponseContent } from '@/types/api/captcha'
-import { ResetPasswordResponse } from '@/types/api/users'
 import { WarningOutline } from '@vicons/ionicons5'
 
 
@@ -116,7 +114,7 @@ const errorMessage = ref('')
 const getCaptcha = async () => {
   isLoadingCaptcha.value = true
   try {
-    const { status, data, content } = await api.get<GetCaptchaResponseContent>('/api/captcha/')
+    const { status, data, content } = await api.get({url: '/api/captcha/'})
     if (status === 200) {
       captchaImageUrl.value = content.image_url
       captchaKey.value = content.key
@@ -145,18 +143,22 @@ const handleSubmit = async () => {
   errorMessage.value = '' // Clear previous error message
 
   try {
-    const { status, data, content } = await api.post<ResetPasswordResponse>('/api/user/reset/', {
-      email: email.value,
-      captcha_key: captchaKey.value,
-      captcha_value: captchaValue.value
-    })
+    const { status, data, content } = await api.post(
+      {url: '/api/user/reset/',
+        query: {
+          email: email.value,
+          captcha_key: captchaKey.value,
+          captcha_value: captchaValue.value
+        }
+      },
+    )
     if (status === 200) {
       linkSent.value = true
     } else {
       // TODO: Handle error: if more than one error
-      if (data.errors.captcha_value) {
-        errorMessage.value = data.errors.captcha_value[0]
-      } else if (data.errors.email) {
+      if (data.errors?.find(it=>it.field==='captcha')) {
+        errorMessage.value = data.errors.find(it=>it.field==='captcha')?.err_msg!
+      } else if (data.errors?.find(it=>it.field==='email')) {
         errorMessage.value = '邮箱不存在'
       } else {
         throw new Error(JSON.stringify(data.errors))

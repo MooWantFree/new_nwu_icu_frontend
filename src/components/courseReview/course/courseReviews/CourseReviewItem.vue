@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Review } from '@/types/courses'
+import { Review } from '@/types/courseReview'
 import {
   onMounted,
   computed,
@@ -24,7 +24,6 @@ import { useRoute } from 'vue-router'
 import { useMessage, useDialog } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
-import type { ReplyDeleteResponse } from '@/types/api/course'
 import ReviewHeader from './reviewItem/ReviewHeader.vue'
 import ReviewContent from './reviewItem/ReviewContent.vue'
 import ReviewBottom from './reviewItem/ReviewBottom.vue'
@@ -93,10 +92,12 @@ const handleDeleteReview = () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        const response = await api.delete<ReplyDeleteResponse>(
-          `/api/assessment/review/`,
-          { review_id: review.id }
-        )
+        const response = await api.delete({
+          url: '/api/assessment/review/',
+          query: {
+            review_id: review.id,
+          },
+        })
         if (response.status === 200) {
           message.success('评价已成功删除')
           emit('reviewDeleted', review.id)

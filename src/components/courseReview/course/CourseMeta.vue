@@ -74,10 +74,9 @@
 import { ref } from 'vue'
 import { ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
 import { useUser } from '@/lib/useUser'
-import type { CourseData } from '@/types/courses'
+import type { CourseData } from '@/types/courseReview'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { ReplyLikeResponse } from '@/types/api/course'
 
 const message = useMessage()
 const { isLoggedIn } = useUser()
@@ -89,8 +88,8 @@ const props = defineProps<{
 const isButtonDisabled = ref(false)
 
 enum LikeValue {
-  Recommend = 1,
-  DisRecommend = -1,
+  Recommend = '1',
+  DisRecommend = '-1',
 }
 
 const handleLikeNDislike = async (likeValue: LikeValue) => {
@@ -101,25 +100,25 @@ const handleLikeNDislike = async (likeValue: LikeValue) => {
   }
   isButtonDisabled.value = true
 
-  const resp = await api.post<ReplyLikeResponse>(
-    '/api/assessment/course/like/',
-    {
+  const resp = await api.post({
+    url: '/api/assessment/course/like/',
+    query: {
       course_id: props.courseData.id,
       like: likeValue,
-    }
-  )
+    },
+  })
 
   if (resp.status === 200) {
     props.courseData.like.dislike = resp.content.like.dislike
     props.courseData.like.like = resp.content.like.like
 
-    if (props.courseData.like.user_option === likeValue) {
+    if (props.courseData.like.user_option === parseInt(likeValue)) {
       props.courseData.like.user_option = 0
     } else {
-      props.courseData.like.user_option = likeValue
+      props.courseData.like.user_option = parseInt(likeValue)
     }
   } else {
-    message.error(`${likeValue === 1 ? '推荐' : '不推荐'}失败，请稍后再试`)
+    message.error(`${likeValue === '1' ? '推荐' : '不推荐'}失败，请稍后再试`)
   }
 
   isButtonDisabled.value = false

@@ -129,8 +129,8 @@ watch(
   }
 )
 
-const handleFile = async (currentEditor, file: File, pos: number) => {
-  const { uploadFile, loading, succeed, imageUrl, errors } = useFileUpload()
+const handleFile = async (currentEditor: any, file: File, pos: number) => {
+  const { uploadFile, succeed, imageUrl, errors } = useFileUpload()
 
   await uploadFile(file)
 

@@ -218,7 +218,7 @@
 
 <script lang="ts" setup>
 import { useUser } from '@/lib/useUser'
-import { Review } from '@/types/courses'
+import { Review } from '@/types/courseReview'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
@@ -272,9 +272,12 @@ const reverseReplies = ref(false)
 const handleDeleteReply = async (repyId: number) => {
   if (confirm(`你确定要删掉这条回复吗？！`)) {
     try {
-      const resp = await api.delete('/api/assessment/reply/', {
-        reply_id: repyId,
-        review_id: review.id,
+      const resp = await api.delete({
+        url: '/api/assessment/reply/',
+        query: {
+          reply_id: repyId,
+          review_id: review.id,
+        },
       })
       if (resp.status === 200) {
         message.success('回复已成功删除')
