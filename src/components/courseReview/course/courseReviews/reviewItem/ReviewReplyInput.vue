@@ -39,9 +39,8 @@
 <script lang="ts" setup>
 import { ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
-import { Review } from '@/types/courses'
+import { Review } from '@/types/courseReview'
 import { api } from '@/lib/requests'
-import type { ReplyCreateResponse } from '@/types/api/course'
 
 const message = useMessage()
 
@@ -63,14 +62,14 @@ const textareaRef = useTemplateRef('textarea')
 const submitReply = async () => {
   loadingRef.value = true
   try {
-    const { status, data } = await api.post<ReplyCreateResponse>(
-      `/api/assessment/reply/`,
-      {
+    const { status, data } = await api.post({
+      url: '/api/assessment/reply/',
+      query: {
         content: replyContent.value,
         review_id: props.review.id,
         parent_id: props.replyTo,
-      }
-    )
+      },
+    })
 
     if (status !== 201) {
       throw new Error('Network response was not ok')

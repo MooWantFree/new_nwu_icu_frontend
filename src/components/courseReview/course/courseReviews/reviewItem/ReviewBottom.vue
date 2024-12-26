@@ -87,7 +87,11 @@
 
       <div class="flex items-center space-x-2">
         <button
-          @click="()=>{handleLikeNDislike(LikeOption.Like)}"
+          @click="
+            () => {
+              handleLikeNDislike(LikeOption.Like)
+            }
+          "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
             'flex items-center px-3 py-1 rounded transition-colors text-sm',
@@ -98,10 +102,16 @@
           ]"
         >
           <ThumbsUpOutline class="w-4 h-4 mr-1 inline-block" />
-          <span class="inline-block whitespace-nowrap">{{ review.like.like }}</span>
+          <span class="inline-block whitespace-nowrap">{{
+            review.like.like
+          }}</span>
         </button>
         <button
-          @click="()=>{handleLikeNDislike(LikeOption.Dislike)}"
+          @click="
+            () => {
+              handleLikeNDislike(LikeOption.Dislike)
+            }
+          "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
             'flex items-center px-3 py-1 rounded transition-colors text-sm',
@@ -129,15 +139,14 @@
 </template>
 
 <script setup lang="ts">
-import { Review } from '@/types/courses'
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import Time from '@/components/tinyComponents/Time.vue'
 import { useUser } from '@/lib/useUser'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { ReplyLikeResponse } from '@/types/api/course'
 import { ThumbsUpOutline, ThumbsDownOutline } from '@vicons/ionicons5'
+import { Review } from '@/types/courseReview'
 
 const { review, isAuthor } = defineProps<{
   review: Review
@@ -174,8 +183,8 @@ const isLikeNDislikeButtonDisabled = ref(false)
 const { isLoggedIn } = useUser()
 const message = useMessage()
 enum LikeOption {
-  Like = 1,
-  Dislike = -1,
+  Like = '1',
+  Dislike = '-1',
 }
 const handleLikeNDislike = async (likeValue: LikeOption) => {
   if (isLikeNDislikeButtonDisabled.value) return
@@ -187,25 +196,25 @@ const handleLikeNDislike = async (likeValue: LikeOption) => {
 
   isLikeNDislikeButtonDisabled.value = true
 
-  const resp = await api.post<ReplyLikeResponse>(
-    '/api/assessment/reply/like/',
-    {
+  const resp = await api.post({
+    url: '/api/assessment/reply/like/',
+    query: {
       review_id: review.id,
       reply_id: 0,
       like_or_dislike: likeValue,
-    }
-  )
+    },
+  })
 
   if (resp.status === 200) {
     review.like.dislike = resp.content.like.dislike
     review.like.like = resp.content.like.like
-    if (review.like.user_option === likeValue) {
+    if (review.like.user_option.toString() === likeValue) {
       review.like.user_option = 0
     } else {
-      review.like.user_option = likeValue
+      review.like.user_option = parseInt(likeValue)
     }
   } else {
-    message.error(`${likeValue === 1 ? '认同' : '不认同'}失败，请稍后再试`)
+    message.error(`${likeValue === '1' ? '认同' : '不认同'}失败，请稍后再试`)
   }
 
   isLikeNDislikeButtonDisabled.value = false

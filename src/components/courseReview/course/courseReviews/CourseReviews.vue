@@ -12,7 +12,11 @@
             class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="sortSelectorValue"
           >
-            <option v-for="option in sortSelectorOptions" :key="option.value" :value="option.value">
+            <option
+              v-for="option in sortSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -23,7 +27,11 @@
             class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="semesterSelectorValue"
           >
-            <option v-for="option in semesterSelectorOptions" :key="option.value" :value="option.value">
+            <option
+              v-for="option in semesterSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -34,7 +42,11 @@
             class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="rankSelectorValue"
           >
-            <option v-for="option in rankSelectorOptions" :key="option.value" :value="option.value">
+            <option
+              v-for="option in rankSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -90,8 +102,7 @@ import { ref, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
-import { CourseData } from '@/types/courses'
-import { NewReviewRequest, NewReviewResponse } from '@/types/api/review'
+import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import CourseReviewItem from '@/components/courseReview/course/courseReviews/CourseReviewItem.vue'
 import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
 
@@ -240,13 +251,23 @@ const handleReplyDeleted = () => {
   emit('reloadData')
 }
 
-const handleSubmitReview = async (content: NewReviewRequest) => {
+const handleSubmitReview = async (content: ReviewDataBase) => {
   isSubmittingReview.value = true
-  const request = initContent.value ? api.put : api.post
   try {
-    const {
-      status,
-    } = await request<NewReviewResponse>('/api/assessment/review/', content)
+    let status: number
+    if (initContent.value) {
+      const resp = await api.put({
+        url: '/api/assessment/review/',
+        query: content,
+      })
+      status = resp.status
+    } else {
+      const resp = await api.post({
+        url: '/api/assessment/review/',
+        query: content,
+      })
+      status = resp.status
+    }
 
     if (status !== 200) {
       throw new Error('Failed to submit review')
@@ -266,11 +287,9 @@ const userReviewed = computed(() => {
   return !!props.courseData.request_user_review_id
 })
 
-type InitContent = Omit<NewReviewRequest, 'semester'> & {
-  semester: string
-}
+type InitContent = ReviewDataBase | null
 
-const initContent = computed<InitContent | null>(() => {
+const initContent = computed<InitContent>(() => {
   const userReview = props.courseData.reviews.find(
     (review) => review.id === props.courseData.request_user_review_id
   )
@@ -284,7 +303,7 @@ const initContent = computed<InitContent | null>(() => {
       grade: Number(userReview.grade),
       homework: Number(userReview.homework),
       reward: Number(userReview.reward),
-      semester: userReview.semester,
+      semester: parseInt(userReview.semester),
     }
   }
   return null

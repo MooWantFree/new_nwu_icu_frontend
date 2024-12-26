@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { Review } from '@/types/courses'
+import { Review } from '@/types/courseReview'
 
 const { review, isAuthor } = defineProps<{
   review: Review

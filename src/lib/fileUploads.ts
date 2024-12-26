@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { api } from '@/lib/requests'
-import type { FileUploadResponse } from '@/types/api/file'
 
 export function useFileUpload() {
   const loading = ref(false)
@@ -18,8 +17,10 @@ export function useFileUpload() {
     formData.append('file', file)
 
     try {
-      const { status, data, content, errors } =
-        await api.post<FileUploadResponse>('/api/upload/', formData)
+      const { status, data, content, errors } = await api.post({
+        url: '/api/upload/',
+        query: formData,
+      })
 
       if (
         status.toString().startsWith('4') ||

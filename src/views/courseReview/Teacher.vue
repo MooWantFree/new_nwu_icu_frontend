@@ -10,7 +10,10 @@
             <n-avatar
               round
               :size="80"
-              :src="`/api/download/${teacher.teacher_info.avatar}`"
+              :src="`/api/download/${
+              // @ts-expect-error TODO: No avatar_uuid now
+              teacher.teacher_info.avatar_uuid
+              }`"
             >
               <template #fallback>
                 <div
@@ -38,7 +41,10 @@
           </div>
 
           <p class="mx-5 text-gray-700">
-            {{ teacher.teacher_info.description || '暂无描述' }}
+            {{
+              // @ts-expect-error TODO: No description now
+             teacher.teacher_info.description 
+            || '暂无描述' }}
           </p>
         </div>
 
@@ -63,7 +69,9 @@
               </p>
               <!-- TODO: what if semester list is too long -->
               <p class="text-gray-700 mb-4">
-                {{ course.course.description || '暂无课程描述' }}
+                {{ 
+                // @ts-expect-error TODO: No description now
+                  course.course.description || '暂无课程描述' }}
               </p>
               <div class="flex justify-between items-start mb-2">
                 <span class="text-sm text-gray-500"
@@ -123,22 +131,23 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { NButton } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { TeacherResponse } from '@/types/api/assessment/teacher'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
+import { APITeacherInfo } from '@/types/api/courseReview/teacher'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 
-const teacher = ref<TeacherResponse['success'] | null>(null)
+const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
 
 const fetchTeacherData = async () => {
-  const teacherId = route.params.id
+  const teacherId = parseInt(route.params.id as string)
   try {
-    const { status, content } = await api.get<TeacherResponse>(
-      `/api/assessment/teacher/${teacherId}/`
-    )
+    const { status, content } = await api.get({
+      url: '/api/assessment/teacher/:id/',
+      params: { id: teacherId },
+    })
     if (status === 200) {
       teacher.value = content
     } else if (status === 404) {

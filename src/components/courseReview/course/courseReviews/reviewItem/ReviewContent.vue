@@ -86,7 +86,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Review } from '@/types/courses'
+import { Review } from '@/types/courseReview'
 import { ratingTooltip } from '../../tooltips'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 

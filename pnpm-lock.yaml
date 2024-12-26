@@ -71,6 +71,9 @@ importers:
       vue3-apexcharts:
         specifier: ^1.6.0
         version: 1.6.0(apexcharts@3.54.0)(vue@3.5.6)
+      zod:
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
       '@vicons/ionicons5':
         specifier: ^0.12.0
@@ -1394,6 +1397,9 @@ packages:
     engines: {node: '>= 14'}
     hasBin: true
 
+  zod@3.24.1:
+    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -2663,3 +2669,5 @@ snapshots:
       strip-ansi: 7.1.0
 
   yaml@2.5.0: {}
+
+  zod@3.24.1: {}
