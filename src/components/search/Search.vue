@@ -115,7 +115,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
 import { LoaderCircle, Search } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
@@ -132,9 +131,6 @@ import SearchResultReview from './results/SearchResultReview.vue'
 import SearchResultTeacher from './results/SearchResultTeacher.vue'
 import SearchResultResource from './results/SearchResultResource.vue'
 import Skeleton from './Skeleton.vue'
-
-const route = useRoute()
-const currentPosition = route.meta
 
 const searchQuery = ref('')
 const activeTab = ref<SearchType>(searchEnums.review)
