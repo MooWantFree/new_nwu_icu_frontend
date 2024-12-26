@@ -125,13 +125,7 @@ import { useRouter } from 'vue-router'
 import { debounce } from 'lodash-es'
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import {
-  CheckUsernameResponse,
-  LoginResponse,
-  RegisterResponse,
-} from '@/types/api/users'
-import { GetCaptchaResponse } from '@/types/api/captcha'
-import { UserProfile } from '@/types/userProfile'
+import { APILogin } from '@/types/api/user/user'
 
 // Common parts
 const message = useMessage()
@@ -139,6 +133,8 @@ const loadingRef = ref<boolean>(false)
 const router = useRouter()
 const rememberMe = ref(false)
 // TODO: How to handle the remember me?
+
+type UserProfile = APILogin['response']
 
 // Login part
 const loginFormRef = ref<FormInst | null>(null)
@@ -164,11 +160,13 @@ const handleLoginButtonClick = (e: MouseEvent) => {
   loginFormRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const { status, data, content, errors } = await api.post<LoginResponse>(
-          '/api/user/login/',
+        const { status, content, errors } = await api.post(
           {
-            username: loginFormValue.value.username,
-            password: loginFormValue.value.password,
+            url: '/api/user/login/',
+            query: {
+              username: loginFormValue.value.username,
+              password: loginFormValue.value.password,
+            },
           }
         )
 
@@ -236,9 +234,13 @@ const checkUsernameAvailability = debounce(
       return
     }
     try {
-      const { status, errors } = await api.post<CheckUsernameResponse>(
-        '/api/user/username/',
-        { username: value }
+      const { status, errors } = await api.post(
+        {
+          url: '/api/user/username/',
+          query: {
+            username: value,
+          },
+        }
       )
       if (status !== 200) {
         throw new Error(
@@ -334,14 +336,16 @@ const handleSignUpButtonClick = (e: MouseEvent) => {
     if (!errors) {
       try {
         const { status, data, content, errors } =
-          await api.post<RegisterResponse>('/api/user/register/', {
+          await api.post({
+            url: '/api/user/register/',
+            query: {
             username: signUpFormValue.value.username,
             password: signUpFormValue.value.password,
+            repeat_password: signUpFormValue.value.repeatPassword,
             email: signUpFormValue.value.email,
             captcha_value: signUpFormValue.value.captcha,
             captcha_key: captchaInfo.value.key,
-          })
-
+          }})
         if (status !== 200) {
           if (errors) {
             for (const error of errors) {
@@ -355,8 +359,10 @@ const handleSignUpButtonClick = (e: MouseEvent) => {
           switchToSignInTabTrigger()
         }
       } catch (e) {
-        message.error(`内部错误，请重试或联系管理员：${e.message}`)
         console.error(e)
+        if (e instanceof Error) {
+          message.error('网络错误，请重试或联系管理员\n' + e.message)
+        }
       } finally {
         loadingRef.value = false
       }
@@ -371,6 +377,7 @@ const tabsValueRef = ref()
 const switchToSignInTabTrigger = () => {
   tabsValueRef.value = 'sign-in'
   nextTick(() => {
+    // @ts-expect-error FIXME: IDK why
     tabsRef.value?.syncBarPosition()
   })
 }
@@ -386,9 +393,9 @@ const captchaLoading = ref(false)
 const updateCaptcha = async () => {
   captchaLoading.value = true
   try {
-    const { status, data, content, errors } = await api.get<GetCaptchaResponse>(
-      '/api/captcha/'
-    )
+    const { status, data, content, errors } = await api.get({
+      url: '/api/captcha/',
+    })
     if (status === 200) {
       captchaInfo.value.imageUrl = content.image_url
       captchaInfo.value.key = content.key

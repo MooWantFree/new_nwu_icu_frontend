@@ -40,30 +40,31 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import type { LatestCourseReviewResponse } from '@/types/courseReview'
 import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
 import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSkeleton.vue'
+import { APILatestReviews } from '@/types/api/courseReview/review'
 
 const message = useMessage()
 const router = useRouter()
 const route = useRoute()
 
-const reviews = ref<LatestCourseReviewResponse['success']['results']>([])
+const reviews = ref<APILatestReviews['response']['results']>([])
 const totalReviewCount = ref(0)
 const loading = ref(true)
 const pageSize = 5
 const currentPage = ref(parseInt(route.query.page as string) || 1)
 
 const fetchReviews = async (page: number, desc: number = 1) => {
-  const searchParams = new URLSearchParams({
-    page: page.toString(),
-    pageSize: pageSize.toString(),
-    desc: desc.toString(),
-  })
-  const reqUrl = `/api/assessment/latest-review/?${searchParams.toString()}`
-
+  const searchParams = {
+    page: page,
+    pageSize: pageSize,
+    desc: desc,
+  }
   try {
-    const { status, content, errors } = await api.get<LatestCourseReviewResponse>(reqUrl)
+    const { status, content, errors } = await api.get({
+      url: '/api/assessment/latest-review/',
+      query: searchParams
+    })
 
     if (status !== 200) {
       throw new Error(errors ? errors.map(err => err.err_msg).join(', ') : '获取点评失败，请重试')

@@ -155,10 +155,10 @@
                   @click="submitReview"
                   :disabled="submitting || loading || !isFormValid"
                 >
-                  <div
+                  <LoaderCircle
                     v-if="submitting"
-                    class="mr-2 w-5 h-5 border-t-2 border-white rounded-full animate-spin"
-                  ></div>
+                    class="mr-2 w-5 h-5 text-white animate-spin"
+                  />
                   {{ submitting ? '提交中...' : '提交' }}
                 </button>
               </div>
@@ -173,29 +173,26 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch, computed, ref } from 'vue'
-import Editor from '@/components/tiptap/editor/Editor.vue'
-import { NewReviewRequest } from '@/types/api/review'
-import { CourseData } from '@/types/courses'
-import { SemesterListResponse } from '@/types/api/course'
 import { api } from '@/lib/requests'
-import Rate from '@/components/tinyComponents/Rate.vue'
-import { ChevronUp, ChevronDown } from 'lucide-vue-next'
 import { ratingTooltip } from '../tooltips'
+import type { CourseData, ReviewDataBase } from '@/types/courseReview'
+import Editor from '@/components/tiptap/editor/Editor.vue'
+import Rate from '@/components/tinyComponents/Rate.vue'
+import { LoaderCircle, ChevronUp, ChevronDown } from 'lucide-vue-next'
+import { APISemesterList } from '@/types/api/courseReview/course'
 
 const props = defineProps<{
   courseData: CourseData
   modelValue: boolean
   submitting: boolean
   initContent:
-    | (Omit<NewReviewRequest, 'semester'> & {
-        semester: string
-      })
+    | ReviewDataBase
     | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'submit', content: NewReviewRequest): void
+  (e: 'submit', content: ReviewDataBase): void
 }>()
 
 const content = ref(props.initContent?.content || '')
@@ -206,7 +203,7 @@ const difficulty = ref(props.initContent?.difficulty || 0)
 const homework = ref(props.initContent?.homework || 0)
 const grade = ref(props.initContent?.grade || 0)
 const reward = ref(props.initContent?.reward || 0)
-const semesterData = ref<SemesterListResponse['success'] | null>(null)
+const semesterData = ref<APISemesterList['response'] | null>(null)
 const semesterOptions = computed(() => {
   if (!semesterData.value) return []
   return Object.entries(semesterData.value)
@@ -220,15 +217,13 @@ watch(
   () => semesterOptions.value,
   (options) => {
     const initSelectedSemester =
-      options.find((it) => it.label === props.initContent?.semester)?.value ||
+      options.find((it) => parseInt(it.label) === props.initContent?.semester)?.value ||
       null
     selectedSemester.value = initSelectedSemester
   }
 )
 
-const semesterListRequest = api.get<SemesterListResponse>(
-  '/api/assessment/semester/'
-)
+const semesterListRequest = api.get({ url: '/api/assessment/semester/' })
 
 const loading = ref(true)
 onMounted(async () => {
@@ -239,7 +234,7 @@ onMounted(async () => {
 })
 
 const submitReview = async () => {
-  const reviewData: NewReviewRequest = {
+  const reviewData: ReviewDataBase= {
     course: props.courseData.id,
     content: content.value,
     rating: rating.value,
@@ -299,7 +294,9 @@ watch(
 
 const showRatingsSelector = ref(false)
 
-const isFormValid = computed(() => (
+// TODO: validate the form using zod
+const isFormValid = computed(
+  () =>
     content.value.trim() &&
     rating.value > 0 &&
     difficulty.value > 0 &&
@@ -307,6 +304,5 @@ const isFormValid = computed(() => (
     grade.value > 0 &&
     reward.value > 0 &&
     selectedSemester.value !== null
-  )
 )
 </script>

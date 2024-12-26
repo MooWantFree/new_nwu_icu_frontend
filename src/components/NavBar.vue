@@ -26,7 +26,19 @@
             :render-label="renderMenuLabel"
           />
         </div>
-        <div class="nav-bar-pc-right" style="margin-left: auto">
+        <div
+          class="nav-bar-pc-right"
+          style="margin-left: auto; display: flex; align-items: center"
+        >
+          <n-button
+            text
+            style="margin-right: 10px"
+            @click="showSearchModal = true"
+          >
+            <template #icon>
+              <n-icon><Search /></n-icon>
+            </template>
+          </n-button>
           <template v-if="!isLoggedIn">
             <n-button
               :disabled="isLoading"
@@ -74,7 +86,7 @@
           size="huge"
           aria-modal="true"
         >
-          <Login
+          <LoginForm
             @login-success="handleLoginSuccess"
             @close-modal="showLoginPopup = false"
           />
@@ -85,57 +97,75 @@
           <img alt="logo image" src="@/assets/logo.svg" />
           <n-button color="#000000" dashed>NWU.ICU</n-button>
         </n-text>
-        <n-popover
-          ref="mobilePopoverRef"
-          style="padding: 0; width: 288px"
-          placement="bottom-end"
-          display-directive="show"
-          trigger="click"
-        >
-          <template #trigger>
-            <n-icon size="20" style="margin-left: 20px">
-              <MenuOutline />
-            </n-icon>
-          </template>
-          <template #header>
-            <n-menu
-              :value="activeKey"
-              :options="mobileMenuHomeButton"
-              :indent="18"
-              :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu"
-              accordion
-            />
-          </template>
-          <div style="overflow: auto; max-height: 79vh">
-            <!--            Mobile Menu-->
-            <n-menu
-              :value="activeKey"
-              :options="menuOptions"
-              :indent="18"
-              :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu"
-              accordion
-            />
-          </div>
-          <template #footer>
-            <n-menu
-              :value="activeKey"
-              :options="mobileMenuUserAreaButtons"
-              :indent="18"
-              :render-label="renderMenuLabel"
-              @update:value="handleUpdateMobileMenu"
-              accordion
-            />
-          </template>
-        </n-popover>
+        <div style="display: flex; align-items: center">
+          <n-button
+            text
+            style="margin-right: 10px"
+            @click="showSearchModal = true"
+          >
+            <template #icon>
+              <n-icon><Search /></n-icon>
+            </template>
+          </n-button>
+          <n-popover
+            ref="mobilePopoverRef"
+            style="padding: 0; width: 288px"
+            placement="bottom-end"
+            display-directive="show"
+            trigger="click"
+          >
+            <template #trigger>
+              <n-icon size="20" style="margin-left: 20px">
+                <MenuOutline />
+              </n-icon>
+            </template>
+            <template #header>
+              <n-menu
+                :value="activeKey"
+                :options="mobileMenuHomeButton"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+              />
+            </template>
+            <div style="overflow: auto; max-height: 79vh">
+              <!--            Mobile Menu-->
+              <n-menu
+                :value="activeKey"
+                :options="menuOptions"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+              />
+            </div>
+            <template #footer>
+              <n-menu
+                :value="activeKey"
+                :options="mobileMenuUserAreaButtons"
+                :indent="18"
+                :render-label="renderMenuLabel"
+                @update:value="handleUpdateMobileMenu"
+                accordion
+              />
+            </template>
+          </n-popover>
+        </div>
       </template>
     </div>
   </n-layout-header>
+  <SearchModal v-if="showSearchModal" @close="showSearchModal = false" />
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  ref,
+  useTemplateRef,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NModal, useDialog, useMessage } from 'naive-ui'
 import {
@@ -148,12 +178,16 @@ import {
   OpenOutline,
   Pencil,
   Person,
+  Search,
 } from '@vicons/ionicons5'
 import { renderIcon, renderMenuLabel } from '@/lib/h'
 import { useUser } from '@/lib/useUser'
-import { UserProfile } from '@/types/userProfile'
 import { api } from '@/lib/requests'
-import Login from '@/components/LoginForm.vue'
+import LoginForm from '@/components/user/LoginForm.vue'
+import SearchModal from '@/components/search/SearchModal.vue'
+import { APILogin } from '@/types/api/user/user'
+
+type UserProfile = APILogin['response']
 
 const route = useRoute()
 const router = useRouter()
@@ -165,6 +199,8 @@ const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 
 // Login popup in PC
 const showLoginPopup = ref(false)
+// Search Modal
+const showSearchModal = ref(false)
 const handleLoginSuccess = (data: UserProfile) => {
   login(data)
   const displayName = data?.nickname ?? data?.username ?? ''
@@ -208,7 +244,7 @@ const userAvatarDropdownOptions = [
   },
 ]
 const handleLogout = async () => {
-  const { status } = await api.post('/api/user/logout/', {})
+  const { status } = await api.post({url: '/api/user/logout/'})
   if (status !== 200) {
     message.error('退出登录失败，请稍后再试')
     logout()
@@ -241,6 +277,7 @@ const handleLogoClick = () => {
 }
 
 const handleUpdateMobileMenu = () => {
+  // @ts-expect-error FIXME: IDK why
   mobilePopoverRef.value?.setShow(false)
 }
 
@@ -286,6 +323,7 @@ const menuOptions = [
         positiveText: '打开',
         negativeText: '算了',
         onPositiveClick(e) {
+          e.preventDefault()
           window.open('https://resour.nwu.icu', '_blank')
         },
       })

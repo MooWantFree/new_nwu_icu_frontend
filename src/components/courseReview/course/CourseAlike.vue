@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { CourseData } from '@/types/courses'
+import { CourseData } from '@/types/courseReview'
 import { computed } from 'vue'
 
 const sortedSameNameCourses = computed(() => {

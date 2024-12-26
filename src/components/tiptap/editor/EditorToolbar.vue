@@ -198,14 +198,12 @@ import {
   AlignLeft as AlignLeftIcon,
   List as ListIcon,
   ListOrdered as ListOrderedIcon,
-  CheckSquare as CheckSquareIcon,
   Link as LinkIcon,
   Image as ImageIcon,
   Smile as SmileIcon,
   LayoutGrid as LayoutGridIcon,
   Code as CodeIcon,
   FileCode as FileCodeIcon,
-  Plus as PlusIcon,
 } from 'lucide-vue-next'
 
 const { editor } = defineProps<{
@@ -289,7 +287,6 @@ const insertTable = (rows: number, cols: number) => {
 }
 
 const showLinkModal = ref(false)
-const selectedText = ref('')
 
 const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
   // FIXME: Not work properly

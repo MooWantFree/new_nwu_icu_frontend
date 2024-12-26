@@ -7,7 +7,7 @@
           #="{ navigate, href }"
           custom
         >
-          <n-avatar round :src="`/api/download/${teacher?.avatar}`">
+          <n-avatar round :src="`/api/download/${teacher.avatar_uuid}`">
             <template #fallback>
               <div
                 :class="[
@@ -42,7 +42,7 @@
 
 <script lang="ts" setup>
 import { RouterLink } from 'vue-router'
-import type { CourseData } from '@/types/courses'
+import type { CourseData } from '@/types/courseReview'
 
 const { courseData } = defineProps<{
   courseData: CourseData

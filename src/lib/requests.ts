@@ -1,22 +1,29 @@
-import { ResponseBase, APIResponse } from '@/types/api'
+import { APIBase, MethodMap } from '@/types/api/base'
+import { RequestEndpoints } from '@/types/api'
 
-type RequestConfig = {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  url: string
-  data?: any
-  options?: RequestInit
+type APIResponse<T extends APIBase> = {
+  message: T['message'] extends string ? T['message'] : string
+  errors?: T['errors']
+  contents: T['response']
 }
 
-async function request<T extends ResponseBase>(
-  config: RequestConfig
-): Promise<{
+async function request<T extends APIBase>({
+  method,
+  url,
+  query,
+  options,
+}: {
+  method: MethodMap
+  url: string
+  query?: T['query']
+  options?: RequestInit
+}): Promise<{
   status: number
   data: APIResponse<T>
-  content: T['success']
-  errors?: APIResponse<T>['errors']
+  content: T['response']
+  errors: T['errors']
 }> {
-  const { method, url, data, options: customOptions } = config
-  const fullUrl = `${url}`
+  let fullUrl = `${url}`
 
   const defaultOptions: RequestInit = {
     method,
@@ -29,19 +36,26 @@ async function request<T extends ResponseBase>(
 
   const mergedOptions: RequestInit = {
     ...defaultOptions,
-    ...customOptions,
+    ...options,
     headers: {
       ...defaultOptions.headers,
-      ...customOptions?.headers,
+      ...options?.headers,
     },
   }
 
-  if (data) {
-    if (data instanceof FormData || data instanceof File) {
+  if (query) {
+    if (method === MethodMap.GET) {
+      const searchParams = new URLSearchParams()
+      Object.entries(query).forEach(([key, value]) => {
+        searchParams.set(key, String(value))
+      })
+      fullUrl += `?${searchParams.toString()}`
+    }
+    else if (query instanceof FormData || query instanceof File) {
       delete (mergedOptions.headers as Record<string, string>)['Content-Type']
-      mergedOptions.body = data
+      mergedOptions.body = query
     } else {
-      mergedOptions.body = JSON.stringify(data)
+      mergedOptions.body = JSON.stringify(query)
     }
   }
 
@@ -52,7 +66,7 @@ async function request<T extends ResponseBase>(
     return {
       status: response.status,
       data: result as APIResponse<T>,
-      content: result.contents as T['success'],
+      content: result.contents as T['response'],
       errors: result.errors as APIResponse<T>['errors'],
     }
   } catch (error) {
@@ -70,22 +84,108 @@ function getCsrfToken(): string {
   )
 }
 
+const fillURL = (url: string, params: any) => {
+  let filledURL = url
+  if (!params) return filledURL
+
+  Object.entries(params).forEach(([key, value]) => {
+    filledURL = filledURL.replace(`:${key}`, String(value))
+  })
+
+  return filledURL
+}
+
 export const api = {
-  get: <T extends ResponseBase>(url: string, options?: RequestInit) =>
-    request<T>({ method: 'GET', url, options }),
-  post: <T extends ResponseBase>(
-    url: string,
-    data: T['request'],
+  get: <Path extends keyof RequestEndpoints[MethodMap.GET]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.GET][Path]
+      ? RequestEndpoints[MethodMap.GET][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.GET][Path]
+      ? RequestEndpoints[MethodMap.GET][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'POST', url, data, options }),
-  put: <T extends ResponseBase>(
-    url: string,
-    data: T['request'],
+  }) => {
+    const filledUrl = fillURL(url, params)
+    return request<RequestEndpoints[MethodMap.GET][Path]>({
+      method: MethodMap.GET,
+      url: filledUrl,
+      query,
+      options,
+    })
+  },
+  post: <Path extends keyof RequestEndpoints[MethodMap.POST]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.POST][Path]
+      ? RequestEndpoints[MethodMap.POST][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.POST][Path]
+      ? RequestEndpoints[MethodMap.POST][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'PUT', url, data, options }),
-  delete: <T extends ResponseBase>(
-    url: string,
-    data: T['request'],
+  }) => {
+    const filledUrl = fillURL(url, params)
+    return request<RequestEndpoints[MethodMap.POST][Path]>({
+      method: MethodMap.POST,
+      url: filledUrl,
+      query,
+      options,
+    })
+  },
+  put: <Path extends keyof RequestEndpoints[MethodMap.PUT]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.PUT][Path]
+      ? RequestEndpoints[MethodMap.PUT][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.PUT][Path]
+      ? RequestEndpoints[MethodMap.PUT][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'DELETE', url, data, options }),
+  }) => {
+    const filledUrl = fillURL(url, params)
+    return request<RequestEndpoints[MethodMap.PUT][Path]>({
+      method: MethodMap.PUT,
+      url: filledUrl,
+      query,
+      options,
+    })
+  },
+  delete: <Path extends keyof RequestEndpoints[MethodMap.DELETE]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.DELETE][Path]
+      ? RequestEndpoints[MethodMap.DELETE][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.DELETE][Path]
+      ? RequestEndpoints[MethodMap.DELETE][Path]['query']
+      : never
+    options?: RequestInit
+  }) => {
+    const filledUrl = fillURL(url, params)
+    return request<RequestEndpoints[MethodMap.DELETE][Path]>({
+      method: MethodMap.DELETE,
+      url: filledUrl,
+      query,
+      options,
+    })
+  },
 }

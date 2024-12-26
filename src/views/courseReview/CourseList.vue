@@ -8,7 +8,11 @@
         class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="" disabled selected>选择课程类型</option>
-        <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
+        <option
+          v-for="option in courseTypeOptions"
+          :key="option.value"
+          :value="option.value"
+        >
           {{ option.label }}
         </option>
       </select>
@@ -17,7 +21,11 @@
         class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="" disabled selected>选择排序方式</option>
-        <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
+        <option
+          v-for="option in orderByOptions"
+          :key="option.value"
+          :value="option.value"
+        >
           {{ option.label }}
         </option>
       </select>
@@ -31,7 +39,11 @@
     </div>
 
     <div v-if="loading" class="space-y-6">
-      <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
+      <div
+        v-for="i in 5"
+        :key="i"
+        class="bg-white rounded-xl shadow-md p-6 animate-pulse"
+      >
         <div class="h-7 bg-gray-200 rounded-full w-3/4 mb-4"></div>
         <div class="h-5 bg-gray-200 rounded-full w-1/2 mb-3"></div>
         <div class="h-5 bg-gray-200 rounded-full w-2/3 mb-3"></div>
@@ -42,7 +54,10 @@
       </div>
     </div>
 
-    <div v-else-if="courses.length === 0" class="text-center text-xl text-gray-500 my-12">
+    <div
+      v-else-if="courses.length === 0"
+      class="text-center text-xl text-gray-500 my-12"
+    >
       暂无数据
     </div>
 
@@ -63,10 +78,17 @@
         <p class="text-gray-700 mb-2">教师: {{ course.teacher }}</p>
         <p class="text-gray-700 mb-3">学期: {{ course.semester }}</p>
         <div class="flex items-center mb-3">
-          <n-rate readonly :value="course.average_rating" :allow-half="true" size="medium" />
+          <n-rate
+            readonly
+            :value="course.average_rating"
+            :allow-half="true"
+            size="medium"
+          />
           <span class="ml-3 text-gray-700 font-medium">
             {{ course.average_rating.toFixed(1) }}
-            <span class="text-sm text-gray-500">({{ course.review_count }} 条评价)</span>
+            <span class="text-sm text-gray-500"
+              >({{ course.review_count }} 条评价)</span
+            >
           </span>
         </div>
         <div class="text-sm font-medium text-gray-600">
@@ -95,7 +117,8 @@
 import { onMounted, computed, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { CourseDataInCourseList, CourseListResponse } from '@/types/api/course'
+import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
+import { z } from 'zod'
 
 const message = useMessage()
 
@@ -104,33 +127,24 @@ enum OrderBy {
   Popular = 'popular',
 }
 
-enum CourseType {
-  All = 'all',
-  General = 'general',
-  Pe = 'pe',
-  English = 'english',
-  Professional = 'professional',
-  Politics = 'politics',
-  Required = 'required',
-  Optional = 'optional',
-}
+const CourseType = APICourseListQuery.shape.course_type.enum 
 
-const courses = ref<CourseDataInCourseList[]>([])
-const courseType = ref<CourseType>(CourseType.All)
+const courses = ref<APICourseList['response']['courses']>([])
+const courseType = ref<z.infer<typeof APICourseListQuery>['course_type']>(CourseType.all)
 const orderBy = ref<OrderBy>(OrderBy.Rating)
-const data = ref<CourseListResponse['success'] | null>(null)
+const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
 
 const courseTypeOptions = [
-  { label: '全部课程', value: CourseType.All },
-  { label: '通识课', value: CourseType.General },
-  { label: '体育课', value: CourseType.Pe },
-  { label: '英语课', value: CourseType.English },
-  { label: '专业课', value: CourseType.Professional },
-  { label: '政治课', value: CourseType.Politics },
-  { label: '必修课', value: CourseType.Required },
-  { label: '选修课', value: CourseType.Optional },
+  { label: '全部课程', value: CourseType.all },
+  { label: '通识课', value: CourseType.general },
+  { label: '体育课', value: CourseType.pe },
+  { label: '英语课', value: CourseType.english },
+  { label: '专业课', value: CourseType.professional },
+  { label: '政治课', value: CourseType.politics },
+  { label: '必修课', value: CourseType.required },
+  { label: '选修课', value: CourseType.optional },
 ]
 
 const orderByOptions = [
@@ -146,9 +160,14 @@ const fetchCourses = async (page: number = 1) => {
   requestParams.set('page', page.toString())
 
   try {
-    const response = await api.get<CourseListResponse>(
-      '/api/assessment/courselist/?' + requestParams
-    )
+    const response = await api.get({
+      url: '/api/assessment/courselist/',
+      query: {
+        order_by: orderBy.value,
+        course_type: courseType.value,
+        page,
+      },
+    })
     courses.value = response.content.courses
     data.value = response.content
   } catch (error) {
@@ -165,7 +184,7 @@ onMounted(async () => {
 
 const totalPages = computed(() => data.value?.num_pages || 1)
 const handlePageChange = async (page: number) => {
-    currentPage.value = page
-    await fetchCourses(page)
+  currentPage.value = page
+  await fetchCourses(page)
 }
 </script>

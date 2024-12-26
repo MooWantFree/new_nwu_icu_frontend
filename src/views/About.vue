@@ -27,13 +27,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/lib/requests'
-import { AboutResponse } from '@/types/api/texts'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 
 const content = ref<string | null>(null)
 
 onMounted(async () => {
-  const res = await api.get<AboutResponse>('/api/about/')
+  const res = await api.get({
+    url: '/api/about/'
+  })
   content.value = res.content.about
 })
 </script>

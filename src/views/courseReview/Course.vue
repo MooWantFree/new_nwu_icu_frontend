@@ -1,5 +1,5 @@
 <template>
-  <CourseSkeleton v-if="courseLoading" />
+  <CourseSkeleton v-if="courseLoading || !courseData" />
   <main class="min-h-screen bg-gray-100" v-else>
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
@@ -31,8 +31,7 @@
 import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/lib/requests'
-import { CourseData } from '@/types/courses'
-import { CourseDataResponse } from '@/types/api/course'
+import { CourseData } from '@/types/courseReview'
 import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'
 import CourseReviews from '@/components/courseReview/course/courseReviews/CourseReviews.vue'
 import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
@@ -49,8 +48,13 @@ const showTopButton = ref(false)
 const loadData = async () => {
   courseLoading.value = true
   try {
-    const url = `/api/assessment/course/${route.params.id}/`
-    const { status, content } = await api.get<CourseDataResponse>(url)
+    const id = parseInt(route.params.id instanceof Object ? route.params.id[0] : route.params.id)
+    const { status, content } = await api.get({
+      url: '/api/assessment/course/:id/',
+      params: {
+        id,
+      }
+    })
 
     if (status === 404) {
       await router.push({ name: '404' })
@@ -66,7 +70,9 @@ const loadData = async () => {
     courseLoading.value = false
   } catch (error) {
     console.error('Failed to fetch course data:', error)
-    await router.push({ name: '500', query: { message: encodeURI(error.toString()) } })
+    if (error instanceof Error) {
+      await router.push({ name: '500', query: { message: encodeURI(error.toString()) } })
+    }
   }
 }
 
