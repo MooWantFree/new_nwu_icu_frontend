@@ -15,14 +15,22 @@
         'absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t to-transparent flex items-end justify-center',
       ]"
     >
-      <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <ExpandButton
+        :expandButtonText="expandButtonText"
+        :expanded="expanded"
+        @toggle="handleToggleExpand"
+      />
       <div class="mt-3"></div>
     </div>
     <div
       v-if="expanded && isContentOverflowing && needExpand"
       class="flex justify-center w-full mt-4 mb-6"
     >
-      <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <ExpandButton
+        :expandButtonText="expandButtonText"
+        :expanded="expanded"
+        @toggle="handleToggleExpand"
+      />
       <div class="mt-3"></div>
     </div>
     <LinkConfirmModal
@@ -54,10 +62,18 @@ const {
   value = '',
   needExpand = true,
   expandColor = 'from-gray-100',
+  expandButtonText,
+  emitToggle,
 } = defineProps<{
   expandColor?: string
   value: string
   needExpand?: boolean
+  expandButtonText?: string
+  emitToggle?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'toggle'): void
 }>()
 
 const editor = useEditor({
@@ -120,7 +136,7 @@ onMounted(async () => {
   await nextTick()
   if (editorContainer.value) {
     checkContentOverflow(editorContainer.value.scrollHeight)
-    
+
     // Create and start the ResizeObserver
     resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -149,8 +165,12 @@ const checkContentOverflow = (contentHeight: number) => {
   }
 }
 
-const toggleExpand = () => {
-  expanded.value = !expanded.value
+const handleToggleExpand = () => {
+  if (emitToggle) {
+    emit('toggle')
+  } else {
+    expanded.value = !expanded.value
+  }
 }
 
 const showModal = ref(false)
