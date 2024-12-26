@@ -34,6 +34,13 @@
           {{ searchTypeTooltip[tab] }}
         </button>
       </nav>
+      <div v-if="searchQuery && paginationLoading">
+        <Skeleton
+          v-for="i in pageSize"
+          :key="i"
+          :active-tab="activeTab"
+        />
+      </div>
       <div
         v-if="!searchLoading && searchResults?.search_result.length"
         class="space-y-4 max-h-[50vh] overflow-y-auto"
@@ -74,6 +81,16 @@
             class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
           />
         </template>
+        <n-pagination
+          v-if="totalPage > 1"
+          v-model:page="currentPage"
+          :page-count="totalPage"
+          show-size-picker
+          :page-sizes="[10, 20, 30, 40]"
+          show-quick-jumper
+          @update:page="handlePageChange"
+          @update:page-size="handlePageSizeChange"
+        />
       </div>
       <div v-else class="text-center py-12">
         <template v-if="searchLoading">
@@ -114,6 +131,7 @@ import SearchResultCourse from './results/SearchResultCourse.vue'
 import SearchResultReview from './results/SearchResultReview.vue'
 import SearchResultTeacher from './results/SearchResultTeacher.vue'
 import SearchResultResource from './results/SearchResultResource.vue'
+import Skeleton from './Skeleton.vue'
 
 const route = useRoute()
 const currentPosition = route.meta
@@ -130,7 +148,6 @@ const handleSearch = async () => {
     return
   }
 
-  searchLoading.value = true
   searchResults.value = null
   const requestQueryData = {
     keyword: searchQuery.value,
@@ -159,5 +176,22 @@ const handleTabClick = (tab: SearchType) => {
   searchLoading.value = true
   activeTab.value = tab
   debouncedSearch()
+}
+
+const paginationLoading = ref(false)
+const currentPage = ref(1)
+const totalPage = ref(1)
+const pageSize = ref(10)
+const handlePageChange = async (page: number) => {
+  paginationLoading.value = true
+  currentPage.value = page
+  await handleSearch()
+  paginationLoading.value = false
+}
+const handlePageSizeChange = async (newPageSize: number) => {
+  paginationLoading.value = true
+  pageSize.value = newPageSize
+  await handlePageChange(1)
+  paginationLoading.value = false
 }
 </script>

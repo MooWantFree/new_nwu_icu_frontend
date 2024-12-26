@@ -5,9 +5,9 @@
   >
     <!-- Teacher information section with avatar -->
     <div class="flex items-center mb-4">
-      <img 
-        :src="`/api/file/${teacher.avatar_uuid}`" 
-        alt="Teacher Avatar" 
+      <img
+        :src="`/api/file/${teacher.avatar_uuid}`"
+        alt="Teacher Avatar"
         class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-gray-200"
       />
       <div>

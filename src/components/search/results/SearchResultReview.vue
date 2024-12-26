@@ -1,14 +1,19 @@
 <template>
-  <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-    <a @click="handleReviewClick(filteredReview.course.id)" class="cursor-pointer">
+  <div
+    class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+  >
+    <a
+      @click="handleReviewClick(filteredReview.course.id)"
+      class="cursor-pointer"
+    >
       <h3 class="text-lg font-semibold text-blue-600 mb-2 hover:underline">
         {{ filteredReview.course.name }}
       </h3>
     </a>
     <div class="h-18 overflow-hidden mb-3">
-      <p class="text-sm text-gray-700 line-clamp-3">
-        <div v-html="filteredReview.content" ></div>
-      </p>
+      <div class="text-sm text-gray-700 line-clamp-3">
+        <div v-html="filteredReview.content"></div>
+      </div>
     </div>
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center">
@@ -17,7 +22,9 @@
           alt="User Avatar"
           class="w-6 h-6 rounded-full mr-2"
         />
-        <span class="text-sm font-medium text-gray-700">{{ filteredReview.created_by.nickname }}</span>
+        <span class="text-sm font-medium text-gray-700">{{
+          filteredReview.created_by.nickname
+        }}</span>
         <span class="text-xs text-gray-500 ml-2">
           {{ new Date(filteredReview.modify_time).toLocaleDateString() }}
         </span>
@@ -33,7 +40,9 @@
       <div class="flex items-center">
         <span class="text-yellow-500 mr-1">★</span>
         <span class="font-medium">{{ filteredReview.rating.toFixed(1) }}</span>
-        <span class="text-sm text-gray-500 ml-2">({{ filteredReview.semester }})</span>
+        <span class="text-sm text-gray-500 ml-2"
+          >({{ filteredReview.semester }})</span
+        >
       </div>
       <div class="flex items-center space-x-4 text-sm text-gray-600">
         <div class="flex items-center">
@@ -53,7 +62,7 @@
 import { ReviewSearchResult } from '@/types/api/search/search'
 import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const { review } = defineProps<{
   review: ReviewSearchResult

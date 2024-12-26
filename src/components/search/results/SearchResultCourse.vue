@@ -1,8 +1,6 @@
 <!-- Course search result card component -->
 <template>
-  <div
-    class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
-  >
+  <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
     <!-- Course title with clickable link -->
     <a @click="handleCourseClick" class="cursor-pointer">
       <h3 class="text-lg font-semibold text-blue-600 mb-2 hover:underline">
@@ -55,7 +53,8 @@
           v-if="course.latest_review_time"
           class="text-xs text-gray-500 ml-2"
         >
-          (最新: {{ new Date(course.latest_review_time).toLocaleDateString() }})
+          (最新:
+          {{ new Date(course.latest_review_time).toLocaleDateString() }})
         </span>
       </div>
     </div>
@@ -69,7 +68,7 @@ import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 
 // Define component props
-const props = defineProps<{
+const { course } = defineProps<{
   course: CourseSearchResult
 }>()
 const emit = defineEmits<{
@@ -84,7 +83,7 @@ const handleCourseClick = () => {
   router.push({
     name: 'courseReviewItem',
     params: {
-      id: props.course.id,
+      id: course.id,
     },
   })
   emit('close')
