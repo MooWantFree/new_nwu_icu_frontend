@@ -6,4 +6,5 @@ export const searchTypeTooltip: Record<SearchType, string> = {
   [searchEnums.review]: '课程评价',
   [searchEnums.course]: '课程',
   [searchEnums.teacher]: '教师',
+  [searchEnums.resource]: '资源',
 }

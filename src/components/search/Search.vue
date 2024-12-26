@@ -65,6 +65,15 @@
             class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
           />
         </template>
+        <template v-if="activeTab === searchEnums.resource">
+          <SearchResultResource
+            v-for="result in searchResults.search_result"
+            :key="result.id"
+            @close="$emit('close')"
+            :resource="result as ResourceSearchResult"
+            class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+          />
+        </template>
       </div>
       <div v-else class="text-center py-12">
         <template v-if="searchLoading">
@@ -88,25 +97,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { Search, LoaderCircle } from 'lucide-vue-next'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { searchEnums, SearchType, searchTypeTooltip } from './enums'
+import { useDebounceFn } from '@vueuse/core'
+import { LoaderCircle, Search } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
+import { searchEnums, SearchType, searchTypeTooltip } from './enums'
 import {
   APISearch,
   CourseSearchResult,
   ReviewSearchResult,
   TeacherSearchResult,
+  ResourceSearchResult,
 } from '@/types/api/search/search'
 import SearchResultCourse from './results/SearchResultCourse.vue'
 import SearchResultReview from './results/SearchResultReview.vue'
 import SearchResultTeacher from './results/SearchResultTeacher.vue'
-import { useDebounceFn } from '@vueuse/core'
-
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+import SearchResultResource from './results/SearchResultResource.vue'
 
 const route = useRoute()
 const currentPosition = route.meta

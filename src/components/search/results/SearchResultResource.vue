@@ -10,26 +10,32 @@
       </h3>
       <!-- File type badge -->
       <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
-        {{ resource.type }}
+        {{ resource.type === 'file' ? '文件' : '文件夹' }}
       </span>
     </div>
 
     <!-- Resource details -->
-    <div class="text-sm text-gray-600 space-y-2">
-      <!-- File size with formatted display -->
-      <p class="flex items-center">
-        <span class="mr-2">📁</span>
-        {{ formatFileSize(resource.size) }}
-      </p>
+    <div class="text-sm text-gray-600 flex justify-between items-center">
+      <div class="space-y-2">
+        <!-- File size with formatted display -->
+        <p class="flex items-center">
+          <span class="mr-2">{{ resource.type === 'file' ? '📄' : '📁' }}</span>
+          {{ resource.type === 'file' ? formatFileSize(resource.size) : '文件夹' }}
+        </p>
+      </div>
       
       <!-- Download button -->
       <a
-        :href="resource.url"
+        :href="`${resource.url}/${resource.name}`"
         target="_blank"
-        class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors"
+        :class="{
+          'text-white bg-blue-600 hover:bg-blue-700': resource.type === 'file',
+          'text-blue-600 bg-blue-100 hover:bg-blue-200': resource.type !== 'file'
+        }"
       >
-        <span class="mr-2">⬇️</span>
-        下载资源
+        <span class="mr-2">{{ resource.type === 'file' ? '⬇️' : '👁️' }}</span>
+        {{ resource.type === 'file' ? '下载' : '查看' }}
       </a>
     </div>
   </div>

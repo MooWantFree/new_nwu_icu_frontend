@@ -6,7 +6,7 @@ import { MethodMap } from '../base'
 // 搜索
 export const APISearchQuery = z.object({
   keyword: z.string(),
-  type: z.enum(['review', 'course', 'teacher']),
+  type: z.enum(['review', 'course', 'teacher', 'resource']),
 })
 export type ReviewSearchResult = {
   id: number
