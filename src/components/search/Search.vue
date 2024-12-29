@@ -151,7 +151,7 @@ const handleSearch = async () => {
   }
   try {
     const response = await api.post({
-      url: '/api/assessment/search/',
+      url: '/api/search/',
       query: requestQueryData,
     })
     searchResults.value = response.content
