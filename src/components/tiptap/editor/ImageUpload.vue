@@ -81,7 +81,10 @@ const imageUrl = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 
-const emit = defineEmits(['close', 'upload'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'upload', url: string): void
+}>()
 
 const closeModal = () => {
   emit('close')

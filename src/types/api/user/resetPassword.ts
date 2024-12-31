@@ -59,13 +59,12 @@ export type APIVerifyResetPasswordToken = {
 
 // POST
 // 已登录后重置密码
-const APIUserResetPasswordQuery = z
+export const APIUserResetPasswordQuery = z
+// FIXME: 这里要验证码干啥
   .object({
     old_password: z.string(),
     new_password: basePasswordSchema,
     confirm_password: z.string(),
-    captcha_key: z.string(),
-    captcha_value: z.string(),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: '两次输入的密码不匹配',
