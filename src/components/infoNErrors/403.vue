@@ -19,10 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-  message: {
-    type: String,
-    default: '',
-  },
-})
+const { message = '' } = defineProps<{
+  message?: string
+}>()
 </script>
