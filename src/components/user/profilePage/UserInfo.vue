@@ -89,6 +89,7 @@
 import Time from '@/components/tinyComponents/Time.vue'
 import type { APIUserProfile } from '@/types/api/user/profilePage'
 import { useUser } from '@/lib/useUser'
+import { useRouter } from 'vue-router';
 
 const user = useUser()
 
@@ -96,8 +97,9 @@ defineProps<{
   userInfo: APIUserProfile['response'] | null
 }>()
 
+const router = useRouter()
+
 const handleEdit = () => {
-  // TODO: Implement edit functionality
-  console.log('Edit profile')
+  router.push('/user/settings/profile')
 }
 </script>
