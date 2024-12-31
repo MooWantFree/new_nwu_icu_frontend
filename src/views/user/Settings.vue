@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="container mx-auto px-4 py-8 max-w-4xl min-h-svh">
     <h1 class="text-3xl font-bold mb-8 text-gray-800">用户设置</h1>
     <div v-if="isLoading || !userInfo" class="flex justify-center items-center h-64">
       <LoaderCircle class="animate-spin h-16 w-16 text-blue-500" />

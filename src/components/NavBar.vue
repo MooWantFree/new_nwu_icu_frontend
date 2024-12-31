@@ -232,7 +232,7 @@ const userAvatarDropdownOptions = [
     label: '编辑用户资料',
     key: 'editProfile',
     icon: renderIcon(Pencil),
-    path: '/user/edit',
+    path: '/user/settings/profile',
   },
   {
     label: '退出登录',
