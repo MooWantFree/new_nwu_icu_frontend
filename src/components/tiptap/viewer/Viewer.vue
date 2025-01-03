@@ -114,14 +114,14 @@ const editor = useEditor({
     },
     handleClick: (view, pos, event) => {
       // FIXME: Jump before clicked
-      const link = (event.target as HTMLElement).closest('a')
-      if (link) {
-        event.preventDefault()
-        const href = link.getAttribute('href')
-        if (href) {
-          showLinkConfirm(href)
-        }
-      }
+      // const link = (event.target as HTMLElement).closest('a')
+      // if (link) {
+      //   event.preventDefault()
+      //   const href = link.getAttribute('href')
+      //   if (href) {
+      //     showLinkConfirm(href)
+      //   }
+      // }
     },
   },
   injectCSS: true,
