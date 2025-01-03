@@ -105,7 +105,7 @@ export const APIUpdateProfileBody = z.object({
       .optional()
   ),
   username: usernameSchema.optional(),
-  avatar: z.nullable(z.string().uuid().optional()),
+  avatar_uuid: z.nullable(z.string().uuid().optional()),
   bio: z.nullable(z.string().max(255).optional()),
 })
 export type APIUpdateProfile = {

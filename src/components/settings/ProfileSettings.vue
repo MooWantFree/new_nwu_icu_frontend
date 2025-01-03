@@ -12,7 +12,7 @@
           <div class="flex flex-col items-center space-y-4">
             <div class="relative group">
               <img 
-                :src="`/api/download/${formData.avatar}`" 
+                :src="`/api/download/${formData.avatar_uuid}`" 
                 alt="Avatar" 
                 class="w-24 h-24 rounded-full object-cover transition-all duration-300 group-hover:opacity-75"
               >
@@ -24,8 +24,8 @@
               </div>
             </div>
           </div>
-          <p v-if="errors.avatar" class="text-red-500 text-xs italic mt-2">
-            {{ errors.avatar }}
+          <p v-if="errors.avatar_uuid" class="text-red-500 text-xs italic mt-2">
+            {{ errors.avatar_uuid }}
           </p>
           <ImageUpload
             @close="showImageUpload = false"
@@ -115,7 +115,7 @@ import ImageUpload from '../tiptap/editor/ImageUpload.vue'
 
 type ErrorsProfile = {
   nickname: string
-  avatar: string
+  avatar_uuid: string
   username: string
   bio: string
 }
@@ -128,19 +128,19 @@ const { userInfo } = defineProps<{
 const message = useMessage()
 const errors = ref<ErrorsProfile>({
   nickname: '',
-  avatar: '',
+  avatar_uuid: '',
   username: '',
   bio: '',
 })
 const formData = ref<FormData>({
   nickname: userInfo.nickname,
-  avatar: userInfo.avatar,
+  avatar_uuid: userInfo.avatar,
   username: userInfo.username,
   bio: userInfo.bio,
 })
 const showImageUpload = ref(false)
 const handleImageUpload = (url: string) => {
-  formData.value.avatar = url.split('/')[3]
+  formData.value.avatar_uuid = url.split('/')[3]
   showImageUpload.value = false
   message.success('头像上传成功，记得还要点击保存哦')
 }
@@ -150,7 +150,7 @@ const isSubmitting = ref(false)
 const validateForm = () => {
   errors.value = {
     nickname: '',
-    avatar: '',
+    avatar_uuid: '',
     username: '',
     bio: '',
   }
