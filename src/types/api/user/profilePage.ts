@@ -76,6 +76,35 @@ export type APIUserProfile = {
     nickname: string
     avatar: string
     nwu_email?: string
+    is_me: true
+  }
+  errors: ErrorFactory<ErrorNotLogin>[]
+}
+
+// GET
+// 获取个人信息
+export type APIUserProfileFromId = {
+  endpoint: `/api/user/profile/${number}/`
+  method: MethodMap.GET
+  params: {
+    id: number
+  }
+  response: {
+    id: number
+    username: string
+    bio?: string
+    email: string
+    date_joined: string
+    nickname: string
+    avatar: string
+    nwu_email?: string
+    is_me: true
+  } | {
+    id: number
+    bio: string | null
+    nickname: string
+    avatar: string
+    is_me: false
   }
   errors: ErrorFactory<ErrorNotLogin>[]
 }

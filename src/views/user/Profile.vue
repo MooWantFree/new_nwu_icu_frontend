@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
-import { APIUserProfile } from '@/types/api/user/profilePage'
+import { APIUserProfileFromId } from '@/types/api/user/profilePage'
 import UserInfo from '@/components/user/profilePage/UserInfo.vue'
 import History from '@/components/user/profilePage/History.vue'
 import { api } from '@/lib/requests'
@@ -24,7 +24,7 @@ const { id } = defineProps<{
 }>()
 
 const message = useMessage()
-const userInfo = ref<APIUserProfile['response'] | null>(null)
+const userInfo = ref<APIUserProfileFromId['response'] | null>(null)
 
 watch(
   () => id,
@@ -39,11 +39,22 @@ const fetchUserData = async () => {
     let numberId: number
     if (id !== 'me') {
       numberId = parseInt(id)
-      // TODO: Fetch the certain id user info
-    }
-    const resp = await api.get({ url: '/api/user/profile/'})
-    if (resp.status === 200) {
-      userInfo.value = resp.content
+      const resp = await api.get({
+        url: '/api/user/profile/:id/',
+        params: { id: numberId },
+      })
+      if (resp.status === 200) {
+        userInfo.value = resp.content
+      } else {
+        throw new Error('获取用户信息失败，请稍后重试')
+      }
+    } else {
+      const resp = await api.get({ url: '/api/user/profile/' })
+      if (resp.status === 200 && resp.content.is_me) {
+        userInfo.value = resp.content
+      } else {
+        throw new Error('获取用户信息失败，请稍后重试')
+      }
     }
   } catch (error) {
     message.error('获取用户信息失败，请稍后重试')

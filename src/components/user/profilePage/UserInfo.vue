@@ -31,29 +31,31 @@
   <div v-else class="bg-white shadow overflow-hidden sm:rounded-lg">
     <!-- Profile header -->
     <div class="px-4 py-5 sm:px-6">
-  <div class="flex items-center mb-4">
-    <img
-      :src="`/api/download/${userInfo.avatar}`"
-      :alt="userInfo.nickname"
-      class="h-24 w-24 rounded-full object-cover"
-    />
-    <div class="ml-6">
-      <h1 class="text-2xl font-bold text-gray-900">
-        {{ userInfo.nickname }}
-      </h1>
-      <p class="text-sm text-gray-500">@{{ userInfo.username }}</p>
+      <div class="flex items-center mb-4">
+        <img
+          :src="`/api/download/${userInfo.avatar}`"
+          :alt="userInfo.nickname"
+          class="h-24 w-24 rounded-full object-cover"
+        />
+        <div class="ml-6">
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ userInfo.nickname }}
+          </h1>
+          <p v-if="userInfo.is_me" class="text-sm text-gray-500">
+            @{{ userInfo.username }}
+          </p>
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button
+          v-if="userInfo.is_me"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+          @click="handleEdit"
+        >
+          编辑资料
+        </button>
+      </div>
     </div>
-  </div>
-  <div class="flex justify-end">
-    <button
-      v-if="user.userInfo.value.id === userInfo.id"
-      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-      @click="handleEdit"
-    >
-      编辑资料
-    </button>
-  </div>
-</div>
 
     <!-- Profile content -->
     <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
@@ -64,20 +66,23 @@
             {{ userInfo.bio || '暂无个人简介' }}
           </dd>
         </div>
-        <div class="sm:col-span-1">
+        <div v-if="userInfo.is_me" class="sm:col-span-1">
           <dt class="text-sm font-medium text-gray-500">电子邮箱</dt>
           <dd class="mt-1 text-sm text-gray-900">{{ userInfo.email }}</dd>
         </div>
         <div class="sm:col-span-1">
           <dt class="text-sm font-medium text-gray-500">注册时间</dt>
-          <dd class="mt-1 text-sm text-gray-900">
+          <dd v-if="userInfo.is_me" class="mt-1 text-sm text-gray-900">
             <Time :time="new Date(userInfo.date_joined)" />
           </dd>
         </div>
         <div class="sm:col-span-1">
           <dt class="text-sm font-medium text-gray-500">西北大学邮箱</dt>
-          <dd class="mt-1 text-sm text-gray-900">
+          <dd v-if="userInfo.is_me" class="mt-1 text-sm text-gray-900">
             {{ userInfo.nwu_email || '未提供' }}
+          </dd>
+          <dd v-else class="mt-1 text-sm text-gray-900">
+            <!-- TODO: 已验证 -->
           </dd>
         </div>
       </dl>
@@ -87,14 +92,11 @@
 
 <script setup lang="ts">
 import Time from '@/components/tinyComponents/Time.vue'
-import type { APIUserProfile } from '@/types/api/user/profilePage'
-import { useUser } from '@/lib/useUser'
+import type { APIUserProfileFromId } from '@/types/api/user/profilePage'
 import { useRouter } from 'vue-router';
 
-const user = useUser()
-
 defineProps<{
-  userInfo: APIUserProfile['response'] | null
+  userInfo: APIUserProfileFromId['response'] | null
 }>()
 
 const router = useRouter()
