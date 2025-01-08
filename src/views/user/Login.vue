@@ -1,10 +1,6 @@
 <template>
-  <div
-      class="login-form"
-  >
-    <n-card
-        style="width: 80%;"
-    >
+  <div class="flex justify-center">
+    <n-card class="w-4/5">
       <LoginForm :on-login-success="handleLoginSuccess"/>
     </n-card>
   </div>
@@ -19,7 +15,7 @@ import { checkLoginStatus } from '@/lib/logins'
 
 const router = useRouter()
 const message = useMessage()
-onBeforeMount(()=>{
+onBeforeMount(() => {
   if (checkLoginStatus()) {
     router.replace("/")
   }
@@ -31,10 +27,3 @@ const handleLoginSuccess = () => {
   }, 1500)
 }
 </script>
-
-<style scoped>
-.login-form {
-  display: flex;
-  justify-content: center;
-}
-</style>

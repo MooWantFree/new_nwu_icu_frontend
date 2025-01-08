@@ -48,8 +48,11 @@ export type APIUserOwnReview = {
 
 // POST
 // 绑定西大邮箱
-const APIBindScholarEmailQuery = z.object({
-  college_email: z.string(),
+export const APIBindScholarEmailQuery = z.object({
+  college_email: z.string().email().refine(
+    (email) => email.endsWith('nwu.edu.cn'),
+    { message: '请使用以 nwu.edu.cn 结尾的西北大学邮箱' }
+  ),
 })
 export type APIBindScholarEmail = {
   endpoint: '/api/user/bind-college-email/bind/'
@@ -73,6 +76,35 @@ export type APIUserProfile = {
     nickname: string
     avatar: string
     nwu_email?: string
+    is_me: true
+  }
+  errors: ErrorFactory<ErrorNotLogin>[]
+}
+
+// GET
+// 获取个人信息
+export type APIUserProfileFromId = {
+  endpoint: `/api/user/profile/${number}/`
+  method: MethodMap.GET
+  params: {
+    id: number
+  }
+  response: {
+    id: number
+    username: string
+    bio?: string
+    email: string
+    date_joined: string
+    nickname: string
+    avatar: string
+    nwu_email?: string
+    is_me: true
+  } | {
+    id: number
+    bio: string | null
+    nickname: string
+    avatar: string
+    is_me: false
   }
   errors: ErrorFactory<ErrorNotLogin>[]
 }
@@ -92,21 +124,23 @@ export type APIVerifyScholarEmail = {
 
 // POST
 // 更新个人信息
-const APIUpdateProfileBody = z.object({
-  nickname: z
-    .string()
-    .regex(/^[\u4e00-\u9fa5a-zA-Z0-9!@#$%^&*()_+~\-={}]+$/)
-    .max(30)
-    .min(2)
-    .optional(),
+export const APIUpdateProfileBody = z.object({
+  nickname: z.nullable(
+    z
+      .string()
+      .regex(/^[\u4e00-\u9fa5a-zA-Z0-9!@#$%^&*()_+~\-={}]+$/)
+      .max(30)
+      .min(2)
+      .optional()
+  ),
   username: usernameSchema.optional(),
-  avatar: z.string().optional(),
-  bio: z.string().max(255).optional(),
+  avatar_uuid: z.nullable(z.string().uuid().optional()),
+  bio: z.nullable(z.string().max(255).optional()),
 })
 export type APIUpdateProfile = {
   endpoint: '/api/user/profile/'
   method: MethodMap.POST
-  body: z.infer<typeof APIUpdateProfileBody>
+  query: z.infer<typeof APIUpdateProfileBody>
   response: z.infer<typeof APIUpdateProfileBody> & { id: number }
   errors: ErrorFactory<
     ErrorNotLogin | 'bio' | 'avatar' | 'nickname' | 'username'
