@@ -19,6 +19,7 @@
           </p>
           <div v-else class="flex flex-col items-center">
             <span class="text-sm text-gray-600">{{ selectedFile.name }}</span>
+            <span class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
           </div>
           <input
             ref="fileInput"
@@ -32,9 +33,8 @@
         </div>
         <div class="flex justify-end space-x-2">
           <button
-            @click="$emit('close')"
+            @click="confirmClose"
             class="px-4 py-2 bg-gray-200 rounded"
-            :disabled="loading"
           >
             取消
           </button>
@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useMessage, useDialog } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
 
 const {
@@ -67,6 +67,7 @@ const {
   progress,
 } = useFileUpload()
 const messageAPI = useMessage()
+const dialog = useDialog()
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
 
@@ -77,6 +78,22 @@ const emit = defineEmits<{
 
 const attemptCloseModal = () => {
   if (!loading.value) {
+    emit('close')
+  }
+}
+
+const confirmClose = () => {
+  if (loading.value) {
+    dialog.warning({
+      title: '确认取消',
+      content: '正在上传文件，确定要取消吗？\n请注意，将无法撤销此操作。',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        emit('close')
+      }
+    })
+  } else {
     emit('close')
   }
 }
@@ -128,6 +145,14 @@ const submitFile = async () => {
       { once: true }
     )
   }
+}
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
 
