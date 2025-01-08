@@ -67,10 +67,6 @@
               </template>
               <template v-else>
                 <n-avatar round :src="`/api/download/${userInfo.avatar}`">
-                  <template #fallback>
-                    <img src="https://www.loliapi.com/acg/pp/" />
-                    <!-- TODO: Change it -->
-                  </template>
                 </n-avatar>
               </template>
             </n-dropdown>
