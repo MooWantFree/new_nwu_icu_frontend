@@ -305,21 +305,24 @@ const insertTable = (rows: number, cols: number) => {
 const showLinkModal = ref(false)
 
 const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
-  // FIXME: Not work properly
   if (text) {
     editor
       .chain()
       .focus()
-      .insertContent({
-        type: 'text',
-        text: text,
-        marks: [
-          {
-            type: 'link',
-            attrs: { href: url },
-          },
-        ],
-      })
+      .insertContent([
+        {type: 'text', text: ' '},
+        {
+          type: 'text',
+          text: text,
+          marks: [
+            {
+              type: 'link',
+              attrs: { href: url },
+            },
+          ],
+        },
+        { type: 'text', text: ' ' }, // Add space after the link
+      ])
       .run()
   } else {
     editor.chain().focus().setLink({ href: url }).run()
