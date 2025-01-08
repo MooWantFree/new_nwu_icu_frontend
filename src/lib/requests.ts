@@ -12,11 +12,14 @@ async function request<T extends APIBase>({
   url,
   query,
   options,
+  onUploadProgress,
 }: {
   method: MethodMap
   url: string
   query?: T['query']
   options?: RequestInit
+  // Callback function to track upload progress
+  onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
 }): Promise<{
   status: number
   data: APIResponse<T>
@@ -53,6 +56,45 @@ async function request<T extends APIBase>({
     }
     else if (query instanceof FormData || query instanceof File) {
       delete (mergedOptions.headers as Record<string, string>)['Content-Type']
+      
+      // Use XHR for upload progress tracking
+      if (onUploadProgress) {
+        // Temporarily use XHR, as fetch currently doesn't support upload progress
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open(method, fullUrl)
+          
+          // Copy headers from mergedOptions
+          Object.entries(mergedOptions.headers || {}).forEach(([key, value]) => {
+            xhr.setRequestHeader(key, value as string)
+          })
+          
+          // Track upload progress
+          xhr.upload.onprogress = event => onUploadProgress({
+            loaded: event.loaded,
+            total: event.lengthComputable ? event.total : undefined
+          })
+          
+          // Handle response
+          xhr.onload = async () => {
+            try {
+              const result = JSON.parse(xhr.responseText)
+              resolve({
+                status: xhr.status,
+                data: result as APIResponse<T>,
+                content: result.contents as T['response'],
+                errors: result.errors as APIResponse<T>['errors'],
+              })
+            } catch (error) {
+              reject(new Error('Failed to parse response'))
+            }
+          }
+          
+          xhr.onerror = () => reject(new Error('Network error'))
+          xhr.send(query)
+        })
+      }
+      
       mergedOptions.body = query
     } else {
       mergedOptions.body = JSON.stringify(query)
@@ -111,10 +153,9 @@ export const api = {
       : never
     options?: RequestInit
   }) => {
-    const filledUrl = fillURL(url, params)
     return request<RequestEndpoints[MethodMap.GET][Path]>({
       method: MethodMap.GET,
-      url: filledUrl,
+      url: fillURL(url, params),
       query,
       options,
     })
@@ -124,6 +165,7 @@ export const api = {
     params,
     query,
     options,
+    onUploadProgress,
   }: {
     url: Path
     params?: 'params' extends keyof RequestEndpoints[MethodMap.POST][Path]
@@ -133,13 +175,14 @@ export const api = {
       ? RequestEndpoints[MethodMap.POST][Path]['query']
       : never
     options?: RequestInit
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
   }) => {
-    const filledUrl = fillURL(url, params)
     return request<RequestEndpoints[MethodMap.POST][Path]>({
       method: MethodMap.POST,
-      url: filledUrl,
+      url: fillURL(url, params),
       query,
       options,
+      onUploadProgress,
     })
   },
   put: <Path extends keyof RequestEndpoints[MethodMap.PUT]>({
@@ -147,6 +190,7 @@ export const api = {
     params,
     query,
     options,
+    onUploadProgress,
   }: {
     url: Path
     params?: 'params' extends keyof RequestEndpoints[MethodMap.PUT][Path]
@@ -156,13 +200,14 @@ export const api = {
       ? RequestEndpoints[MethodMap.PUT][Path]['query']
       : never
     options?: RequestInit
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
   }) => {
-    const filledUrl = fillURL(url, params)
     return request<RequestEndpoints[MethodMap.PUT][Path]>({
       method: MethodMap.PUT,
-      url: filledUrl,
+      url: fillURL(url, params),
       query,
       options,
+      onUploadProgress,
     })
   },
   delete: <Path extends keyof RequestEndpoints[MethodMap.DELETE]>({
@@ -180,10 +225,9 @@ export const api = {
       : never
     options?: RequestInit
   }) => {
-    const filledUrl = fillURL(url, params)
     return request<RequestEndpoints[MethodMap.DELETE][Path]>({
       method: MethodMap.DELETE,
-      url: filledUrl,
+      url: fillURL(url, params),
       query,
       options,
     })

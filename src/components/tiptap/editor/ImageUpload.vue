@@ -31,6 +31,10 @@
             class="hidden"
           />
         </div>
+        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${progress}%` }"></div>
+          <div>{{ progress }}%</div>
+        </div>
         <hr class="my-4" />
         <div>
           <label class="block mb-2">或直接使用图片网址</label>
@@ -43,9 +47,8 @@
         </div>
         <div class="flex justify-end space-x-2">
           <button
-            @click="closeModal"
+            @click="confirmClose"
             class="px-4 py-2 bg-gray-200 rounded"
-            :disabled="loading"
           >
             取消
           </button>
@@ -65,7 +68,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useMessage, useDialog } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
 
 const {
@@ -73,8 +76,10 @@ const {
   succeed,
   imageUrl: uploadedImageUrl,
   uploadFile,
+  progress,
   errors,
 } = useFileUpload()
+const dialog = useDialog()
 const messageAPI = useMessage()
 const imageUrl = ref('')
 const selectedFile = ref<File | null>(null)
@@ -166,6 +171,23 @@ const submitImage = async () => {
     closeModal()
   }
 }
+
+const confirmClose = () => {
+  if (loading.value) {
+    dialog.warning({
+      title: '确认取消',
+      content: '正在上传文件，确定要取消吗？\n请注意，将无法撤销此操作。',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        emit('close')
+      }
+    })
+  } else {
+    emit('close')
+  }
+}
+
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB in bytes
 const ALLOWED_IMAGE_TYPES = [

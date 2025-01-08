@@ -170,6 +170,13 @@
         >
           <file-code-icon class="w-4 h-4" />
         </button>
+        <button
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          @click="showFileUpload = true"
+          title="上传文件"
+        >
+          <cloud-upload-icon class="w-4 h-4" />
+        </button>
       </div>
     </div>
     <ImageUpload
@@ -178,6 +185,11 @@
       @upload="handleImageUpload"
     />
     <InsertLink v-model="showLinkModal" @submit="handleLinkSubmit" />
+    <FileUpload
+      v-if="showFileUpload"
+      @close="showFileUpload = false"
+      @upload="handleFileUpload"
+    />
   </div>
 </template>
 
@@ -189,6 +201,7 @@ import InsertLink from './InsertLink.vue'
 import EmojiPicker from './EmojiPicker.vue'
 import InsertTable from './InsertTable.vue'
 import { onClickOutside } from '@vueuse/core'
+import FileUpload from './FileUpload.vue'
 import {
   ChevronDown as ChevronDownIcon,
   Bold as BoldIcon,
@@ -204,6 +217,7 @@ import {
   LayoutGrid as LayoutGridIcon,
   Code as CodeIcon,
   FileCode as FileCodeIcon,
+  CloudUpload as CloudUploadIcon,
 } from 'lucide-vue-next'
 
 const { editor } = defineProps<{
@@ -215,6 +229,7 @@ const showFontDropdown = ref(false)
 const showAlignDropdown = ref(false)
 const showEmojiPicker = ref(false)
 const showTableInsert = ref(false)
+const showFileUpload = ref(false)
 
 const fontDropdownRef = ref<HTMLElement | null>(null)
 const alignDropdownRef = ref<HTMLElement | null>(null)
@@ -308,5 +323,20 @@ const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
   } else {
     editor.chain().focus().setLink({ href: url }).run()
   }
+}
+
+const handleFileUpload = (filename: string, url: string) => {
+  editor
+    .chain()
+    .focus()
+    .insertContent([
+      {
+        type: 'text',
+        text: filename,
+        marks: [{ type: 'link', attrs: { href: url } }],
+      },
+      { type: 'text', text: ' ' }, // Add space after the link
+    ])
+    .run()
 }
 </script>

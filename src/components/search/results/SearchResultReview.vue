@@ -12,7 +12,11 @@
     </a>
     <div class="h-18 overflow-hidden mb-3">
       <div class="text-sm text-gray-700 line-clamp-3">
-        <div v-html="filteredReview.content"></div>
+        <!-- <div v-html="filteredReview.content"></div> -->
+        <div>
+          {{ extractText(filteredReview.content) }}
+        </div>
+        <!-- FIXME: EVIL! DO NOT USE V-HTML FOR UGC -->
       </div>
     </div>
     <div class="flex items-center justify-between mb-3">
@@ -75,7 +79,7 @@ const emit = defineEmits<{
 const filteredReview = computed(() => {
   return {
     ...review,
-    content: review.content.replace(/<img[^>]*>/g, '[图片]<br />'),
+    content: review.content.replace(/<img[^>]*>/g, '<p>[图片]</p><br />'),
   }
 })
 
@@ -99,5 +103,11 @@ const handleReviewClick = (courseId: number, reviewId: number = -1) => {
     })
   }
   emit('close')
+}
+
+function extractText(html: string) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
 }
 </script>

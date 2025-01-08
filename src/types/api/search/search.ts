@@ -61,7 +61,7 @@ export type ResourceSearchResult = {
   url: string
 }
 export type APISearch = {
-  endpoint: '/api/assessment/search/'
+  endpoint: '/api/search/'
   method: MethodMap.POST
   query: z.infer<typeof APISearchQuery>
   response: {

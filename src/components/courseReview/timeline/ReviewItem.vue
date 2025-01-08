@@ -65,7 +65,7 @@
         </div>
       </div>
       <div class="text-gray-600 mb-4 relative">
-        <Viewer :value="review.content" expand-color="from-white" />
+        <Viewer @toggle="handleMoreButtonClick" :emitToggle="true" :expandButtonText="'查看更多 >'" :value="review.content" expand-color="from-white" />
       </div>
       <div class="flex items-center justify-between text-sm">
         <span class="text-gray-500"></span>

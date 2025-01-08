@@ -73,7 +73,7 @@ export type RequestEndpoints = {
     '/api/assessment/teacher/': Teacher.APITeacherNew
 
     // Search
-    '/api/assessment/search/': Search.APISearch
+    '/api/search/': Search.APISearch
 
     // Captcha
     '/api/captcha/': Captcha.APICaptcha
