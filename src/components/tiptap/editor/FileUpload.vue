@@ -7,13 +7,16 @@
       <h2 class="text-xl font-bold mb-4">上传文件</h2>
       <div class="space-y-4">
         <div
-          class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center cursor-pointer"
-          :class="{ 'bg-blue-50 border-blue-500': selectedFile }"
-          @dragover.prevent
+          class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center cursor-pointer relative"
+          :class="{ 'bg-blue-50 border-blue-500': selectedFile || isDragging }"
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           @click="$refs.fileInput.click()"
         >
-          <p v-if="!selectedFile">将文件拖放到此处或点击选择</p>
+          <p v-if="!selectedFile">
+            {{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}
+          </p>
           <div v-else class="flex flex-col items-center">
             <span class="text-sm text-gray-600">{{ selectedFile.name }}</span>
           </div>
@@ -65,6 +68,7 @@ const {
 } = useFileUpload()
 const messageAPI = useMessage()
 const selectedFile = ref<File | null>(null)
+const isDragging = ref(false)
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -85,6 +89,7 @@ const handleFileUpload = (event: Event) => {
 }
 
 const handleDrop = (event: DragEvent) => {
+  isDragging.value = false
   const files = event.dataTransfer?.files
   if (files && files.length > 0) {
     checkFileSize(files[0])
