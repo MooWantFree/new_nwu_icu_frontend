@@ -287,6 +287,7 @@ const handleAlignSelect = (key: string) => {
 
 const handleImageUpload = (imageData: string) => {
   editor.chain().focus().setImage({ src: imageData }).run()
+  editor.chain().focus('end').insertContent({ type: 'hardBreak' }).run()
   showImageUpload.value = false
 }
 
@@ -336,6 +337,7 @@ const handleFileUpload = (filename: string, url: string) => {
         marks: [{ type: 'link', attrs: { href: url } }],
       },
       { type: 'text', text: ' ' }, // Add space after the link
+      { type: 'hardBreak' },
     ])
     .run()
 }
