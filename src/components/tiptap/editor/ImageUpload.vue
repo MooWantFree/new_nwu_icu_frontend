@@ -31,6 +31,10 @@
             class="hidden"
           />
         </div>
+        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${progress}%` }"></div>
+          <div>{{ progress }}%</div>
+        </div>
         <hr class="my-4" />
         <div>
           <label class="block mb-2">或直接使用图片网址</label>
@@ -74,6 +78,7 @@ const {
   imageUrl: uploadedImageUrl,
   message,
   uploadFile,
+  progress,
   errors,
 } = useFileUpload()
 const messageAPI = useMessage()
