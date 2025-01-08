@@ -3,22 +3,22 @@
     v-if="modelValue"
     class="fixed inset-0 z-50 flex items-center justify-center"
   >
-    <!-- Backdrop -->
+    <!-- 背景遮罩 -->
     <div
       class="absolute inset-0 bg-black/50"
       @click="$emit('update:modelValue', false)"
     ></div>
 
-    <!-- Modal -->
+    <!-- 模态框 -->
     <div class="relative w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-      <h3 class="mb-4 text-lg font-semibold text-gray-900">Add Link</h3>
+      <h3 class="mb-4 text-lg font-semibold text-gray-900">添加链接</h3>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label
             for="linkUrl"
             class="block mb-1 text-sm font-medium text-gray-700"
-            >URL</label
+            >链接地址</label
           >
           <input
             id="linkUrl"
@@ -34,13 +34,13 @@
           <label
             for="linkText"
             class="block mb-1 text-sm font-medium text-gray-700"
-            >Link Text</label
+            >链接文本</label
           >
           <input
             id="linkText"
             v-model="text"
             type="text"
-            placeholder="Display text"
+            placeholder="显示文本"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -51,13 +51,13 @@
             @click="handleClose"
             class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
-            Cancel
+            取消
           </button>
           <button
             type="submit"
             class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Add Link
+            添加链接
           </button>
         </div>
       </form>
