@@ -72,7 +72,6 @@ const {
   loading,
   succeed,
   imageUrl: uploadedImageUrl,
-  message,
   uploadFile,
   errors,
 } = useFileUpload()
