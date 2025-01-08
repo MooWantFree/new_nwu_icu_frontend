@@ -8,6 +8,7 @@
           class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
           v-model="searchQuery"
           @input="debouncedSearch"
+          @keyup.enter="handleSearch"
         />
         <div class="absolute top-3 left-3">
           <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
@@ -144,10 +145,13 @@ const handleSearch = async () => {
     return
   }
 
+  searchLoading.value = true
   searchResults.value = null
   const requestQueryData = {
     keyword: searchQuery.value,
     type: activeTab.value,
+    current_page: currentPage.value,
+    page_size: pageSize.value,
   }
   try {
     const response = await api.post({
@@ -171,7 +175,7 @@ const handleTabClick = (tab: SearchType) => {
   }
   searchLoading.value = true
   activeTab.value = tab
-  debouncedSearch()
+  handleSearch()
 }
 
 const paginationLoading = ref(false)
