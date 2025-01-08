@@ -3,23 +3,35 @@
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     @click.self="attemptCloseModal"
   >
-    <div class="bg-white p-6 rounded-lg shadow-xl w-96">
-      <h2 class="text-xl font-bold mb-4">上传文件</h2>
-      <div class="space-y-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-[480px] max-w-full">
+      <h2 class="text-2xl font-bold mb-6">上传文件</h2>
+      <div class="space-y-6">
         <div
-          class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center cursor-pointer relative"
-          :class="{ 'bg-blue-50 border-blue-500': selectedFile || isDragging }"
+          class="border-2 border-dashed border-gray-300 p-8 rounded-lg text-center cursor-pointer relative transition-all duration-300 ease-in-out"
+          :class="{
+            'bg-blue-50 border-blue-500': selectedFile || isDragging,
+            'hover:bg-gray-50': !selectedFile && !isDragging
+          }"
           @dragover.prevent="isDragging = true"
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           @click="$refs.fileInput.click()"
         >
-          <p v-if="!selectedFile">
-            {{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}
-          </p>
+          <template v-if="!selectedFile">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <p class="text-lg font-medium text-gray-700">
+              {{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}
+            </p>
+            <p class="mt-2 text-sm text-gray-500">支持所有文件类型，最大 25MB</p>
+          </template>
           <div v-else class="flex flex-col items-center">
-            <span class="text-sm text-gray-600">{{ selectedFile.name }}</span>
-            <span class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
+            <svg class="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="text-lg font-medium text-gray-700">{{ selectedFile.name }}</span>
+            <span class="mt-1 text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
           </div>
           <input
             ref="fileInput"
@@ -28,22 +40,27 @@
             class="hidden"
           />
         </div>
-        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${progress}%` }"></div>
+        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+          <div 
+            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
+            :style="{ width: `${progress}%` }"
+          >
+            {{ `${Math.round(progress)}%` }}
+          </div>
         </div>
-        <div class="flex justify-end space-x-2">
+        <div class="flex justify-end space-x-4">
           <button
             @click="confirmClose"
-            class="px-4 py-2 bg-gray-200 rounded"
+            class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-300"
           >
             取消
           </button>
           <button
             @click="submitFile"
-            class="px-4 py-2 bg-blue-500 text-white rounded flex items-center justify-center"
-            :disabled="loading"
+            class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!selectedFile || loading"
           >
-            <span v-if="loading" class="spinner"></span>
+            <span v-if="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
             {{ loading ? '上传中...' : '上传' }}
           </button>
         </div>
@@ -155,22 +172,3 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
-
-<style scoped>
-.spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>
