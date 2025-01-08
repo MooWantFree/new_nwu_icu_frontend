@@ -37,7 +37,7 @@ export function useFileUpload() {
 
       succeed.value = true
       message.value = data.message
-      imageUrl.value = `/api/download/${content.uuid}`
+      imageUrl.value = `/api/download/${content.uuid}/`
     } catch (error) {
       succeed.value = false
     } finally {

@@ -18,7 +18,10 @@
           <div v-if="!selectedFile" class="space-y-2">
             <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
             <p class="text-lg">拖放图片到此处，或点击选择</p>
-            <p class="text-sm text-gray-500">支持 JPEG, PNG, GIF 和 WebP 格式，最大 25MB</p>
+            <p class="text-sm text-gray-500">支持 JPEG, PNG, GIF 和 WebP 格式，最大 100MB</p>
+            <div v-if="isCompressing" class="text-sm text-blue-600">
+              正在压缩图片，请稍候...
+            </div>
           </div>
           <div v-else class="flex flex-col items-center">
             <img :src="previewUrl" alt="预览图片" class="max-h-48 max-w-full mb-4 rounded shadow" />
@@ -40,6 +43,7 @@
             {{ `${Math.round(progress)}%` }}
           </div>
         </div>
+
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">或直接使用图片网址</label>
           <input
@@ -59,10 +63,10 @@
           <button
             @click="submitImage"
             class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="!selectedFile && !imageUrl || loading"
+            :disabled="!selectedFile && !imageUrl || loading || isCompressing"
           >
-            <span v-if="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-            {{ loading ? '上传中...' : '上传' }}
+            <span v-if="loading || isCompressing" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+            {{ loading ? '上传中...' : isCompressing ? '压缩中...' : '上传' }}
           </button>
         </div>
       </div>
@@ -90,6 +94,7 @@ const imageUrl = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const isDragging = ref(false)
+const isCompressing = ref(false)
 
 const emit = defineEmits(['close', 'upload'])
 
@@ -124,26 +129,81 @@ const handlePaste = (event: ClipboardEvent) => {
   }
 }
 
-const setSelectedFile = (file: File) => {
-  if (file.size > MAX_FILE_SIZE) {
-    messageAPI.error(MESSAGE_IMAGE_FILE_SIZE_EXCEED)
+const setSelectedFile = async (file: File) => {
+  if (file.size > MAX_FILE_SIZE_HARD_LIMIT) {
+    messageAPI.error(MESSAGE_IMAGE_FILE_SIZE_EXCEED_HARD_LIMIT)
     return
   }
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     messageAPI.error(MESSAGE_IMAGE_EXTENSION_NOT_ALLOW)
     return
   }
-  selectedFile.value = file
-  previewUrl.value = URL.createObjectURL(file)
+  
+  let compressedFile = file
+  if (file.size > MAX_FILE_SIZE) {
+    try {
+      isCompressing.value = true
+      let quality = 0.8
+      while (compressedFile.size > MAX_FILE_SIZE && quality > 0.1) {
+        compressedFile = await compressImage(file, quality)
+        quality -= 0.1
+      }
+      if (compressedFile.size > MAX_FILE_SIZE) {
+        throw new Error('Unable to compress image to desired size')
+      }
+      isCompressing.value = false
+    } catch (error) {
+      isCompressing.value = false
+      messageAPI.error('图片压缩失败，请尝试使用更小的图片')
+      return
+    }
+  }
+  
+  selectedFile.value = compressedFile
+  previewUrl.value = URL.createObjectURL(compressedFile)
   imageUrl.value = ''
+}
+
+const compressImage = (file: File, quality: number): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const elem = document.createElement('canvas')
+        const scaleFactor = Math.sqrt(MAX_FILE_SIZE / file.size)
+        elem.width = img.width * scaleFactor
+        elem.height = img.height * scaleFactor
+        const ctx = elem.getContext('2d')
+        ctx?.drawImage(img, 0, 0, elem.width, elem.height)
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+        const imageType = isSafari ? 'image/jpeg' : 'image/webp'
+        const fileExtension = isSafari ? 'jpg' : 'webp'
+        ctx?.canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, `.${fileExtension}`), {
+                type: imageType,
+                lastModified: Date.now(),
+              })
+              resolve(newFile)
+            } else {
+              reject(new Error('Blob creation failed'))
+            }
+          },
+          imageType,
+          quality
+        )
+      }
+    }
+    reader.onerror = (error) => reject(error)
+  })
 }
 
 const submitImage = async () => {
   if (selectedFile.value) {
-    if (selectedFile.value.size > MAX_FILE_SIZE) {
-      messageAPI.error(MESSAGE_IMAGE_FILE_SIZE_EXCEED)
-      return
-    }
     uploadFile(selectedFile.value)
     watch([loading], ([newLoading]) => {
       if (!newLoading) {
@@ -177,7 +237,8 @@ const confirmClose = () => {
 }
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024
+const MAX_FILE_SIZE_HARD_LIMIT = 100 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MESSAGE_IMAGE_EXTENSION_NOT_ALLOW = '只支持 JPEG, PNG, GIF 和 WebP 格式的图片'
-const MESSAGE_IMAGE_FILE_SIZE_EXCEED = '文件大小不能超过25MB'
+const MESSAGE_IMAGE_FILE_SIZE_EXCEED_HARD_LIMIT = '图片大小不能超过100MB'
 </script>

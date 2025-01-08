@@ -286,8 +286,10 @@ const handleAlignSelect = (key: string) => {
 }
 
 const handleImageUpload = (imageData: string) => {
-  editor.chain().focus().setImage({ src: imageData }).run()
-  editor.chain().focus('end').insertContent({ type: 'hardBreak' }).run()
+  const currentPos = editor.view.state.selection.anchor
+  editor.chain().focus().insertContent({ type: 'text', text: ' ' }).run()
+  editor.chain().focus(currentPos).setImage({ src: imageData }).run()
+  // editor.chain().focus('end').insertContent({ type: 'hardBreak' }).run()
   showImageUpload.value = false
 }
 
