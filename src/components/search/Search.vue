@@ -7,8 +7,8 @@
           placeholder="搜索课程、评价或用户..."
           class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
           v-model="searchQuery"
-          @input="debouncedSearch"
-          @keyup.enter="handleSearch"
+          @input="()=> debouncedSearch()"
+          @keyup.enter="()=> handleSearch()"
         />
         <div class="absolute top-3 left-3">
           <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
@@ -35,16 +35,11 @@
           {{ searchTypeTooltip[tab] }}
         </button>
       </nav>
-      <div v-if="searchQuery && paginationLoading">
-        <Skeleton
-          v-for="i in pageSize"
-          :key="i"
-          :active-tab="activeTab"
-        />
-      </div>
       <div
         v-if="!searchLoading && searchResults?.search_result.length"
         class="space-y-4 max-h-[50vh] overflow-y-auto"
+        @scroll="handleScroll"
+        ref="scrollContainer"
       >
         <template v-if="activeTab === searchEnums.review">
           <SearchResultReview
@@ -82,16 +77,9 @@
             class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
           />
         </template>
-        <n-pagination
-          v-if="totalPage > 1"
-          v-model:page="currentPage"
-          :page-count="totalPage"
-          show-size-picker
-          :page-sizes="[10, 20, 30, 40]"
-          show-quick-jumper
-          @update:page="handlePageChange"
-          @update:page-size="handlePageSizeChange"
-        />
+        <div v-if="scrollLoading" class="text-center py-4">
+          <LoaderCircle class="w-8 h-8 mx-auto text-blue-500 animate-spin" />
+        </div>
       </div>
       <div v-else class="text-center py-12">
         <template v-if="searchLoading">
@@ -115,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { LoaderCircle, Search } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
@@ -131,22 +119,28 @@ import SearchResultCourse from './results/SearchResultCourse.vue'
 import SearchResultReview from './results/SearchResultReview.vue'
 import SearchResultTeacher from './results/SearchResultTeacher.vue'
 import SearchResultResource from './results/SearchResultResource.vue'
-import Skeleton from './Skeleton.vue'
 
 const searchQuery = ref('')
 const activeTab = ref<SearchType>(searchEnums.review)
 
 const searchResults = ref<APISearch['response'] | null>(null)
 const searchLoading = ref(false)
+const scrollLoading = ref(false)
 
-const handleSearch = async () => {
-  if (!searchQuery.value.trim()) {
+const handleSearch = async (loadMore = false) => {
+  if (!searchQuery.value.trim() && !loadMore) {
     searchResults.value = null
     return
   }
 
-  searchLoading.value = true
-  searchResults.value = null
+  if (!loadMore) {
+    searchLoading.value = true
+    searchResults.value = null
+    currentPage.value = 1
+  } else {
+    scrollLoading.value = true
+  }
+
   const requestQueryData = {
     keyword: searchQuery.value,
     type: activeTab.value,
@@ -158,40 +152,51 @@ const handleSearch = async () => {
       url: '/api/search/',
       query: requestQueryData,
     })
-    searchResults.value = response.content
+    if (loadMore && searchResults.value) {
+      searchResults.value.search_result = [
+        ...searchResults.value.search_result,
+        ...response.content.search_result,
+      ]
+    } else {
+      searchResults.value = response.content
+    }
+    totalPage.value = response.content.total_pages
   } catch (error) {
     console.error('Search failed:', error)
   } finally {
     searchLoading.value = false
+    scrollLoading.value = false
   }
 }
+
 const debouncedSearch = useDebounceFn(handleSearch, 500)
 
 const handleTabClick = (tab: SearchType) => {
   if (activeTab.value === tab) return
-  if (!searchQuery.value.trim()) {
-    activeTab.value = tab
-    return
-  }
-  searchLoading.value = true
   activeTab.value = tab
+  currentPage.value = 1
   handleSearch()
 }
 
-const paginationLoading = ref(false)
 const currentPage = ref(1)
 const totalPage = ref(1)
 const pageSize = ref(10)
-const handlePageChange = async (page: number) => {
-  paginationLoading.value = true
-  currentPage.value = page
-  await handleSearch()
-  paginationLoading.value = false
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+const handleScroll = () => {
+  if (!scrollContainer.value) return
+
+  const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
+  if (scrollTop + clientHeight >= scrollHeight - 20 && !scrollLoading.value && currentPage.value < totalPage.value) {
+    currentPage.value++
+    handleSearch(true)
+  }
 }
-const handlePageSizeChange = async (newPageSize: number) => {
-  paginationLoading.value = true
-  pageSize.value = newPageSize
-  await handlePageChange(1)
-  paginationLoading.value = false
-}
+
+onMounted(() => {
+  if (scrollContainer.value) {
+    scrollContainer.value.addEventListener('scroll', handleScroll)
+  }
+})
 </script>
