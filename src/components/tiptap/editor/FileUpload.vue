@@ -1,7 +1,7 @@
 <template>
   <div
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    @click.self="closeModal"
+    @click.self="attemptCloseModal"
   >
     <div class="bg-white p-6 rounded-lg shadow-xl w-96">
       <h2 class="text-xl font-bold mb-4">上传文件</h2>
@@ -24,9 +24,12 @@
             class="hidden"
           />
         </div>
+        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${progress}%` }"></div>
+        </div>
         <div class="flex justify-end space-x-2">
           <button
-            @click="closeModal"
+            @click="$emit('close')"
             class="px-4 py-2 bg-gray-200 rounded"
             :disabled="loading"
           >
@@ -58,6 +61,7 @@ const {
   message,
   uploadFile,
   errors,
+  progress,
 } = useFileUpload()
 const messageAPI = useMessage()
 const selectedFile = ref<File | null>(null)
@@ -67,8 +71,10 @@ const emit = defineEmits<{
   (e: 'upload', filename: string, url: string): void
 }>()
 
-const closeModal = () => {
-  emit('close')
+const attemptCloseModal = () => {
+  if (!loading.value) {
+    emit('close')
+  }
 }
 
 const handleFileUpload = (event: Event) => {
@@ -106,7 +112,7 @@ const submitFile = async () => {
       ([newLoading]) => {
         if (!newLoading && succeed.value) {
           emit('upload', selectedFile.value!.name, uploadedFileUrl.value)
-          closeModal()
+          attemptCloseModal()
           return
         }
         if (!newLoading && !succeed.value) {
