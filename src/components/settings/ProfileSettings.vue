@@ -10,15 +10,16 @@
             头像
           </label>
           <div class="flex flex-col items-center space-y-4">
-            <div class="relative group">
-              <img 
-                :src="`/api/download/${formData.avatar_uuid}`" 
-                alt="Avatar" 
-                class="w-24 h-24 rounded-full object-cover transition-all duration-300 group-hover:opacity-75"
-              >
+            <div class="relative group cursor-pointer" @click="showImageUpload = true">
+              <div class="w-28 h-28 rounded-full border-4 border-blue-500 flex items-center justify-center">
+                <img 
+                  :src="`/api/download/${formData.avatar_uuid}`" 
+                  alt="Avatar" 
+                  class="w-24 h-24 rounded-full object-cover transition-all duration-300 group-hover:opacity-75"
+                >
+              </div>
               <div 
                 class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                @click="showImageUpload = true"
               >
                 <span class="text-white text-sm font-medium">更改头像</span>
               </div>
@@ -27,7 +28,7 @@
           <p v-if="errors.avatar_uuid" class="text-red-500 text-xs italic mt-2">
             {{ errors.avatar_uuid }}
           </p>
-          <ImageUpload
+          <AvatarUpload
             @close="showImageUpload = false"
             @upload="handleImageUpload"
             v-if="showImageUpload"
@@ -111,7 +112,7 @@ import { z } from 'zod'
 import { useMessage } from 'naive-ui'
 import { LoaderCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
-import ImageUpload from '../tiptap/editor/ImageUpload.vue'
+import AvatarUpload from './AvatarUpload.vue'
 
 type ErrorsProfile = {
   nickname: string
