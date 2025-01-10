@@ -33,6 +33,42 @@ type APIUserActivityReviewBase = {
     reward: number
   }
 }
+export enum APIUserActivitiesQueryType {
+  reply = 'reply',
+  review = 'review',
+}
+export type APIUserActivitiesReview = {
+  endpoint: '/api/assessment/user/activities/review/:id/'
+  method: MethodMap.GET
+  params: {
+    id: number
+  }
+  query: {
+    page_size: number
+    page: number
+  }
+  response: {
+    page: number
+    max_page: number
+    count: number
+    results:
+      | (APIUserActivityReviewBase & {
+          is_me: true
+          anonymous: boolean
+          content: {
+            current_content: string
+            content_history: string[]
+          }
+        })[]
+      | (APIUserActivityReviewBase & {
+          is_me: false
+        })[]
+  }
+  errors: ErrorFactory<ErrorNotLogin>[]
+}
+
+// GET
+// 获取已发表回复
 type APIUserActivityReplyBase = {
   id: number
   content: string
@@ -51,18 +87,13 @@ type APIUserActivityReplyBase = {
     dislike: number
   }
 }
-export enum APIUserActivitiesQueryType {
-  reply = 'reply',
-  review = 'review',
-}
-export type APIUserActivities = {
-  endpoint: '/api/assessment/user/activities/:id/'
+export type APIUserActivitiesReply = {
+  endpoint: '/api/assessment/user/activities/reply/:id/'
   method: MethodMap.GET
   params: {
     id: number
   }
   query: {
-    type: APIUserActivitiesQueryType
     page_size: number
     page: number
   }
@@ -70,21 +101,7 @@ export type APIUserActivities = {
     page: number
     max_page: number
     count: number
-    results: {
-      [APIUserActivitiesQueryType.review]:
-        | (APIUserActivityReviewBase & {
-            is_me: true
-            anonymous: boolean
-            content: {
-              current_content: string
-              content_history: string[]
-            }
-          })
-        | (APIUserActivityReviewBase & {
-            is_me: false
-          })
-      [APIUserActivitiesQueryType.reply]: APIUserActivityReplyBase[]
-    }[APIUserActivitiesQueryType]
+    results: APIUserActivityReplyBase[]
   }
   errors: ErrorFactory<ErrorNotLogin>[]
 }
@@ -152,6 +169,8 @@ export type APIUserProfileFromId = {
         nickname: string
         avatar: string
         is_me: false
+        verified: boolean
+        date_joined: string
       }
   errors: ErrorFactory<ErrorNotLogin>[]
 }

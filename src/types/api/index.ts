@@ -10,7 +10,8 @@ export type RequestEndpoints = {
   [MethodMap.GET]: {
     // User
     // - Profile
-    '/api/assessment/user/activities/:id/': ProfilePage.APIUserActivities
+    '/api/assessment/user/activities/review/:id/': ProfilePage.APIUserActivitiesReview
+    '/api/assessment/user/activities/reply/:id/': ProfilePage.APIUserActivitiesReply
     '/api/user/profile/': ProfilePage.APIUserProfile
     '/api/user/profile/:id/': ProfilePage.APIUserProfileFromId
     '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
