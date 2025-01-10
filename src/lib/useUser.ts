@@ -10,7 +10,7 @@ const isLoading = ref(false)
 
 let timeoutId: NodeJS.Timeout | null = null
 
-export function useUser() {
+export function useUser(setup: boolean = true) {
   const checkLoginStatus = () => {
     const cookieExists = document.cookie
       .split(';')
@@ -95,17 +95,19 @@ export function useUser() {
     checkLoginStatus()
   })
 
-  onMounted(() => {
-    checkLoginStatus()
-    window.addEventListener('focus', checkLoginStatus)
-  })
+  if (setup) {
+    onMounted(() => {
+      checkLoginStatus()
+      window.addEventListener('focus', checkLoginStatus)
+    })
 
-  onUnmounted(() => {
-    window.removeEventListener('focus', checkLoginStatus)
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
-  })
+    onUnmounted(() => {
+      window.removeEventListener('focus', checkLoginStatus)
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    })
+  }
 
   return {
     userInfo: readonly(userInfo),

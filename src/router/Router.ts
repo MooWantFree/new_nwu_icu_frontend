@@ -149,7 +149,7 @@ const Router = createRouter({
   },
 });
 
-const { isLoggedIn } = useUser()
+const { isLoggedIn } = useUser(false)
 
 Router.beforeEach(async (to, from) => {
   // Change title
