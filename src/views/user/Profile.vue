@@ -5,14 +5,14 @@
         <UserInfo :userInfo="userInfo" class="sticky top-8" />
       </div>
       <div class="w-full lg:w-2/3">
-        <History :userInfo="userInfo" :id="id" />
+        <History :userInfo="userInfo" :id="realId" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { APIUserProfileFromId } from '@/types/api/user/profilePage'
 import UserInfo from '@/components/user/profilePage/UserInfo.vue'
@@ -31,8 +31,11 @@ watch(
   async () => {
     await fetchUserData()
   },
-  { immediate: true }
 )
+
+const realId = computed(() => {
+  return id === 'me' ? userInfo.value?.id.toString() : id
+})
 
 const fetchUserData = async () => {
   try {
