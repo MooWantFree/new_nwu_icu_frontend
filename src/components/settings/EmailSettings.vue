@@ -166,7 +166,7 @@ const handleNwuEmailAction = async () => {
 const showNWUEmailVerifyDialog = () => {
   dialog.success({
     title: '等待验证',
-    content: '请前往您的NWU邮箱进行验证。',
+    content: '请前往您的NWU邮箱，点击链接进行验证。',
     positiveText: '好的',
   })
 }
