@@ -72,7 +72,7 @@
         </div>
         <div class="sm:col-span-1">
           <dt class="text-sm font-medium text-gray-500">注册时间</dt>
-          <dd v-if="userInfo.is_me" class="mt-1 text-sm text-gray-900">
+          <dd class="mt-1 text-sm text-gray-900">
             <Time :time="new Date(userInfo.date_joined)" />
           </dd>
         </div>
@@ -82,7 +82,7 @@
             {{ userInfo.nwu_email || '未提供' }}
           </dd>
           <dd v-else class="mt-1 text-sm text-gray-900">
-            <!-- TODO: 已验证 -->
+            <span>{{ userInfo.verified ? '已验证' : '未验证' }}</span>
           </dd>
         </div>
       </dl>
