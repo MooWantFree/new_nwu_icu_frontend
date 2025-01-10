@@ -115,7 +115,7 @@
           </button>
           <button
             v-if="selectedFile"
-            @click="submitImage"
+            @click.prevent="submitImage"
             class="px-4 py-2 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors"
             :disabled="loading"
           >
