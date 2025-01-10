@@ -5,43 +5,86 @@ import { MethodMap } from '../base'
 
 // GET
 // 获取已发表评价
-export type APIUserOwnReview = {
-  endpoint: '/api/assessment/my/review/'
+type APIUserActivityReviewBase = {
+  id: number
+  datetime: string
+  semester: string
+  course: {
+    name: string
+    id: number
+    semester: string
+  }
+  like: {
+    like: number
+    dislike: number
+  }
+  content: {
+    current_content: string
+  }
+  teachers: {
+    name: string
+    id: number
+  }[]
+  rating: {
+    rating: number
+    difficulty: number
+    grade: number
+    homework: number
+    reward: number
+  }
+}
+type APIUserActivityReplyBase = {
+  id: number
+  content: string
+  datetime: string
+  course: {
+    name: string
+    id: number
+    semester: string
+  }
+  reply: {
+    id: number
+    content: string
+  }
+  like: {
+    like: number
+    dislike: number
+  }
+}
+export enum APIUserActivitiesQueryType {
+  reply = 'reply',
+  review = 'review',
+}
+export type APIUserActivities = {
+  endpoint: '/api/assessment/user/activities/:id/'
   method: MethodMap.GET
+  params: {
+    id: number
+  }
+  query: {
+    type: APIUserActivitiesQueryType
+    page_size: number
+    page: number
+  }
   response: {
     page: number
     max_page: number
     count: number
     results: {
-      id: number
-      anonymous: boolean
-      datetime: string
-      semester: string
-      course: {
-        name: string
-        id: number
-        semester: string
-      }
-      like: {
-        like: number
-        dislike: number
-      }
-      content: {
-        current_content: string
-        content_history: string[]
-      }
-      teachers: {
-        name: string
-        id: number
-      }[]
-      rating: {
-        rating: number
-        difficulty: number
-        grade: number
-        homework: number
-        reward: number
-      }
-    }[]
+      [APIUserActivitiesQueryType.review]:
+        | (APIUserActivityReviewBase & {
+            is_me: true
+            anonymous: boolean
+            content: {
+              current_content: string
+              content_history: string[]
+            }
+          })
+        | (APIUserActivityReviewBase & {
+            is_me: false
+          })
+      [APIUserActivitiesQueryType.reply]: APIUserActivityReplyBase[]
+    }[APIUserActivitiesQueryType]
   }
   errors: ErrorFactory<ErrorNotLogin>[]
 }
@@ -49,10 +92,12 @@ export type APIUserOwnReview = {
 // POST
 // 绑定西大邮箱
 export const APIBindScholarEmailQuery = z.object({
-  college_email: z.string().email().refine(
-    (email) => email.endsWith('nwu.edu.cn'),
-    { message: '请使用以 nwu.edu.cn 结尾的西北大学邮箱' }
-  ),
+  college_email: z
+    .string()
+    .email()
+    .refine((email) => email.endsWith('nwu.edu.cn'), {
+      message: '请使用以 nwu.edu.cn 结尾的西北大学邮箱',
+    }),
 })
 export type APIBindScholarEmail = {
   endpoint: '/api/user/bind-college-email/bind/'
@@ -89,23 +134,25 @@ export type APIUserProfileFromId = {
   params: {
     id: number
   }
-  response: {
-    id: number
-    username: string
-    bio?: string
-    email: string
-    date_joined: string
-    nickname: string
-    avatar: string
-    nwu_email?: string
-    is_me: true
-  } | {
-    id: number
-    bio: string | null
-    nickname: string
-    avatar: string
-    is_me: false
-  }
+  response:
+    | {
+        id: number
+        username: string
+        bio?: string
+        email: string
+        date_joined: string
+        nickname: string
+        avatar: string
+        nwu_email?: string
+        is_me: true
+      }
+    | {
+        id: number
+        bio: string | null
+        nickname: string
+        avatar: string
+        is_me: false
+      }
   errors: ErrorFactory<ErrorNotLogin>[]
 }
 
