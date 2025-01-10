@@ -140,7 +140,6 @@ const {
   loading,
   succeed,
   imageUrl: uploadedImageUrl,
-  message,
   uploadFile,
   progress,
   errors,

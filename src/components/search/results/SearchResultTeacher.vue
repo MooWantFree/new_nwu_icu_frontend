@@ -30,9 +30,9 @@
     </div>
 
     <!-- Additional information can be added here -->
-    <div class="text-sm text-gray-600">
+    <!-- <div class="text-sm text-gray-600">
       <p class="mb-1">教师ID: {{ teacher.id }}</p>
-    </div>
+    </div> -->
   </div>
 </template>
 
