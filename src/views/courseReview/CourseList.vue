@@ -55,7 +55,7 @@
     </div>
 
     <div
-      v-else-if="courses.length === 0"
+      v-else-if="courses && courses.length === 0"
       class="text-center text-xl text-gray-500 my-12"
     >
       暂无数据
@@ -129,7 +129,7 @@ enum OrderBy {
 
 const CourseType = APICourseListQuery.shape.course_type.enum 
 
-const courses = ref<APICourseList['response']['courses']>([])
+const courses = ref<APICourseList['response']['results']>([])
 const courseType = ref<z.infer<typeof APICourseListQuery>['course_type']>(CourseType.all)
 const orderBy = ref<OrderBy>(OrderBy.Rating)
 const data = ref<APICourseList['response'] | null>(null)
@@ -168,7 +168,7 @@ const fetchCourses = async (page: number = 1) => {
         page,
       },
     })
-    courses.value = response.content.courses
+    courses.value = response.content.results
     data.value = response.content
   } catch (error) {
     console.error('Error fetching courses:', error)
@@ -182,7 +182,7 @@ onMounted(async () => {
   await fetchCourses()
 })
 
-const totalPages = computed(() => data.value?.num_pages || 1)
+const totalPages = computed(() => data.value?.max_page || 1)
 const handlePageChange = async (page: number) => {
   currentPage.value = page
   await fetchCourses(page)

@@ -44,8 +44,10 @@ export type APICourseList = {
   method: MethodMap.GET
   query: z.infer<typeof APICourseListQuery>
   response: {
-    total: number
-    courses: {
+    count: number
+    max_page: number
+    page: number
+    results: {
       id: number
       name: string
       classification: string
@@ -55,10 +57,6 @@ export type APICourseList = {
       average_rating: number
       normalized_rating: number
     }[]
-    has_next: boolean
-    has_previous: boolean
-    current_page: number
-    num_pages: number
   }
 }
 
