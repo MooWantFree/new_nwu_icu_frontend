@@ -4,12 +4,19 @@ import Router from './router/Router'
 import naive from 'naive-ui'
 import VueApexCharts from 'vue3-apexcharts'
 import VueGtag from 'vue-gtag'
-import * as Sentry from "@sentry/vue";
+import * as Sentry from '@sentry/vue'
 import '@/style/style.css'
 
+const app = createApp(App)
+app.use(Router)
+app.use(VueApexCharts)
+app.use(VueGtag, {
+  config: { id: 'G-MYB5VKYR7S' },
+})
+app.use(naive)
 Sentry.init({
   app,
-  dsn: "https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395",
+  dsn: 'https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395',
   integrations: [
     Sentry.browserTracingIntegration({ Router }),
     Sentry.replayIntegration(),
@@ -31,12 +38,6 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-});
-
-const app = createApp(App)
-app.use(Router)
-app.use(VueApexCharts)
-app.use(VueGtag, {
-  config: { id: 'G-MYB5VKYR7S' },
 })
-app.use(naive).mount('#app')
+
+app.mount('#app')
