@@ -1,7 +1,6 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useUser } from '@/lib/useUser'
-import { checkLoginStatus } from '@/lib/logins'
 
 const courseReviewRoutes = [
   {
@@ -108,14 +107,6 @@ const messageRoutes = [
         },
       },
       {
-        path: 'at-me',
-        name: 'at-me',
-        component: () => import('@/components/message/AtMe.vue'),
-        meta: {
-          pageTitle: '@我的',
-        },
-      },
-      {
         path: 'likes',
         name: 'likes',
         component: () => import('@/components/message/Likes.vue'),
@@ -210,7 +201,7 @@ Router.beforeEach(async (to, from) => {
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
-  const loginStatus = checkLoginStatus()
+  const loginStatus = isLoggedIn.value
   routes.forEach(route => {
     if (route.path === to.path) {
       if (route.meta?.requiresAuth && !loginStatus) {

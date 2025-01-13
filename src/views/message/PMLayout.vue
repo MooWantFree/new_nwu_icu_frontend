@@ -33,14 +33,6 @@
           回复我的
         </router-link>
         <router-link
-          to="/message/at-me"
-          class="flex items-center px-3 py-2 text-sm rounded-lg text-gray-700 hover:bg-gray-100"
-          active-class="bg-blue-50 text-blue-600"
-        >
-          <Send class="w-4 h-4 mr-3" />
-          @ 我的
-        </router-link>
-        <router-link
           to="/message/likes"
           class="flex items-center px-3 py-2 text-sm rounded-lg text-gray-700 hover:bg-gray-100"
           active-class="bg-blue-50 text-blue-600"
