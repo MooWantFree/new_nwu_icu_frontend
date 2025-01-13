@@ -1,24 +1,95 @@
-export type MessageUserRequest = {
-  page: number,
+import { z } from 'zod'
+import type { ErrorFactory } from '../errors'
+import { MethodMap } from '../base'
+
+// GET
+// 获取消息列表
+export const APIUserMessageListQuery = z.object({
+  page: z.number().min(1).default(1),
+})
+export type APIUserMessageList = {
+  endpoint: '/api/message/user/'
+  method: MethodMap.GET
+  query: z.infer<typeof APIUserMessageListQuery>
+  response: {
+    page: number
+    max_page: number
+    count: number
+    results: {
+      id: number
+      chatter: {
+        id: number
+        nickname: string
+        avatar: string
+      }
+      last_message: {
+        content: string
+        datetime: string
+      }
+      unread_count: number
+    }[]
+  }
+  errors: ErrorFactory<'auth'>[]
 }
 
-export type MessageUserResponse = {
-  success: {
-    page: number,
-    max_page: number,
-    count: number,
+// GET
+// 获取消息详情
+export const APIUserMessageDetailParams = z.object({
+  id: z.number(),
+})
+export const APIUserMessageDetailQuery = z.object({
+  page: z.number(),
+})
+export type APIUserMessageDetail = {
+  endpoint: `/api/message/user/${string}/`
+  method: MethodMap.GET
+  params: z.infer<typeof APIUserMessageDetailParams>
+  query: z.infer<typeof APIUserMessageDetailQuery>
+  response: {
     results: {
-      id: number,
-      chatter: {
-        id: number,
-        nickname: string,
-        avatar: string,
-      },
-      last_message: {
-        content: string,
-        datetime: string,
-      },
-      unread_count: number,
-    }[],
+      id: number
+      reply: {
+        id: number
+        content: string
+      }
+      created_by: {
+        id: number
+        nickname: string
+        avatar: string
+      }
+      course: {
+        id: number
+        name: string
+      }
+      raw_post: {
+        id: number
+        classify: string
+        content: string
+      }
+      datetime: string
+    }[]
+    page: number
+    max_page: number
+    count: number
   }
+  errors: ErrorFactory<'auth'>[]
+}
+
+// POST
+// 发送消息
+export const APISendMessageQuery = z.object({
+  receiver: z.number(),
+  content: z.string(), // For image, use Base64
+  // TODO: Is there need to support file and reply to certain message?
+})
+export type APISendMessage = {
+  endpoint: '/api/message/send/'
+  method: MethodMap.POST
+  query: z.infer<typeof APISendMessageQuery>
+  response: {
+    receiver: number
+    content: string
+    classify: 'user' | 'system'
+  }
+  errors: ErrorFactory<'auth'>[]
 }
