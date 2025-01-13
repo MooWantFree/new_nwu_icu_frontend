@@ -71,9 +71,19 @@
   </div>
   <div
     v-else
-    class="flex items-center justify-center h-[calc(100vh-42px)] bg-gray-50"
+    class="flex flex-col items-center justify-center h-[calc(100vh-42px)] bg-gray-100"
   >
-    <p class="text-lg text-gray-600">请先登录以访问消息中心</p>
+    <div class="text-center p-8 bg-white rounded-lg shadow-md">
+      <AlertCircle class="w-16 h-16 mx-auto mb-4 text-yellow-500" />
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">需要登录</h2>
+      <p class="text-lg text-gray-600 mb-6">请先登录以访问消息中心</p>
+      <router-link
+        to="/"
+        class="inline-block px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-300 shadow-md"
+      >
+        返回首页
+      </router-link>
+    </div>
   </div>
 </template>
 
