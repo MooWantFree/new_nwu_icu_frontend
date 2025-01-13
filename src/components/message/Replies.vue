@@ -21,13 +21,13 @@
 
     <div class="space-y-4">
       <div
-        v-for="reply in replies?.results"
+        v-for="reply in replies"
         :key="reply.id"
         class="bg-white rounded-lg shadow p-4"
       >
         <div class="flex items-start space-x-4">
           <img
-            :src="reply.created_by.avatar"
+            :src="`/api/download/${reply.created_by.avatar}`"
             alt="User avatar"
             class="w-10 h-10 rounded-full"
           />
@@ -35,18 +35,22 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-medium text-gray-900">
-                  <span>{{ reply.created_by.nickname }}</span>
-                  <!-- TODO: Link to user -->
+                  <RouterLink
+                    :to="`/user/${reply.created_by.id}`"
+                    class="text-blue-600 hover:underline"
+                    >{{ reply.created_by.nickname }}</RouterLink
+                  >
                   <span>&nbsp;回复了</span>
                   <span
-                    >《<RouterLink
+                    >《
+                    <RouterLink
                       :to="`/review/course/${reply.course.id}`"
                       class="text-blue-600 hover:underline"
                       >{{ reply.course.name }}</RouterLink
                     >》下的</span
                   >
                   <span class="text-blue-600 hover:underline"
-                    ><RouterLink :to="`/user/${reply.created_by.id}`"
+                    ><RouterLink :to="`/review/course/${reply.course.id}`"
                       >我的评论</RouterLink
                     ></span
                   >
@@ -68,7 +72,7 @@
                 >
                   <button
                     @click="
-                      deleteConfirmation = reply.id
+                      deleteConfirmation = reply.id;
                       activeMenu = null
                     "
                     class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -117,10 +121,7 @@
       </div>
     </div>
 
-    <div
-      v-if="!replies?.results || replies.results.length === 0"
-      class="text-center py-8"
-    >
+    <div v-if="!replies || replies.length === 0" class="text-center py-8">
       <p class="text-gray-500">暂无回复</p>
     </div>
   </div>
@@ -130,11 +131,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { MoreVertical, RefreshCw } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
-import type { MessageReplyResponse } from '@/types/api/messages/replies'
-import Viewer from '../tiptap/viewer/Viewer.vue'
 import { useMessage } from 'naive-ui'
+import { APINotificationList } from '@/types/api/messages/messages'
 
-const replies = ref<MessageReplyResponse['success']>()
+const replies = ref<APINotificationList['response']['results']>()
 const message = useMessage()
 const loading = ref(true)
 const activeMenu = ref<number | null>(null)
@@ -162,9 +162,14 @@ onUnmounted(() => {
 const fetchData = async (): Promise<void> => {
   loading.value = true
   try {
-    const response = await api.get<MessageReplyResponse>('/api/message/reply')
+    const response = await api.get({
+      url: '/api/message/reply/',
+      query: {
+        page: 1,
+      },
+    })
     if (response.status.toString().startsWith('2')) {
-      replies.value = response.content
+      replies.value = response.content.results
     } else {
       message.error('获取回复失败')
     }
@@ -199,18 +204,18 @@ const toggleMenu = (replyId: number) => {
   }
 }
 
-const deleteReply = async (replyId: number) => {
-  try {
-    await api.delete(`/api/message/reply/${replyId}`)
-    message.success('回复已删除')
-    deleteConfirmation.value = null
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    await fetchData() // Refresh the list after deletion
-  } catch (error) {
-    message.error('删除回复失败')
-    console.error('Failed to delete reply:', error)
-  }
-}
+// const deleteReply = async (replyId: number) => {
+//   try {
+//     await api.delete(`/api/message/reply/${replyId}`)
+//     message.success('回复已删除')
+//     deleteConfirmation.value = null
+//     await new Promise((resolve) => setTimeout(resolve, 500))
+//     await fetchData() // Refresh the list after deletion
+//   } catch (error) {
+//     message.error('删除回复失败')
+//     console.error('Failed to delete reply:', error)
+//   }
+// }
 </script>
 
 <style scoped>

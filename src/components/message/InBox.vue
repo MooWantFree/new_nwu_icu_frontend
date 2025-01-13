@@ -97,49 +97,32 @@
 import { ref, onMounted, computed } from 'vue'
 import ChatView from './ChatView.vue'
 import { api } from '@/lib/requests'
-import { MessageUserResponse } from '@/types/api/messages/inbox'
 import { useMessage } from 'naive-ui'
+import { APIUserMessageList } from '@/types/api/messages/inbox'
 
 const message = useMessage()
 const loading = ref(true)
-const messages = ref<MessageUserResponse['success']['results']>()
+const messages = ref<APIUserMessageList['response']['results'] | null>(null)
 const totalPages = ref(0)
 const currentPage = ref(1)
-const itemsPerPage = 10
-const selectedMessage = ref<(typeof messages.value)[0] | null>(null)
+const selectedMessage = ref<APIUserMessageList['response']['results'][0] | null>(null)
 
-const paginatedMessages = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return messages.value.slice(start, end)
-})
+const paginatedMessages = computed(() => messages.value || [])
 
 const fetchMessages = async (page: number = 1) => {
   try {
-    const resp = await api.get<MessageUserResponse>(
-      `/api/message/user/?page=${page}`
-    )
+    loading.value = true
+    const resp = await api.get({
+      url: '/api/message/user/',
+      query: {
+        page,
+      },
+    })
     if (resp.status.toString().startsWith('2')) {
       messages.value = resp.data.contents.results
       totalPages.value = resp.data.contents.max_page
+      currentPage.value = page
     }
-    currentPage.value = page
-    // FIXME: For test purposes
-    // messages.value = [
-    //         {
-    //             "id": 3029,
-    //             "chatter": {
-    //                 "id": 3,
-    //                 "nickname": "268",
-    //                 "avatar": "8e45e725-8591-41b3-b58c-db9e2b8c549f"
-    //             },
-    //             "last_message": {
-    //                 "content": "asd",
-    //                 "datetime": "2024-10-19T02:10:11.384036"
-    //             },
-    //             "unread_count": 0
-    //         }
-    //     ]
   } catch (e) {
     console.error('Error fetching messages:', e)
     message.error('获取消息失败，请重试')
@@ -148,10 +131,19 @@ const fetchMessages = async (page: number = 1) => {
   }
 }
 
-const nextPage = () => fetchMessages(currentPage.value + 1)
-const prevPage = () => fetchMessages(currentPage.value - 1)
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    fetchMessages(currentPage.value + 1)
+  }
+}
 
-const selectMessage = (message: (typeof messages.value)[0]) => {
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    fetchMessages(currentPage.value - 1)
+  }
+}
+
+const selectMessage = (message: APIUserMessageList['response']['results'][0]) => {
   selectedMessage.value = message
 }
 

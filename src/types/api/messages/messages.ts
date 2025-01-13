@@ -4,11 +4,15 @@ import { MethodMap } from '../base'
 
 // GET
 // 回复提醒
+const APINotificationListQuery = z.object({
+  page: z.number().min(1).default(1),
+})
 export type APINotificationList = {
   endpoint: '/api/message/reply/'
   method: MethodMap.GET
+  query: z.infer<typeof APINotificationListQuery>
   response: {
-    notices: {
+    results: {
       id: number
       reply: {
         id: number
