@@ -30,7 +30,11 @@
       <p class="mt-3">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
       <div class="flex items-center mt-4 space-x-2">
         <button
-          @click="handleRecommendButtonClick"
+          @click="
+            () => {
+              handleLikeNDislike(LikeValue.Recommend)
+            }
+          "
           :disabled="isButtonDisabled"
           :class="[
             'flex items-center px-4 py-2 rounded transition-colors',
@@ -44,7 +48,11 @@
           <span>推荐({{ courseData.like.like }})</span>
         </button>
         <button
-          @click="handleDisRecommendButtonClick"
+          @click="
+            () => {
+              handleLikeNDislike(LikeValue.DisRecommend)
+            }
+          "
           :disabled="isButtonDisabled"
           :class="[
             'flex items-center px-4 py-2 rounded transition-colors ml-2',
@@ -66,13 +74,12 @@
 import { ref } from 'vue'
 import { ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
 import { useUser } from '@/lib/useUser'
-import type { CourseData } from '@/types/courses'
+import type { CourseData } from '@/types/courseReview'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { ReplyLikeResponse } from '@/types/api/course'
 
 const message = useMessage()
-const { isLoading, isLoggedIn } = useUser()
+const { isLoggedIn } = useUser()
 const props = defineProps<{
   courseData: CourseData
   loading: boolean
@@ -80,73 +87,40 @@ const props = defineProps<{
 
 const isButtonDisabled = ref(false)
 
-const handleRecommendButtonClick = async () => {
-  if (isButtonDisabled.value) return
-  if (!isLoggedIn.value) {
-    message.error('请先登录')
-    return
-  }
-  isButtonDisabled.value = true
-  const resp = await api.post<ReplyLikeResponse>(
-    '/api/assessment/course/like/',
-    {
-      course_id: props.courseData.id,
-      like: 1,
-    }
-  )
-  if (resp.status === 200) {
-    switch (props.courseData.like.user_option) {
-      case -1:
-      // fall through
-      case 0:
-        props.courseData.like.dislike = resp.content.like.dislike
-        props.courseData.like.like = resp.content.like.like
-        props.courseData.like.user_option = 1
-        break
-      case 1:
-        props.courseData.like.dislike = resp.content.like.dislike
-        props.courseData.like.like = resp.content.like.like
-        props.courseData.like.user_option = 0
-        break
-    }
-  } else {
-    message.error('推荐失败，请稍后再试')
-  }
-  isButtonDisabled.value = false
+enum LikeValue {
+  Recommend = '1',
+  DisRecommend = '-1',
 }
 
-const handleDisRecommendButtonClick = async () => {
+const handleLikeNDislike = async (likeValue: LikeValue) => {
   if (isButtonDisabled.value) return
   if (!isLoggedIn.value) {
     message.error('请先登录')
     return
   }
   isButtonDisabled.value = true
-  const resp = await api.post<ReplyLikeResponse>(
-    '/api/assessment/course/like/',
-    {
+
+  const resp = await api.post({
+    url: '/api/assessment/course/like/',
+    query: {
       course_id: props.courseData.id,
-      like: -1,
-    }
-  )
+      like: likeValue,
+    },
+  })
+
   if (resp.status === 200) {
-    switch (props.courseData.like.user_option) {
-      case 1:
-      // fall through
-      case 0:
-        props.courseData.like.dislike = resp.content.like.dislike
-        props.courseData.like.like = resp.content.like.like
-        props.courseData.like.user_option = -1
-        break
-      case -1:
-        props.courseData.like.dislike = resp.content.like.dislike
-        props.courseData.like.like = resp.content.like.like
-        props.courseData.like.user_option = 0
-        break
+    props.courseData.like.dislike = resp.content.like.dislike
+    props.courseData.like.like = resp.content.like.like
+
+    if (props.courseData.like.user_option === parseInt(likeValue)) {
+      props.courseData.like.user_option = 0
+    } else {
+      props.courseData.like.user_option = parseInt(likeValue)
     }
   } else {
-    message.error('不推荐失败，请稍后再试')
+    message.error(`${likeValue === '1' ? '推荐' : '不推荐'}失败，请稍后再试`)
   }
+
   isButtonDisabled.value = false
 }
 </script>

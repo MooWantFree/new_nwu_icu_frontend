@@ -1,7 +1,8 @@
 import { ref, onMounted, onUnmounted, watch, readonly } from 'vue'
-import { UserProfile } from '@/types/userProfile'
-import { UserProfileResponse } from '@/types/api/users'
 import { api } from '@/lib/requests'
+import { APIUserProfile } from '@/types/api/user/profilePage'
+
+type UserProfile = APIUserProfile['response']
 
 const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)
@@ -9,7 +10,7 @@ const isLoading = ref(false)
 
 let timeoutId: NodeJS.Timeout | null = null
 
-export function useUser() {
+export function useUser(setup: boolean = true) {
   const checkLoginStatus = () => {
     const cookieExists = document.cookie
       .split(';')
@@ -20,7 +21,7 @@ export function useUser() {
     }
     // Check if the cookie is still valid
     const sessionTimeout = getSessionTimeout()
-    if (sessionTimeout <= 0 || !sessionTimeout) {
+    if ((sessionTimeout && sessionTimeout <= 0) || !sessionTimeout) {
       logout()
       return
     }
@@ -61,7 +62,7 @@ export function useUser() {
   const fetchUserInfo = async () => {
     isLoading.value = true
     try {
-      const response = await api.get<UserProfileResponse>('/api/user/profile/')
+      const response = await api.get({ url: '/api/user/profile/' })
       if (response.status === 200) {
         login(response.content)
       } else {
@@ -94,17 +95,19 @@ export function useUser() {
     checkLoginStatus()
   })
 
-  onMounted(() => {
-    checkLoginStatus()
-    window.addEventListener('focus', checkLoginStatus)
-  })
+  if (setup) {
+    onMounted(() => {
+      checkLoginStatus()
+      window.addEventListener('focus', checkLoginStatus)
+    })
 
-  onUnmounted(() => {
-    window.removeEventListener('focus', checkLoginStatus)
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
-  })
+    onUnmounted(() => {
+      window.removeEventListener('focus', checkLoginStatus)
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    })
+  }
 
   return {
     userInfo: readonly(userInfo),

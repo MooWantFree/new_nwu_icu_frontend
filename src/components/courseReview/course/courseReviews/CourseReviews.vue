@@ -8,85 +8,64 @@
       >
         <div class="flex items-center space-x-2">
           <p class="whitespace-nowrap">排序</p>
-          <n-select
-            class="flex-grow"
-            :options="sortSelectorOptions"
-            v-model:value="sortSelectorValue"
-          />
+          <select
+            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            v-model="sortSelectorValue"
+          >
+            <option
+              v-for="option in sortSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
         </div>
         <div class="flex items-center space-x-2">
           <p class="whitespace-nowrap">学期</p>
-          <n-select
-            class="flex-grow"
-            :options="semesterSelectorOptions"
-            v-model:value="semesterSelectorValue"
-          />
+          <select
+            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            v-model="semesterSelectorValue"
+          >
+            <option
+              v-for="option in semesterSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
         </div>
         <div class="flex items-center space-x-2">
           <p class="whitespace-nowrap">评分</p>
-          <n-select
-            class="flex-grow"
-            :options="rankSelectorOptions"
-            v-model:value="rankSelectorValue"
-          />
+          <select
+            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            v-model="rankSelectorValue"
+          >
+            <option
+              v-for="option in rankSelectorOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
         </div>
-        <button
-          @click="showRatingTrendModal = true"
-          class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          课程学期评分趋势
-        </button>
       </div>
-      <n-button
+      <button
         v-if="!userReviewed"
-        class="w-full sm:w-auto mt-4 sm:mt-0"
-        type="primary"
-        color="#18a058"
+        class="w-full sm:w-auto mt-4 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
         @click="handleNewReviewButtonClicked"
       >
         新建一个评价
-      </n-button>
-      <n-button
+      </button>
+      <button
         v-else
-        class="w-full sm:w-auto mt-4 sm:mt-0"
-        type="primary"
-        color="#18a058"
+        class="w-full sm:w-auto mt-4 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
         @click="handleEditReviewButtonClicked"
       >
         编辑我的评价
-      </n-button>
-    </div>
-
-    <!-- Rating Trend Modal -->
-    <div
-      v-if="showRatingTrendModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">课程评分趋势</h2>
-          <button
-            @click="showRatingTrendModal = false"
-            class="text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
-          </button>
-        </div>
-        <CourseRatingTrend :ratingData="ratingTrendData" />
-      </div>
+      </button>
     </div>
 
     <div class="mt-6 space-y-4">
@@ -99,13 +78,9 @@
         />
       </div>
       <div v-if="reviewsDisplayed.length === 0">
-        <n-empty size="huge" description="暂时没有内容呢">
-          <template #extra>
-            <n-button size="large" @click="handleNewReviewButtonClicked">
-              新建一个评价
-            </n-button>
-          </template>
-        </n-empty>
+        <div class="text-center py-8">
+          <p class="text-xl font-semibold mb-4">暂时没有内容呢</p>
+        </div>
       </div>
     </div>
 
@@ -127,11 +102,9 @@ import { ref, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
-import { CourseData } from '@/types/courses'
-import { NewReviewRequest, NewReviewResponse } from '@/types/api/review'
+import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import CourseReviewItem from '@/components/courseReview/course/courseReviews/CourseReviewItem.vue'
 import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
-import CourseRatingTrend from '@/components/courseReview/course/CourseRatingTrend.vue'
 
 const emit = defineEmits<{
   (e: 'reloadData'): void
@@ -152,7 +125,7 @@ enum SortMethods {
 }
 
 const message = useMessage()
-const { userInfo, isLoading, isLoggedIn } = useUser()
+const { isLoggedIn } = useUser()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -269,23 +242,32 @@ const handleNewReviewButtonClicked = () => {
   }
   showEditor.value = true
 }
-const handleReviewDeleted = (reviewId: number) => {
+
+const handleReviewDeleted = () => {
   emit('reloadData')
 }
 
-const handleReplyDeleted = (reviewId: number, replyId: number) => {
+const handleReplyDeleted = () => {
   emit('reloadData')
 }
 
-const handleSubmitReview = async (content: NewReviewRequest) => {
+const handleSubmitReview = async (content: ReviewDataBase) => {
   isSubmittingReview.value = true
-  const request = initContent.value ? api.put : api.post
   try {
-    const {
-      status,
-      data,
-      content: responseContent,
-    } = await request<NewReviewResponse>('/api/assessment/review/', content)
+    let status: number
+    if (initContent.value) {
+      const resp = await api.put({
+        url: '/api/assessment/review/',
+        query: content,
+      })
+      status = resp.status
+    } else {
+      const resp = await api.post({
+        url: '/api/assessment/review/',
+        query: content,
+      })
+      status = resp.status
+    }
 
     if (status !== 200) {
       throw new Error('Failed to submit review')
@@ -304,10 +286,10 @@ const handleSubmitReview = async (content: NewReviewRequest) => {
 const userReviewed = computed(() => {
   return !!props.courseData.request_user_review_id
 })
-type InitContent = Omit<NewReviewRequest, 'semester'> & {
-  semester: string
-}
-const initContent = computed<InitContent | null>(() => {
+
+type InitContent = ReviewDataBase | null
+
+const initContent = computed<InitContent>(() => {
   const userReview = props.courseData.reviews.find(
     (review) => review.id === props.courseData.request_user_review_id
   )
@@ -321,10 +303,9 @@ const initContent = computed<InitContent | null>(() => {
       grade: Number(userReview.grade),
       homework: Number(userReview.homework),
       reward: Number(userReview.reward),
-      semester: userReview.semester,
+      semester: parseInt(userReview.semester),
     }
   }
-  // Return a default NewReviewRequest if no user review is found
   return null
   // TODO: What if we use pagination?
 })
@@ -336,15 +317,4 @@ const handleEditReviewButtonClicked = () => {
   }
   showEditor.value = true
 }
-
-// Add these new refs and computed properties
-const showRatingTrend = ref(false)
-const showRatingTrendModal = ref(false)
-
-const ratingTrendData = computed(() => {
-  return props.courseData.reviews.map((review) => ({
-    date: review.created_time,
-    rating: review.rating,
-  }))
-})
 </script>

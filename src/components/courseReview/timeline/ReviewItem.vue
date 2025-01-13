@@ -5,7 +5,7 @@
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-badge
-              :show="review.is_student"
+              :show="review.author.is_student"
               class="hov"
               value="V"
               :offset="[-5, 33]"
@@ -18,7 +18,9 @@
               />
             </n-badge>
           </template>
-          <p style="margin: 0" v-if="review.is_student">西大邮箱认证用户</p>
+          <p style="margin: 0" v-if="review.author.is_student">
+            西大邮箱认证用户
+          </p>
           <p style="margin: 0" v-else>普通用户</p>
         </n-tooltip>
         <div class="ml-3">
@@ -63,7 +65,7 @@
         </div>
       </div>
       <div class="text-gray-600 mb-4 relative">
-        <Viewer :value="review.content" expand-color="from-white" />
+        <Viewer @toggle="handleMoreButtonClick" :emitToggle="true" :expandButtonText="'查看更多 >'" :value="review.content" expand-color="from-white" />
       </div>
       <div class="flex items-center justify-between text-sm">
         <span class="text-gray-500"></span>
@@ -80,20 +82,20 @@ import dayjs from 'dayjs'
 import { useRouter } from 'vue-router'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
-import type { Review } from '@/types/courseReview'
+import type { ReviewTimeline } from '@/types/courseReview'
 
 dayjs.extend(relativeTime)
 
-const props = defineProps<{
-  review: Review
+const { review } = defineProps<{
+  review: ReviewTimeline
 }>()
 const router = useRouter()
 
 const handleMoreButtonClick = () => {
   router.push({
     name: 'courseReviewItem',
-    params: { id: props.review.course.id },
-    hash: `#review-${props.review.id}`,
+    params: { id: review.course.id },
+    hash: `#review-${review.id}`,
   })
 }
 </script>

@@ -1,34 +1,42 @@
 <template>
   <button
-    @click="$emit('toggle')"
-    class="expand-button bg-white text-blue-500 hover:text-blue-700 font-semibold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+    @click="handleExpandClick"
+    class="group flex items-center px-4 py-2 rounded-full bg-white text-blue-500 hover:text-blue-700 font-semibold shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
   >
-    {{ expanded ? '收起' : '展开' }}
-    <n-icon size="18" class="ml-1">
-      <chevron-down v-if="!expanded" />
-      <chevron-up v-if="expanded" />
-    </n-icon>
+    <template v-if="expandButtonText">
+      {{ expandButtonText }}
+    </template>
+    <template v-else>
+      <span>{{ expanded ? '收起' : '展开' }}</span>
+      <svg
+        class="w-5 h-5 ml-1 transition-transform duration-300 ease-in-out"
+        :class="{ 'rotate-180': expanded }"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </template>
   </button>
 </template>
 
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
-import { ChevronDown, ChevronUp } from '@vicons/ionicons5'
-
-defineProps<{
+const { expanded, expandButtonText } = defineProps<{
   expanded: boolean
+  expandButtonText?: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'toggle'): void
+  (e: 'buttonClick'): void
 }>()
-</script>
 
-<style scoped>
-.expand-button {
-  transition: all 0.3s ease;
+const handleExpandClick = () => {
+  emit('toggle')
 }
-.expand-button:hover {
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-</style>
+</script>

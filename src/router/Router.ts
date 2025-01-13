@@ -1,6 +1,6 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { checkLoginStatus } from '@/lib/logins'
+import { useUser } from '@/lib/useUser'
 
 const courseReviewRoutes = [
   {
@@ -53,15 +53,16 @@ const userRoutes = [
   //       pageTitle: '编辑用户资料',
   //     }
   // },
-  {
-    path: '/user/:id(\\d+)',
-    name: '用户资料',
-    component: () => import('@/views/user/Profile.vue'),
-    meta: {
-      requiresAuth: false,
-      pageTitle: '用户资料',
-    },
-  },
+  // {
+  //   path: "/user/:id(\\d+)",
+  //   name: "用户资料",
+  //   component: () => import("@/views/user/Profile.vue"),
+  //   meta:
+  //     {
+  //       requiresAuth: false,
+  //       pageTitle: '用户资料',
+  //     }
+  // },
   {
     path: '/user/forget-password',
     name: 'forgetPassword',
@@ -193,22 +194,31 @@ const routes = [
 const Router = createRouter({
   history: createWebHistory(),
   routes,
-})
+  scrollBehavior: (from, to, savedPosition) => {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  },
+});
 
-Router.beforeEach((to, from, next) => {
+const { isLoggedIn } = useUser(false)
+
+Router.beforeEach(async (to, from) => {
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
   const loginStatus = checkLoginStatus()
-  routes.forEach((route) => {
+  routes.forEach(route => {
     if (route.path === to.path) {
       if (route.meta?.requiresAuth && !loginStatus) {
-        next({ name: 'login' })
+        next({name: 'login'})
       }
     }
   })
   // Finally
-  next()
-})
+  next();
+});
 
 export default Router

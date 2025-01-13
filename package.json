@@ -29,7 +29,8 @@
     "lucide-vue-next": "^0.460.0",
     "vue": "^3.5.6",
     "vue-router": "^4.4.5",
-    "vue3-apexcharts": "^1.6.0"
+    "vue3-apexcharts": "^1.6.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@vicons/ionicons5": "^0.12.0",

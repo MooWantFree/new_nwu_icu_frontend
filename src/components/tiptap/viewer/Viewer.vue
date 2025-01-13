@@ -1,8 +1,9 @@
+<!-- TODO: Remove tiptap dependency for viewer -->
 <template>
   <div class="relative">
     <div :class="{ 'max-h-60 overflow-hidden': !expanded && needExpand }">
       <div ref="editorContainer">
-        <div class="max-w-none">
+        <div class="max-w-none viewer">
           <editor-content :editor="editor" />
         </div>
       </div>
@@ -14,14 +15,22 @@
         'absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t to-transparent flex items-end justify-center',
       ]"
     >
-      <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <ExpandButton
+        :expandButtonText="expandButtonText"
+        :expanded="expanded"
+        @toggle="handleToggleExpand"
+      />
       <div class="mt-3"></div>
     </div>
     <div
       v-if="expanded && isContentOverflowing && needExpand"
       class="flex justify-center w-full mt-4 mb-6"
     >
-      <ExpandButton :expanded="expanded" @toggle="toggleExpand" />
+      <ExpandButton
+        :expandButtonText="expandButtonText"
+        :expanded="expanded"
+        @toggle="handleToggleExpand"
+      />
       <div class="mt-3"></div>
     </div>
     <LinkConfirmModal
@@ -34,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -53,10 +62,18 @@ const {
   value = '',
   needExpand = true,
   expandColor = 'from-gray-100',
+  expandButtonText,
+  emitToggle,
 } = defineProps<{
   expandColor?: string
   value: string
   needExpand?: boolean
+  expandButtonText?: string
+  emitToggle?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'toggle'): void
 }>()
 
 const editor = useEditor({
@@ -97,14 +114,14 @@ const editor = useEditor({
     },
     handleClick: (view, pos, event) => {
       // FIXME: Jump before clicked
-      const link = (event.target as HTMLElement).closest('a')
-      if (link) {
-        event.preventDefault()
-        const href = link.getAttribute('href')
-        if (href) {
-          showLinkConfirm(href)
-        }
-      }
+      // const link = (event.target as HTMLElement).closest('a')
+      // if (link) {
+      //   event.preventDefault()
+      //   const href = link.getAttribute('href')
+      //   if (href) {
+      //     showLinkConfirm(href)
+      //   }
+      // }
     },
   },
   injectCSS: true,
@@ -113,10 +130,27 @@ const editor = useEditor({
 })
 
 const editorContainer = ref<HTMLElement | null>()
+let resizeObserver: ResizeObserver | null = null
+
 onMounted(async () => {
   await nextTick()
   if (editorContainer.value) {
     checkContentOverflow(editorContainer.value.scrollHeight)
+
+    // Create and start the ResizeObserver
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        checkContentOverflow(entry.target.scrollHeight)
+      }
+    })
+    resizeObserver.observe(editorContainer.value)
+  }
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
   }
 })
 
@@ -131,8 +165,12 @@ const checkContentOverflow = (contentHeight: number) => {
   }
 }
 
-const toggleExpand = () => {
-  expanded.value = !expanded.value
+const handleToggleExpand = () => {
+  if (emitToggle) {
+    emit('toggle')
+  } else {
+    expanded.value = !expanded.value
+  }
 }
 
 const showModal = ref(false)
@@ -172,4 +210,8 @@ const handleCancel = () => {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
+/* 
+.viewer > * > .ProseMirror-selectednode {
+  outline: none !important;
+} */
 </style>

@@ -170,6 +170,13 @@
         >
           <file-code-icon class="w-4 h-4" />
         </button>
+        <button
+          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          @click="showFileUpload = true"
+          title="上传文件"
+        >
+          <cloud-upload-icon class="w-4 h-4" />
+        </button>
       </div>
     </div>
     <ImageUpload
@@ -178,6 +185,11 @@
       @upload="handleImageUpload"
     />
     <InsertLink v-model="showLinkModal" @submit="handleLinkSubmit" />
+    <FileUpload
+      v-if="showFileUpload"
+      @close="showFileUpload = false"
+      @upload="handleFileUpload"
+    />
   </div>
 </template>
 
@@ -189,6 +201,7 @@ import InsertLink from './InsertLink.vue'
 import EmojiPicker from './EmojiPicker.vue'
 import InsertTable from './InsertTable.vue'
 import { onClickOutside } from '@vueuse/core'
+import FileUpload from './FileUpload.vue'
 import {
   ChevronDown as ChevronDownIcon,
   Bold as BoldIcon,
@@ -198,14 +211,13 @@ import {
   AlignLeft as AlignLeftIcon,
   List as ListIcon,
   ListOrdered as ListOrderedIcon,
-  CheckSquare as CheckSquareIcon,
   Link as LinkIcon,
   Image as ImageIcon,
   Smile as SmileIcon,
   LayoutGrid as LayoutGridIcon,
   Code as CodeIcon,
   FileCode as FileCodeIcon,
-  Plus as PlusIcon,
+  CloudUpload as CloudUploadIcon,
 } from 'lucide-vue-next'
 
 const { editor } = defineProps<{
@@ -217,6 +229,7 @@ const showFontDropdown = ref(false)
 const showAlignDropdown = ref(false)
 const showEmojiPicker = ref(false)
 const showTableInsert = ref(false)
+const showFileUpload = ref(false)
 
 const fontDropdownRef = ref<HTMLElement | null>(null)
 const alignDropdownRef = ref<HTMLElement | null>(null)
@@ -273,7 +286,10 @@ const handleAlignSelect = (key: string) => {
 }
 
 const handleImageUpload = (imageData: string) => {
-  editor.chain().focus().setImage({ src: imageData }).run()
+  const currentPos = editor.view.state.selection.anchor
+  editor.chain().focus().insertContent({ type: 'text', text: ' ' }).run()
+  editor.chain().focus(currentPos).setImage({ src: imageData }).run()
+  // editor.chain().focus('end').insertContent({ type: 'hardBreak' }).run()
   showImageUpload.value = false
 }
 
@@ -289,27 +305,45 @@ const insertTable = (rows: number, cols: number) => {
 }
 
 const showLinkModal = ref(false)
-const selectedText = ref('')
 
 const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
-  // FIXME: Not work properly
   if (text) {
     editor
       .chain()
       .focus()
-      .insertContent({
-        type: 'text',
-        text: text,
-        marks: [
-          {
-            type: 'link',
-            attrs: { href: url },
-          },
-        ],
-      })
+      .insertContent([
+        {type: 'text', text: ' '},
+        {
+          type: 'text',
+          text: text,
+          marks: [
+            {
+              type: 'link',
+              attrs: { href: url },
+            },
+          ],
+        },
+        { type: 'text', text: ' ' }, // Add space after the link
+      ])
       .run()
   } else {
     editor.chain().focus().setLink({ href: url }).run()
   }
+}
+
+const handleFileUpload = (filename: string, url: string) => {
+  editor
+    .chain()
+    .focus()
+    .insertContent([
+      {
+        type: 'text',
+        text: filename,
+        marks: [{ type: 'link', attrs: { href: url } }],
+      },
+      { type: 'text', text: ' ' }, // Add space after the link
+      { type: 'hardBreak' },
+    ])
+    .run()
 }
 </script>

@@ -12,7 +12,7 @@
         >
           {{ course.teacher_name }}
         </router-link>
-        - {{ course.rating ? course.rating.toFixed(1) : '(0) 暂无评分' }}
+        - {{ course.rating ? course.rating.toFixed(1) : '暂无评分' }}
       </li>
     </ul>
   </div>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { CourseData } from '@/types/courses'
+import { CourseData } from '@/types/courseReview'
 import { computed } from 'vue'
 
 const sortedSameNameCourses = computed(() => {

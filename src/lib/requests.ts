@@ -1,22 +1,32 @@
-import { ResponseBase, APIResponse } from '@/types/api'
+import { APIBase, MethodMap } from '@/types/api/base'
+import { RequestEndpoints } from '@/types/api'
 
-type RequestConfig = {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  url: string
-  data?: any
-  options?: RequestInit
+type APIResponse<T extends APIBase> = {
+  message: T['message'] extends string ? T['message'] : string
+  errors?: T['errors']
+  contents: T['response']
 }
 
-async function request<T extends ResponseBase>(
-  config: RequestConfig
-): Promise<{
+async function request<T extends APIBase>({
+  method,
+  url,
+  query,
+  options,
+  onUploadProgress,
+}: {
+  method: MethodMap
+  url: string
+  query?: T['query']
+  options?: RequestInit
+  // Callback function to track upload progress
+  onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+}): Promise<{
   status: number
   data: APIResponse<T>
-  content: T['success']
-  errors?: APIResponse<T>['errors']
+  content: T['response']
+  errors: T['errors']
 }> {
-  const { method, url, data, options: customOptions } = config
-  const fullUrl = `${url}`
+  let fullUrl = `${url}`
 
   const defaultOptions: RequestInit = {
     method,
@@ -29,19 +39,65 @@ async function request<T extends ResponseBase>(
 
   const mergedOptions: RequestInit = {
     ...defaultOptions,
-    ...customOptions,
+    ...options,
     headers: {
       ...defaultOptions.headers,
-      ...customOptions?.headers,
+      ...options?.headers,
     },
   }
 
-  if (data) {
-    if (data instanceof FormData || data instanceof File) {
-      delete mergedOptions.headers['Content-Type']
-      mergedOptions.body = data
+  if (query) {
+    if (method === MethodMap.GET) {
+      const searchParams = new URLSearchParams()
+      Object.entries(query).forEach(([key, value]) => {
+        searchParams.set(key, String(value))
+      })
+      fullUrl += `?${searchParams.toString()}`
+    }
+    else if (query instanceof FormData || query instanceof File) {
+      delete (mergedOptions.headers as Record<string, string>)['Content-Type']
+      
+      // Use XHR for upload progress tracking
+      if (onUploadProgress) {
+        // Temporarily use XHR, as fetch currently doesn't support upload progress
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open(method, fullUrl)
+          
+          // Copy headers from mergedOptions
+          Object.entries(mergedOptions.headers || {}).forEach(([key, value]) => {
+            xhr.setRequestHeader(key, value as string)
+          })
+          
+          // Track upload progress
+          xhr.upload.onprogress = event => onUploadProgress({
+            loaded: event.loaded,
+            total: event.lengthComputable ? event.total : undefined
+          })
+          
+          // Handle response
+          xhr.onload = async () => {
+            try {
+              const result = JSON.parse(xhr.responseText)
+              resolve({
+                status: xhr.status,
+                data: result as APIResponse<T>,
+                content: result.contents as T['response'],
+                errors: result.errors as APIResponse<T>['errors'],
+              })
+            } catch (error) {
+              reject(new Error('Failed to parse response'))
+            }
+          }
+          
+          xhr.onerror = () => reject(new Error('Network error'))
+          xhr.send(query)
+        })
+      }
+      
+      mergedOptions.body = query
     } else {
-      mergedOptions.body = JSON.stringify(data)
+      mergedOptions.body = JSON.stringify(query)
     }
   }
 
@@ -52,7 +108,7 @@ async function request<T extends ResponseBase>(
     return {
       status: response.status,
       data: result as APIResponse<T>,
-      content: result.contents as T['success'],
+      content: result.contents as T['response'],
       errors: result.errors as APIResponse<T>['errors'],
     }
   } catch (error) {
@@ -70,22 +126,110 @@ function getCsrfToken(): string {
   )
 }
 
+const fillURL = (url: string, params: any) => {
+  let filledURL = url
+  if (!params) return filledURL
+
+  Object.entries(params).forEach(([key, value]) => {
+    filledURL = filledURL.replace(`:${key}`, String(value))
+  })
+
+  return filledURL
+}
+
 export const api = {
-  get: <T extends ResponseBase>(url: string, options?: RequestInit) =>
-    request<T>({ method: 'GET', url, options }),
-  post: <T extends ResponseBase>(
-    url: string,
-    data: any,
+  get: <Path extends keyof RequestEndpoints[MethodMap.GET]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.GET][Path]
+      ? RequestEndpoints[MethodMap.GET][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.GET][Path]
+      ? RequestEndpoints[MethodMap.GET][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'POST', url, data, options }),
-  put: <T extends ResponseBase>(
-    url: string,
-    data: any,
+  }) => {
+    return request<RequestEndpoints[MethodMap.GET][Path]>({
+      method: MethodMap.GET,
+      url: fillURL(url, params),
+      query,
+      options,
+    })
+  },
+  post: <Path extends keyof RequestEndpoints[MethodMap.POST]>({
+    url,
+    params,
+    query,
+    options,
+    onUploadProgress,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.POST][Path]
+      ? RequestEndpoints[MethodMap.POST][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.POST][Path]
+      ? RequestEndpoints[MethodMap.POST][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'PUT', url, data, options }),
-  delete: <T extends ResponseBase>(
-    url: string,
-    data: any,
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+  }) => {
+    return request<RequestEndpoints[MethodMap.POST][Path]>({
+      method: MethodMap.POST,
+      url: fillURL(url, params),
+      query,
+      options,
+      onUploadProgress,
+    })
+  },
+  put: <Path extends keyof RequestEndpoints[MethodMap.PUT]>({
+    url,
+    params,
+    query,
+    options,
+    onUploadProgress,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.PUT][Path]
+      ? RequestEndpoints[MethodMap.PUT][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.PUT][Path]
+      ? RequestEndpoints[MethodMap.PUT][Path]['query']
+      : never
     options?: RequestInit
-  ) => request<T>({ method: 'DELETE', url, data, options }),
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+  }) => {
+    return request<RequestEndpoints[MethodMap.PUT][Path]>({
+      method: MethodMap.PUT,
+      url: fillURL(url, params),
+      query,
+      options,
+      onUploadProgress,
+    })
+  },
+  delete: <Path extends keyof RequestEndpoints[MethodMap.DELETE]>({
+    url,
+    params,
+    query,
+    options,
+  }: {
+    url: Path
+    params?: 'params' extends keyof RequestEndpoints[MethodMap.DELETE][Path]
+      ? RequestEndpoints[MethodMap.DELETE][Path]['params']
+      : never
+    query?: 'query' extends keyof RequestEndpoints[MethodMap.DELETE][Path]
+      ? RequestEndpoints[MethodMap.DELETE][Path]['query']
+      : never
+    options?: RequestInit
+  }) => {
+    return request<RequestEndpoints[MethodMap.DELETE][Path]>({
+      method: MethodMap.DELETE,
+      url: fillURL(url, params),
+      query,
+      options,
+    })
+  },
 }
