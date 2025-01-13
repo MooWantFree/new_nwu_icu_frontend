@@ -1,6 +1,14 @@
 <template>
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <h1 class="text-4xl font-bold mb-8 text-gray-900">课程列表</h1>
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-900">课程列表</h1>
+      <button
+        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center"
+      >
+        <PlusCircle class="w-5 h-5 mr-2" />
+        添加课程
+      </button>
+    </div>
 
     <div class="mb-8 flex flex-wrap items-center justify-end gap-4">
       <select
@@ -119,6 +127,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { z } from 'zod'
+import { PlusCircle } from 'lucide-vue-next'
 
 const message = useMessage()
 
