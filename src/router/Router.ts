@@ -1,6 +1,7 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useUser } from '@/lib/useUser'
+import { checkLoginStatus } from '@/lib/logins'
 
 const courseReviewRoutes = [
   {
@@ -213,12 +214,12 @@ Router.beforeEach(async (to, from) => {
   routes.forEach(route => {
     if (route.path === to.path) {
       if (route.meta?.requiresAuth && !loginStatus) {
-        next({name: 'login'})
+       return {name: 'login'}
       }
     }
   })
   // Finally
-  next();
+  return
 });
 
 export default Router
