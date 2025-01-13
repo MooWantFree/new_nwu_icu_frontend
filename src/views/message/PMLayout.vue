@@ -95,6 +95,7 @@ import {
   Send,
   Settings,
   Users,
+  AlertCircle,
 } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
 
