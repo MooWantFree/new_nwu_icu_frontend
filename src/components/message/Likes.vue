@@ -9,23 +9,34 @@
       </div>
       <template v-else-if="likes.length">
         <div
-          v-for="like in likes"
-          :key="like.id"
+          v-for="notice in likes"
+          :key="notice.id"
           class="p-4 border-b hover:bg-gray-50"
         >
           <div class="flex items-start space-x-3">
-            <n-avatar :src="like.user.avatar" />
             <div class="flex-1">
               <div class="flex items-center justify-between">
-                <span class="font-medium">{{ like.user.username }}</span>
+                <span class="font-medium">{{
+                  notice.raw_info.course.name
+                }}</span>
                 <n-time
-                  :time="new Date(like.timestamp)"
+                  :time="new Date(notice.datetime)"
                   format="yyyy-MM-dd HH:mm"
                 />
               </div>
-              <p class="mt-1 text-sm text-gray-600">赞了你的{{ like.type }}</p>
+              <p class="mt-1 text-sm text-gray-600">
+                {{ notice.raw_info.classify }}
+              </p>
               <div class="mt-2 p-3 bg-gray-50 rounded-lg">
-                <p class="text-sm text-gray-600">{{ like.content }}</p>
+                <p class="text-sm text-gray-600">
+                  {{ notice.raw_info.content }}
+                </p>
+              </div>
+              <div
+                class="mt-2 flex items-center space-x-4 text-sm text-gray-500"
+              >
+                <span>👍 {{ notice.like.like }}</span>
+                <span>👎 {{ notice.like.dislike }}</span>
               </div>
             </div>
           </div>
@@ -36,7 +47,7 @@
     <n-pagination
       v-if="totalCount > 0"
       v-model:page="currentPage"
-      :page-count="totalPages"
+      :page-count="maxPage"
       :on-update:page="handlePageChange"
       class="p-4"
     />
@@ -47,21 +58,32 @@
 import { ref, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import type { APILikeList } from '@/types/api/messages/like'
 
 const message = useMessage()
 const loading = ref(true)
-const likes = ref([])
+// Store the likes data from API
+const likes = ref<APILikeList['response']['results']>([])
+// Current page number
 const currentPage = ref(1)
+// Total count of notices
 const totalCount = ref(0)
-const totalPages = ref(0)
+// Maximum page number
+const maxPage = ref(0)
 
+// Fetch likes data from API
 const fetchLikes = async (page: number) => {
   try {
     loading.value = true
-    const response = await api.get(`/likes?page=${page}`)
-    likes.value = response.data.results
-    totalCount.value = response.data.count
-    totalPages.value = Math.ceil(totalCount.value / 10) // Assuming 10 items per page
+    // Call the API endpoint with the correct path
+    const response = await api.get({
+      url: '/api/message/like/',
+      query: { page },
+    })
+    // Update the data with API response
+    likes.value = response.content.results
+    totalCount.value = response.content.count
+    maxPage.value = response.content.max_page
   } catch (error) {
     message.error('获取赞列表失败')
   } finally {

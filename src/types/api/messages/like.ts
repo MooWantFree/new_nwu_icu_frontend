@@ -15,7 +15,7 @@ export type APILikeList = {
     page: number
     max_page: number
     count: number
-    notices: {
+    results: {
       id: number
       raw_info: {
         classify: string
