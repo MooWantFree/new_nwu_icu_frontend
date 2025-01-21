@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full bg-gray-100">
-    <div v-if="loading" class="flex items-center justify-center h-full">
+  <div class="min-h-[calc(100vh-2rem)] bg-gray-100">
+    <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-2rem)]">
       <div class="p-8 bg-white rounded-lg shadow-md">
         <div
           class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
@@ -8,40 +8,47 @@
         <p class="text-center text-gray-600">加载中...</p>
       </div>
     </div>
-    <div v-else class="flex h-full">
-      <div class="w-72 bg-white border-r flex flex-col">
-        <div class="p-4 border-b">
+    <div v-else class="flex min-h-[calc(100vh-2rem)]">
+      <div class="w-80 border border-gray bg-white border-r flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center">
           <h2 class="font-semibold text-lg text-gray-800">我的消息</h2>
+          <button
+            @click="fetchMessages(currentPage)"
+            class="text-blue-500 hover:text-blue-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
         </div>
         <div class="overflow-y-auto flex-grow">
           <div
             v-for="message in paginatedMessages"
             :key="message.id"
             @click="selectMessage(message)"
-            class="p-4 border-b cursor-pointer transition duration-150 ease-in-out"
-            :class="{
-              'bg-blue-50 hover:bg-blue-100':
-                selectedMessage?.id === message.id,
-              'hover:bg-gray-50': selectedMessage?.id !== message.id,
-            }"
+            class="p-4 border-b cursor-pointer transition duration-150 ease-in-out hover:bg-gray-50"
+            :class="{ 'bg-blue-50': selectedMessage?.id === message.id }"
           >
             <div class="flex items-start space-x-3">
               <img
-                :src="message.chatter.avatar"
-                :alt="message.last_message.content"
+                :src="`/api/download/${message.chatter.avatar}`"
+                :alt="message.chatter.nickname"
                 class="w-10 h-10 rounded-full object-cover"
               />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-1">
-                  <div class="flex items-center space-x-2">
-                    <span class="font-medium text-sm text-gray-900">{{
-                      message.chatter.nickname
-                    }}</span>
-                    <!-- <span v-if="message.isOfficial"
-                      class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                      官方
-                    </span> -->
-                  </div>
+                  <span class="font-medium text-sm text-gray-900">{{
+                    message.chatter.nickname
+                  }}</span>
                   <span
                     v-if="message.unread_count > 0"
                     class="bg-red-500 text-white text-xs px-2 py-1 rounded-full"
@@ -56,9 +63,7 @@
             </div>
           </div>
         </div>
-        <div
-          class="p-4 border-t flex justify-between items-center bg-gray-50 h-9"
-        >
+        <div class="p-4 border-t flex justify-between items-center bg-gray-50">
           <button
             @click="prevPage"
             :disabled="currentPage === 1"
@@ -78,16 +83,13 @@
           </button>
         </div>
       </div>
-      <ChatView
-        v-if="selectedMessage"
-        :message="selectedMessage"
-        class="flex-1"
-      />
-      <div v-else class="flex-1 flex items-center justify-center bg-gray-50">
-        <p v-if="messages?.length === 0" class="text-gray-500">
-          暂时还没有消息呢
-        </p>
-        <p v-else class="text-gray-500">请选择一个消息</p>
+      <div class="flex-1 bg-white">
+        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" />
+        <div v-else class="h-full flex items-center justify-center bg-gray-50">
+          <p class="text-gray-500">
+            {{ messages?.length === 0 ? '暂时还没有消息' : '请选择一个消息' }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -105,7 +107,9 @@ const loading = ref(true)
 const messages = ref<APIUserMessageList['response']['results'] | null>(null)
 const totalPages = ref(0)
 const currentPage = ref(1)
-const selectedMessage = ref<APIUserMessageList['response']['results'][0] | null>(null)
+const selectedMessage = ref<
+  APIUserMessageList['response']['results'][0] | null
+>(null)
 
 const paginatedMessages = computed(() => messages.value || [])
 
@@ -114,9 +118,7 @@ const fetchMessages = async (page: number = 1) => {
     loading.value = true
     const resp = await api.get({
       url: '/api/message/user/',
-      query: {
-        page,
-      },
+      query: { page },
     })
     if (resp.status.toString().startsWith('2')) {
       messages.value = resp.data.contents.results
@@ -131,23 +133,12 @@ const fetchMessages = async (page: number = 1) => {
   }
 }
 
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    fetchMessages(currentPage.value + 1)
-  }
-}
+const nextPage = () =>
+  currentPage.value < totalPages.value && fetchMessages(currentPage.value + 1)
+const prevPage = () =>
+  currentPage.value > 1 && fetchMessages(currentPage.value - 1)
+const selectMessage = (msg: APIUserMessageList['response']['results'][0]) =>
+  (selectedMessage.value = msg)
 
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    fetchMessages(currentPage.value - 1)
-  }
-}
-
-const selectMessage = (message: APIUserMessageList['response']['results'][0]) => {
-  selectedMessage.value = message
-}
-
-onMounted(async () => {
-  await fetchMessages()
-})
+onMounted(fetchMessages)
 </script>

@@ -46,31 +46,14 @@ export type APIUserMessageDetail = {
   params: z.infer<typeof APIUserMessageDetailParams>
   query: z.infer<typeof APIUserMessageDetailQuery>
   response: {
-    results: {
-      id: number
-      reply: {
-        id: number
-        content: string
-      }
-      created_by: {
-        id: number
-        nickname: string
-        avatar: string
-      }
-      course: {
-        id: number
-        name: string
-      }
-      raw_post: {
-        id: number
-        classify: string
-        content: string
-      }
-      datetime: string
-    }[]
     page: number
     max_page: number
     count: number
+    results: {
+      id: number
+      content: string
+      datetime: string
+    }[]
   }
   errors: ErrorFactory<'auth'>[]
 }
