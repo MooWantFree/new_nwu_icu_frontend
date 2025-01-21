@@ -50,6 +50,11 @@ export type APIUserMessageDetail = {
     max_page: number
     count: number
     results: {
+      chatter: {
+        avatar: string
+        id: number
+        nickname: string
+      }
       id: number
       content: string
       datetime: string

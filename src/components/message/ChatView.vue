@@ -3,12 +3,6 @@
     <div class="p-4 border-b flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="font-medium">{{ chatTarget.chatter.nickname }}</span>
-        <!-- <span
-          v-if="chatTarget.chatter.is_official"
-          class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600"
-        >
-          官方
-        </span> -->
       </div>
       <button class="p-1 rounded-full hover:bg-gray-100">
         <MoreVertical class="w-5 h-5 text-gray-500" />
@@ -16,23 +10,31 @@
     </div>
     <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)]" ref="messageContainer">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
-        <div class="flex justify-center items-center h-full">
-          <LoaderCircle class="w-8 h-8 text-blue-500 animate-spin" />
-        </div>
+        <LoaderCircle class="w-8 h-8 text-blue-500 animate-spin" />
       </div>
       <div v-else class="max-w-screen-md mx-auto space-y-4">
         <div v-if="messageList.length === 0" class="text-center text-sm text-gray-500">没有更多消息了～</div>
         <template v-else>
-          <div v-for="msg in messageList" :key="msg.id" class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-full overflow-hidden">
-              <img :src="`/api/download/${chatTarget.chatter.avatar}`" :alt="chatTarget.chatter.nickname" class="w-full h-full object-cover" />
+          <div v-for="msg in messageList" :key="msg.id" 
+               :class="[
+                 'flex items-start gap-3',
+                 { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
+               ]">
+            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <img :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
             </div>
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="font-medium text-sm">{{ chatTarget.chatter.nickname }}</span>
+            <div :class="[
+              'flex flex-col',
+              { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
+            ]">
+              <div class="flex items-center gap-2 mb-1" :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
+                <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
                 <span class="text-sm text-gray-500">{{ formatTime(msg.datetime) }}</span>
               </div>
-              <div class="bg-white rounded-lg p-3 shadow-sm">
+              <div :class="[
+                'rounded-lg p-3 shadow-sm max-w-xs',
+                msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-500 text-white'
+              ]">
                 <p class="text-sm">{{ msg.content }}</p>
               </div>
             </div>
@@ -118,7 +120,6 @@ const loadMessages = async (page: number) => {
 const sendMessage = async () => {
   if (!newMessage.value.trim()) return
   const dateNow = new Date().toISOString()
-  
 
   try {
     const resp = await api.post({
@@ -133,6 +134,11 @@ const sendMessage = async () => {
         id: -1,
         content: resp.data.contents.content,
         datetime: dateNow,
+        chatter: {
+          id: userInfo.value?.id!,
+          nickname: userInfo.value?.nickname!,
+          avatar: userInfo.value?.avatar!,
+        }
       })
       newMessage.value = ''
       await nextTick()
@@ -162,7 +168,7 @@ watch(
     messageList.value = []
     currentPage.value = 1
     loadMessages(1)
-  }, 200)
+  }, 0)
 )
 
 onMounted(() => {

@@ -1,6 +1,9 @@
 <template>
   <div class="min-h-[calc(100vh-2rem)] bg-gray-100">
-    <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-2rem)]">
+    <div
+      v-if="loading"
+      class="flex items-center justify-center min-h-[calc(100vh-2rem)]"
+    >
       <div class="p-8 bg-white rounded-lg shadow-md">
         <div
           class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
@@ -137,8 +140,11 @@ const nextPage = () =>
   currentPage.value < totalPages.value && fetchMessages(currentPage.value + 1)
 const prevPage = () =>
   currentPage.value > 1 && fetchMessages(currentPage.value - 1)
-const selectMessage = (msg: APIUserMessageList['response']['results'][0]) =>
-  (selectedMessage.value = msg)
+const selectMessage = (msg: APIUserMessageList['response']['results'][0]) => {
+  // Set the unread count to 0
+  msg.unread_count = 0
+  selectedMessage.value = msg
+}
 
 onMounted(fetchMessages)
 </script>
