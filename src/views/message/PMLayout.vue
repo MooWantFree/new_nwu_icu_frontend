@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100">
     <div v-if="isLoading" class="flex items-center justify-center h-screen">
-      <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <LoaderCircle class="w-16 h-16 text-blue-500 animate-spin" />
     </div>
     <div v-else-if="isLoggedIn" class="flex h-screen overflow-hidden">
       <aside :class="[
@@ -27,15 +27,9 @@
             <span v-if="isSidebarOpen" class="text-sm font-medium">{{ link.text }}</span>
           </router-link>
         </nav>
-        <div class="absolute bottom-0 w-full p-4">
-          <button class="w-full flex items-center justify-center py-2 px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">
-            <Settings class="w-5 h-5 mr-2" />
-            <span v-if="isSidebarOpen" class="text-sm font-medium">消息设置</span>
-          </button>
-        </div>
       </aside>
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-        <div class="container mx-auto px-6 py-8">
+        <div class="container mx-auto">
           <router-view />
         </div>
       </main>
@@ -58,17 +52,17 @@
 
 <script setup lang="ts">
 import {
+  LoaderCircle,
   Bell,
   ThumbsUp,
   MessageSquare,
-  Settings,
   Users,
   AlertCircle,
   ChevronLeft,
   ChevronRight
 } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const { isLoggedIn, isLoading } = useUser()
 const isSidebarOpen = ref(true)
@@ -83,4 +77,17 @@ const navLinks = [
   { to: '/message/likes', icon: ThumbsUp, text: '收到的赞' },
   { to: '/message/system', icon: Bell, text: '系统通知' },
 ]
+
+onMounted(() => {
+  if (window.innerWidth < 768) {
+    isSidebarOpen.value = false
+  }
+  // Disable scroll
+  document.body.style.overflow = 'hidden'
+})
+
+onUnmounted(() => {
+  // Enable scroll
+  document.body.style.overflow = 'auto'
+})
 </script>
