@@ -37,9 +37,9 @@ export const APIUserMessageDetailParams = z.object({
   id: z.number(),
 })
 export const APIUserMessageDetailQuery = z.object({
-  page: z.number(),
+  page: z.number().optional(),
   page_size: z.number().optional(),
-  order: z.enum(['before', 'after']).default('after'),
+  order: z.enum(['before', 'after']).default('after').optional(),
   last_message_id: z.number().optional(),
 })
 export type APIUserMessageDetail = {

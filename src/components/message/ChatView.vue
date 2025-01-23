@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick, useTemplateRef, computed } from 'vue'
+import { ref, watch, onMounted, nextTick, useTemplateRef, computed, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
@@ -99,6 +99,7 @@ const currentPage = ref(1)
 const isLoading = ref(true)
 const newMessage = ref('')
 const messageContainer = useTemplateRef('messageContainer')
+const fetchInterval = ref<number | null>(null)
 
 const loadInitMessages = async (page: number) => {
   try {
@@ -121,6 +122,25 @@ const loadInitMessages = async (page: number) => {
   }
 }
 
+const fetchNewMessages = async () => {
+  if (!lastMessage.value) return
+
+  try {
+    const resp = await api.get({
+      url: '/api/message/user/:id',
+      params: { id: props.chatTarget.chatter.id },
+      query: { order: 'after', last_message_id: lastMessage.value.id },
+    })
+    if (resp.status.toString().startsWith('2')) {
+      messageList.value.push(...resp.data.contents.results)
+    } else {
+      throw new Error('Failed to fetch new messages')
+    }
+  } catch (e) {
+    console.error('Error fetching new messages:', e)
+  }
+}
+
 const sendMessage = async () => {
   if (!newMessage.value.trim()) return
   const dateNow = new Date().toISOString()
@@ -134,7 +154,7 @@ const sendMessage = async () => {
       }
     })
     if (resp.status.toString().startsWith('2')) {
-      messageList.value.unshift({
+      messageList.value.push({
         id: -1,
         content: resp.data.contents.content,
         datetime: dateNow,
@@ -210,5 +230,12 @@ watch(
 
 onMounted(() => {
   loadInitMessages(1)
+  fetchInterval.value = setInterval(fetchNewMessages, 5000) as unknown as number
+})
+
+onUnmounted(() => {
+  if (fetchInterval.value) {
+    clearInterval(fetchInterval.value)
+  }
 })
 </script>
