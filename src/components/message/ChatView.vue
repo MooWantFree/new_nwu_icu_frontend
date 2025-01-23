@@ -10,21 +10,26 @@
     </div>
     <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
-        <LoaderCircle class="w-8 h-8 text-blue-500 animate-spin" />
+        <Loader2 class="w-8 h-8 text-blue-500 animate-spin" />
       </div>
       <div v-else class="max-w-screen-md mx-auto space-y-4">
-        <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">没有更多消息了～</div>
+        <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">
+          <InboxIcon class="w-12 h-12 mx-auto mb-2 text-gray-400" />
+          没有更多消息了～
+        </div>
         <template v-else>
           <template v-for="(msg, index) in finalMessageList" :key="msg.id">
-            <div v-if="showDateDivider(msg, index)" class="text-center text-sm text-gray-500 my-4">
+            <div v-if="showDateDivider(msg, index)" class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
+              <CalendarIcon class="w-4 h-4 mr-2" />
               {{ formatDate(msg.datetime) }}
             </div>
             <div :class="[
               'flex items-start gap-3',
               { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
             ]">
-              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
+              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                <img v-if="msg.chatter.avatar" :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
+                <User v-else class="w-6 h-6 text-gray-400" />
               </div>
               <div :class="[
                 'flex flex-col',
@@ -32,7 +37,10 @@
               ]">
                 <div class="flex items-center gap-2 mb-1" :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
                   <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
-                  <span class="text-sm text-gray-500">{{ formatTime(msg.datetime) }}</span>
+                  <span class="text-sm text-gray-500 flex items-center">
+                    <Clock class="w-3 h-3 mr-1" />
+                    {{ formatTime(msg.datetime) }}
+                  </span>
                 </div>
                 <div :class="[
                   'rounded-lg p-3 shadow-sm max-w-xs',
@@ -51,7 +59,7 @@
       <div class="max-w-2xl mx-auto">
         <div class="flex items-center gap-2">
           <button class="p-2 hover:bg-gray-100 rounded-lg">
-            <Image class="w-5 h-5 text-gray-500" />
+            <ImageIcon class="w-5 h-5 text-gray-500" />
           </button>
           <input
             type="text"
@@ -63,14 +71,15 @@
           <button
             @click="sendMessage"
             class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
-            :disabled="!newMessage.trim()"
+            :disabled="!newMessage.trim() || isSending"
           >
-            发送
+            <span v-if="!isSending">发送</span>
+            <Loader2 v-else class="w-4 h-4 animate-spin" />
             <Send class="w-4 h-4" />
           </button>
         </div>
         <div class="flex items-center justify-end mt-2 text-sm text-gray-500">
-          <span>{{ newMessage.length }}/500</span>
+          <span :class="{ 'text-red-500': newMessage.length >= 500 }">{{ newMessage.length }}/500</span>
         </div>
       </div>
     </div>
@@ -84,7 +93,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
-import { MoreVertical, Image, Send, LoaderCircle } from 'lucide-vue-next'
+import { MoreVertical, Image as ImageIcon, Send, Loader2, User, Clock, CalendarIcon, MessageSquare, InboxIcon } from 'lucide-vue-next'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
 const message = useMessage()
@@ -100,6 +109,7 @@ const isLoading = ref(true)
 const newMessage = ref('')
 const messageContainer = useTemplateRef('messageContainer')
 const fetchInterval = ref<number | null>(null)
+const isSending = ref(false)
 
 const loadInitMessages = async (page: number) => {
   try {
@@ -124,6 +134,8 @@ const loadInitMessages = async (page: number) => {
     console.error('Error fetching messages:', e)
   } finally {
     isLoading.value = false
+    await nextTick()
+    scrollToBottom()
   }
 }
 
@@ -147,7 +159,8 @@ const fetchNewMessages = async () => {
 }
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim()) return
+  if (!newMessage.value.trim() || isSending.value) return
+  isSending.value = true
   const dateNow = new Date().toISOString()
 
   try {
@@ -160,7 +173,7 @@ const sendMessage = async () => {
     })
     if (resp.status.toString().startsWith('2')) {
       messageList.value.push({
-        id: -1,
+        id: -1, // FIXME: Remember to change it 
         content: resp.data.contents.content,
         datetime: dateNow,
         chatter: {
@@ -178,6 +191,8 @@ const sendMessage = async () => {
   } catch (e) {
     message.error('发送消息失败，请重试')
     console.error('Error sending message:', e)
+  } finally {
+    isSending.value = false
   }
 }
 
