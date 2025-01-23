@@ -8,37 +8,41 @@
         <MoreVertical class="w-5 h-5 text-gray-500" />
       </button>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)]" ref="messageContainer">
+    <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
         <LoaderCircle class="w-8 h-8 text-blue-500 animate-spin" />
       </div>
       <div v-else class="max-w-screen-md mx-auto space-y-4">
-        <div v-if="messageList.length === 0" class="text-center text-sm text-gray-500">没有更多消息了～</div>
+        <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">没有更多消息了～</div>
         <template v-else>
-          <div v-for="msg in messageList" :key="msg.id" 
-               :class="[
-                 'flex items-start gap-3',
-                 { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
-               ]">
-            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-              <img :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
+          <template v-for="(msg, index) in finalMessageList" :key="msg.id">
+            <div v-if="showDateDivider(msg, index)" class="text-center text-sm text-gray-500 my-4">
+              {{ formatDate(msg.datetime) }}
             </div>
             <div :class="[
-              'flex flex-col',
-              { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
+              'flex items-start gap-3',
+              { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
             ]">
-              <div class="flex items-center gap-2 mb-1" :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
-                <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
-                <span class="text-sm text-gray-500">{{ formatTime(msg.datetime) }}</span>
+              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <img :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
               </div>
               <div :class="[
-                'rounded-lg p-3 shadow-sm max-w-xs',
-                msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-500 text-white'
+                'flex flex-col',
+                { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
               ]">
-                <p class="text-sm">{{ msg.content }}</p>
+                <div class="flex items-center gap-2 mb-1" :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
+                  <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
+                  <span class="text-sm text-gray-500">{{ formatTime(msg.datetime) }}</span>
+                </div>
+                <div :class="[
+                  'rounded-lg p-3 shadow-sm max-w-xs',
+                  msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-500 text-white'
+                ]">
+                  <p class="text-sm">{{ msg.content }}</p>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
         </template>
       </div>
     </div>
@@ -74,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick, useTemplateRef } from 'vue'
+import { ref, watch, onMounted, nextTick, useTemplateRef, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
@@ -82,7 +86,7 @@ import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/i
 import { useUser } from '@/lib/useUser'
 import { MoreVertical, Image, Send, LoaderCircle } from 'lucide-vue-next'
 
-// TODO: Using Cache(LRU) to cache messages
+// TODO: Using Cache(LRU) to cache messages while tab switching
 const message = useMessage()
 const { userInfo } = useUser()
 
@@ -158,9 +162,42 @@ const scrollToBottom = () => {
   }
 }
 
-const formatTime = (timestamp: string) => {
-  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const formatDate = (timestamp: string) => {
+  const date = new Date(timestamp)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  if (date.toDateString() === today.toDateString()) {
+    return '今天'
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return '昨天'
+  } else {
+    return date.toLocaleDateString()
+  }
 }
+
+const formatTime = (timestamp: string) => {
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const showDateDivider = (msg: APIUserMessageDetail['response']['results'][0], index: number) => {
+  if (index === 0) return true
+  const prevMsg = finalMessageList.value[index - 1]
+  const currDate = new Date(msg.datetime)
+  const prevDate = new Date(prevMsg.datetime)
+  return currDate.toDateString() !== prevDate.toDateString()
+}
+
+const finalMessageList = computed(() => {
+  // Sort by time
+  return messageList.value.slice().sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
+})
+
+const lastMessage = computed(() => {
+  return finalMessageList.value[finalMessageList.value.length - 1]
+})
 
 watch(
   () => props.chatTarget,
