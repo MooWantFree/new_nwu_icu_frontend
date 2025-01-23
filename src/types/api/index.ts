@@ -13,6 +13,7 @@ export type RequestEndpoints = {
     // - Profile
     '/api/assessment/my/review/': ProfilePage.APIUserOwnReview
     '/api/user/profile/': ProfilePage.APIUserProfile
+    '/api/user/profile/:id/': ProfilePage.APIUserProfileGivenId
     '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
     // - Reset Password
     '/api/user/mail-reset/:token/': ResetPassword.APIVerifyResetPasswordToken

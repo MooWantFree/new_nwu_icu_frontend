@@ -115,6 +115,11 @@ const loadInitMessages = async (page: number) => {
       throw new Error('Failed to fetch messages')
     }
   } catch (e) {
+    if (props.chatTarget.last_message.datetime === '') {
+      // Which means this is the new chat
+      messageList.value = []
+      return
+    }
     message.error('获取消息失败，请重试')
     console.error('Error fetching messages:', e)
   } finally {
