@@ -59,7 +59,7 @@
                   {{ formatDate(reply.datetime) }}
                 </p>
               </div>
-              <div class="relative">
+              <!-- <div class="relative">
                 <button
                   @click="toggleMenu(reply.id)"
                   class="text-gray-400 hover:text-gray-600"
@@ -102,7 +102,7 @@
                     </button>
                   </div>
                 </div>
-              </div>
+              </div> -->
             </div>
             <div class="mt-2">
               <p class="text-sm text-gray-600">{{ reply.reply.content }}</p>
