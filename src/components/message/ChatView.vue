@@ -96,13 +96,13 @@ const isLoading = ref(true)
 const newMessage = ref('')
 const messageContainer = useTemplateRef('messageContainer')
 
-const loadMessages = async (page: number) => {
+const loadInitMessages = async (page: number) => {
   try {
     isLoading.value = true
     const resp = await api.get({
       url: '/api/message/user/:id',
       params: { id: props.chatTarget.chatter.id },
-      query: { page },
+      query: { page, order: 'before' },
     })
     if (resp.status.toString().startsWith('2')) {
       messageList.value = resp.data.contents.results
@@ -125,7 +125,7 @@ const sendMessage = async () => {
     const resp = await api.post({
       url: '/api/message/',
       query: {
-        receiver: props.chatTarget.id,
+        receiver: props.chatTarget.chatter.id,
         content: newMessage.value,
       }
     })
@@ -167,11 +167,11 @@ watch(
   useDebounceFn(() => {
     messageList.value = []
     currentPage.value = 1
-    loadMessages(1)
+    loadInitMessages(1)
   }, 0)
 )
 
 onMounted(() => {
-  loadMessages(1)
+  loadInitMessages(1)
 })
 </script>

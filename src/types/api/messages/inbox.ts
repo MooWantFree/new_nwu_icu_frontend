@@ -16,7 +16,6 @@ export type APIUserMessageList = {
     max_page: number
     count: number
     results: {
-      id: number
       chatter: {
         id: number
         nickname: string
@@ -39,6 +38,9 @@ export const APIUserMessageDetailParams = z.object({
 })
 export const APIUserMessageDetailQuery = z.object({
   page: z.number(),
+  page_size: z.number().optional(),
+  order: z.enum(['before', 'after']).default('after'),
+  last_message_id: z.number().optional(),
 })
 export type APIUserMessageDetail = {
   endpoint: `/api/message/user/${string}/`

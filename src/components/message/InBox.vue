@@ -35,11 +35,15 @@
         </div>
         <div class="overflow-y-auto flex-grow">
           <div
-            v-for="message in paginatedMessages"
-            :key="message.id"
+            v-for="(message, index) in paginatedMessages"
+            :key="index"
             @click="selectMessage(message)"
-            class="p-4 border-b cursor-pointer transition duration-150 ease-in-out hover:bg-gray-50"
-            :class="{ 'bg-blue-50': selectedMessage?.id === message.id }"
+            class="p-4 border-b cursor-pointer transition duration-150 ease-in-out"
+            :class="{
+              'bg-blue-50': selectedMessage?.chatter.id === message.chatter.id,
+              'hover:bg-gray-100': selectedMessage?.chatter.id !== message.chatter.id,
+              'hover:bg-blue-100': selectedMessage?.chatter.id === message.chatter.id
+            }"
           >
             <div class="flex items-start space-x-3">
               <img
