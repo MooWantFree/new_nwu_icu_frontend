@@ -73,13 +73,11 @@ export const APISendMessageQuery = z.object({
   // TODO: Is there need to support file and reply to certain message?
 })
 export type APISendMessage = {
-  endpoint: '/api/message/send/'
+  endpoint: '/api/message/'
   method: MethodMap.POST
   query: z.infer<typeof APISendMessageQuery>
   response: {
-    receiver: number
-    content: string
-    classify: 'user' | 'system'
+    message: number // Message ID
   }
   errors: ErrorFactory<'auth'>[]
 }

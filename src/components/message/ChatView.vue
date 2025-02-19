@@ -173,8 +173,8 @@ const sendMessage = async () => {
     })
     if (resp.status.toString().startsWith('2')) {
       messageList.value.push({
-        id: -1, // FIXME: Remember to change it 
-        content: resp.data.contents.content,
+        id: resp.data.contents.message, // FIXME: Remember to change it 
+        content: newMessage.value,
         datetime: dateNow,
         chatter: {
           id: userInfo.value?.id!,
@@ -233,6 +233,10 @@ const showDateDivider = (msg: APIUserMessageDetail['response']['results'][0], in
 const finalMessageList = computed(() => {
   // Sort by time
   return messageList.value.slice().sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
+})
+
+const firstMessage = computed(() => {
+  return finalMessageList.value[0]
 })
 
 const lastMessage = computed(() => {
