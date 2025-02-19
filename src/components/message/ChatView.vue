@@ -197,9 +197,11 @@ const sendMessage = async () => {
 }
 
 const scrollToBottom = () => {
+  nextTick(() => {
   if (messageContainer.value) {
     messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-  }
+    }
+  })
 }
 
 const formatDate = (timestamp: string) => {
