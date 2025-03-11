@@ -1,39 +1,37 @@
-import {Component, h} from "vue";
-import {MenuOption, NIcon} from "naive-ui";
-import {RouterLink} from "vue-router";
+import { h, Component } from 'vue'
+import { NIcon, MenuOption } from 'naive-ui'
+import { RouterLink } from 'vue-router'
 
 const renderIcon = (icon: Component) => {
-  return () => h(NIcon, null, {default: () => h(icon)})
+  return () => h(NIcon, null, { default: () => h(icon) })
 }
 const renderMenuLabel = (option: MenuOption) => {
   if (option.path) {
     return h(
       RouterLink,
       {
-        to: option.path
+        to: option.path,
       },
-      {default: () => option.text??option.label}
+      { default: () => option.text ?? option.label }
     )
-  }
-  else if (option.onclick) {
+  } else if (option.onclick) {
     return h(
-      "div",
-      {onClick: option.onclick},
-      {default: () => option.text??option.label}
+      'div',
+      { onClick: option.onclick },
+      { default: () => option.text ?? option.label }
     )
-  }else {
+  } else {
     return h(
       'span',
       h(
         'span',
         {
-          style: (option.meta as { style?: any })?.style
+          style: (option.meta as { style?: any })?.style,
         },
-        {default: () => option.text ?? option.label}
+        { default: () => option.text ?? option.label }
       )
     )
   }
-
 }
 
-export {renderIcon, renderMenuLabel}
+export { renderIcon, renderMenuLabel }

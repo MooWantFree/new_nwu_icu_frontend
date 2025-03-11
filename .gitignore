@@ -28,3 +28,10 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# For private npm
+.npmrc
+.aider*
+
+# windsurf rules
+.windsurfrules

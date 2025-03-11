@@ -1,98 +1,97 @@
 <template>
-  <div class="review-list">
-    <template v-if="loading">
-      <template v-for="i in pageLength" :key="i">
-        <review-item-skeleton/>
-      </template>
-    </template>
-    <template v-else>
-      <review-items
-          v-for="(review, index) in reviews"
-          :review="review"
-          :key="index"
-      />
-    </template>
-  </div>
-  <div class="pagination" v-if="totalReviewCount !== 0">
-    <n-pagination
-        style="margin-left: auto;margin-right: auto;margin-top: 2rem"
-        :item-count="totalReviewCount"
-        :page-solt="7"
-        :page-size="5"
-        @update:page="onPageUpdate"
-        v-model:page="currentPage"
-    >
-      <template #prefix="{ itemCount, startIndex, endIndex }">
-        共{{ itemCount }}个点评
-      </template>
-    </n-pagination>
+  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">时间线</h1>
+      <div class="space-y-6">
+        <template v-if="loading">
+          <review-item-skeleton v-for="index in pageSize" :key="index" />
+        </template>
+        <template v-else>
+          <review-item
+            v-for="review in reviews"
+            :review="review"
+            :key="review.id"
+          />
+        </template>
+      </div>
+      <div
+        v-if="totalReviewCount > 0"
+        class="flex items-center justify-center mt-8"
+      >
+        <n-pagination
+          v-model:page="currentPage"
+          :item-count="totalReviewCount"
+          :page-slot="7"
+          :page-size="pageSize"
+          @update:page="onPageUpdate"
+          show-quick-jumper
+        >
+          <template #prefix="{ itemCount }">
+            共{{ itemCount }}个点评
+          </template>
+        </n-pagination>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from "vue";
-import ReviewItems from "@/components/courseReview/ReviewItems.vue";
-import {useMessage} from "naive-ui";
-import {LatestCourseReview} from "@/types/courseReview";
-import ReviewItemSkeleton from "@/components/courseReview/ReviewItemSkeleton.vue";
-import {useRoute, useRouter} from "vue-router";
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { api } from '@/lib/requests'
+import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
+import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSkeleton.vue'
+import { APILatestReviews } from '@/types/api/courseReview/review'
 
 const message = useMessage()
-
-const reviews = ref<LatestCourseReview["content"]["reviews"]>()
-const totalReviewCount = ref(0)
-const loading = ref(true)
-const pageLength = ref(5)
-
 const router = useRouter()
 const route = useRoute()
 
-const fetchReviews = async (currentPage: number, pageSize: number = 5, desc: number = 1) => {
-  const searchParams = new URLSearchParams({
-    currentPage: currentPage.toString(),
-    pageSize: pageSize.toString(),
-    desc: desc.toString(),
-  })
-  const reqUrl = "/api/review/latest/?" + searchParams.toString()
-  const resp = await fetch(reqUrl)
-  if (!resp.ok) {
-    // TODO:
+const reviews = ref<APILatestReviews['response']['results']>([])
+const totalReviewCount = ref(0)
+const loading = ref(true)
+const pageSize = 5
+const currentPage = ref(parseInt(route.query.page as string) || 1)
+
+const fetchReviews = async (page: number, desc: number = 1) => {
+  const searchParams = {
+    page: page,
+    pageSize: pageSize,
+    desc: desc,
   }
-  const data = await resp.json() as LatestCourseReview
-  reviews.value = data.content.reviews
-  totalReviewCount.value = data.content.total
+  try {
+    const { status, content, errors } = await api.get({
+      url: '/api/assessment/latest-review/',
+      query: searchParams
+    })
+
+    if (status !== 200) {
+      throw new Error(errors ? errors.map(err => err.err_msg).join(', ') : '获取点评失败，请重试')
+    }
+
+    reviews.value = content.results
+    totalReviewCount.value = content.count
+  } catch (error) {
+    console.error('Error fetching reviews:', error)
+    message.error(error instanceof Error ? error.message : '获取点评失败，请重试')
+  }
 }
+
+const onPageUpdate = async (page: number) => {
+  loading.value = true
+  await router.replace({ query: { ...route.query, page: page.toString() } })
+  await fetchReviews(page)
+  loading.value = false
+}
+
+watch(() => route.query.page, (newPage) => {
+  currentPage.value = parseInt(newPage as string) || 1
+})
 
 onMounted(async () => {
   loading.value = true
   await fetchReviews(currentPage.value)
   loading.value = false
 })
-
-// Page
-const queryPage = parseInt(route.query.page as string)
-const currentPage = ref(isNaN(queryPage) ? 1 : queryPage)
-const onPageUpdate = async (page: number) => {
-  loading.value = true
-  await Promise.all([
-    router.replace({path: route.path, query: {page: page}}),
-    fetchReviews(page)
-  ])
-  loading.value = false
-}
 </script>
-
-<style scoped>
-.review-list {
-  display: flex;
-  flex-direction: column;
-  width: 60%;
-  justify-content: center;
-  margin: 0 auto;
-  background-color: white;
-}
-
-.pagination {
-  display: flex;
-}
-</style>

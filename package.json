@@ -9,19 +9,43 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.7.2",
+    "@sentry/vue": "^8.48.0",
+    "@tailwindcss/typography": "^0.5.14",
+    "@tiptap-pro/extension-file-handler": "^2.11.3",
+    "@tiptap/extension-image": "^2.7.4",
+    "@tiptap/extension-link": "^2.10.3",
+    "@tiptap/extension-placeholder": "^2.7.1",
+    "@tiptap/extension-table": "^2.10.3",
+    "@tiptap/extension-table-cell": "^2.10.3",
+    "@tiptap/extension-table-header": "^2.10.3",
+    "@tiptap/extension-table-row": "^2.10.3",
+    "@tiptap/extension-text-align": "^2.10.3",
+    "@tiptap/extension-underline": "^2.7.2",
+    "@tiptap/pm": "^2.7.1",
+    "@tiptap/starter-kit": "^2.7.1",
+    "@tiptap/vue-3": "^2.7.1",
+    "@vueuse/core": "^10.11.1",
+    "apexcharts": "^3.54.0",
+    "cropperjs": "^1.6.2",
     "dayjs": "^1.11.11",
-    "vue": "^3.4.29",
-    "vue-router": "^4.0.13"
+    "lucide-vue-next": "^0.460.0",
+    "vue": "^3.5.6",
+    "vue-cropperjs": "^5.0.0",
+    "vue-gtag": "^2.0.1",
+    "vue-router": "^4.4.5",
+    "vue3-apexcharts": "^1.6.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/vue-cropperjs": "^4.1.6",
     "@vicons/ionicons5": "^0.12.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "autoprefixer": "^10.4.19",
-    "naive-ui": "^2.38.2",
+    "naive-ui": "^2.39.0",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.7",
     "vfonts": "^0.0.3",
-    "vite": "^5.3.1"
-  }
+    "vite": "^5.4.6"
+  },
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

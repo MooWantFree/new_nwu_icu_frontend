@@ -1,8 +1,9 @@
 const checkLoginStatus = (): boolean => {
-  const cookie = document.cookie
-  return cookie.includes('sessionid') // TODO
+  const cookies = document.cookie.split(';')
+  const sessionCookie = cookies.find((cookie) =>
+    cookie.trim().startsWith('sessionid=')
+  )
+  return !!sessionCookie && sessionCookie.split('=')[1].trim() !== ''
 }
 
-export {
-  checkLoginStatus
-}
+export { checkLoginStatus }
