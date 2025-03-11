@@ -28,21 +28,18 @@
           <div class="flex items-start space-x-6">
             <div class="flex-1">
               <div class="flex items-center justify-between mb-4">
-                <span class="text-xl font-semibold text-gray-800">{{
-                  notice.raw_info.course.name
-                }}</span>
+                <RouterLink :to="`/review/course/${notice.raw_info.course.id}`" class="hover:text-blue-800 text-xl font-semibold text-blue-500">
+                  {{ notice.raw_info.course.name }}
+                </RouterLink>
                 <Time
                   :time="new Date(notice.datetime)"
                   format="yyyy-MM-dd HH:mm"
                   class="text-sm text-gray-500"
                 />
               </div>
-              <p class="text-md text-gray-600 mb-4">
-                {{ notice.raw_info.classify }}
-              </p>
               <div class="p-6 bg-gray-50 rounded-lg mb-4">
                 <p class="text-md text-gray-700">
-                  {{ notice.raw_info.content }}
+                  {{ extractText(notice.raw_info.raw_post.content) }}
                 </p>
               </div>
               <div class="flex items-center space-x-6 text-md text-gray-500">
@@ -119,4 +116,10 @@ const refreshLikes = () => {
 onMounted(() => {
   fetchLikes(currentPage.value)
 })
+
+function extractText(html: string) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+}
 </script>

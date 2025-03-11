@@ -18,13 +18,15 @@ export type APILikeList = {
     results: {
       id: number
       raw_info: {
-        classify: string
-        id: number
         course: {
           id: number
           name: string
+        },
+        raw_post: {
+          classify: string,
+          content: string,
+          id: number,
         }
-        content: string
       }
       like: {
         like: number
