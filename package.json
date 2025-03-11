@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/vue": "^8.48.0",
     "@tailwindcss/typography": "^0.5.14",
     "@tiptap-pro/extension-file-handler": "^2.11.3",
     "@tiptap/extension-image": "^2.7.4",
@@ -25,14 +26,18 @@
     "@tiptap/vue-3": "^2.7.1",
     "@vueuse/core": "^10.11.1",
     "apexcharts": "^3.54.0",
+    "cropperjs": "^1.6.2",
     "dayjs": "^1.11.11",
     "lucide-vue-next": "^0.460.0",
     "vue": "^3.5.6",
+    "vue-cropperjs": "^5.0.0",
+    "vue-gtag": "^2.0.1",
     "vue-router": "^4.4.5",
     "vue3-apexcharts": "^1.6.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/vue-cropperjs": "^4.1.6",
     "@vicons/ionicons5": "^0.12.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "autoprefixer": "^10.4.19",

@@ -1,6 +1,6 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { useUser } from '@/lib/useUser'
+import { checkLoginStatus } from '@/lib/logins'
 
 const courseReviewRoutes = [
   {
@@ -32,6 +32,7 @@ const courseReviewRoutes = [
       pageTitle: '课程评价|课程列表',
     },
   },
+
 ] satisfies RouteRecordRaw[]
 
 const userRoutes = [
@@ -43,26 +44,42 @@ const userRoutes = [
       pageTitle: '登录/注册',
     },
   },
-  // {
-  //   path: "/user/edit",
-  //   name: "编辑用户资料",
-  //   component: () => import("@/views/user/Edit.vue"),
-  //   meta:
-  //     {
-  //       requiresAuth: true,
-  //       pageTitle: '编辑用户资料',
-  //     }
-  // },
-  // {
-  //   path: "/user/:id(\\d+)",
-  //   name: "用户资料",
-  //   component: () => import("@/views/user/Profile.vue"),
-  //   meta:
-  //     {
-  //       requiresAuth: false,
-  //       pageTitle: '用户资料',
-  //     }
-  // },
+  {
+    path: '/user/:id',
+    name: 'userProfile',
+    component: () => import('@/views/user/Profile.vue'),
+    props: true,
+    meta: {
+      pageTitle: '用户资料',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/user/settings',
+    name: 'settings',
+    meta: {
+      pageTitle: '设置',
+      requiresAuth: true,
+    },
+    component: () => import('@/views/user/Settings.vue'),
+    children: [
+      {
+        name: 'profileSettings',
+        path: 'profile',
+        component: () => import('@/components/settings/ProfileSettings.vue'),
+      },
+      {
+        name: 'emailSettings',
+        path: 'email',
+        component: () => import('@/components/settings/EmailSettings.vue'),
+      },
+      {
+        name: 'passwordSettings',
+        path: 'password',
+        component: () => import('@/components/settings/PasswordSettings.vue'),
+      },
+    ]
+  },
   {
     path: '/user/forget-password',
     name: 'forgetPassword',
@@ -193,7 +210,8 @@ const Router = createRouter({
       return { top: 0 }
     }
   },
-});
+
+})
 
 const { isLoggedIn } = useUser(false)
 
@@ -201,16 +219,10 @@ Router.beforeEach(async (to, from) => {
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
-  const loginStatus = isLoggedIn.value
-  routes.forEach(route => {
-    if (route.path === to.path) {
-      if (route.meta?.requiresAuth && !loginStatus) {
-       return {name: 'login'}
-      }
-    }
-  })
-  // Finally
+  if (to.meta?.requiresAuth && !checkLoginStatus()) {
+    return { name: '403', params: { message: '您尚未登录' } }
+  }
   return
-});
+})
 
 export default Router

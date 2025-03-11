@@ -4,7 +4,7 @@
       <div class="relative">
         <input
           type="text"
-          placeholder="搜索课程、评价或用户..."
+          placeholder="搜索课程、评价、教师及资源..."
           class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
           v-model="searchQuery"
           @input="()=> debouncedSearch()"
@@ -169,7 +169,10 @@ const handleSearch = async (loadMore = false) => {
   }
 }
 
-const debouncedSearch = useDebounceFn(handleSearch, 500)
+const debouncedSearch = () => {
+  searchLoading.value = true
+  useDebounceFn(handleSearch, 500)()
+}
 
 const handleTabClick = (tab: SearchType) => {
   if (activeTab.value === tab) return

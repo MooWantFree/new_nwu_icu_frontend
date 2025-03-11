@@ -96,7 +96,10 @@ const previewUrl = ref('')
 const isDragging = ref(false)
 const isCompressing = ref(false)
 
-const emit = defineEmits(['close', 'upload'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'upload', url: string): void
+}>()
 
 const closeModal = () => emit('close')
 

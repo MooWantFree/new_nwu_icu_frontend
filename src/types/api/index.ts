@@ -11,7 +11,8 @@ export type RequestEndpoints = {
   [MethodMap.GET]: {
     // User
     // - Profile
-    '/api/assessment/my/review/': ProfilePage.APIUserOwnReview
+    '/api/assessment/user/activities/review/:id/': ProfilePage.APIUserActivitiesReview
+    '/api/assessment/user/activities/reply/:id/': ProfilePage.APIUserActivitiesReply
     '/api/user/profile/': ProfilePage.APIUserProfile
     '/api/user/profile/:id/': ProfilePage.APIUserProfileGivenId
     '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
@@ -22,7 +23,6 @@ export type RequestEndpoints = {
 
     // CourseReview
     // - Profile
-    // '/api/assessment/my/review/': Profile.APIMyReview // Duplicated, actually same
     '/api/assessment/my/reply/': Profile.APIMyReply
     // - Review
     '/api/assessment/latest-review/': Review.APILatestReviews

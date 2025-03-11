@@ -30,7 +30,7 @@
           />
         </n-form-item-row>
         <div class="flex justify-between items-center mt-2">
-          <n-checkbox v-model:checked="rememberMe">记住我</n-checkbox>
+          <div></div>
           <n-button text type="primary" @click="goToForgotPassword">
             忘记密码？
           </n-button>
