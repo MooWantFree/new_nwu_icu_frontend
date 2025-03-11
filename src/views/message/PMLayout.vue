@@ -75,7 +75,7 @@ const navLinks = [
   { to: '/message/inbox', icon: MessageSquare, text: '我的消息' },
   { to: '/message/replies', icon: Users, text: '回复我的' },
   { to: '/message/likes', icon: ThumbsUp, text: '收到的赞' },
-  { to: '/message/system', icon: Bell, text: '系统通知' },
+  // { to: '/message/system', icon: Bell, text: '系统通知' },
 ]
 
 onMounted(() => {

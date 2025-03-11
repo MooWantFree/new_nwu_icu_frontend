@@ -8,7 +8,7 @@
         <MoreVertical class="w-5 h-5 text-gray-500" />
       </button>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer">
+    <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer" @scroll="handleScroll">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
         <Loader2 class="w-8 h-8 text-blue-500 animate-spin" />
       </div>
@@ -18,8 +18,13 @@
           没有更多消息了～
         </div>
         <template v-else>
+          <div v-if="isLoadingMore" class="text-center py-2">
+            <Loader2 class="w-5 h-5 text-blue-500 animate-spin mx-auto" />
+            <span class="text-xs text-gray-500">加载更多消息...</span>
+          </div>
           <template v-for="(msg, index) in finalMessageList" :key="msg.id">
-            <div v-if="showDateDivider(msg, index)" class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
+            <div v-if="showDateDivider(msg, index)"
+              class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
               <CalendarIcon class="w-4 h-4 mr-2" />
               {{ formatDate(msg.datetime) }}
             </div>
@@ -27,15 +32,18 @@
               'flex items-start gap-3',
               { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
             ]">
-              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                <img v-if="msg.chatter.avatar" :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname" class="w-full h-full object-cover" />
+              <div
+                class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                <img v-if="msg.chatter.avatar" :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname"
+                  class="w-full h-full object-cover" />
                 <User v-else class="w-6 h-6 text-gray-400" />
               </div>
               <div :class="[
                 'flex flex-col',
                 { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
               ]">
-                <div class="flex items-center gap-2 mb-1" :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
+                <div class="flex items-center gap-2 mb-1"
+                  :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
                   <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
                   <span class="text-sm text-gray-500 flex items-center">
                     <Clock class="w-3 h-3 mr-1" />
@@ -61,18 +69,13 @@
           <button class="p-2 hover:bg-gray-100 rounded-lg">
             <ImageIcon class="w-5 h-5 text-gray-500" />
           </button>
-          <input
-            type="text"
-            placeholder="发送消息..."
+          <input type="text" placeholder="发送消息..."
+            :disabled="isSending"
             class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            v-model="newMessage"
-            @keyup.enter="sendMessage"
-          />
-          <button
-            @click="sendMessage"
+            v-model="newMessage" @keyup.enter="sendMessage" />
+          <button @click="sendMessage"
             class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
-            :disabled="!newMessage.trim() || isSending"
-          >
+            :disabled="!newMessage.trim() || isSending">
             <span v-if="!isSending">发送</span>
             <Loader2 v-else class="w-4 h-4 animate-spin" />
             <Send class="w-4 h-4" />
@@ -110,6 +113,8 @@ const newMessage = ref('')
 const messageContainer = useTemplateRef('messageContainer')
 const fetchInterval = ref<number | null>(null)
 const isSending = ref(false)
+const isLoadingMore = ref(false)
+const hasMoreMessages = ref(true)
 
 const loadInitMessages = async (page: number) => {
   try {
@@ -121,6 +126,7 @@ const loadInitMessages = async (page: number) => {
     })
     if (resp.status.toString().startsWith('2')) {
       messageList.value = resp.data.contents.results
+      hasMoreMessages.value = resp.data.contents.results.length > 0
     } else {
       throw new Error('Failed to fetch messages')
     }
@@ -139,6 +145,50 @@ const loadInitMessages = async (page: number) => {
   }
 }
 
+const fetchOldMessage = async () => {
+  if (!firstMessage.value || isLoadingMore.value || !hasMoreMessages.value) return
+  
+  try {
+    isLoadingMore.value = true
+    const resp = await api.get({
+      url: '/api/message/user/:id',
+      params: { id: props.chatTarget.chatter.id },
+      query: { order: 'before', last_message_id: firstMessage.value.id },
+    })
+    if (resp.status.toString().startsWith('2')) {
+      const oldScrollHeight = messageContainer.value?.scrollHeight || 0
+      const newMessages = resp.data.contents.results
+      
+      if (newMessages.length > 0) {
+        messageList.value.unshift(...newMessages)
+        
+        await nextTick()
+        if (messageContainer.value) {
+          const newScrollHeight = messageContainer.value.scrollHeight
+          messageContainer.value.scrollTop = newScrollHeight - oldScrollHeight
+        }
+      } else {
+        hasMoreMessages.value = false
+      }
+    } else {
+      throw new Error('Failed to fetch old messages')
+    }
+  } catch (e) {
+    console.error('Error fetching old messages:', e)
+  } finally {
+    isLoadingMore.value = false
+  }
+}
+
+const handleScroll = useDebounceFn(() => {
+  if (!messageContainer.value) return
+  
+  // If scrolled to top (with a threshold), load older messages
+  if (messageContainer.value.scrollTop < 100 && hasMoreMessages.value) {
+    fetchOldMessage()
+  }
+}, 200)
+
 const fetchNewMessages = async () => {
   if (!lastMessage.value) return
 
@@ -149,13 +199,25 @@ const fetchNewMessages = async () => {
       query: { order: 'after', last_message_id: lastMessage.value.id },
     })
     if (resp.status.toString().startsWith('2')) {
+      const wasAtBottom = isScrolledToBottom()
       messageList.value.push(...resp.data.contents.results)
+      
+      if (wasAtBottom) {
+        await nextTick()
+        scrollToBottom()
+      }
     } else {
       throw new Error('Failed to fetch new messages')
     }
   } catch (e) {
     console.error('Error fetching new messages:', e)
   }
+}
+
+const isScrolledToBottom = () => {
+  if (!messageContainer.value) return true
+  const { scrollTop, scrollHeight, clientHeight } = messageContainer.value
+  return scrollHeight - scrollTop - clientHeight < 50
 }
 
 const sendMessage = async () => {
@@ -198,8 +260,8 @@ const sendMessage = async () => {
 
 const scrollToBottom = () => {
   nextTick(() => {
-  if (messageContainer.value) {
-    messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
   })
 }
@@ -250,6 +312,7 @@ watch(
   useDebounceFn(() => {
     messageList.value = []
     currentPage.value = 1
+    hasMoreMessages.value = true
     loadInitMessages(1)
   }, 0)
 )

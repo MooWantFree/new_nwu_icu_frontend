@@ -76,6 +76,7 @@ import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
 
+// TODO: Change this to inf scroll
 const route = useRoute()
 const message = useMessage()
 const loading = ref(true)
