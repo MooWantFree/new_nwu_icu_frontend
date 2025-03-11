@@ -213,8 +213,6 @@ const Router = createRouter({
 
 })
 
-const { isLoggedIn } = useUser(false)
-
 Router.beforeEach(async (to, from) => {
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))

@@ -21,7 +21,7 @@
           <div class="bg-gray-100 p-3 rounded mb-2">
             <p class="text-gray-700">
               <!-- 回复了 {{ reply.parent.created_by.name }}: -->
-              <ReviewPlainText :content="reply.content" />
+              <ReviewPlainText :content="reply.review.content" />
             </p>
           </div>
           <p class="text-gray-700">{{ reply.reply.content }}</p>

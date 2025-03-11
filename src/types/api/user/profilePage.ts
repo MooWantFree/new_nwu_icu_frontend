@@ -71,7 +71,15 @@ export type APIUserActivitiesReview = {
 // 获取已发表回复
 type APIUserActivityReplyBase = {
   id: number
-  content: string
+  review: {
+    author: {
+      nickname: string
+      id: number
+      avatar_uuid: string
+      is_student: boolean
+    }
+    content: string
+  }
   datetime: string
   course: {
     name: string
