@@ -144,6 +144,26 @@ export type APIUserProfile = {
 }
 
 // GET
+// 获取指定ID的用户信息
+const APIUserProfileGivenIdParams = z.object({
+  id: z.number(),
+})
+export type APIUserProfileGivenId = {
+  endpoint: '/api/user/profile/:id/'
+  method: MethodMap.GET
+  params: z.infer<typeof APIUserProfileGivenIdParams>
+  response: {
+    id: number
+    bio: string | null
+    nickname: string
+    avatar: string
+    is_me: boolean
+    verified: boolean
+  }
+  errors: ErrorFactory<ErrorNotLogin>[]
+}
+
+// GET
 // 获取个人信息
 export type APIUserProfileFromId = {
   endpoint: `/api/user/profile/${number}/`

@@ -286,7 +286,10 @@ const handleAlignSelect = (key: string) => {
 }
 
 const handleImageUpload = (imageData: string) => {
-  editor.chain().focus().setImage({ src: imageData }).run()
+  const currentPos = editor.view.state.selection.anchor
+  editor.chain().focus().insertContent({ type: 'text', text: ' ' }).run()
+  editor.chain().focus(currentPos).setImage({ src: imageData }).run()
+  // editor.chain().focus('end').insertContent({ type: 'hardBreak' }).run()
   showImageUpload.value = false
 }
 
@@ -304,21 +307,24 @@ const insertTable = (rows: number, cols: number) => {
 const showLinkModal = ref(false)
 
 const handleLinkSubmit = ({ url, text }: { url: string; text: string }) => {
-  // FIXME: Not work properly
   if (text) {
     editor
       .chain()
       .focus()
-      .insertContent({
-        type: 'text',
-        text: text,
-        marks: [
-          {
-            type: 'link',
-            attrs: { href: url },
-          },
-        ],
-      })
+      .insertContent([
+        {type: 'text', text: ' '},
+        {
+          type: 'text',
+          text: text,
+          marks: [
+            {
+              type: 'link',
+              attrs: { href: url },
+            },
+          ],
+        },
+        { type: 'text', text: ' ' }, // Add space after the link
+      ])
       .run()
   } else {
     editor.chain().focus().setLink({ href: url }).run()
@@ -336,6 +342,7 @@ const handleFileUpload = (filename: string, url: string) => {
         marks: [{ type: 'link', attrs: { href: url } }],
       },
       { type: 'text', text: ' ' }, // Add space after the link
+      { type: 'hardBreak' },
     ])
     .run()
 }

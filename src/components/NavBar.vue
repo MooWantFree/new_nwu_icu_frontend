@@ -30,15 +30,29 @@
           class="nav-bar-pc-right"
           style="margin-left: auto; display: flex; align-items: center"
         >
-          <n-button
-            text
-            style="margin-right: 10px"
-            @click="showSearchModal = true"
-          >
-            <template #icon>
-              <n-icon><Search /></n-icon>
-            </template>
-          </n-button>
+          <div class="flex items-center space-x-2 mr-3">
+            <n-button
+              text
+              class="hover:bg-gray-100 rounded-full p-2 transition-colors"
+              @click="showSearchModal = true"
+              title="搜索"
+            >
+              <template #icon>
+                <n-icon size="18"><Search /></n-icon>
+              </template>
+            </n-button>
+            <RouterLink to="/message/inbox" class="">
+              <n-button
+              text
+              class="hover:bg-gray-100 rounded-full p-2 transition-colors"
+              title="通知"
+            >
+              <template #icon>
+                <n-icon size="18"><Notifications /></n-icon>
+              </template>
+            </n-button>
+            </RouterLink>
+          </div>
           <template v-if="!isLoggedIn">
             <n-button
               :disabled="isLoading"
@@ -175,6 +189,7 @@ import {
   Pencil,
   Person,
   Search,
+  Notifications,
 } from '@vicons/ionicons5'
 import { renderIcon, renderMenuLabel } from '@/lib/h'
 import { useUser } from '@/lib/useUser'

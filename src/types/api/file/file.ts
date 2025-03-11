@@ -6,7 +6,7 @@ import { MethodMap } from '../base'
 export type APIUploadFile = {
   endpoint: '/api/upload/'
   method: MethodMap.POST
-  query: FormData // TODO: How to define FormData
+  query: FormData
   response: {
     uuid: string
   }

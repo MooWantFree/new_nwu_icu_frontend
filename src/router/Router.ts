@@ -32,7 +32,8 @@ const courseReviewRoutes = [
       pageTitle: '课程评价|课程列表',
     },
   },
-] as RouteRecordRaw[]
+
+] satisfies RouteRecordRaw[]
 
 const userRoutes = [
   {
@@ -95,7 +96,52 @@ const userRoutes = [
       pageTitle: '用户激活',
     },
   },
-] as RouteRecordRaw[]
+] satisfies RouteRecordRaw[]
+
+const messageRoutes = [
+  {
+    path: '/message',
+    name: 'message',
+    component: () => import('@/views/message/PMLayout.vue'),
+    meta: {
+      pageTitle: '消息',
+    },
+    children: [
+      {
+        path: 'inbox',
+        name: 'inbox',
+        component: () => import('@/components/message/InBox.vue'),
+        meta: {
+          pageTitle: '我的消息',
+        },
+      },
+      {
+        path: 'replies',
+        name: 'replies',
+        component: () => import('@/components/message/Replies.vue'),
+        meta: {
+          pageTitle: '回复我的',
+        },
+      },
+      {
+        path: 'likes',
+        name: 'likes',
+        component: () => import('@/components/message/Likes.vue'),
+        meta: {
+          pageTitle: '收到的赞',
+        },
+      },
+      {
+        path: 'system',
+        name: 'system',
+        component: () => import('@/components/message/SystemNotifications.vue'),
+        meta: {
+          pageTitle: '系统通知',
+        },
+      },
+    ],
+  },
+] satisfies RouteRecordRaw[]
 
 const systemInfoRoutes = [
   {
@@ -122,12 +168,13 @@ const systemInfoRoutes = [
       pageTitle: '500 - 服务器错误',
     },
   },
-] as RouteRecordRaw[]
+] satisfies RouteRecordRaw[]
 
 const routes = [
   ...courseReviewRoutes,
   ...userRoutes,
   ...systemInfoRoutes,
+  ...messageRoutes,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
@@ -163,7 +210,10 @@ const Router = createRouter({
       return { top: 0 }
     }
   },
+
 })
+
+const { isLoggedIn } = useUser(false)
 
 Router.beforeEach(async (to, from) => {
   // Change title

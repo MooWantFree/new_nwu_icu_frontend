@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'select', emoji: string): void
 }>()
 
