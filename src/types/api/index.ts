@@ -1,5 +1,6 @@
 import type { ProfilePage, ResetPassword, User } from './user'
 import type { Profile, Review, Reply, Course, Teacher } from './courseReview'
+import type { Messages, Inbox, Like } from './messages'
 import type { Search } from './search'
 import type { Captcha } from './captcha'
 import type { Text } from './text'
@@ -12,6 +13,7 @@ export type RequestEndpoints = {
     // - Profile
     '/api/assessment/my/review/': ProfilePage.APIUserOwnReview
     '/api/user/profile/': ProfilePage.APIUserProfile
+    '/api/user/profile/:id/': ProfilePage.APIUserProfileGivenId
     '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
     // - Reset Password
     '/api/user/mail-reset/:token/': ResetPassword.APIVerifyResetPasswordToken
@@ -42,6 +44,13 @@ export type RequestEndpoints = {
 
     // File
     '/api/download/:uuid/': FileAPI.APIFileDownload
+
+    // Messages
+    '/api/message/user/': Inbox.APIUserMessageList
+    '/api/message/user/:id': Inbox.APIUserMessageDetail
+    '/api/message/like/': Like.APILikeList
+    '/api/message/reply/': Messages.APINotificationList
+    '/api/message/unread/': Messages.APIUnreadMessageCount
   }
   [MethodMap.POST]: {
     // User
@@ -79,6 +88,9 @@ export type RequestEndpoints = {
 
     // File
     '/api/upload/': FileAPI.APIUploadFile
+
+    // Message
+    '/api/message/': Inbox.APISendMessage
   }
   [MethodMap.DELETE]: {
     // CourseReview
