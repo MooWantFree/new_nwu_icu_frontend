@@ -14,6 +14,7 @@
       <select v-model="schoolFilter"
         class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
         <option value="" selected>全部学院</option>
+        <option v-if="schoolOptions.length === 0" value="" disabled>学院列表加载中...</option>
         <option v-for="option in schoolOptions" :key="option.label" :value="option.label">
           {{ option.label }}
         </option>
