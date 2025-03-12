@@ -21,7 +21,7 @@
     
     <div class="flex justify-between items-center">
       <div class="flex items-center">
-        <input
+        <!-- <input
           id="remember-me"
           v-model="rememberMe"
           type="checkbox"
@@ -29,7 +29,7 @@
         />
         <label for="remember-me" class="ml-2 block text-sm text-gray-700">
           记住我
-        </label>
+        </label> -->
       </div>
       
       <button 
