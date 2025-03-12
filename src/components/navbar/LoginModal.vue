@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import LoginForm from '@/components/user/LoginForm.vue'
+import LoginForm from '@/components/user/loginNRegister/LoginForm.vue'
 import { APILogin } from '@/types/api/user/user'
 
 type UserProfile = APILogin['response']

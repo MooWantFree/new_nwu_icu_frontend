@@ -26,7 +26,7 @@ export type APIRegister = {
   method: MethodMap.POST
   query: z.infer<typeof APIRegisterQuery>
   response: {}
-  errors: ErrorFactory<'username' | 'email' | 'captcha'>[]
+  errors: ErrorFactory<'username' | 'email' | 'password' | 'captcha'>[]
 }
 
 // POST
