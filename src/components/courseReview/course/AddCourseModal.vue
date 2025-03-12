@@ -118,10 +118,14 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{
   modelValue: boolean
   initValue?: {
-    courseName?: string
-    courseSchool?: number
-    courseClassification?: CourseClassification
-    teacherId?: number
+    name?: string
+    school?: number
+    classification?: CourseClassification
+    teacher?: {
+      id: number
+      name: string
+      school: string
+    }
   }
 }>()
 
@@ -165,14 +169,14 @@ const schools = ref<{
   name: string
 }[]>([])
 
-const courseName = ref(props.initValue?.courseName || "")
-const courseSchool = ref(props.initValue?.courseSchool || 0)
-const courseClassification = ref<CourseClassification>(props.initValue?.courseClassification || "")
+const courseName = ref(props.initValue?.name || "")
+const courseSchool = ref(props.initValue?.school || 0)
+const courseClassification = ref<CourseClassification>(props.initValue?.classification || "")
 const selectedTeacher = ref<{
   id: number
   name: string
   school: string
-}>({
+}>(props.initValue?.teacher || {
   id: 0,
   name: "",
   school: ""
@@ -289,7 +293,7 @@ const submitCourse = async () => {
       })
       closeModal()
     } else {
-      errorMessage.value.other = '添加课程失败: ' + JSON.stringify(resp.errors) 
+      errorMessage.value.other = '添加课程失败: ' + JSON.stringify(resp.errors)
     }
   } catch (error) {
     if (error instanceof Error) {

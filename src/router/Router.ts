@@ -19,6 +19,7 @@ const courseReviewRoutes = [
     },
   },
   {
+    name: 'teacherReviewItem',
     path: '/review/teacher/:id(\\d+)',
     component: () => import('@/views/courseReview/Teacher.vue'),
     meta: {

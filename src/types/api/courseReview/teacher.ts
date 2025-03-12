@@ -36,7 +36,7 @@ export type APITeacherInfo = {
 // 新增教师
 const APITeacherNewQuery = z.object({
   name: z.string(),
-  school: z.string(),
+  school: z.number(),
 })
 export type APITeacherNew = {
   endpoint: '/api/assessment/teacher/'

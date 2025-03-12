@@ -1,12 +1,22 @@
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <AddTeacherModal v-model="showAddTeacherModal" @add="handleTeacherAdded" />
     <div class="fixed inset-0 bg-black bg-opacity-50" @click="closeModal"></div>
     <div class="w-full max-w-md mx-auto bg-white rounded-lg shadow-xl z-10">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="text-lg font-medium">选择教师</h3>
-        <button class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none" @click="closeModal">
-          <X class="w-5 h-5" />
-        </button>
+        <div class="flex items-center gap-2">
+          <button @click="showAddTeacherModal = true"
+            class="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-1.5">
+            <PlusCircle />
+            添加教师
+          </button>
+          <button
+            class="p-1.5 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+            @click="closeModal">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div class="p-4 space-y-4">
@@ -63,6 +73,13 @@
             <Search class="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p class="text-lg font-medium text-gray-600">未找到教师</p>
             <p class="text-sm mt-2 text-gray-500">请尝试调整搜索关键词</p>
+            <div class="border-t border-gray-200 my-4 w-full"></div>
+            <p class="text-sm text-gray-600 mb-2">找不到教师？您可以添加一个新教师</p>
+            <button @click="showAddTeacherModal = true"
+              class="w-full px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-2">
+              <PlusCircle />
+              添加新教师
+            </button>
           </template>
           <template v-else>
             <Search class="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -84,9 +101,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { LoaderCircle, Search, X } from 'lucide-vue-next'
+import { LoaderCircle, Search, X, PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { TeacherSearchResult } from '@/types/api/search/search'
+import AddTeacherModal from '../AddTeacherModal.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -105,6 +123,7 @@ const scrollLoading = ref(false)
 const currentPage = ref(1)
 const totalPage = ref(1)
 const scrollContainer = ref<HTMLElement | null>(null)
+const showAddTeacherModal = ref(false)
 
 watch(() => props.modelValue, (newVal) => {
   show.value = newVal
@@ -114,6 +133,10 @@ watch(() => show.value, (newVal) => {
   emit('update:modelValue', newVal)
 })
 
+const handleTeacherAdded = (teacher: TeacherSearchResult) => {
+  emit('select', teacher)
+  closeModal()
+}
 const handleSearch = async (loadMore = false) => {
   if (!loadMore) {
     searchLoading.value = true
@@ -139,7 +162,7 @@ const handleSearch = async (loadMore = false) => {
     })
 
     const results = response.data.contents.search_result || []
-    
+
     if (loadMore) {
       // @ts-expect-error The type of teachers.value is TeacherSearchResult[]
       teachers.value = [...teachers.value, ...results]
