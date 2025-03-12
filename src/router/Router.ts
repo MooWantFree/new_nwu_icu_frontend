@@ -33,6 +33,13 @@ const courseReviewRoutes = [
       pageTitle: '课程评价|课程列表',
     },
   },
+  {
+    path: '/review/teacher',
+    component: () => import('@/views/courseReview/TeacherList.vue'),
+    meta: {
+      pageTitle: '课程评价|教师列表',
+    },
+  },
 
 ] satisfies RouteRecordRaw[]
 

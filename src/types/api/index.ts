@@ -35,6 +35,7 @@ export type RequestEndpoints = {
     '/api/assessment/semester/': Course.APISemesterList
     // - Teacher
     '/api/assessment/teacher/:id/': Teacher.APITeacherInfo
+    '/api/assessment/teacher/': Teacher.APITeacherList
 
     // Captcha
     '/api/captcha/': Captcha.APICaptcha
