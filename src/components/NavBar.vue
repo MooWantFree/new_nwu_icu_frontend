@@ -1,309 +1,134 @@
 <template>
-  <n-layout-header
-    bordered
-    class="nav"
-    :style="style"
-    style="display: flex; justify-content: space-around"
-  >
-    <div
-      :style="
-        !isMobile
-          ? 'overflow: hidden; width: 95%; display: flex; justify-content: space-between; align-items: center'
-          : 'display: flex; justify-content: space-between; align-items: center; width: 90%; margin-top: 0.5rem'
-      "
-    >
-      <template v-if="!isMobile" style="display: flex; align-items: center">
-        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-          <img alt="logo image" src="@/assets/logo.svg" />
-          <n-button color="#000000" dashed>NWU.ICU</n-button>
-        </n-text>
-        <!--        PC NaviBars: left-->
-        <div class="nav-bar-pc-left" style="margin-left: auto">
-          <n-menu
-            :value="activeKey"
-            mode="horizontal"
-            :options="menuOptions"
-            :render-label="renderMenuLabel"
-          />
-        </div>
-        <div
-          class="nav-bar-pc-right"
-          style="margin-left: auto; display: flex; align-items: center"
-        >
-          <div class="flex items-center space-x-2 mr-3">
-            <n-button
-              text
-              class="hover:bg-gray-100 rounded-full p-2 transition-colors"
-              @click="showSearchModal = true"
-              title="搜索"
-            >
-              <template #icon>
-                <n-icon size="18"><Search /></n-icon>
-              </template>
-            </n-button>
-            <RouterLink to="/message/inbox" class="">
-              <n-button
-              text
-              class="hover:bg-gray-100 rounded-full p-2 transition-colors"
-              title="通知"
-            >
-              <template #icon>
-                <n-icon size="18"><Notifications /></n-icon>
-              </template>
-            </n-button>
-            </RouterLink>
+  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo component -->  
+        <Logo @showMessage="showMessage" />
+
+        <!-- Desktop Navigation Menu -->  
+        <div class="hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10">
+          <NavMenu :menuItems="menuOptions" />
+          
+          <div class="flex items-center space-x-4">
+            <!-- Action Buttons (Search, Notifications) -->  
+            <ActionButtons @showSearchModal="showSearchModal = true" />
+            
+            <!-- User Menu -->  
+            <UserMenu 
+              :isLoggedIn="isLoggedIn" 
+              :isLoading="isLoading" 
+              :userInfo="userInfo"
+              @showLoginModal="showLoginPopup = true"
+              @logout="logout"
+              @showMessage="showMessage"
+            />
           </div>
-          <template v-if="!isLoggedIn">
-            <n-button
-              :disabled="isLoading"
-              type="info"
-              @click="showLoginPopup = true"
-            >
-              登录/注册
-            </n-button>
-          </template>
-          <template v-else>
-            <n-dropdown
-              :options="userAvatarDropdownOptions"
-              :render-label="renderMenuLabel"
-              trigger="hover"
-            >
-              <template v-if="userInfo === null">
-                <n-avatar
-                  round
-                  :style="{
-                    color: 'yellow',
-                    backgroundColor: 'red',
-                  }"
-                >
-                  M
-                </n-avatar>
-              </template>
-              <template v-else>
-                <n-avatar round :src="`/api/download/${userInfo.avatar}`">
-                </n-avatar>
-              </template>
-            </n-dropdown>
-          </template>
         </div>
-        <n-modal
-          v-model:show="showLoginPopup"
-          preset="card"
-          :mask-closable="false"
-          title="登录/注册"
-          style="width: 600px"
-          :bordered="false"
-          size="huge"
-          aria-modal="true"
-        >
-          <LoginForm
-            @login-success="handleLoginSuccess"
-            @close-modal="showLoginPopup = false"
-          />
-        </n-modal>
-      </template>
-      <template v-else>
-        <n-text tag="div" class="ui-logo" :depth="1" @click="handleLogoClick">
-          <img alt="logo image" src="@/assets/logo.svg" />
-          <n-button color="#000000" dashed>NWU.ICU</n-button>
-        </n-text>
-        <div style="display: flex; align-items: center">
-          <n-button
-            text
-            style="margin-right: 10px"
+        
+        <!-- Mobile Menu -->  
+        <div class="flex md:hidden items-center space-x-2">
+          <button
             @click="showSearchModal = true"
+            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            title="搜索"
           >
-            <template #icon>
-              <n-icon><Search /></n-icon>
-            </template>
-          </n-button>
-          <n-popover
-            ref="mobilePopoverRef"
-            style="padding: 0; width: 288px"
-            placement="bottom-end"
-            display-directive="show"
-            trigger="click"
-          >
-            <template #trigger>
-              <n-icon size="20" style="margin-left: 20px">
-                <MenuOutline />
-              </n-icon>
-            </template>
-            <template #header>
-              <n-menu
-                :value="activeKey"
-                :options="mobileMenuHomeButton"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-              />
-            </template>
-            <div style="overflow: auto; max-height: 79vh">
-              <!--            Mobile Menu-->
-              <n-menu
-                :value="activeKey"
-                :options="menuOptions"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-              />
-            </div>
-            <template #footer>
-              <n-menu
-                :value="activeKey"
-                :options="mobileMenuUserAreaButtons"
-                :indent="18"
-                :render-label="renderMenuLabel"
-                @update:value="handleUpdateMobileMenu"
-                accordion
-              />
-            </template>
-          </n-popover>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          
+          <MobileMenu 
+            :menuItems="menuOptions" 
+            :isLoggedIn="isLoggedIn"
+            @showLoginModal="showLoginPopup = true"
+            @logout="logout"
+            @showMessage="showMessage"
+          />
         </div>
-      </template>
+      </div>
     </div>
-  </n-layout-header>
+  </header>
+  
+  <!-- Modals -->  
+  <LoginModal 
+    :isOpen="showLoginPopup" 
+    @close="showLoginPopup = false"
+    @loginSuccess="handleLoginSuccess"
+  />
+  
   <SearchModal v-if="showSearchModal" @close="showSearchModal = false" />
 </template>
 
-<script lang="ts" setup>
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-  useTemplateRef,
-} from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NModal, useDialog, useMessage } from 'naive-ui'
-import {
-  CloudDownload,
-  Home,
-  InformationCircleOutline,
-  LogIn,
-  LogOut,
-  MenuOutline,
-  OpenOutline,
-  Pencil,
-  Person,
-  Search,
-  Notifications,
-} from '@vicons/ionicons5'
-import { renderIcon, renderMenuLabel } from '@/lib/h'
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useUser } from '@/lib/useUser'
-import { api } from '@/lib/requests'
-import LoginForm from '@/components/user/LoginForm.vue'
-import SearchModal from '@/components/search/SearchModal.vue'
 import { APILogin } from '@/types/api/user/user'
+
+// Import components
+import Logo from '@/components/navbar/Logo.vue'
+import NavMenu from '@/components/navbar/NavMenu.vue'
+import ActionButtons from '@/components/navbar/ActionButtons.vue'
+import UserMenu from '@/components/navbar/UserMenu.vue'
+import MobileMenu from '@/components/navbar/MobileMenu.vue'
+import LoginModal from '@/components/navbar/LoginModal.vue'
+import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
 
-const route = useRoute()
-const router = useRouter()
-const message = useMessage()
-const activeKey = ref<string | null>(null)
-// TODO: activeKey: init it on page loaded
 
+
+// User state
 const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 
-// Login popup in PC
+// Modal states
 const showLoginPopup = ref(false)
-// Search Modal
 const showSearchModal = ref(false)
-const handleLoginSuccess = (data: UserProfile) => {
-  login(data)
-  const displayName = data?.nickname ?? data?.username ?? ''
-  message.success(`欢迎${displayName}，已成功登录，页面即将刷新`)
-  showLoginPopup.value = false
-}
-const handleLogoutButtonClick = () => {
-  const d = dialog.create({
-    icon: renderIcon(LogOut),
-    title: '退出登录',
-    content: '确定要退出登录吗',
-    positiveText: '确定',
-    negativeText: '算了',
-    onPositiveClick(e) {
-      e.preventDefault()
-      d.loading = true
-      return handleLogout()
-    },
-  })
-}
-const userAvatarDropdownOptions = [
-  {
-    label: '用户资料',
-    key: 'profile',
-    icon: renderIcon(Person),
-    path: `/user/me`, // TODO: Figure out what is better
-  },
-  {
-    label: '编辑用户资料',
-    key: 'editProfile',
-    icon: renderIcon(Pencil),
-    path: '/user/settings/profile',
-  },
-  {
-    label: '退出登录',
-    key: 'logout',
-    icon: renderIcon(LogOut),
-    onclick: () => {
-      handleLogoutButtonClick()
-    },
-  },
-]
-const handleLogout = async () => {
-  const { status } = await api.post({url: '/api/user/logout/'})
-  if (status !== 200) {
-    message.error('退出登录失败，请稍后再试')
-    logout()
-    return
-  }
-  logout()
-  message.success('成功退出登录，欢迎您下次再来')
-}
 
-// Update Window width on update
+// Responsive design
 const pageWidth = ref(window.innerWidth)
 const onPageWidthUpdate = () => {
   pageWidth.value = window.innerWidth
 }
-const isMobile = computed(() => pageWidth.value <= 800)
-onMounted(() => {
-  window.addEventListener('resize', onPageWidthUpdate)
-})
-onUnmounted(() => {
-  window.removeEventListener('resize', onPageWidthUpdate)
-})
 
-// Menus
-const handleLogoClick = () => {
-  if (route.path === '/') {
-    message.info('您已经在主页了')
-    return
-  }
-  router.push('/')
+// Event handlers
+const handleLoginSuccess = (data: UserProfile) => {
+  login(data)
+  const displayName = data?.nickname ?? data?.username ?? ''
+  showMessage(`欢迎${displayName}，已成功登录`, 'success')
+  showLoginPopup.value = false
 }
 
-const handleUpdateMobileMenu = () => {
-  // @ts-expect-error FIXME: IDK why
-  mobilePopoverRef.value?.setShow(false)
+// Custom message handler (replacing NaiveUI message)
+const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+  // This is a simple implementation - in a real app, you might want to use a toast library
+  // or implement a custom toast component
+  const toast = document.createElement('div')
+  toast.className = `fixed top-4 right-4 px-4 py-2 rounded-md shadow-md z-50 transition-opacity duration-300 ${
+    type === 'success' ? 'bg-green-500' : 
+    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+  } text-white`
+  toast.textContent = text
+  document.body.appendChild(toast)
+  
+  // Fade in
+  setTimeout(() => {
+    toast.style.opacity = '1'
+  }, 10)
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0'
+    setTimeout(() => {
+      document.body.removeChild(toast)
+    }, 300)
+  }, 3000)
 }
-
-// Mobile Menu
-const mobilePopoverRef = useTemplateRef('mobilePopoverRef')
-
-// Dialog for outer href
-const dialog = useDialog()
 
 // Menu Options
 const menuOptions = [
   {
     key: 'courseReview',
     text: '课程评价',
-    icon: renderIcon(Pencil),
     children: [
       {
         key: 'reviewTimeline',
@@ -325,130 +150,26 @@ const menuOptions = [
   {
     key: 'resourceDownload',
     text: '资料下载',
-    icon: renderIcon(CloudDownload),
     onclick: () => {
-      dialog.create({
-        icon: renderIcon(OpenOutline),
-        title: '打开外部链接',
-        content: '在新的标签页打开资料下载页面（虽然也是我们的）',
-        positiveText: '打开',
-        negativeText: '算了',
-        onPositiveClick(e) {
-          e.preventDefault()
-          window.open('https://resour.nwu.icu', '_blank')
-        },
-      })
+      const shouldOpen = confirm('在新的标签页打开资料下载页面（虽然也是我们的）')
+      if (shouldOpen) {
+        window.open('https://resour.nwu.icu', '_blank')
+      }
     },
   },
   {
     key: 'about',
     text: '关于',
-    icon: renderIcon(InformationCircleOutline),
     path: '/about',
   },
 ]
 
-const mobileMenuHomeButton = [
-  {
-    key: 'home',
-    text: '主页',
-    icon: renderIcon(Home),
-    path: '/',
-  },
-]
-
-const mobileMenuLoginButton = [
-  {
-    key: 'login',
-    text: '登录/注册',
-    path: '/login',
-    icon: renderIcon(LogIn),
-  },
-]
-
-const mobileMenuUserButtons = [
-  {
-    key: 'profile',
-    text: '用户资料',
-    icon: renderIcon(Person),
-    path: '/user/profile',
-  },
-  {
-    key: 'logout',
-    text: '退出登录',
-    icon: renderIcon(LogOut),
-    onclick: handleLogoutButtonClick,
-  },
-]
-
-const mobileMenuUserAreaButtons = computed(() => {
-  return isLoggedIn.value ? mobileMenuUserButtons : mobileMenuLoginButton
+// Event listeners for responsive design
+onMounted(() => {
+  window.addEventListener('resize', onPageWidthUpdate)
 })
 
-const style = computed(() => {
-  return isMobile.value
-    ? {
-        '--side-padding': '16px',
-        'grid-template-columns': 'auto 1fr auto',
-      }
-    : {
-        '--side-padding': '32px',
-        'grid-template-columns': 'calc(272px - var(--side-padding)) 1fr auto',
-      }
+onUnmounted(() => {
+  window.removeEventListener('resize', onPageWidthUpdate)
 })
 </script>
-
-<style scoped>
-/* .nav {
-  display: grid;
-  grid-template-rows: calc(var(--header-height) - 1px);
-  align-items: center;
-  padding: 0 var(--side-padding);
-} */
-
-.ui-logo {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-}
-
-.ui-logo > img {
-  margin-right: 12px;
-  height: 32px;
-  width: 32px;
-}
-
-.nav-menu {
-  width: 100%;
-  padding-left: 36px;
-  overflow: hidden;
-  flex-grow: 0;
-  flex-shrink: 1;
-}
-
-.nav-picker {
-  margin-right: 4px;
-}
-
-.nav-picker.padded {
-  padding: 0 10px;
-}
-
-.nav-picker:last-child {
-  margin-right: 0;
-}
-
-.nav-end {
-  display: flex;
-  align-items: center;
-}
-</style>
-
-<style>
-.nav-menu .n-menu-item,
-.nav-menu .n-submenu,
-.nav-menu .n-menu-item-content {
-  height: calc(var(--header-height) - 1px) !important;
-}
-</style>
