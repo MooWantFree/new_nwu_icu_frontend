@@ -51,7 +51,8 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">教授课程</h2>
-            <n-button type="primary" @click="handleAddCourse">
+            <AddCourseModal v-model="showTeacherSelectorModal" :init-value="{teacher: teacher.teacher_info}" />
+            <n-button type="primary" @click="showTeacherSelectorModal = true">
               <template #icon>
                 <n-icon><PlusCircle /></n-icon>
               </template>
@@ -142,6 +143,7 @@ import { PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
 import { APITeacherInfo } from '@/types/api/courseReview/teacher'
+import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,6 +151,7 @@ const message = useMessage()
 
 const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
+const showTeacherSelectorModal = ref(false)
 
 const fetchTeacherData = async () => {
   const teacherId = parseInt(route.params.id as string)
