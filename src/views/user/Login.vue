@@ -10,7 +10,7 @@
 import { onBeforeMount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import LoginForm from '@/components/user/LoginForm.vue'
+import LoginForm from '@/components/user/loginNRegister/LoginForm.vue'
 import { checkLoginStatus } from '@/lib/logins'
 
 const router = useRouter()

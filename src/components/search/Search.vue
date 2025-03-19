@@ -92,6 +92,19 @@
           <Search class="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <p class="text-lg font-medium text-gray-600">未找到结果</p>
           <p class="text-sm mt-2 text-gray-500">请尝试调整搜索关键词</p>
+          <div v-if="activeTab === searchEnums.course" class="mt-3">
+            <div class="border-t border-gray-200 my-4"></div>
+            <p class="text-sm text-gray-500 mb-3">找不到课程？添加一个新的</p>
+            <button
+              type="button"
+              @click="showAddCourseModal = true"
+              class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center transition-colors duration-200"
+            >
+              <PlusCircle class="w-5 h-5 mr-2" />
+              添加新课程
+            </button>
+            <AddCourseModal v-model="showAddCourseModal" />
+          </div>
         </template>
         <template v-else>
           <Search class="w-16 h-16 mx-auto mb-4 text-gray-400" />
@@ -105,7 +118,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { LoaderCircle, Search } from 'lucide-vue-next'
+import { LoaderCircle, Search, PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { searchEnums, SearchType, searchTypeTooltip } from './enums'
 import {
@@ -119,6 +132,7 @@ import SearchResultCourse from './results/SearchResultCourse.vue'
 import SearchResultReview from './results/SearchResultReview.vue'
 import SearchResultTeacher from './results/SearchResultTeacher.vue'
 import SearchResultResource from './results/SearchResultResource.vue'
+import AddCourseModal from '../courseReview/course/AddCourseModal.vue'
 
 const searchQuery = ref('')
 const activeTab = ref<SearchType>(searchEnums.review)
@@ -126,6 +140,8 @@ const activeTab = ref<SearchType>(searchEnums.review)
 const searchResults = ref<APISearch['response'] | null>(null)
 const searchLoading = ref(false)
 const scrollLoading = ref(false)
+
+const showAddCourseModal = ref(false)
 
 const handleSearch = async (loadMore = false) => {
   if (!searchQuery.value.trim() && !loadMore) {

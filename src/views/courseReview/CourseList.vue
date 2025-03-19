@@ -3,11 +3,13 @@
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold text-gray-900">课程列表</h1>
       <button
+        @click="handleAddCourse"
         class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center"
       >
         <PlusCircle class="w-5 h-5 mr-2" />
         添加课程
       </button>
+      <AddCourseModal v-model="showAddCourseModal" />
     </div>
 
     <div class="mb-8 flex flex-wrap items-center justify-end gap-4">
@@ -128,6 +130,7 @@ import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { z } from 'zod'
 import { PlusCircle } from 'lucide-vue-next'
+import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 
 const message = useMessage()
 
@@ -144,6 +147,11 @@ const orderBy = ref<OrderBy>(OrderBy.Rating)
 const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
+const showAddCourseModal = ref(false)
+
+const handleAddCourse = () => {
+  showAddCourseModal.value = true
+}
 
 const courseTypeOptions = [
   { label: '全部课程', value: CourseType.all },

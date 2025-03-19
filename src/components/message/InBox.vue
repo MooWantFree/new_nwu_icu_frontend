@@ -7,15 +7,11 @@
       </div>
     </div>
     <div v-else class="flex min-h-[calc(100vh-2rem)]">
-      <div class="w-80 border border-gray bg-white border-r flex flex-col">
+      <div class="w-80 bg-white border-r flex flex-col shadow-sm">
         <div class="p-4 border-b flex justify-between items-center">
           <h2 class="font-semibold text-lg text-gray-800">我的消息</h2>
-          <button @click="fetchMessages(currentPage)" class="text-blue-500 hover:text-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                clip-rule="evenodd" />
-            </svg>
+          <button @click="fetchMessages(currentPage)" class="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+            <RefreshCw class="h-5 w-5" />
           </button>
         </div>
         <div class="overflow-y-auto flex-grow">
@@ -26,41 +22,54 @@
               'hover:bg-blue-100': selectedMessage?.chatter.id === message.chatter.id
             }">
             <div class="flex items-start space-x-3">
-              <img :src="`/api/download/${message.chatter.avatar}`" :alt="message.chatter.nickname"
-                class="w-10 h-10 rounded-full object-cover" />
+              <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 flex items-center justify-center">
+                <img v-if="message.chatter.avatar" :src="`/api/download/${message.chatter.avatar}`" :alt="message.chatter.nickname"
+                  class="w-full h-full object-cover" />
+                <User v-else class="w-6 h-6 text-gray-400" />
+              </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-1">
-                  <span class="font-medium text-sm text-gray-900">{{
-                    message.chatter.nickname
-                    }}</span>
+                  <span class="font-medium text-gray-900">{{ message.chatter.nickname }}</span>
                   <span v-if="message.unread_count > 0" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                     {{ message.unread_count }}
                   </span>
                 </div>
                 <p class="text-sm text-gray-500 truncate">
-                  {{ message.last_message.content }}
+                  {{ message.last_message.content || '开始新对话' }}
+                </p>
+                <p class="text-xs text-gray-400 mt-1">
+                  {{ message.last_message.datetime ? formatTime(message.last_message.datetime) : '' }}
                 </p>
               </div>
             </div>
           </div>
+          <div v-if="finalMessages.length === 0" class="p-8 text-center text-gray-500">
+            暂无消息
+          </div>
         </div>
         <div class="p-4 border-t flex justify-between items-center bg-gray-50">
           <button @click="prevPage" :disabled="currentPage === 1"
-            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out">
+            class="px-3 py-1.5 bg-blue-500 text-white rounded-md disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out flex items-center">
+            <ChevronLeft class="w-4 h-4 mr-1" />
             上一页
           </button>
-          <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages }}</span>
+          <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages || 1 }}</span>
           <button @click="nextPage" :disabled="currentPage === totalPages"
-            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out">
+            class="px-3 py-1.5 bg-blue-500 text-white rounded-md disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out flex items-center">
             下一页
+            <ChevronRight class="w-4 h-4 ml-1" />
           </button>
         </div>
       </div>
-      <div class="flex-1 bg-white">
+      <div class="flex-1 bg-white shadow-sm">
         <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" />
-        <div v-else class="h-full flex items-center justify-center bg-gray-50">
-          <p class="text-gray-500">
-            {{ messages?.length === 0 ? '暂时还没有消息' : '请选择一个消息' }}
+        <div v-else class="h-full flex flex-col items-center justify-center bg-gray-50">
+          <MessageSquare class="h-16 w-16 text-gray-300 mb-4" />
+          <p class="text-gray-500 text-lg">
+            {{ messages?.length === 0 ? '暂时还没有消息' : '请选择一个对话' }}
+          </p>
+          <p class="text-gray-400 text-sm mt-2">
+            {{ messages?.length === 0 ? '开始与他人交流吧' : '点击左侧列表开始聊天' }}
           </p>
         </div>
       </div>
@@ -75,6 +84,7 @@ import { api } from '@/lib/requests'
 import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
+import { User, RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 // TODO: Change this to inf scroll
 const route = useRoute()
@@ -103,6 +113,30 @@ const fetchMessages = async (page: number = 1) => {
     message.error('获取消息失败，请重试')
   } finally {
   }
+}
+
+const formatTime = (datetime: string) => {
+  const date = new Date(datetime)
+  const now = new Date()
+  
+  // Same day
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  }
+  
+  // This week
+  const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+  if (daysDiff < 7) {
+    return `${daysDiff}天前`
+  }
+  
+  // This year
+  if (date.getFullYear() === now.getFullYear()) {
+    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+  }
+  
+  // Different year
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const nextPage = () =>

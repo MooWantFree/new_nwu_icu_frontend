@@ -30,10 +30,12 @@ export type RequestEndpoints = {
     '/api/assessment/reply/:id/': Reply.APIGetReply
     // - Course
     '/api/assessment/courselist/': Course.APICourseList
+    '/api/assessment/school/': Course.APISchoolList
     '/api/assessment/course/:id/': Course.APICourseInfo
     '/api/assessment/semester/': Course.APISemesterList
     // - Teacher
     '/api/assessment/teacher/:id/': Teacher.APITeacherInfo
+    '/api/assessment/teacher/': Teacher.APITeacherList
 
     // Captcha
     '/api/captcha/': Captcha.APICaptcha

@@ -50,7 +50,7 @@ export type TeacherSearchResult = {
   id: number
   name: string
   school: string
-  avatar_uuid: string
+  avatar_uuid?: string
 }
 export type ResourceSearchResult = {
   id: number

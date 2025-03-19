@@ -19,6 +19,7 @@ const courseReviewRoutes = [
     },
   },
   {
+    name: 'teacherReviewItem',
     path: '/review/teacher/:id(\\d+)',
     component: () => import('@/views/courseReview/Teacher.vue'),
     meta: {
@@ -30,6 +31,13 @@ const courseReviewRoutes = [
     component: () => import('@/views/courseReview/CourseList.vue'),
     meta: {
       pageTitle: '课程评价|课程列表',
+    },
+  },
+  {
+    path: '/review/teacher',
+    component: () => import('@/views/courseReview/TeacherList.vue'),
+    meta: {
+      pageTitle: '课程评价|教师列表',
     },
   },
 

@@ -61,6 +61,21 @@ export type APICourseList = {
 }
 
 // GET
+// 学院列表
+export type APISchoolList = {
+  endpoint: '/api/assessment/school/',
+  method: MethodMap.GET,
+  response: {
+    schools: {
+      id: number,
+      name: string
+    }[]
+  }
+}
+
+// GET
+// 课程信息(评论信息, 评分等)
+// GET
 // 课程信息(评论信息, 评分等)
 const APICourseInfoParams = z.object({
   id: z.number(),
@@ -129,10 +144,10 @@ export type APICourseInfo = {
 
 // POST
 // 新增课程
-const APICourseNewQuery = z.object({
-  course_name: z.string(),
-  course_school: z.number(),
-  course_classification: z.enum([
+export const APICourseNewQuery = z.object({
+  name: z.string(),
+  school: z.number(),
+  classification: z.enum([
     'general',
     'pe',
     'english',

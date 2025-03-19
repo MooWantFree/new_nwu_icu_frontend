@@ -49,7 +49,16 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 class="text-xl font-semibold mb-4">教授课程</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">教授课程</h2>
+            <AddCourseModal v-model="showTeacherSelectorModal" :init-value="{teacher: teacher.teacher_info}" />
+            <n-button type="primary" @click="showTeacherSelectorModal = true">
+              <template #icon>
+                <n-icon><PlusCircle /></n-icon>
+              </template>
+              添加课程
+            </n-button>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
               v-for="course in teacher.course_list"
@@ -129,10 +138,12 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { NButton } from 'naive-ui'
+import { NButton, NIcon } from 'naive-ui'
+import { PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
 import { APITeacherInfo } from '@/types/api/courseReview/teacher'
+import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,6 +151,7 @@ const message = useMessage()
 
 const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
+const showTeacherSelectorModal = ref(false)
 
 const fetchTeacherData = async () => {
   const teacherId = parseInt(route.params.id as string)

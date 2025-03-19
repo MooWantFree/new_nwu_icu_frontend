@@ -234,7 +234,8 @@ const sendMessage = async () => {
       }
     })
     if (resp.status.toString().startsWith('2')) {
-      messageList.value.push({
+      if (!messageList.value.find(msg => msg.id === resp.data.contents.message)) {
+        messageList.value.push({
         id: resp.data.contents.message, // FIXME: Remember to change it 
         content: newMessage.value,
         datetime: dateNow,
@@ -244,6 +245,7 @@ const sendMessage = async () => {
           avatar: userInfo.value?.avatar!,
         }
       })
+      }
       newMessage.value = ''
       await nextTick()
       scrollToBottom()
