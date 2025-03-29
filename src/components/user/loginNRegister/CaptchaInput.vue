@@ -48,38 +48,19 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, defineEmits } from 'vue';
+defineProps<{
+  modelValue: string;
+  id: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  error: string;
+  imageUrl: string;
+}>()
 
-defineProps({
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  id: {
-    type: String,
-    required: true
-  },
-  label: {
-    type: String,
-    required: true
-  },
-  placeholder: {
-    type: String,
-    default: ''
-  },
-  required: {
-    type: Boolean,
-    default: false
-  },
-  error: {
-    type: String,
-    default: ''
-  },
-  imageUrl: {
-    type: String,
-    default: ''
-  }
-});
+defineEmits<{
+  (e: 'update:modelValue', value: string): void;
+  (e: 'refresh'): void;
+}>()
 
-defineEmits(['update:modelValue', 'refresh']);
 </script>
