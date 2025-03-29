@@ -19,6 +19,9 @@
             <a
               v-for="item in section.items"
               :key="item.label"
+              :href="item.url"
+              target="_blank"
+              rel="noopener noreferrer"
               class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-slate-500 hover:text-slate-50 transition-colors"
             >
               <component :is="item.icon" class="w-8 h-8" />
@@ -32,85 +35,22 @@
 </template>
 
 <script setup lang="ts">
-import { h } from 'vue'
-
-const TempIcon = (props: { class?: string }) =>
-  h(
-    'svg',
-    {
-      xmlns: 'http://www.w3.org/2000/svg',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      strokeWidth: 2,
-      strokeLinecap: 'round',
-      strokeLinejoin: 'round',
-      class: props.class,
-    },
-    [
-      h('rect', { width: 18, height: 18, x: 3, y: 3, rx: 2, ry: 2 }),
-      h('path', { d: 'M12 8v8' }),
-      h('path', { d: 'M8 12h8' }),
-    ]
-  )
-
+import { Bike, BookOpenText, Library, Mail, Printer, Waypoints } from 'lucide-vue-next'
 const sections = [
   {
-    title: 'Academics',
+    title: '西大服务',
     color: 'primary',
-    icon: TempIcon,
     items: [
-      { label: 'Colleges', icon: TempIcon },
-      { label: 'Departments', icon: TempIcon },
-      { label: 'Academic Calendar', icon: TempIcon },
-      { label: 'Academic Calendar', icon: TempIcon },
-      { label: 'Courses', icon: TempIcon },
-    ],
-  },
-  {
-    title: 'Campus',
-    color: 'secondary',
-    icon: TempIcon,
-    items: [
-      { label: 'Campus Map', icon: TempIcon },
-      { label: 'IT Services', icon: TempIcon },
-      { label: 'Career Services', icon: TempIcon },
-      { label: 'Student Life', icon: TempIcon },
-    ],
-  },
-  {
-    title: 'Quick Links',
-    color: 'muted',
-    icon: TempIcon,
-    items: [{ label: 'News', icon: TempIcon }],
-  },
-  {
-    title: 'Quick Links',
-    color: 'muted',
-    icon: TempIcon,
-    items: [{ label: 'News', icon: TempIcon }],
-  },
-  {
-    title: 'Quick Links',
-    color: 'muted',
-    icon: TempIcon,
-    items: [{ label: 'News', icon: TempIcon }],
-  },
-  {
-    title: 'Quick Links',
-    color: 'muted',
-    icon: TempIcon,
-    items: [{ label: 'News', icon: TempIcon }],
-  },
-  {
-    title: 'Research',
-    color: 'card',
-    icon: TempIcon,
-    items: [
-      { label: 'Labs', icon: TempIcon },
-      { label: 'Grants', icon: TempIcon },
-      { label: 'Publications', icon: TempIcon },
-      { label: 'Facilities', icon: TempIcon },
+      { label: '教务管理系统', icon: BookOpenText, url: 'https://jwgl.nwu.edu.cn/sso/jziotlogin' },
+      { label: '图书馆自助打印', icon: Printer, url: 'https://weixinprinthost.woquyun.com/wq-web/#/index' },
+      { label: '西大邮箱', icon: Mail, url: 'https://mail.stumail.nwu.edu.cn/' },
+      { label: 'WEB VPN', icon: Waypoints, url: 'https://webvpn.nwu.edu.cn/' },
+      { label: '彩虹体育馆预约', icon: Bike, url: 'http://cgzx.nwu.edu.cn:8080/venues/auth' },
+      {
+        label: '图书馆馆藏检索',
+        icon: Library,
+        url: 'https://agentdockingopac.featurelib.libsou.com/showhome/search/showSearch?schoolId=25',
+      },
     ],
   },
 ]
