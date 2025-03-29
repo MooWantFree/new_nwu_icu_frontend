@@ -143,7 +143,7 @@
           </div>
           <!-- Jump Back Button -->
           <div
-            class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
+            class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200 md:block hidden"
             v-if="
               jumpHistory.length > 0 &&
               jumpHistory[jumpHistory.length - 1].to === reply.id
@@ -153,25 +153,34 @@
             <button
               class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
             >
-              <svg
-                class="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                ></path>
-              </svg>
-              返回上一楼(#{{
+              <MoveLeft class="w-4 h-4 mr-1" />
+              <p>
+                返回上一楼(#{{
                 orderedReplies.find(
                   (it) => it.id === jumpHistory[jumpHistory.length - 1].from
                 )?.floorNumber
-              }})
+                }})
+              </p>
+            </button>
+          </div>
+          <!-- Mobile Jump Back Button -->
+          <div
+            class="fixed bottom-[6rem] right-4 z-50 md:hidden block"
+            v-if="
+              jumpHistory.length > 0 &&
+              jumpHistory[jumpHistory.length - 1].to === reply.id
+            "
+            @click="handleJmpBackClick"
+          >
+            <button
+              class="flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300"
+            >
+              <MoveLeft class="w-4 h-4 mr-1" />
+              <span>返回 #{{
+                orderedReplies.find(
+                  (it) => it.id === jumpHistory[jumpHistory.length - 1].from
+                )?.floorNumber
+              }}</span>
             </button>
           </div>
         </div>
@@ -222,6 +231,7 @@ import { Review } from '@/types/courseReview'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import {MoveLeft} from 'lucide-vue-next'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 
@@ -234,7 +244,6 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-
 // Display the reply box or not
 const showReply = ref(false)
 const replyTarget = ref(0)

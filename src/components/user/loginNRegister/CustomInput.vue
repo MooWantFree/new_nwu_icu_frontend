@@ -56,42 +56,23 @@
 </template>
 
 <script lang="ts" setup>
-import { defineEmits, ref } from 'vue';
+import { ref } from 'vue';
 
-defineProps({
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  id: {
-    type: String,
-    required: true
-  },
-  label: {
-    type: String,
-    required: true
-  },
-  placeholder: {
-    type: String,
-    default: ''
-  },
-  type: {
-    type: String,
-    default: 'text'
-  },
-  required: {
-    type: Boolean,
-    default: false
-  },
-  error: {
-    type: String,
-    default: ''
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  }
-});
+const {
+  type = 'text',
+  required = false,
+  error = '',
+  loading = false
+} = defineProps<{
+  modelValue: string,
+  id: string,
+  label: string,
+  placeholder: string,
+  type: string,
+  required: boolean,
+  error: string,
+  loading: boolean
+}>()
 
 const emit = defineEmits(['update:modelValue']);
 
