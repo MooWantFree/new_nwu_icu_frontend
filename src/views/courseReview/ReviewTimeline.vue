@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+  <div :class="['min-h-screen px-4 sm:px-6 lg:px-8', { 'py-12': showHeader }]">
     <div class="max-w-6xl mx-auto">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">时间线</h1>
+      <h1 v-if="showHeader" class="text-3xl font-bold text-gray-900 mb-8">时间线 ({{ totalReviewCount }})</h1>
       <div class="space-y-6">
         <template v-if="loading">
           <review-item-skeleton v-for="index in pageSize" :key="index" />
@@ -15,20 +15,17 @@
         </template>
       </div>
       <div
-        v-if="totalReviewCount > 0"
+        v-if="totalReviewCount > 0 && showHeader"
         class="flex items-center justify-center mt-8"
       >
         <n-pagination
           v-model:page="currentPage"
           :item-count="totalReviewCount"
-          :page-slot="7"
+          :page-slot="2"
           :page-size="pageSize"
           @update:page="onPageUpdate"
           show-quick-jumper
         >
-          <template #prefix="{ itemCount }">
-            共{{ itemCount }}个点评
-          </template>
         </n-pagination>
       </div>
     </div>
@@ -44,6 +41,17 @@ import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
 import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSkeleton.vue'
 import { APILatestReviews } from '@/types/api/courseReview/review'
 
+const props = defineProps({
+  showHeader: {
+    type: Boolean,
+    default: true,
+  },
+  pageSize: {
+    type: Number,
+    default: 5,
+  },
+})
+
 const message = useMessage()
 const router = useRouter()
 const route = useRoute()
@@ -51,19 +59,18 @@ const route = useRoute()
 const reviews = ref<APILatestReviews['response']['results']>([])
 const totalReviewCount = ref(0)
 const loading = ref(true)
-const pageSize = 5
 const currentPage = ref(parseInt(route.query.page as string) || 1)
 
 const fetchReviews = async (page: number, desc: number = 1) => {
   const searchParams = {
     page: page,
-    pageSize: pageSize,
+    pageSize: props.pageSize,
     desc: desc,
   }
   try {
     const { status, content, errors } = await api.get({
       url: '/api/assessment/latest-review/',
-      query: searchParams
+      query: searchParams,
     })
 
     if (status !== 200) {
