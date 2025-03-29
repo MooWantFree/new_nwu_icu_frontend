@@ -139,40 +139,22 @@
             class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
             @click="isMenuOpen = false"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <User class="h-5 w-5 mr-3" />
             用户资料
+          </router-link>
+          <router-link
+           to="/message/inbox"
+           class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
+           @click="isMenuOpen = false"
+          >
+            <Mail class="h-5 w-5 mr-3" />
+            消息
           </router-link>
           <button
             @click="handleLogout"
             class="flex items-center w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
+            <LogOut class="h-5 w-5 mr-3" />
             退出登录
           </button>
         </template>
@@ -181,20 +163,7 @@
             @click="$emit('showLoginModal'); isMenuOpen = false"
             class="flex items-center w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-              />
-            </svg>
+            <LogIn class="h-5 w-5 mr-3" />
             登录/注册
           </button>
         </template>
@@ -205,6 +174,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import {
+  User,
+  LogOut,
+  LogIn,
+  Mail,
+} from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 
 interface MenuItem {
