@@ -350,6 +350,9 @@ const handleJmpClick = async (
     )
 
     if (targetElement) {
+      if (jumpHistory.value.length > 0 && currentReplyId != jumpHistory.value[jumpHistory.value.length - 1].to) {
+        jumpHistory.value = []
+      }
       jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
       handleJmp(targetElement.querySelector(`[data-reply-id="${targetReplyId}"]`))
     }
