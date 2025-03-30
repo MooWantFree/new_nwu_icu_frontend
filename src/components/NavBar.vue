@@ -36,9 +36,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
-          
-          <MobileMenu 
-            :menuItems="menuOptions" 
+
+          <MobileMenu
+            :menuItems="menuOptions"
             :isLoggedIn="isLoggedIn"
             @showLoginModal="showLoginPopup = true"
             @logout="logout"
@@ -126,13 +126,18 @@ const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') 
 
 // Menu Options
 const menuOptions = [
+    {
+    key: 'home',
+    text: '主页',
+    path: '/',
+  },
   {
     key: 'courseReview',
     text: '课程评价',
     children: [
       {
         key: 'reviewTimeline',
-        text: '主页',
+        text: '时间线',
         path: '/review/timeline',
       },
       {
