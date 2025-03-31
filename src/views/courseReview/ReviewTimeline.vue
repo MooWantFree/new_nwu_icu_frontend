@@ -21,7 +21,7 @@
         <n-pagination
           v-model:page="currentPage"
           :item-count="totalReviewCount"
-          :page-slot="2"
+          :page-slot="5"
           :page-size="pageSize"
           @update:page="onPageUpdate"
           show-quick-jumper
