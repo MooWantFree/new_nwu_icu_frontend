@@ -28,6 +28,7 @@
           :loading="loading"
           @login-success="handleLoginSuccess"
           @update:loading="updateLoading"
+          @close-modal="emit('close-modal')"
         />
         <RegisterTabContent 
           v-else 
@@ -111,8 +112,6 @@ defineExpose({
 <style scoped>
 .login-form-container {
   background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   width: 100%;
   max-width: 460px;
   overflow: hidden;
@@ -151,7 +150,7 @@ defineExpose({
 }
 
 .tab-contents {
-  min-height: 380px;
+
 }
 
 /* Transitions */
