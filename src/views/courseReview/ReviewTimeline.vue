@@ -87,7 +87,7 @@ const fetchReviews = async (page: number, desc: number = 1) => {
 
 const onPageUpdate = async (page: number) => {
   loading.value = true
-  await router.replace({ query: { ...route.query, page: page.toString() } })
+  await router.push({ query: { ...route.query, page: page.toString() } })
   await fetchReviews(page)
   loading.value = false
 }
