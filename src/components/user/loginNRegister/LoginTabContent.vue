@@ -68,7 +68,7 @@ defineProps({
   }
 });
 
-const emit = defineEmits(['login-success', 'update:loading']);
+const emit = defineEmits(['login-success', 'update:loading','close-modal']);
 
 const router = useRouter();
 const rememberMe = ref(false);
@@ -143,6 +143,7 @@ const handleLogin = async () => {
 };
 
 const goToForgotPassword = () => {
-  router.push({ name: 'forgot-password' });
-};
+  emit('close-modal');
+  router.push({ name: 'forgetPassword' })
+}
 </script>
