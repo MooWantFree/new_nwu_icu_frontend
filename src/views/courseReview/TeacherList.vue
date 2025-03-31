@@ -32,8 +32,8 @@
       </button>
     </div>
 
-    <div v-if="loading" class="space-y-6">
-      <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div v-for="i in teacherSkeletonCount" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
         <div class="flex items-center mb-4">
           <div class="h-16 w-16 bg-gray-200 rounded-full"></div>
           <div class="ml-4">
@@ -41,11 +41,8 @@
             <div class="h-4 bg-gray-200 rounded-full w-24"></div>
           </div>
         </div>
-        <div class="h-4 bg-gray-200 rounded-full w-3/4 mb-3"></div>
-        <div class="h-4 bg-gray-200 rounded-full w-1/2 mb-3"></div>
-        <div class="flex justify-between items-center mt-5">
-          <div class="h-9 bg-gray-200 rounded-full w-28"></div>
-          <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+        <div class="flex justify-end mt-4">
+          <div class="h-8 bg-gray-200 rounded-md w-20"></div>
         </div>
       </div>
     </div>
@@ -134,6 +131,7 @@ const loading = ref(true)
 const currentPage = ref(1)
 const showAddTeacherModal = ref(false)
 
+const teacherSkeletonCount = computed(() => data.value?.results.length || 12)
 const handleTeacherAdded = ({ id }: { id: number, name: string, school: string }) => {
   router.push({
     name: 'teacherReviewItem',
@@ -156,10 +154,12 @@ const fetchTeachers = async (page: number = 1) => {
     // Create query object according to APITeacherListQuery type
     const query: {
       page: number;
+      page_size: number;
       school?: string;
       order: 'rating' | 'popular';
     } = {
       page,
+      page_size: 12,
       order: orderBy.value
     }
 

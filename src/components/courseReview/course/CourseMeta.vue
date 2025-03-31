@@ -27,7 +27,19 @@
           <p>开课单位：{{ courseData.school }}</p>
         </div>
       </div>
-      <p class="mt-3">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
+      <div class="mt-3 flex">
+        <p class="flex-1">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
+        <p class="flex-1">
+          标准化平均分：
+          <n-rate
+            readonly
+            :allow-half="true"
+            :default-value="Number(courseData.normalized_rating_avg)"
+            :size="12"
+          />
+          {{ courseData.normalized_rating_avg }}
+        </p>
+      </div>
       <div class="flex items-center mt-4 space-x-2">
         <button
           @click="

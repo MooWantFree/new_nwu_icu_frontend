@@ -75,8 +75,6 @@ export type APISchoolList = {
 
 // GET
 // 课程信息(评论信息, 评分等)
-// GET
-// 课程信息(评论信息, 评分等)
 const APICourseInfoParams = z.object({
   id: z.number(),
 })

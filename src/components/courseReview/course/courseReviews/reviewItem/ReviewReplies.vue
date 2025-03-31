@@ -225,6 +225,7 @@ import { Review } from '@/types/courseReview'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import {MoveLeft} from 'lucide-vue-next'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 
@@ -237,7 +238,6 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-
 // Display the reply box or not
 const showReply = ref(false)
 const replyTarget = ref(0)
