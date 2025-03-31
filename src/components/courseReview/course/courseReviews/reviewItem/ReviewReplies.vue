@@ -29,6 +29,7 @@
       <div v-for="reply in orderedReplies" ref="replies" :key="reply.id">
         <div
           class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
+          :data-reply-id="reply.id"
         >
           <div class="flex flex-1">
             <div class="flex flex-col flex-1">
@@ -81,7 +82,7 @@
                   </span>
                 </p>
                 <span class="text-sm text-gray-500 ml-4"
-                  >#{{ reply.floorNumber }}</span
+                >#{{ reply.floor_number }}</span
                 >
               </div>
               <div>
@@ -89,7 +90,7 @@
                   <Time type="relative" :time="new Date(reply.created_time)" />
                   <div class="flex-grow"></div>
                   <button
-                    v-if="isLoggedIn && reply.created_by.id === userInfo?.id"
+                    v-if="isLoggedIn && reply.created_by.id === userInfo?.id  && !reply.is_deleted"
                     @click="() => handleDeleteReply(reply.id)"
                     class=""
                   >
@@ -110,7 +111,7 @@
                   </button>
                   <p>&nbsp;&nbsp;</p>
                   <button
-                    v-if="isLoggedIn"
+                    v-if="isLoggedIn && !reply.is_deleted"
                     @click="() => toggleReply(reply.id)"
                     class=""
                   >
@@ -133,7 +134,7 @@
                         formerReplyTarget != 0
                       "
                       class="font-black underline underline-offset-1"
-                      >取消</span
+                    >取消</span
                     >
                     <span v-else>回复</span>
                   </button>
@@ -143,7 +144,7 @@
           </div>
           <!-- Jump Back Button -->
           <div
-            class="absolute -right-36 top-0 w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200 md:block hidden"
+            class="absolute -right-12 sm:-right-36 top-0 w-12 sm:w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
             v-if="
               jumpHistory.length > 0 &&
               jumpHistory[jumpHistory.length - 1].to === reply.id
@@ -153,34 +154,27 @@
             <button
               class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
             >
-              <MoveLeft class="w-4 h-4 mr-1" />
-              <p>
-                返回上一楼(#{{
-                orderedReplies.find(
-                  (it) => it.id === jumpHistory[jumpHistory.length - 1].from
-                )?.floorNumber
+              <svg
+                class="w-4 h-4 sm:mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+              </svg>
+              <span class="hidden sm:inline">
+                (#{{
+                  orderedReplies.find(
+                    (it) => it.id === jumpHistory[jumpHistory.length - 1].from,
+                  )?.floorNumber
                 }})
-              </p>
-            </button>
-          </div>
-          <!-- Mobile Jump Back Button -->
-          <div
-            class="fixed bottom-[6rem] right-4 z-50 md:hidden block"
-            v-if="
-              jumpHistory.length > 0 &&
-              jumpHistory[jumpHistory.length - 1].to === reply.id
-            "
-            @click="handleJmpBackClick"
-          >
-            <button
-              class="flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300"
-            >
-              <MoveLeft class="w-4 h-4 mr-1" />
-              <span>返回 #{{
-                orderedReplies.find(
-                  (it) => it.id === jumpHistory[jumpHistory.length - 1].from
-                )?.floorNumber
-              }}</span>
+              </span>
             </button>
           </div>
         </div>
@@ -295,8 +289,8 @@ const handleDeleteReply = async (repyId: number) => {
         throw new Error(
           resp.errors?.reduce(
             (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
-            ''
-          )
+            '',
+          ),
         )
       }
     } catch (error) {
@@ -329,7 +323,7 @@ const handleJmp = async (targetElement: HTMLElement) => {
     targetElement.classList.add(
       'transition-transform',
       'duration-300',
-      'scale-110'
+      'scale-110',
     )
     setTimeout(() => {
       targetElement.classList.remove('scale-110')
@@ -339,7 +333,7 @@ const handleJmp = async (targetElement: HTMLElement) => {
       targetElement.classList.remove(
         'transition-transform',
         'duration-300',
-        'scale-100'
+        'scale-100',
       )
     }, 600)
   }
@@ -347,16 +341,20 @@ const handleJmp = async (targetElement: HTMLElement) => {
 
 const handleJmpClick = async (
   targetReplyId: number,
-  currentReplyId: number
+  currentReplyId: number,
 ) => {
   if (repliesRefs.value) {
-    const currentReplyIndex = review.reply
-      ?.toReversed()
-      .findIndex((reply) => reply.id === targetReplyId)
-    if (currentReplyIndex !== undefined && currentReplyIndex !== -1) {
+    const domElements = Array.from(repliesRefs.value)
+    const targetElement = domElements.find(el =>
+      el.querySelector(`[data-reply-id="${targetReplyId}"]`),
+    )
+
+    if (targetElement) {
+      if (jumpHistory.value.length > 0 && currentReplyId != jumpHistory.value[jumpHistory.value.length - 1].to) {
+        jumpHistory.value = []
+      }
       jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
-      const targetElement = repliesRefs.value[currentReplyIndex]
-      handleJmp(targetElement)
+      handleJmp(targetElement.querySelector(`[data-reply-id="${targetReplyId}"]`))
     }
   }
 }
@@ -365,13 +363,13 @@ const handleJmpBackClick = () => {
   if (jumpHistory.value.length > 0) {
     const previousReplyInfo = jumpHistory.value.pop()
     if (previousReplyInfo !== undefined) {
-      // Find the index of the reply with the stored ID
-      const replyIndex = review.reply
-        ?.toReversed()
-        .findIndex((reply) => reply.id === previousReplyInfo.from)
-      if (replyIndex !== undefined && replyIndex !== -1 && repliesRefs.value) {
-        const targetElement = repliesRefs.value[replyIndex]
-        handleJmp(targetElement)
+      const domElements = Array.from(repliesRefs.value)
+      const targetElement = domElements.find(el =>
+        el.querySelector(`[data-reply-id="${previousReplyInfo.from}"]`),
+      )
+
+      if (targetElement) {
+        handleJmp(targetElement.querySelector(`[data-reply-id="${previousReplyInfo.from}"]`))
       }
     }
   }
@@ -382,24 +380,37 @@ const toggleReplyOrder = () => {
 }
 
 const orderedReplies = computed(() => {
-  const replies = [...review.reply].reverse().map((it, index) => {
+  const replies = [...review.reply].map((it) => {
     return {
       ...it,
-      floorNumber: index + 1,
+      floorNumber: it.floor_number,
     }
   })
 
-  return reverseReplies.value ? replies.reverse() : replies
+  replies.sort((a, b) => {
+    const timeA = new Date(a.created_time).getTime()
+    const timeB = new Date(b.created_time).getTime()
+    return reverseReplies.value ? timeB - timeA : timeA - timeB
+  })
+
+  return replies
 })
 
 const { userInfo, isLoggedIn } = useUser()
 const onReplySubmitted = async (
   content: string,
   parent: number,
-  replyId: number
+  replyId: number,
 ) => {
-  toggleReply()
+  showReply.value = false
+  replyTarget.value = 0
+  formerReplyTarget.value = 0
   if (!userInfo.value) return
+
+  const maxFloorNumber = review.reply.reduce((max, reply) =>
+    Math.max(max, reply.floor_number || 0), 0)
+  const newFloorNumber = maxFloorNumber + 1
+
   // Push the new reply to the review's replies array
   review.reply.unshift({
     id: replyId,
@@ -411,6 +422,7 @@ const onReplySubmitted = async (
       name: userInfo.value.nickname ?? userInfo.value.username,
       avatar: userInfo.value.avatar,
     },
+    floor_number: newFloorNumber,
     like: {
       like: 0,
       dislike: 0,

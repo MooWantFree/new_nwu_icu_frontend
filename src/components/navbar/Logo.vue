@@ -5,7 +5,7 @@
   >
     <img 
       alt="logo image" 
-      src="@/assets/logo.svg" 
+      src="@/assets/logo.png"
       class="mr-3 h-8 w-8"
     />
     <button 

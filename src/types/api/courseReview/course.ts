@@ -130,7 +130,23 @@ export type APICourseInfo = {
         avatar: string
         anonymous: boolean
       }
-      reply: any[]
+      reply: {
+        id: number
+        floor_number: number
+        created_time: string
+        parent: number
+        created_by: {
+          id: number
+          name: string
+          avatar: string
+        },
+        like: {
+          like: number
+          dislike: number
+          user_option: number
+        }
+        is_deleted: boolean
+      }
     }[]
     other_dup_name_course: {
       course_id: number
