@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-2xl mx-auto">
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <div class="bg-white px-8 pt-6 pb-8 mb-4">
         <h2 class="text-xl font-semibold mb-4">修改密码</h2>
         <div class="mb-4">
           <label

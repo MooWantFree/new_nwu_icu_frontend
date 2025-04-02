@@ -86,7 +86,12 @@ const userRoutes = [
         path: 'password',
         component: () => import('@/components/settings/PasswordSettings.vue'),
       },
-    ]
+      {
+        name: 'privateSettings',
+        path: 'private',
+        component: () => import('@/components/settings/PrivateSettings.vue'),
+      },
+    ],
   },
   {
     path: '/user/forget-password',
@@ -226,7 +231,7 @@ Router.beforeEach(async (to, from) => {
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
   if (to.meta?.requiresAuth && !checkLoginStatus()) {
-    return { name: '403', params: { message: '您尚未登录' } }
+    return { name: '403', params: { message: '你尚未登录' } }
   }
   return
 })

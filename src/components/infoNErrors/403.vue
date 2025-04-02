@@ -5,7 +5,7 @@
     <div class="text-center">
       <h1 class="text-6xl font-bold text-gray-800 mb-4">403</h1>
       <p class="text-2xl text-gray-600 mb-8">访问被拒绝</p>
-      <p class="text-lg text-gray-500 mb-8">抱歉，您没有权限访问此页面。</p>
+      <p class="text-lg text-gray-500 mb-8">抱歉，你没有权限访问此页面。</p>
       <p class="text-lg text-gray-500 mb-8">请尝试登录后重试。</p>
       <p v-if="message" class="text-lg text-red-500 mb-8">{{ message }}</p>
       <router-link

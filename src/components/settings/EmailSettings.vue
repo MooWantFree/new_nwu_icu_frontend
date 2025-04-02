@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white shadow-md rounded-lg p-6 mb-4">
+  <div class="bg-white p-6 mb-4">
     <h2 class="text-xl font-semibold mb-4">邮箱设置</h2>
     <div class="space-y-4">
       <div>
@@ -166,7 +166,7 @@ const handleNwuEmailAction = async () => {
 const showNWUEmailVerifyDialog = () => {
   dialog.success({
     title: '等待验证',
-    content: '请前往您的NWU邮箱，点击链接进行验证。',
+    content: '请前往你的NWU邮箱，点击链接进行验证。',
     positiveText: '好的',
   })
 }

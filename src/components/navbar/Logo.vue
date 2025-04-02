@@ -26,7 +26,7 @@ const handleLogoClick = () => {
   if (route.path === '/') {
     // Using a custom event instead of directly showing a message
     // This allows the parent component to handle the notification
-    emit('showMessage', '您已经在主页了')
+    emit('showMessage', '你已经在主页了')
     return
   }
   router.push('/')
