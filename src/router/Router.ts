@@ -57,6 +57,7 @@ const userRoutes = [
     name: 'userProfile',
     component: () => import('@/views/user/Profile.vue'),
     props: true,
+    alias: '/user/profile/:id',  
     meta: {
       pageTitle: '用户资料',
       requiresAuth: true,
