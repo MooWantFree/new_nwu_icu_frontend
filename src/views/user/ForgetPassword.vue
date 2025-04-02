@@ -5,7 +5,7 @@
         {{ linkSent ? '重置链接已发送' : '忘记密码？' }}
       </h2>
       <p class="mt-2 text-center text-sm text-gray-600">
-        {{ linkSent ? '请检查您的电子邮件以重置密码' : '输入您的电子邮件地址，我们将向您发送重置密码的链接。' }}
+        {{ linkSent ? '请检查你的电子邮件以重置密码' : '输入你的电子邮件地址，我们将向你发送重置密码的链接。' }}
       </p>
     </div>
 
@@ -58,7 +58,7 @@
 
         <div v-else class="text-center">
           <p class="mb-4">我们已经向{{ ` ${email} ` }}发了送一封包含重置密码链接的电子邮件</p>
-          <p class="mb-4">如果您没有收到邮件，请检查您的垃圾邮件文件夹或重试</p>
+          <p class="mb-4">如果你没有收到邮件，请检查你的垃圾邮件文件夹或重试</p>
           <button @click="resetForm"
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             重新发送链接

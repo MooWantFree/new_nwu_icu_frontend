@@ -6,7 +6,7 @@
         <div class="h-16 w-16">
           <div class="h-full w-full animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"></div>
         </div>
-        <p class="mt-6 text-lg font-medium text-gray-700">正在激活您的账户...</p>
+        <p class="mt-6 text-lg font-medium text-gray-700">正在激活你的账户...</p>
         <p class="mt-2 text-sm text-gray-500">请稍候，这可能需要几秒钟时间</p>
       </div>
 
@@ -19,7 +19,7 @@
             </svg>
           </div>
           <h1 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">邮箱验证成功</h1>
-          <p class="mt-4 text-gray-600">恭喜，您的邮箱地址已成功验证，现在可以登录并使用所有功能。</p>
+          <p class="mt-4 text-gray-600">恭喜，你的邮箱地址已成功验证，现在可以登录并使用所有功能。</p>
           <div class="mt-8">
             <router-link
               to="/"
@@ -89,7 +89,7 @@ const checkUserAndActivate = async () => {
   // Check if user is already logged in
   const isLoggedIn = user.isLoggedIn.value
   if (isLoggedIn) {
-    message.success('您已登录，正在跳转至首页')
+    message.success('你已登录，正在跳转至首页')
     router.replace('/')
     return
   }
@@ -98,7 +98,7 @@ const checkUserAndActivate = async () => {
   token.value = route.query.token as string
 
   if (!token.value) {
-    error.value = '激活令牌丢失，请检查您的激活链接是否完整'
+    error.value = '激活令牌丢失，请检查你的激活链接是否完整'
     loading.value = false
     return
   }
@@ -125,7 +125,7 @@ const activateAccount = async () => {
       error.value = errorText || '账户激活失败。请重试或联系客服支持。'
     }
   } catch (err) {
-    error.value = '网络连接错误，请检查您的网络连接并重试。'
+    error.value = '网络连接错误，请检查你的网络连接并重试。'
     console.error('Activation error:', err)
   } finally {
     loading.value = false

@@ -233,7 +233,7 @@ const handleLogout = async () => {
       return
     }
     emit('logout')
-    emit('showMessage', '成功退出登录，欢迎您下次再来', 'success')
+    emit('showMessage', '成功退出登录，欢迎你下次再来', 'success')
   } catch (error) {
     emit('showMessage', '退出登录失败，请稍后再试', 'error')
     emit('logout')

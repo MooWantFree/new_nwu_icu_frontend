@@ -231,7 +231,7 @@ Router.beforeEach(async (to, from) => {
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
   if (to.meta?.requiresAuth && !checkLoginStatus()) {
-    return { name: '403', params: { message: '您尚未登录' } }
+    return { name: '403', params: { message: '你尚未登录' } }
   }
   return
 })

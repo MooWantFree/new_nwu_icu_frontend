@@ -92,7 +92,7 @@ const handleRegisterSuccess = () => {
   // Clear any error messages
   generalError.value = '';
   // Show success message
-  successMessage.value = '注册成功！请检查您的邮箱，点击激活链接完成账号激活。';
+  successMessage.value = '注册成功！请检查你的邮箱，点击激活链接完成账号激活。';
   // Keep user on the register tab to see the success message
 };
 

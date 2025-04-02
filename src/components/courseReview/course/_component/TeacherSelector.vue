@@ -74,7 +74,7 @@
             <p class="text-lg font-medium text-gray-600">未找到教师</p>
             <p class="text-sm mt-2 text-gray-500">请尝试调整搜索关键词</p>
             <div class="border-t border-gray-200 my-4 w-full"></div>
-            <p class="text-sm text-gray-600 mb-2">找不到教师？您可以添加一个新教师</p>
+            <p class="text-sm text-gray-600 mb-2">找不到教师？你可以添加一个新教师</p>
             <button @click="showAddTeacherModal = true"
               class="w-full px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-2">
               <PlusCircle />

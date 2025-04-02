@@ -19,7 +19,7 @@
               </h3>
               <div class="mt-2">
                 <p class="text-sm text-gray-500">
-                  您即将访问一个外部网站:
+                  你即将访问一个外部网站:
                   <span class="font-medium text-gray-700 break-all">{{ url }}</span>
                 </p>
               </div>
