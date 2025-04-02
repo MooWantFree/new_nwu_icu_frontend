@@ -40,6 +40,7 @@ const tabs = [
   { name: 'profileSettings', label: '个人资料' },
   { name: 'emailSettings', label: '邮箱设置' },
   { name: 'passwordSettings', label: '密码设置' },
+  { name: 'privateSettings', label: '隐私设置' },
 ]
 
 const { isLoading, userInfo } = useUser()

@@ -240,3 +240,19 @@ export type APIUpdateProfile = {
     ErrorNotLogin | 'bio' | 'avatar' | 'nickname' | 'username'
   >[]
 }
+// GET
+// 用户隐私设定
+export type APIPrivate = {
+  endpoint: '/api/user/private/'
+  method: MethodMap.GET
+  response: {
+    review: {
+      setting: number
+      explain: string
+    }
+    reply: {
+      setting: number
+      explain: string
+    }
+  }
+}

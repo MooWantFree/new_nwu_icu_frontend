@@ -86,7 +86,12 @@ const userRoutes = [
         path: 'password',
         component: () => import('@/components/settings/PasswordSettings.vue'),
       },
-    ]
+      {
+        name: 'privateSettings',
+        path: 'private',
+        component: () => import('@/components/settings/PrivateSettings.vue'),
+      },
+    ],
   },
   {
     path: '/user/forget-password',

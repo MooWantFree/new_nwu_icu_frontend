@@ -16,6 +16,7 @@ export type RequestEndpoints = {
     '/api/user/profile/': ProfilePage.APIUserProfile
     '/api/user/profile/:id/': ProfilePage.APIUserProfileGivenId
     '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
+    '/api/user/private/': ProfilePage.APIPrivate
     // - Reset Password
     '/api/user/mail-reset/:token/': ResetPassword.APIVerifyResetPasswordToken
     // - User
