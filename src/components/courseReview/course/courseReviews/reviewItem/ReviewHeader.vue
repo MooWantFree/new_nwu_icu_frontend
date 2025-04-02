@@ -3,7 +3,7 @@
     <div>
       <div class="flex items-center relative">
         <div v-if="review.author.id > 0" class="relative group">
-          <router-link :to="`/user/profile/${review.author.id}`">
+          <router-link :to="`/user//${review.author.id}`">
             <img
               :src="`/api/download/${review.author.avatar}`"
               alt="Avatar"
@@ -21,7 +21,7 @@
           <h3 class="text-xl font-bold text-gray-900">
             <router-link
               v-if="review.author.id > 0"
-              :to="`/user/profile/${review.author.id}`"
+              :to="`/user/${review.author.id}`"
               class="text-blue-600 hover:text-blue-800 transition-colors duration-300"
             >
               {{ review.author.nickname }}
