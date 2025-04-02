@@ -28,7 +28,7 @@
             <h2 class="text-base sm:text-lg font-semibold text-gray-900">
               <router-link
                 v-if="review.author.id > 0"
-                :to="`/user/profile/${review.author.id}`"
+                :to="`/user/${review.author.id}`"
                 class="link"
               >
                 {{ review.author.nickname }}
