@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white shadow-md rounded-lg p-6 mb-4">
+  <div class="bg-white p-6 mb-4">
     <h2 class="text-xl font-semibold mb-4">邮箱设置</h2>
     <div class="space-y-4">
       <div>

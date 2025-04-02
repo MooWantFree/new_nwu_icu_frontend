@@ -3,7 +3,7 @@
 <template>
   <div class="max-w-2xl mx-auto">
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <div class="bg-white  rounded px-8 pt-6 pb-8 mb-4">
         <h2 class="text-xl font-semibold mb-4">基本信息</h2>
         <div class="mb-4">
           <label class="block text-gray-700 text-sm font-bold mb-2" for="avatar">
