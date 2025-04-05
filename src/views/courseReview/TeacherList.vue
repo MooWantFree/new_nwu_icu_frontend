@@ -1,7 +1,15 @@
 <template>
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold text-gray-900">教师列表</h1>
+      <h1 class="text-4xl font-bold text-gray-900 relative">
+        教师列表
+        <span 
+          v-if="totalTeachers > 0" 
+          class="absolute -bottom-1 -right-2 text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full transform translate-x-full"
+        >
+          共 {{ totalTeachers }} 位教师
+        </span>
+      </h1>
       <button @click="showAddTeacherModal = true"
         class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center">
         <PlusCircle class="w-5 h-5 mr-2" />
@@ -129,6 +137,7 @@ const orderBy = ref<OrderBy>(OrderBy.Rating)
 const data = ref<{ count: number; max_page: number; page: number; results: Teacher[] } | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
+const totalTeachers = ref(0)
 const showAddTeacherModal = ref(false)
 
 const teacherSkeletonCount = computed(() => data.value?.results.length || 12)
@@ -176,6 +185,7 @@ const fetchTeachers = async (page: number = 1) => {
     teachers.value = response.content.results
     data.value = response.content
     currentPage.value = response.content.page
+    totalTeachers.value = response.content.count
     loading.value = false
   } catch (error) {
     console.error('Error fetching teachers:', error)

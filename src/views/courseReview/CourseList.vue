@@ -1,7 +1,17 @@
 <template>
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold text-gray-900">课程列表</h1>
+      <div class="flex items-center">
+        <h1 class="text-4xl font-bold text-gray-900 relative">
+          课程列表
+          <span 
+            v-if="totalCourses > 0" 
+            class="absolute -bottom-1 -right-2 text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full transform translate-x-full"
+          >
+            共 {{ totalCourses }} 门课程
+          </span>
+        </h1>
+      </div>
       <button
         @click="handleAddCourse"
         class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center"
@@ -144,6 +154,7 @@ const CourseType = APICourseListQuery.shape.course_type.enum
 const courses = ref<APICourseList['response']['results']>([])
 const courseType = ref<z.infer<typeof APICourseListQuery>['course_type']>(CourseType.all)
 const orderBy = ref<OrderBy>(OrderBy.Rating)
+const totalCourses = ref(0)
 const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
@@ -186,6 +197,7 @@ const fetchCourses = async (page: number = 1) => {
       },
     })
     courses.value = response.content.results
+    totalCourses.value = response.content.count
     data.value = response.content
   } catch (error) {
     console.error('Error fetching courses:', error)
