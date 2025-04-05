@@ -42,8 +42,7 @@
                   >
                   <span>&nbsp;回复了</span>
                   <span
-                    >《
-                    <RouterLink
+                    >《<RouterLink
                       :to="`/review/course/${reply.course.id}`"
                       class="text-blue-600 hover:underline"
                       >{{ reply.course.name }}</RouterLink
