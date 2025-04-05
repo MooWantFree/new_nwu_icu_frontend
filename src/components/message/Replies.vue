@@ -57,11 +57,10 @@
               <RouterLink
                 :to="`/review/course/${reply.course.id}`"
                 class="text-blue-600 hover:underline"
-              >{{ reply.course.name }}</RouterLink>》下的
-              <RouterLink 
-                :to="`/review/course/${reply.course.id}`"
-                class="text-blue-600 hover:underline"
-              >我的评论</RouterLink>
+              >{{ reply.course.name }}</RouterLink>》下我的
+              <RouterLink
+                    :to="reply.raw_post.classify === 'review' ? `/review/course/${reply.course.id}#review-${reply.raw_post.id}`  : `/review/course/${reply.course.id}#reply-${reply.raw_post.id}`"
+                  >{{ reply.raw_post.classify === 'review' ? '课程评价' : '回复' }}</RouterLink>
             </div>
             <div class="mt-2">
               <p class="text-sm text-gray-600">{{ reply.reply.content }}</p>

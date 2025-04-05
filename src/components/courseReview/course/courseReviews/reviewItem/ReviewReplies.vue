@@ -186,12 +186,13 @@
 <script lang="ts" setup>
 import { useUser } from '@/lib/useUser'
 import { Review } from '@/types/courseReview'
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { Trash2, MoveLeft, MessageSquare } from 'lucide-vue-next'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
+import { useRoute } from 'vue-router'
 
 const { review } = defineProps<{
   review: Review
@@ -264,6 +265,18 @@ const handleDeleteReply = async (repyId: number) => {
   }
 }
 
+const route = useRoute()
+
+
+onMounted(async () => {
+  await nextTick()
+  const hash = route.hash
+  if (hash && hash.includes('reply-')) {
+    const replyId = parseInt(hash.split('-')[1])
+    handleJmpClick(replyId)
+  }
+})
+
 const repliesRefs = useTemplateRef('replies')
 const jumpHistory = ref<{ from: number; to: number }[]>([]) // Now stores reply IDs instead of floor numbers
 
@@ -305,7 +318,7 @@ const handleJmp = async (targetElement: HTMLElement) => {
 
 const handleJmpClick = async (
   targetReplyId: number,
-  currentReplyId: number,
+  currentReplyId?: number,
 ) => {
   if (repliesRefs.value) {
     const domElements = Array.from(repliesRefs.value)
@@ -314,10 +327,12 @@ const handleJmpClick = async (
     )
 
     if (targetElement) {
-      if (jumpHistory.value.length > 0 && currentReplyId != jumpHistory.value[jumpHistory.value.length - 1].to) {
-        jumpHistory.value = []
+      if (currentReplyId != null) {
+        if (jumpHistory.value.length > 0 && currentReplyId != jumpHistory.value[jumpHistory.value.length - 1].to) {
+          jumpHistory.value = []
+        }
+        jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
       }
-      jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
       handleJmp(targetElement.querySelector(`[data-reply-id="${targetReplyId}"]`))
     }
   }

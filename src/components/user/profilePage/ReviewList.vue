@@ -98,6 +98,9 @@
         </n-pagination>
       </div>
     </div>
+    <div v-else-if="errorDetail" class="text-center py-8">
+      <p class="text-gray-500">{{ errorDetail }}</p>
+    </div>
     <div v-else-if="data && data.results.length === 0" class="text-center py-8">
       <p class="text-gray-500">暂无评价</p>
     </div>
@@ -112,7 +115,7 @@
 // Import necessary components and types
 import { api } from '@/lib/requests'
 import { APIUserActivitiesReview } from '@/types/api/user/profilePage'
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onUnmounted } from 'vue'
 import { NRate } from 'naive-ui'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
@@ -124,6 +127,7 @@ const props = defineProps<{
 
 // Define reactive data
 const data = ref<APIUserActivitiesReview['response'] | null>(null)
+const errorDetail = ref<string>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -143,6 +147,11 @@ const fetchData = async () => {
         page_size: pageSize.value,
       },
     })
+    if (response.status !== 200) {
+      console.error('API request failed:', response.status)
+      errorDetail.value = response.errors[0].err_msg
+      return
+    }
     data.value = response.data.contents
   } catch (error) {
     console.error('Failed to fetch reviews:', error)
