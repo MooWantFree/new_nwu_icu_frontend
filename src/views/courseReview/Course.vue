@@ -20,9 +20,7 @@
       class="fixed bottom-8 right-8 bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-300"
       v-show="showTopButton"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-      </svg>
+      <ArrowUp class="w-6 h-6" />
     </button>
   </main>
 </template>
@@ -37,6 +35,7 @@ import CourseReviews from '@/components/courseReview/course/courseReviews/Course
 import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
 import CourseAlike from '@/components/courseReview/course/CourseAlike.vue'
 import CourseSkeleton from '@/components/courseReview/course/CourseSkeleton.vue'
+import { ArrowUp } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
