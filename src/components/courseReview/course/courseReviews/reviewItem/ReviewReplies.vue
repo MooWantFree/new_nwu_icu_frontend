@@ -94,19 +94,7 @@
                     @click="() => handleDeleteReply(reply.id)"
                     class=""
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 32 32"
-                      class="inline-block w-4 h-4"
-                    >
-                      <path d="M12 12h2v12h-2z" fill="currentColor"></path>
-                      <path d="M18 12h2v12h-2z" fill="currentColor"></path>
-                      <path
-                        d="M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20z"
-                        fill="currentColor"
-                      ></path>
-                      <path d="M12 2h8v2h-8z" fill="currentColor"></path>
-                    </svg>
+                    <Trash2 class="inline-block w-4 h-4" />
                     <span>删除</span>
                   </button>
                   <p>&nbsp;&nbsp;</p>
@@ -115,18 +103,7 @@
                     @click="() => toggleReply(reply.id)"
                     class=""
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      class="inline-block w-4 h-4"
-                    >
-                      <g fill="none">
-                        <path
-                          d="M10.48 13.842h4.92c.896 0 1.6-.713 1.6-1.566v-6.71C17 4.713 16.296 4 15.4 4H4.6C3.704 4 3 4.713 3 5.566v6.71c0 .853.704 1.566 1.6 1.566h1.6V17h.003l.002-.001l4.276-3.157zM6.8 17.803a1.009 1.009 0 0 1-1.4-.199a.978.978 0 0 1-.199-.59v-2.172h-.6c-1.436 0-2.6-1.149-2.6-2.566v-6.71C2 4.149 3.164 3 4.6 3h10.8C16.836 3 18 4.149 18 5.566v6.71c0 1.418-1.164 2.566-2.6 2.566h-4.59l-4.011 2.961z"
-                          fill="currentColor"
-                        ></path>
-                      </g>
-                    </svg>
+                    <MessageSquare class="inline-block w-4 h-4" />
                     <span
                       v-if="
                         replyTarget === reply.id &&
@@ -154,20 +131,7 @@
             <button
               class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
             >
-              <svg
-                class="w-4 h-4 sm:mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                ></path>
-              </svg>
+              <MoveLeft class="inline-block w-4 h-4 sm:mr-1" />
               <span class="hidden sm:inline">
                 (#{{
                   orderedReplies.find(
@@ -225,7 +189,7 @@ import { Review } from '@/types/courseReview'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import {MoveLeft} from 'lucide-vue-next'
+import { Trash2, MoveLeft, MessageSquare } from 'lucide-vue-next'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 

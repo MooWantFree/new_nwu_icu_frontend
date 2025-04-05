@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted, watch, readonly } from 'vue'
 import { api } from '@/lib/requests'
 import { APIUserProfile } from '@/types/api/user/profilePage'
 
-type UserProfile = APIUserProfile['response']
+type UserProfile = Omit<APIUserProfile['response'], 'is_me'>
 
 const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)

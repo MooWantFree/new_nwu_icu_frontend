@@ -1,15 +1,27 @@
 <template>
   <div
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto"
     @click.self="attemptCloseModal"
   >
-    <div class="bg-white p-8 rounded-lg shadow-xl w-[480px] max-w-full">
-      <h2 class="text-2xl font-bold mb-6">上传文件</h2>
-      <div class="space-y-6">
+    <div class="bg-white p-5 sm:p-8 rounded-xl shadow-2xl w-full max-w-[480px] animate-fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">上传文件</h2>
+        <button 
+          @click="confirmClose"
+          class="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+          aria-label="关闭"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-5">
         <div
-          class="border-2 border-dashed border-gray-300 p-8 rounded-lg text-center cursor-pointer relative transition-all duration-300 ease-in-out"
+          class="border-2 border-dashed border-gray-300 p-6 sm:p-8 rounded-xl text-center cursor-pointer relative transition-all duration-300 ease-in-out"
           :class="{
-            'bg-blue-50 border-blue-500': selectedFile || isDragging,
+            'bg-blue-50/70 border-blue-500': selectedFile || isDragging,
             'hover:bg-gray-50': !selectedFile && !isDragging
           }"
           @dragover.prevent="isDragging = true"
@@ -18,20 +30,22 @@
           @click="$refs.fileInput.click()"
         >
           <template v-if="!selectedFile">
-            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-            </svg>
+            <CloudUpload class="w-12 h-12 mx-auto mb-4 text-blue-400" />
             <p class="text-lg font-medium text-gray-700">
               {{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}
             </p>
             <p class="mt-2 text-sm text-gray-500">支持所有文件类型，最大 25MB</p>
           </template>
           <div v-else class="flex flex-col items-center">
-            <svg class="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span class="text-lg font-medium text-gray-700">{{ selectedFile.name }}</span>
+            <File class="w-12 h-12 text-blue-500 mb-4" />
+            <span class="text-lg font-medium text-gray-700 break-all">{{ selectedFile.name }}</span>
             <span class="mt-1 text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
+            <button 
+              @click.stop="selectedFile = null" 
+              class="mt-3 px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              重新选择
+            </button>
           </div>
           <input
             ref="fileInput"
@@ -40,24 +54,26 @@
             class="hidden"
           />
         </div>
-        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        
+        <div v-if="progress > 0" class="w-full bg-gray-100 rounded-full h-5 overflow-hidden">
           <div 
-            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
+            class="bg-blue-500 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
             :style="{ width: `${progress}%` }"
           >
             {{ `${Math.round(progress)}%` }}
           </div>
         </div>
-        <div class="flex justify-end space-x-4">
+        
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-4">
           <button
             @click="confirmClose"
-            class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-300"
+            class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
           >
             取消
           </button>
           <button
             @click="submitFile"
-            class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             :disabled="!selectedFile || loading"
           >
             <span v-if="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
@@ -73,6 +89,7 @@
 import { ref, watch } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
+import { CloudUpload, File } from 'lucide-vue-next'
 
 const {
   loading,
@@ -171,3 +188,14 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+</style>

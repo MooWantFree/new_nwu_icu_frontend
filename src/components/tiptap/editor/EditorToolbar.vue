@@ -1,21 +1,23 @@
 <template>
   <div
-    class="flex flex-col gap-2 p-4 bg-white border border-gray-200 rounded-lg"
+    class="flex flex-col gap-2 p-2 sm:p-4 bg-white border border-gray-200 rounded-lg"
   >
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+    <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+      <div class="flex items-center gap-1 px-1 sm:px-2 border-r border-gray-200">
         <div class="relative" ref="fontDropdownRef">
           <button
-            class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
+            class="flex items-center gap-1 p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showFontDropdown = !showFontDropdown"
             title="字体选项"
+            aria-label="字体选项"
           >
-            Aa
-            <chevron-down-icon class="w-4 h-4" />
+            <span class="hidden sm:inline">Aa</span>
+            <span class="sm:hidden text-xs">Aa</span>
+            <chevron-down-icon class="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
           <div
             v-if="showFontDropdown"
-            class="absolute left-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+            class="absolute left-0 z-20 w-36 sm:w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
           >
             <button
               v-for="option in fontOptions"
@@ -24,7 +26,7 @@
                 handleFontSelect(option.key);
                 showFontDropdown = false
               "
-              class="w-full px-4 py-2 text-left hover:bg-gray-100"
+              class="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left hover:bg-gray-100 text-sm"
             >
               {{ option.label }}
             </button>
@@ -32,54 +34,59 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+      <div class="flex items-center gap-1 px-1 sm:px-2 border-r border-gray-200">
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bold') }"
           @click="editor.chain().focus().toggleBold().run()"
           title="粗体"
+          aria-label="粗体"
         >
-          <bold-icon class="w-4 h-4" />
+          <bold-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('italic') }"
           @click="editor.chain().focus().toggleItalic().run()"
           title="斜体"
+          aria-label="斜体"
         >
-          <italic-icon class="w-4 h-4" />
+          <italic-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('strike') }"
           @click="editor.chain().focus().toggleStrike().run()"
           title="删除线"
+          aria-label="删除线"
         >
-          <strikethrough-icon class="w-4 h-4" />
+          <strikethrough-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('underline') }"
           @click="editor.chain().focus().toggleUnderline().run()"
           title="下划线"
+          aria-label="下划线"
         >
-          <underline-icon class="w-4 h-4" />
+          <underline-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
       </div>
 
-      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
+      <div class="flex items-center gap-1 px-1 sm:px-2 border-r border-gray-200">
         <div class="relative" ref="alignDropdownRef">
           <button
-            class="flex items-center gap-1 p-2 text-gray-700 rounded hover:bg-gray-100"
+            class="flex items-center gap-1 p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showAlignDropdown = !showAlignDropdown"
             title="对齐选项"
+            aria-label="对齐选项"
           >
-            <align-left-icon class="w-4 h-4" />
-            <chevron-down-icon class="w-4 h-4" />
+            <align-left-icon class="w-3 h-3 sm:w-4 sm:h-4" />
+            <chevron-down-icon class="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
           <div
             v-if="showAlignDropdown"
-            class="absolute left-0 z-10 w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+            class="absolute left-0 z-20 w-28 sm:w-32 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
           >
             <button
               v-for="option in alignmentOptions"
@@ -88,94 +95,96 @@
                 handleAlignSelect(option.key);
                 showAlignDropdown = false
               "
-              class="w-full px-4 py-2 text-left hover:bg-gray-100"
+              class="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left hover:bg-gray-100 text-sm"
             >
               {{ option.label }}
             </button>
           </div>
         </div>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('bulletList') }"
           @click="editor.chain().focus().toggleBulletList().run()"
           title="无序列表"
+          aria-label="无序列表"
         >
-          <list-icon class="w-4 h-4" />
+          <list-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('orderedList') }"
           @click="editor.chain().focus().toggleOrderedList().run()"
           title="有序列表"
+          aria-label="有序列表"
         >
-          <list-ordered-icon class="w-4 h-4" />
+          <list-ordered-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
       </div>
 
-      <div class="flex items-center gap-1 px-2 border-r border-gray-200">
-        <!-- <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
-          @click="editor.chain().focus().toggleTaskList().run()"
-          title="任务列表"
-        >
-          <check-square-icon class="w-4 h-4" />
-        </button> -->
+      <div class="flex flex-wrap items-center gap-1 px-1 sm:px-2">
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="showLinkModal = true"
           title="添加链接"
+          aria-label="添加链接"
         >
-          <link-icon class="w-4 h-4" />
+          <link-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="showImageUpload = true"
           title="上传图片"
+          aria-label="上传图片"
         >
-          <image-icon class="w-4 h-4" />
+          <image-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <div class="relative" ref="emojiPickerRef">
           <button
-            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showEmojiPicker = !showEmojiPicker"
             title="表情"
+            aria-label="表情"
           >
-            <smile-icon class="w-4 h-4" />
+            <smile-icon class="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
           <EmojiPicker v-if="showEmojiPicker" @select="insertEmoji" />
         </div>
         <div class="relative" ref="tableInsertRef">
           <button
-            class="p-2 text-gray-700 rounded hover:bg-gray-100"
+            class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
             @click="showTableInsert = !showTableInsert"
             title="表格"
+            aria-label="表格"
           >
-            <layout-grid-icon class="w-4 h-4" />
+            <layout-grid-icon class="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
           <InsertTable v-if="showTableInsert" @insert="insertTable" />
         </div>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('code') }"
           @click="editor.chain().focus().toggleCode().run()"
           title="行内代码"
+          aria-label="行内代码"
         >
-          <code-icon class="w-4 h-4" />
+          <code-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           :class="{ 'bg-gray-100': editor.isActive('codeBlock') }"
           @click="editor.chain().focus().toggleCodeBlock().run()"
           title="代码块"
+          aria-label="代码块"
         >
-          <file-code-icon class="w-4 h-4" />
+          <file-code-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button
-          class="p-2 text-gray-700 rounded hover:bg-gray-100"
+          class="p-1.5 sm:p-2 text-gray-700 rounded hover:bg-gray-100"
           @click="showFileUpload = true"
           title="上传文件"
+          aria-label="上传文件"
         >
-          <cloud-upload-icon class="w-4 h-4" />
+          <cloud-upload-icon class="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
       </div>
     </div>

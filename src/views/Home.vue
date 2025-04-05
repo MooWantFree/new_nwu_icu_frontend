@@ -23,7 +23,7 @@
           >
             <div class="flex items-center gap-4 mb-8">
               <div :class="`bg-gradient-to-r  rounded-full p-3 shadow-md ${section.color}`">
-                <BookIcon class="w-7 h-7 text-white" />
+                <!-- <BookIcon class="w-7 h-7 text-white" /> -->
               </div>
               <h2 class="text-2xl font-bold text-gray-800">{{ section.title }}</h2>
             </div>
@@ -62,13 +62,11 @@
                 最近评价
               </h2>
             </router-link>
-            <router-link :to="'/review/timeline'"
-                         class="text-primary font-medium hover:underline flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors">
+            <router-link
+              :to="'/review/timeline'"
+              class="text-primary font-medium flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors">
               查看更多
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <ChevronRight class="w-4 h-4" />
             </router-link>
           </div>
           <ReviewTimeline :showHeader="false" :pageSize="3" />
@@ -91,6 +89,7 @@ import {
   Printer,
   School,
   Waypoints,
+  ChevronRight,
 } from 'lucide-vue-next'
 import ReviewTimeline from '@/views/courseReview/ReviewTimeline.vue'
 import { onMounted, ref } from 'vue'
