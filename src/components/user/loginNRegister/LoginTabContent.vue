@@ -6,6 +6,7 @@
       v-model="formData.username"
       placeholder="请输入用户名或邮箱"
       required
+      :loading="loading"
       :error="errors.username"
     />
     
@@ -16,6 +17,7 @@
       placeholder="请输入密码"
       type="password"
       required
+      :loading="loading"
       :error="errors.password"
     />
     
@@ -51,7 +53,7 @@ import CustomInput from './CustomInput.vue';
 import { api } from '@/lib/requests';
 
 defineProps<{
-  loading?: boolean
+  loading: boolean
 }>();
 
 const emit = defineEmits(['login-success', 'update:loading','close-modal']);

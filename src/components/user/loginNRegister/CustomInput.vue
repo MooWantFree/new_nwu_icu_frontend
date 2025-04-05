@@ -68,7 +68,7 @@ const {
   id: string,
   label: string,
   placeholder: string,
-  type: string,
+  type?: string,
   required: boolean,
   error: string,
   loading: boolean

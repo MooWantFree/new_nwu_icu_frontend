@@ -5,17 +5,18 @@
       :loading="checkingUsername" />
 
     <CustomInput id="register-email" label="邮箱" v-model="formData.email" placeholder="请输入邮箱" required
-      :error="errors.email" />
+      :error="errors.email" :loading="loading" />
 
     <div class="space-y-1">
-      <CustomInput id="register-password" label="密码" v-model="formData.password" placeholder="请输入密码" 
-        :type="showPassword ? 'text' : 'password'" required :error="errors.password" 
+      <CustomInput id="register-password" label="密码" v-model="formData.password" placeholder="请输入密码"
+        :type="showPassword ? 'text' : 'password'" required :error="errors.password"
         :append-icon="showPassword ? 'eye-slash' : 'eye'" @icon-click="togglePasswordVisibility"
-        @update:model-value="checkPasswordAvailability" />
+        @update:model-value="checkPasswordAvailability" :loading="loading" />
       <div v-if="formData.password" class="mt-1">
         <div class="flex items-center space-x-2">
           <div class="h-1 flex-grow rounded-full overflow-hidden bg-gray-200">
-            <div :class="passwordStrengthBarClass" :style="{ width: `${passwordStrength * 25}%` }" class="h-full transition-all duration-300"></div>
+            <div :class="passwordStrengthBarClass" :style="{ width: `${passwordStrength * 25}%` }"
+              class="h-full transition-all duration-300"></div>
           </div>
           <span :class="passwordStrengthTextClass" class="text-xs font-medium">{{ passwordStrengthText }}</span>
         </div>
@@ -27,18 +28,20 @@
 
     <div class="space-y-1">
       <CustomInput id="register-repeat-password" label="重复密码" v-model="formData.repeatPassword" placeholder="请重复密码"
-        :type="showPassword ? 'text' : 'password'" required :error="errors.repeatPassword" 
-        :append-icon="showPassword ? 'eye-slash' : 'eye'" @icon-click="togglePasswordVisibility" 
-        @update:model-value="checkPasswordsMatch" />
+        :type="showPassword ? 'text' : 'password'" required :error="errors.repeatPassword"
+        :append-icon="showPassword ? 'eye-slash' : 'eye'" @icon-click="togglePasswordVisibility"
+        @update:model-value="checkPasswordsMatch" :loading="loading" />
       <div v-if="formData.repeatPassword && formData.password" class="flex items-center mt-1 text-xs">
         <span v-if="passwordsMatch" class="text-green-500 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           密码匹配
         </span>
         <span v-else class="text-red-500 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
           密码不匹配
@@ -306,7 +309,7 @@ const checkPasswordAvailability = debounce(() => {
     errors.password = '';
     return;
   }
-  
+
   try {
     basePasswordSchema.parse(formData.password);
     errors.password = '';
@@ -321,21 +324,21 @@ const checkPasswordAvailability = debounce(() => {
 const passwordStrength = computed(() => {
   const password = formData.password;
   if (!password) return 0;
-  
+
   let strength = 0;
-  
+
   // Length check
   if (password.length >= 8) strength += 1;
-  
+
   // Contains uppercase
   if (/[A-Z]/.test(password)) strength += 1;
-  
+
   // Contains lowercase
   if (/[a-z]/.test(password)) strength += 1;
-  
+
   // Contains number
   if (/\d/.test(password)) strength += 1;
-  
+
   return strength;
 });
 
