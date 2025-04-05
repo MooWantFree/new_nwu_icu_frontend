@@ -59,7 +59,7 @@ const userRoutes = [
     props: true,
     meta: {
       pageTitle: '用户资料',
-      requiresAuth: true,
+      requiresAuth: false,
     },
   },
   {

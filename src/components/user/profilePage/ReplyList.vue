@@ -62,6 +62,9 @@
         </n-pagination>
       </div>
     </div>
+    <div v-else-if="errorDetail" class="text-center py-8">
+      <p class="text-gray-500">{{ errorDetail }}</p>
+    </div>
     <div v-else-if="data && data.results.length === 0" class="text-center py-8">
       <p class="text-gray-500">暂无评论</p>
     </div>
@@ -77,8 +80,8 @@
 import { api } from '@/lib/requests'
 import { APIUserActivitiesReply } from '@/types/api/user/profilePage'
 import { ref, watchEffect } from 'vue'
-import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
-import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue';
+import { LoaderCircle } from 'lucide-vue-next'
+import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 
 // Define props
 const props = defineProps<{
@@ -90,6 +93,7 @@ type DataType = APIUserActivitiesReply['response']
 const data = ref<DataType | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const errorDetail = ref<string>(null)
 
 // Fetch data function
 const fetchData = async () => {
@@ -107,6 +111,11 @@ const fetchData = async () => {
         page_size: pageSize.value,
       },
     })
+    if (response.status !== 200) {
+      console.error('API request failed:', response.status)
+      errorDetail.value = response.errors[0].err_msg
+      return
+    }
     data.value = response.content
   } catch (error) {
     console.error('Failed to fetch replies:', error)
