@@ -204,14 +204,6 @@ const routes = [
     },
   },
   {
-    path: '/about',
-    name: 'about',
-    component: () => import('@/views/About.vue'),
-    meta: {
-      pageTitle: '关于',
-    },
-  },
-  {
     path: '/blog',
     name: 'blogs',
     component: () => import('@/views/blog/catalog.vue'),
