@@ -20,18 +20,7 @@
     />
     
     <div class="flex justify-between items-center">
-      <div class="flex items-center">
-        <!-- <input
-          id="remember-me"
-          v-model="rememberMe"
-          type="checkbox"
-          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
-          记住我
-        </label> -->
-      </div>
-      
+      <div></div>
       <button 
         type="button" 
         class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
@@ -61,17 +50,13 @@ import { useRouter } from 'vue-router';
 import CustomInput from './CustomInput.vue';
 import { api } from '@/lib/requests';
 
-defineProps({
-  loading: {
-    type: Boolean,
-    default: false
-  }
-});
+defineProps<{
+  loading?: boolean
+}>();
 
 const emit = defineEmits(['login-success', 'update:loading','close-modal']);
 
 const router = useRouter();
-const rememberMe = ref(false);
 
 const formData = reactive({
   username: '',
