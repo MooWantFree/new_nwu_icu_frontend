@@ -66,7 +66,7 @@
             isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsUpOutline class="w-5 h-5 mr-2" />
+          <ThumbsUp class="w-5 h-5 mr-2" />
           <span>推荐({{ courseData.like.like }})</span>
         </button>
         <button
@@ -84,7 +84,7 @@
             isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsDownOutline class="w-5 h-5 mr-2" />
+          <ThumbsDown class="w-5 h-5 mr-2" />
           <span>不推荐({{ courseData.like.dislike }})</span>
         </button>
       </div>
@@ -94,8 +94,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
-import { CircleHelp } from 'lucide-vue-next'
+import { ThumbsDown, ThumbsUp, CircleHelp } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
 import type { CourseData } from '@/types/courseReview'
 import { useMessage, NRate } from 'naive-ui'
