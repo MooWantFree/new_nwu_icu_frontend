@@ -74,8 +74,6 @@ import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
 
-
-
 // User state
 const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
 
@@ -91,7 +89,7 @@ const onPageWidthUpdate = () => {
 
 // Event handlers
 const handleLoginSuccess = (data: UserProfile) => {
-  login(data)
+  // login(data)
   const displayName = data?.nickname ?? data?.username ?? ''
   showMessage(`欢迎${displayName}，已成功登录`, 'success')
   showLoginPopup.value = false

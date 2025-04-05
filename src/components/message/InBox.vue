@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-[calc(100vh-2rem)] bg-gray-100">
+  <div class="min-h-[calc(100vh-4rem)] bg-gray-100">
     <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <div class="p-8 bg-white rounded-lg shadow-md">
         <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
@@ -14,8 +14,8 @@
             <RefreshCw class="h-5 w-5" />
           </button>
         </div>
-        <div class="overflow-y-auto flex-grow">
-          <div v-for="(message, index) in finalMessages" :key="message.chatter.id" @click="selectMessage(message)"
+        <div class="overflow-y-auto min-h-[calc(100vh-12rem-8px)]">
+          <div v-for="(message) in finalMessages" :key="message.chatter.id" @click="selectMessage(message)"
             class="p-4 border-b cursor-pointer transition duration-150 ease-in-out" :class="{
               'bg-blue-50': selectedMessage?.chatter.id === message.chatter.id,
               'hover:bg-gray-100': selectedMessage?.chatter.id !== message.chatter.id,
