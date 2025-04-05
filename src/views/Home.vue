@@ -23,7 +23,7 @@
           >
             <div class="flex items-center gap-4 mb-8">
               <div :class="`bg-gradient-to-r  rounded-full p-3 shadow-md ${section.color}`">
-                <BookIcon class="w-7 h-7 text-white" />
+                <!-- <BookIcon class="w-7 h-7 text-white" /> -->
               </div>
               <h2 class="text-2xl font-bold text-gray-800">{{ section.title }}</h2>
             </div>
