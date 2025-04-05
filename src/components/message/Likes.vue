@@ -1,79 +1,96 @@
 <template>
-  <div class="flex flex-col h-full">
-    <div class="flex justify-between items-center mb-6 p-4 border-b">
-      <h2 class="text-2xl font-bold text-gray-800">收到的赞</h2>
+  <div class="flex flex-col h-full bg-gray-50">
+    <div class="sticky top-0 z-10 flex justify-between items-center p-4 bg-white shadow-sm border-b">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+        <ThumbsUp class="w-5 h-5 mr-2 text-blue-500" />
+        收到的赞
+      </h2>
       <button
         @click="refreshLikes"
-        class="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition duration-300 ease-in-out flex items-center shadow-md"
+        class="px-3 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 flex items-center shadow-sm"
+        :disabled="loading"
       >
-        <RefreshCw class="w-5 h-5 mr-2" />
-        刷新
+        <RefreshCw class="w-4 h-4 mr-1 md:mr-2" :class="{ 'animate-spin': loading }" />
+        <span class="text-sm md:text-base">刷新</span>
       </button>
     </div>
-    <div class="flex-grow overflow-y-auto px-4">
+    
+    <div class="flex-grow overflow-y-auto px-2 md:px-4 py-4">
       <div v-if="loading" class="flex items-center justify-center h-full">
-        <div class="p-10 bg-white rounded-xl shadow-lg">
-          <div
-            class="w-20 h-20 mx-auto mb-6 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
-          />
-          <p class="text-center text-gray-600 text-lg">加载中...</p>
+        <div class="p-6 rounded-lg">
+          <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-100 border-t-blue-500 rounded-full animate-spin" />
+          <p class="text-center text-gray-600">加载中...</p>
         </div>
       </div>
-      <template v-else-if="likes.length">
+      
+      <div v-else-if="likes.length" class="space-y-4">
         <div
           v-for="notice in likes"
           :key="notice.id"
-          class="mb-6 p-8 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-300"
+          class="bg-white rounded-lg shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
         >
-          <div class="flex items-start space-x-6">
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-4">
-                <RouterLink :to="`/review/course/${notice.raw_info.course.id}`" class="hover:text-blue-800 text-xl font-semibold text-blue-500">
-                  {{ notice.raw_info.course.name }}
-                </RouterLink>
-                <Time
-                  :time="new Date(notice.datetime)"
-                  format="yyyy-MM-dd HH:mm"
-                  class="text-sm text-gray-500"
-                />
-              </div>
-              <div class="p-6 bg-gray-50 rounded-lg mb-4">
-                <p class="text-md text-gray-700">
-                  {{ extractText(notice.raw_info.raw_post.content) }}
-                </p>
-              </div>
-              <div class="flex items-center space-x-6 text-md text-gray-500">
-                <span class="flex items-center">
-                  <ThumbsUp class="w-5 h-5 text-green-500 mr-2" />
-                  {{ notice.like.like }}
-                </span>
-                <span class="flex items-center">
-                  <ThumbsDown class="w-5 h-5 text-red-500 mr-2" />
-                  {{ notice.like.dislike }}
-                </span>
-              </div>
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+            <RouterLink 
+              :to="`/review/course/${notice.raw_info.course.id}`" 
+              class="text-blue-600 hover:text-blue-800 font-medium truncate max-w-[70%]"
+            >
+              {{ notice.raw_info.course.name }}
+            </RouterLink>
+            <Time
+              :time="new Date(notice.datetime)"
+              format="yyyy-MM-dd HH:mm"
+              class="text-xs text-gray-500"
+            />
+          </div>
+          
+          <div class="p-4">
+            <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
+              {{ extractText(notice.raw_info.raw_post.content) }}
+            </div>
+            
+            <div class="flex items-center space-x-4 text-sm text-gray-600">
+              <span class="flex items-center">
+                <ThumbsUp class="w-4 h-4 text-green-500 mr-1" />
+                {{ notice.like.like }}
+              </span>
+              <span class="flex items-center">
+                <ThumbsDown class="w-4 h-4 text-red-500 mr-1" />
+                {{ notice.like.dislike }}
+              </span>
+              <RouterLink 
+                :to="`/review/course/${notice.raw_info.course.id}`" 
+                class="ml-auto text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
+              >
+                查看详情
+              </RouterLink>
             </div>
           </div>
         </div>
-      </template>
-      <div v-else class="flex items-center justify-center h-full">
-        <p class="text-gray-500 text-xl">暂无收到的赞</p>
+      </div>
+      
+      <div v-else class="flex flex-col items-center justify-center h-full text-center p-4">
+        <div class="w-20 h-20 mb-4 text-gray-300">
+          <ThumbsUp class="w-full h-full" />
+        </div>
+        <p class="text-gray-500 text-lg mb-2">暂无收到的赞</p>
+        <p class="text-gray-400 text-sm">发布高质量的评价，获取更多点赞吧！</p>
       </div>
     </div>
-    <div class="flex justify-center p-6">
+    
+    <div class="p-4 flex justify-center bg-white border-t" v-if="totalCount > 0">
       <n-pagination
-        v-if="totalCount > 0"
         v-model:page="currentPage"
         :page-count="maxPage"
         :on-update:page="handlePageChange"
-        class="bg-white shadow-sm rounded-lg"
+        :size="isMobile ? 'small' : 'medium'"
+        class="shadow-sm rounded-lg"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import type { APILikeList } from '@/types/api/messages/like'
@@ -86,6 +103,8 @@ const likes = ref<APILikeList['response']['results']>([])
 const currentPage = ref(1)
 const totalCount = ref(0)
 const maxPage = ref(0)
+
+const isMobile = ref(false)
 
 const fetchLikes = async (page: number) => {
   try {
@@ -107,14 +126,25 @@ const fetchLikes = async (page: number) => {
 const handlePageChange = (page: number) => {
   currentPage.value = page
   fetchLikes(page)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const refreshLikes = () => {
   fetchLikes(currentPage.value)
 }
 
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
 onMounted(() => {
   fetchLikes(currentPage.value)
+  handleResize()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 function extractText(html: string) {

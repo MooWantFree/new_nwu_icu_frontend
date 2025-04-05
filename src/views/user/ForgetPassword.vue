@@ -15,7 +15,7 @@
         <div v-if="errorMessage" class="rounded-md bg-red-50 p-4 mb-4">
           <div class="flex">
             <div class="flex-shrink-0">
-              <WarningOutline class="w-6 h-6"/>
+              <TriangleAlert class="w-6 h-6"/>
             </div>
             <div class="ml-3">
               <h3 class="text-sm font-medium text-red-800">
@@ -93,13 +93,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { WarningOutline } from '@vicons/ionicons5'
+import { TriangleAlert } from 'lucide-vue-next'
 
 
-const router = useRouter()
 const message = useMessage()
 
 const email = ref('')

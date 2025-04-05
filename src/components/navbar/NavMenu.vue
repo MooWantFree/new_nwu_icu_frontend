@@ -9,16 +9,10 @@
             @click="toggleSubmenu(item.key)"
           >
             <span class="mr-2">{{ item.text }}</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
+            <ChevronDown 
               class="h-4 w-4 transition-transform" 
               :class="{ 'rotate-180': openSubmenus.includes(item.key) }"
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
+            />
           </button>
           <!-- Dropdown menu -->
           <div 
@@ -63,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ChevronDown } from 'lucide-vue-next'
 
 interface MenuItem {
   key: string

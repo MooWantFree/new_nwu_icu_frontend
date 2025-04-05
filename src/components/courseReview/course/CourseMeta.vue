@@ -19,28 +19,38 @@
         </div>
       </div>
       <div class="mt-4 text-gray-400"></div>
-      <div class="flex mt-3">
-        <div class="flex-1">
+      <div class="flex flex-col sm:flex-row mt-3">
+        <div class="w-full sm:w-1/2">
           <p>课程类别：{{ courseData.category }}</p>
         </div>
-        <div class="flex-1">
+        <div class="w-full sm:w-1/2 mt-2 sm:mt-0">
           <p>开课单位：{{ courseData.school }}</p>
         </div>
       </div>
-      <div class="mt-3 flex">
-        <p class="flex-1">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
-        <p class="flex-1">
-          标准化平均分：
+      <div class="mt-3 flex flex-col sm:flex-row">
+        <p class="w-full sm:w-1/2">课程主页：暂无（如果你知道，劳烦告诉我们！）</p>
+        <p class="w-full sm:w-1/2 flex items-center mt-2 sm:mt-0">
+          <span>归一化平均分</span>
+          <n-tooltip placement="top">
+            <template #trigger>
+              <n-button text class="text-blue-500 p-0">
+                <CircleHelp class="w-4 h-4" />
+              </n-button>
+            </template>
+            归一化平均分是经过统计调整的评分，可以更公平地比较不同课程
+          </n-tooltip>
+          <span>：</span>
           <n-rate
             readonly
+            class="mr-2"
             :allow-half="true"
             :default-value="Number(courseData.normalized_rating_avg)"
             :size="12"
-          />
+          ></n-rate>
           {{ courseData.normalized_rating_avg }}
         </p>
       </div>
-      <div class="flex items-center mt-4 space-x-2">
+      <div class="flex flex-col sm:flex-row items-center mt-4 space-y-2 sm:space-y-0 sm:space-x-2">
         <button
           @click="
             () => {
@@ -49,14 +59,14 @@
           "
           :disabled="isButtonDisabled"
           :class="[
-            'flex items-center px-4 py-2 rounded transition-colors',
+            'flex items-center px-4 py-2 rounded transition-colors w-full sm:w-auto',
             courseData.like.user_option === 1
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white',
             isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsUpOutline class="w-5 h-5 mr-2" />
+          <ThumbsUp class="w-5 h-5 mr-2" />
           <span>推荐({{ courseData.like.like }})</span>
         </button>
         <button
@@ -67,14 +77,14 @@
           "
           :disabled="isButtonDisabled"
           :class="[
-            'flex items-center px-4 py-2 rounded transition-colors ml-2',
+            'flex items-center px-4 py-2 rounded transition-colors w-full sm:w-auto',
             courseData.like.user_option === -1
               ? 'bg-red-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white',
             isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsDownOutline class="w-5 h-5 mr-2" />
+          <ThumbsDown class="w-5 h-5 mr-2" />
           <span>不推荐({{ courseData.like.dislike }})</span>
         </button>
       </div>
@@ -84,10 +94,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ThumbsDownOutline, ThumbsUpOutline } from '@vicons/ionicons5'
+import { ThumbsDown, ThumbsUp, CircleHelp } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
 import type { CourseData } from '@/types/courseReview'
-import { useMessage } from 'naive-ui'
+import { useMessage, NRate } from 'naive-ui'
 import { api } from '@/lib/requests'
 
 const message = useMessage()

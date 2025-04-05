@@ -14,9 +14,7 @@
       <template v-else-if="success">
         <div class="flex flex-col items-center text-center">
           <div class="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-            <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
+            <Check class="h-10 w-10 text-green-600" />
           </div>
           <h1 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">邮箱验证成功</h1>
           <p class="mt-4 text-gray-600">恭喜，你的邮箱地址已成功验证，现在可以登录并使用所有功能。</p>
@@ -25,9 +23,7 @@
               to="/"
               class="inline-flex items-center rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
-              <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-              </svg>
+              <House class="mr-2 h-5 w-5" />
               前往首页
             </router-link>
           </div>
@@ -38,9 +34,7 @@
       <template v-else>
         <div class="flex flex-col items-center text-center">
           <div class="flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-            <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
+            <TriangleAlert class="h-10 w-10 text-red-600" />
           </div>
           <h1 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">验证失败</h1>
           <p class="mt-4 text-gray-600">{{ error }}</p>
@@ -70,6 +64,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
+import { Check, House, TriangleAlert } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()

@@ -11,7 +11,7 @@
   <!-- Loading state -->
   <div
     v-if="loading"
-    class="flex items-center justify-center min-h-screen bg-gray-100"
+    class="flex items-center justify-center min-h-[calc(100vh-6rem-22px)] bg-gray-100"
   >
     <div class="p-8 bg-white rounded-lg shadow-md">
       <div
@@ -24,7 +24,7 @@
   <!-- Error state -->
   <div
     v-else-if="error"
-    class="flex items-center justify-center min-h-screen bg-gray-100"
+    class="flex items-center justify-center min-h-[calc(100vh-6rem-22px)] bg-gray-100"
   >
     <div class="p-8 bg-white rounded-lg shadow-md text-center">
       <XCircle class="w-16 h-16 mx-auto mb-4 text-red-500" />
@@ -40,7 +40,7 @@
   </div>
 
   <!-- Content -->
-  <div v-else class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
+  <div v-else class="py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-6rem-22px)] bg-gray-100">
     <div class="max-w-4xl mx-auto">
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="p-8">

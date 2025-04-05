@@ -5,20 +5,7 @@
       class="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
       aria-label="Toggle menu"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
+      <Menu class="h-6 w-6" />
     </button>
 
     <!-- Mobile menu dropdown -->
@@ -33,20 +20,7 @@
           class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
           @click="isMenuOpen = false"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 mr-3"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
+          <House class="h-5 w-5 mr-3" />
           主页
         </router-link>
       </div>
@@ -68,21 +42,7 @@
                 />
                 {{ item.text }}
               </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 transition-transform"
-                :class="{ 'rotate-180': openSubmenus.includes(item.key) }"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <ChevronDown class="h-4 w-4" />
             </div>
             <!-- Submenu items -->
             <div v-if="openSubmenus.includes(item.key)" class="bg-gray-50">
@@ -179,6 +139,9 @@ import {
   LogOut,
   LogIn,
   Mail,
+  Menu,
+  House,
+  ChevronDown,
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 
