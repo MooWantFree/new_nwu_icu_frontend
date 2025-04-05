@@ -20,11 +20,21 @@
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            class="group flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200"
+            class="group flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200 relative"
             active-class="bg-blue-100 text-blue-600"
           >
             <component :is="link.icon" class="w-5 h-5 mr-3" />
             <span v-if="isSidebarOpen" class="text-sm font-medium">{{ link.text }}</span>
+            <span 
+              v-if="unreadCount[link.name as keyof typeof unreadCount] > 0" 
+              class="absolute right-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1 min-w-[20px] text-center"
+            >
+              {{ unreadCount[link.name as keyof typeof unreadCount] }}
+            </span>
+            <span 
+              v-else-if="!isSidebarOpen && unreadCount[link.name as keyof typeof unreadCount] > 0" 
+              class="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full"
+            ></span>
           </router-link>
         </nav>
       </aside>
@@ -53,7 +63,6 @@
 <script setup lang="ts">
 import {
   LoaderCircle,
-  Bell,
   ThumbsUp,
   MessageSquare,
   Users,
@@ -63,20 +72,37 @@ import {
 } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { api } from '@/lib/requests'
 
 const { isLoggedIn, isLoading } = useUser()
 const isSidebarOpen = ref(true)
+const unreadCount = ref({
+  user: 0,
+  reply: 0,
+  like: 0,
+})
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
 const navLinks = [
-  { to: '/message/inbox', icon: MessageSquare, text: '我的消息' },
-  { to: '/message/replies', icon: Users, text: '回复我的' },
-  { to: '/message/likes', icon: ThumbsUp, text: '收到的赞' },
+  { to: '/message/inbox', icon: MessageSquare, text: '我的消息', name: 'user' },
+  { to: '/message/replies', icon: Users, text: '回复我的', name: 'reply' },
+  { to: '/message/likes', icon: ThumbsUp, text: '收到的赞', name: 'like' },
   // { to: '/message/system', icon: Bell, text: '系统通知' },
 ]
+
+const fetchUnreadCount = async () => {
+  if (!isLoggedIn.value) return
+  const { content } = await api.get({ url: '/api/message/unread/' })
+  unreadCount.value = {
+    user: content.unread.user,
+    reply: content.unread.reply,
+    like: content.unread.like,
+  }
+}
+const intervalId = ref<NodeJS.Timeout | undefined>(undefined)
 
 onMounted(() => {
   if (window.innerWidth < 768) {
@@ -84,10 +110,13 @@ onMounted(() => {
   }
   // Disable scroll
   document.body.style.overflow = 'hidden'
+  fetchUnreadCount()
+  intervalId.value = setInterval(fetchUnreadCount, 3000)
 })
 
 onUnmounted(() => {
   // Enable scroll
   document.body.style.overflow = 'auto'
+  clearInterval(intervalId.value)
 })
 </script>
