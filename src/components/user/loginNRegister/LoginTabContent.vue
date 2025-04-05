@@ -44,9 +44,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import CustomInput from './CustomInput.vue';
+import { LoaderCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests';
 
 defineProps<{

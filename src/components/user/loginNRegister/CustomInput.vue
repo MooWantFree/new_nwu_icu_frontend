@@ -48,7 +48,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Eye, EyeOff } from 'lucide-vue-next';
+import { Eye, EyeOff, LoaderCircle } from 'lucide-vue-next';
 
 const {
   type = 'text',
