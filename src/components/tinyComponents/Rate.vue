@@ -3,15 +3,16 @@
     <template v-for="star in max" :key="star">
       <svg
         :class="[
-          'w-5 h-5 cursor-pointer transition-all duration-200',
+          'w-5 h-5 transition-all duration-200',
+          !readonly ? 'cursor-pointer' : '',
           star <= (hoverRating || modelValue)
             ? 'text-yellow-400'
             : 'text-gray-300',
           hoverRating === star ? 'transform scale-110' : '',
         ]"
-        @click="updateRating(star)"
-        @mouseenter="hoverRating = star"
-        @mouseleave="hoverRating = 0"
+        @click="!readonly && updateRating(star)"
+        @mouseenter="!readonly && (() => hoverRating = star)()"
+        @mouseleave="!readonly && (() => hoverRating = 0)()"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -27,7 +28,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const { modelValue, max = 5 } = defineProps<{
+const { readonly = false, modelValue, max = 5 } = defineProps<{
+  readonly?: boolean
   modelValue: number
   max?: number
 }>()

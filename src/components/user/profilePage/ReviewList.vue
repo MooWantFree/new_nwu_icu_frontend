@@ -38,19 +38,19 @@
         <div class="flex flex-wrap gap-4 text-sm text-gray-600">
           <span class="flex items-center">
             <span class="font-medium mr-1">难度:</span>
-            <n-rate :value="review.rating.difficulty" size="small" readonly />
+            <Rate v-model="review.rating.difficulty" :readonly="true" :max="3"/>
           </span>
           <span class="flex items-center">
             <span class="font-medium mr-1">给分:</span>
-            <n-rate :value="review.rating.grade" size="small" readonly />
+            <Rate v-model="review.rating.grade" :readonly="true" :max="3"/>
           </span>
           <span class="flex items-center">
             <span class="font-medium mr-1">作业量:</span>
-            <n-rate :value="review.rating.homework" size="small" readonly />
+            <Rate v-model="review.rating.homework" :readonly="true" :max="3" />
           </span>
           <span class="flex items-center">
             <span class="font-medium mr-1">收获:</span>
-            <n-rate :value="review.rating.reward" size="small" readonly />
+            <Rate v-model="review.rating.reward" :readonly="true" :max="3" />
           </span>
         </div>
         <div class="mt-2 flex justify-between items-center">
@@ -115,7 +115,8 @@
 // Import necessary components and types
 import { api } from '@/lib/requests'
 import { APIUserActivitiesReview } from '@/types/api/user/profilePage'
-import { ref, watchEffect, onUnmounted } from 'vue'
+import { ref, watchEffect } from 'vue'
+import Rate from '@/components/tinyComponents/Rate.vue'
 import { NRate } from 'naive-ui'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
