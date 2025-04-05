@@ -1,166 +1,178 @@
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none"
+    class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none bg-gray-900 bg-opacity-50 backdrop-blur-sm"
   >
-    <div class="relative w-full max-w-3xl mx-auto my-6 px-4 sm:px-0">
+    <div class="relative w-full max-w-4xl mx-auto my-4 px-4 sm:px-0">
       <div
-        class="relative flex flex-col w-full bg-white border-0 rounded-lg shadow-lg outline-none focus:outline-none"
-        style="height: 92vh"
+        class="relative flex flex-col w-full bg-white border-0 rounded-xl shadow-2xl outline-none focus:outline-none transition-all duration-300 ease-in-out"
+        style="max-height: 92vh; height: auto"
       >
         <div
-          class="flex items-start justify-between p-4 sm:p-5 border-b border-solid border-gray-300 rounded-t"
+          class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 rounded-t"
         >
-          <h3 class="text-xl sm:text-2xl font-semibold">
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-800">
             {{ initContent?.content ? '编辑' : '新建' }}评价
           </h3>
           <button
-            class="p-1 ml-auto bg-transparent border-0 text-black float-right text-3xl leading-none font-semibold outline-none focus:outline-none hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center w-8 h-8"
+            class="p-2 ml-auto text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors duration-200 flex items-center justify-center"
             @click="closeModal"
           >
-            <span
-              class="bg-transparent text-black block outline-none focus:outline-none"
-            >
-              ×
-            </span>
+            <span class="text-2xl">&times;</span>
           </button>
         </div>
+        
         <div
           v-if="!loading"
-          class="relative p-4 sm:p-6 flex-auto overflow-y-auto"
-          style="height: calc(80vh - 140px)"
+          class="relative p-4 sm:p-6 flex-auto overflow-y-auto bg-gray-50"
+          style="height: calc(80vh - 140px); max-height: 60vh"
         >
           <Editor
             v-model="content"
             :allowEdit="true"
             :withToolbar="true"
-            class="h-full"
+            class="min-h-full bg-white rounded-lg shadow-sm"
           />
         </div>
+        
         <div
           v-else
-          class="relative p-4 sm:p-6 flex-auto overflow-y-auto"
-          style="height: calc(80vh - 140px)"
+          class="relative p-4 sm:p-6 flex-auto overflow-y-auto bg-gray-50 flex items-center justify-center"
+          style="height: calc(80vh - 140px); max-height: 60vh"
         >
-          <div class="flex items-center justify-center h-full">
-            <div className="flex flex-col items-center">
-              <div
-                className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
-                role="status"
-              >
-                <span className="sr-only">加载中...</span>
-              </div>
-              <p className="mt-2 text-center font-medium">加载中</p>
+          <div class="flex flex-col items-center">
+            <div
+              class="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+              role="status"
+            >
+              <span class="sr-only">加载中...</span>
             </div>
+            <p class="mt-3 sm:mt-4 text-center font-medium text-gray-600">加载中...</p>
           </div>
         </div>
+        
         <div
           v-if="showRatingsSelector"
-          class="flex flex-col sm:flex-row p-4 sm:p-6 border-t border-solid border-gray-300 rounded-b"
+          class="p-4 sm:p-6 border-t border-gray-200 bg-white rounded-b-lg transition-all duration-300"
         >
-          <div
-            class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 sm:mb-0 sm:w-2/3"
-          >
-            <div class="flex flex-col">
-              <span class="text-sm font-medium mb-1">课程难度：</span>
-              <div class="flex items-center">
-                <Rate :max="3" v-model="difficulty" />
-                <span class="ml-2 text-gray-600">{{
-                  ratingTooltip(difficulty)
-                }}</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div class="md:col-span-2">
+              <h4 class="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">评分项</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">课程难度：</span>
+                    <div class="flex items-center">
+                      <Rate :max="3" v-model="difficulty" class="mx-2" />
+                      <span class="text-gray-600 text-xs">{{ ratingTooltip(difficulty) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">作业多少：</span>
+                    <div class="flex items-center">
+                      <Rate :max="3" v-model="homework" class="mx-2" />
+                      <span class="text-gray-600 text-xs">{{ ratingTooltip(homework) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">给分好坏：</span>
+                    <div class="flex items-center">
+                      <Rate :max="3" v-model="grade" class="mx-2" />
+                      <span class="text-gray-600 text-xs">{{ ratingTooltip(grade) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">收获大小：</span>
+                    <div class="flex items-center">
+                      <Rate :max="3" v-model="reward" class="mx-2" />
+                      <span class="text-gray-600 text-xs">{{ ratingTooltip(reward) }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-medium mb-1">作业多少：</span>
-              <div class="flex items-center">
-                <Rate :max="3" v-model="homework" />
-                <span class="ml-2 text-gray-600">{{
-                  ratingTooltip(homework)
-                }}</span>
+            <div>
+              <h4 class="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">学期信息</h4>
+              <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">学期：</span>
+                  <div class="w-3/4">
+                    <n-select
+                      v-model:value="selectedSemester"
+                      :options="semesterOptions"
+                      placeholder="选择学期"
+                      class="w-full"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-medium mb-1">给分好坏：</span>
-              <div class="flex items-center">
-                <Rate :max="3" v-model="grade" />
-                <span class="ml-2 text-gray-600">{{
-                  ratingTooltip(grade)
-                }}</span>
-              </div>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-medium mb-1">收获大小：</span>
-              <div class="flex items-center">
-                <Rate :max="3" v-model="reward" />
-                <span class="ml-2 text-gray-600">{{
-                  ratingTooltip(reward)
-                }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="sm:w-1/3 sm:ml-4">
-            <span class="text-sm font-medium mb-1 block">学期：</span>
-            <n-select
-              v-model:value="selectedSemester"
-              :options="semesterOptions"
-              placeholder="选择学期"
-              class="w-full"
-            />
           </div>
         </div>
-        <div
-          class="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 border-t border-solid border-gray-300 rounded-b"
-        >
-          <div class="flex items-center mb-2 sm:mb-0">
-            <div class="text-sm font-medium mr-2">评分：</div>
-            <div class="flex items-center" @click="showRatingsSelector = true">
-              <Rate v-model="rating" />
-              <span class="ml-2 text-gray-600">{{ rating }}分</span>
-            </div>
-          </div>
-          <button
-            class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
-            @click="showRatingsSelector = !showRatingsSelector"
-          >
-            <component
-              :is="showRatingsSelector ? ChevronDown : ChevronUp"
-              class="w-4 h-4 mr-2"
-            />
-            {{ showRatingsSelector ? '收起' : '展开' }}评分选项
-          </button>
-
-          <div class="flex flex-col sm:flex-row items-center">
-            <button
-              class="w-full sm:w-auto px-6 py-2 mb-2 sm:mb-0 sm:mr-2 text-sm font-bold text-red-500 uppercase transition-all duration-150 ease-linear outline-none background-transparent focus:outline-none"
-              type="button"
-              @click="closeModal"
-              :disabled="submitting || loading"
-            >
-              关闭
-            </button>
+        
+        <div class="p-4 sm:p-6 border-t border-gray-200 bg-white">
+          <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center">
-              <input
-                type="checkbox"
-                id="anonymous"
-                v-model="isAnonymous"
-                class="mr-2"
+              <div class="text-sm font-medium mr-3 text-gray-700">总体评分：</div>
+              <div class="flex items-center">
+                <Rate v-model="rating" />
+                <span class="ml-2 text-gray-600">{{ rating }}分</span>
+              </div>
+            </div>
+            
+            <button
+              class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
+              @click="showRatingsSelector = !showRatingsSelector"
+            >
+              <component
+                :is="showRatingsSelector ? ChevronDown : ChevronUp"
+                class="w-4 h-4 mr-2"
               />
-              <label for="anonymous" class="mr-4">匿名发布</label>
-              <div class="flex flex-col">
-                <div v-if="!isFormValid" class="text-red-500 text-sm mb-2">
+              {{ showRatingsSelector ? '收起' : '展开' }}评分选项
+            </button>
+
+            <div class="flex flex-col sm:flex-row sm:items-center">
+              <div class="flex items-center mb-3 sm:mb-0 sm:mr-4">
+                <input
+                  type="checkbox"
+                  id="anonymous"
+                  v-model="isAnonymous"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label for="anonymous" class="ml-2 text-sm font-medium text-gray-700">匿名发布</label>
+              </div>
+              
+              <div class="flex flex-col w-full sm:w-auto min-w-64">
+                <div v-if="!isFormValid" class="text-red-500 text-xs sm:text-sm mb-2">
                   请填写内容，并选择评分及学期
                 </div>
-                <button
-                  class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-white uppercase transition-all duration-150 ease-linear rounded shadow outline-none bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center"
-                  type="button"
-                  @click="submitReview"
-                  :disabled="submitting || loading || !isFormValid"
-                >
-                  <LoaderCircle
-                    v-if="submitting"
-                    class="mr-2 w-5 h-5 text-white animate-spin"
-                  />
-                  {{ submitting ? '提交中...' : '提交' }}
-                </button>
+                <div class="flex w-full space-x-3">
+                  <button
+                    class="w-1/3 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                    type="button"
+                    @click="closeModal"
+                    :disabled="submitting || loading"
+                  >
+                    取消
+                  </button>
+                  <button
+                    class="w-2/3 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
+                    type="button"
+                    @click="submitReview"
+                    :disabled="submitting || loading || !isFormValid"
+                  >
+                    <LoaderCircle
+                      v-if="submitting"
+                      class="mr-2 w-4 h-4 text-white animate-spin"
+                    />
+                    {{ submitting ? '提交中...' : '提交' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -168,7 +180,6 @@
       </div>
     </div>
   </div>
-  <div class="fixed inset-0 z-40 bg-black opacity-25"></div>
 </template>
 
 <script setup lang="ts">

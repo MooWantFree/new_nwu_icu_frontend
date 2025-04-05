@@ -1,12 +1,21 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeModal">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-[480px] max-w-full">
-      <h2 class="text-2xl font-bold mb-6">上传图片</h2>
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto" @click.self="closeModal">
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-[480px] animate-fadeIn">
+      <div class="flex items-start justify-between mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold">上传图片</h2>
+        <button 
+          class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors" 
+          @click="closeModal"
+          aria-label="关闭"
+        >
+          <span class="text-xl leading-none block">×</span>
+        </button>
+      </div>
       <div class="space-y-6">
         <div
-          class="border-2 border-dashed border-gray-300 p-8 rounded-lg text-center cursor-pointer relative transition-all duration-300 ease-in-out"
+          class="border-2 border-dashed border-gray-300 p-6 sm:p-8 rounded-xl text-center cursor-pointer relative transition-all duration-300 ease-in-out"
           :class="{
-            'bg-blue-50 border-blue-500': selectedFile || isDragging,
+            'bg-blue-50/70 border-blue-500': selectedFile || isDragging,
             'hover:bg-gray-50': !selectedFile && !isDragging
           }"
           @dragover.prevent="isDragging = true"
@@ -15,17 +24,25 @@
           @paste="handlePaste"
           @click="$refs.fileInput.click()"
         >
-          <div v-if="!selectedFile" class="space-y-2">
-            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
-            <p class="text-lg">拖放图片到此处，或点击选择</p>
+          <div v-if="!selectedFile" class="space-y-3">
+            <i class="fas fa-cloud-upload-alt text-4xl text-blue-400"></i>
+            <p class="text-lg font-medium text-gray-700">
+              {{ isDragging ? '松开以上传图片' : '拖放图片到此处，或点击选择' }}
+            </p>
             <p class="text-sm text-gray-500">支持 JPEG, PNG, GIF 和 WebP 格式，最大 100MB</p>
-            <div v-if="isCompressing" class="text-sm text-blue-600">
+            <div v-if="isCompressing" class="text-sm text-blue-600 font-medium">
               正在压缩图片，请稍候...
             </div>
           </div>
           <div v-else class="flex flex-col items-center">
-            <img :src="previewUrl" alt="预览图片" class="max-h-48 max-w-full mb-4 rounded shadow" />
-            <span class="text-sm text-gray-600">{{ selectedFile.name }}</span>
+            <img :src="previewUrl" alt="预览图片" class="max-h-48 max-w-full mb-4 rounded-lg shadow-md" />
+            <span class="text-sm text-gray-600 break-all">{{ selectedFile.name }}</span>
+            <button 
+              @click.stop="selectedFile = null; previewUrl = ''" 
+              class="mt-2 px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              重新选择
+            </button>
           </div>
           <input
             ref="fileInput"
@@ -35,9 +52,9 @@
             class="hidden"
           />
         </div>
-        <div v-if="progress > 0" class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div v-if="progress > 0" class="w-full bg-gray-100 rounded-full h-5 overflow-hidden">
           <div 
-            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
+            class="bg-blue-500 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
             :style="{ width: `${progress}%` }"
           >
             {{ `${Math.round(progress)}%` }}
@@ -50,19 +67,19 @@
             v-model="imageUrl"
             type="url"
             placeholder="https://example.com/image.jpg"
-            class="w-full border border-gray-300 p-3 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           />
         </div>
-        <div class="flex justify-end space-x-4">
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-4">
           <button
             @click="confirmClose"
-            class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-300"
+            class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
           >
             取消
           </button>
           <button
             @click="submitImage"
-            class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             :disabled="!selectedFile && !imageUrl || loading || isCompressing"
           >
             <span v-if="loading || isCompressing" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
@@ -245,3 +262,14 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp
 const MESSAGE_IMAGE_EXTENSION_NOT_ALLOW = '只支持 JPEG, PNG, GIF 和 WebP 格式的图片'
 const MESSAGE_IMAGE_FILE_SIZE_EXCEED_HARD_LIMIT = '图片大小不能超过100MB'
 </script>
+
+<style scoped>
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
