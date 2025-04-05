@@ -128,7 +128,7 @@ const props = defineProps<{
 
 // Define reactive data
 const data = ref<APIUserActivitiesReview['response'] | null>(null)
-const errorDetail = ref<string>(null)
+const errorDetail = ref<string>('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
