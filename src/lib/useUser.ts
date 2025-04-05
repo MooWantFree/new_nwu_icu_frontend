@@ -1,8 +1,9 @@
 import { ref, onMounted, onUnmounted, watch, readonly } from 'vue'
 import { api } from '@/lib/requests'
 import { APIUserProfile } from '@/types/api/user/profilePage'
+import { APIUnreadMessageCount } from '@/types/api/messages/messages'
 
-type UserProfile = Omit<APIUserProfile['response'], 'is_me'>
+type UserProfile = Omit<APIUserProfile['response'], 'is_me'> & {unread: APIUnreadMessageCount['response']}
 
 const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)
@@ -62,9 +63,14 @@ export function useUser(setup: boolean = true) {
   const fetchUserInfo = async () => {
     isLoading.value = true
     try {
-      const response = await api.get({ url: '/api/user/profile/' })
-      if (response.status === 200) {
-        login(response.content)
+      const profileReq = api.get({ url: '/api/user/profile/' })
+      const unreadReq = api.get({ url: '/api/message/unread/' })
+      const [profile, unread] = await Promise.all([profileReq, unreadReq])
+      if (profile.status === 200 && unread.status === 200) {
+        login({
+          ...profile.content,
+          unread: unread.content,
+        })
       } else {
         logout()
       }
