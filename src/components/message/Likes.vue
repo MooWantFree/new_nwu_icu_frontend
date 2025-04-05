@@ -139,6 +139,7 @@ const handleResize = () => {
 
 onMounted(() => {
   fetchLikes(currentPage.value)
+  handleResize()
   window.addEventListener('resize', handleResize)
 })
 

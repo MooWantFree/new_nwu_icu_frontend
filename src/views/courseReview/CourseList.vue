@@ -1,8 +1,8 @@
 <template>
-  <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
-    <div class="flex justify-between items-center mb-8">
+  <div class="container mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-8">
       <div class="flex items-center">
-        <h1 class="text-4xl font-bold text-gray-900 relative">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 relative">
           课程列表
           <span 
             v-if="totalCourses > 0" 
@@ -14,7 +14,7 @@
       </div>
       <button
         @click="handleAddCourse"
-        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center"
+        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center self-end sm:self-auto"
       >
         <PlusCircle class="w-5 h-5 mr-2" />
         添加课程
@@ -22,10 +22,10 @@
       <AddCourseModal v-model="showAddCourseModal" />
     </div>
 
-    <div class="mb-8 flex flex-wrap items-center justify-end gap-4">
+    <div class="mb-8 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start sm:justify-end gap-4">
       <select
         v-model="courseType"
-        class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="" disabled selected>选择课程类型</option>
         <option
@@ -38,7 +38,7 @@
       </select>
       <select
         v-model="orderBy"
-        class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="" disabled selected>选择排序方式</option>
         <option
@@ -52,7 +52,7 @@
       <button
         @click="handlePageChange(1)"
         :disabled="loading"
-        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {{ loading ? '加载中...' : '应用筛选' }}
       </button>
@@ -60,9 +60,9 @@
 
     <div v-if="loading" class="space-y-6">
       <div
-        v-for="i in 5"
+        v-for="i in 3"
         :key="i"
-        class="bg-white rounded-xl shadow-md p-6 animate-pulse"
+        class="bg-white rounded-xl shadow-md p-4 sm:p-6 animate-pulse"
       >
         <div class="h-7 bg-gray-200 rounded-full w-3/4 mb-4"></div>
         <div class="h-5 bg-gray-200 rounded-full w-1/2 mb-3"></div>
@@ -81,13 +81,13 @@
       暂无数据
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
       <div
         v-for="course in courses"
         :key="course.id"
-        class="bg-white rounded-xl shadow-md p-6 transition duration-300 hover:shadow-xl hover:transform hover:-translate-y-1"
+        class="bg-white rounded-xl shadow-md p-4 sm:p-6 transition duration-300 hover:shadow-xl hover:transform hover:-translate-y-1"
       >
-        <h2 class="text-2xl font-semibold mb-3">
+        <h2 class="text-xl sm:text-2xl font-semibold mb-3">
           <router-link
             :to="`/review/course/${course.id}`"
             class="text-blue-600 hover:text-blue-800 transition duration-300"
@@ -97,12 +97,13 @@
         </h2>
         <p class="text-gray-700 mb-2">教师: {{ course.teacher }}</p>
         <p class="text-gray-700 mb-3">学期: {{ course.semester }}</p>
-        <div class="flex items-center mb-3">
+        <div class="flex flex-wrap items-center mb-3">
           <n-rate
             readonly
             :value="course.average_rating"
             :allow-half="true"
-            size="medium"
+            size="small"
+            class="sm:size-medium"
           />
           <span class="ml-3 text-gray-700 font-medium">
             {{ course.average_rating.toFixed(1) }}
@@ -117,16 +118,17 @@
       </div>
     </div>
 
-    <div class="flex justify-center mt-12" v-if="totalPages > 1">
+    <div class="flex justify-center mt-8 sm:mt-12 overflow-x-auto" v-if="totalPages > 1">
       <n-pagination
         v-model:page="currentPage"
         :page-count="totalPages"
         :on-update:page="handlePageChange"
-        :page-slot="5"
+        :page-slot="isMobile ? 3 : 5"
         show-quick-jumper
       >
         <template #prefix>
-          第 {{ currentPage }} 页 / 共 {{ totalPages }} 页
+          <span class="hidden sm:inline">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+          <span class="sm:hidden">{{ currentPage }}/{{ totalPages }}</span>
         </template>
       </n-pagination>
     </div>
@@ -134,13 +136,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, onUnmounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { z } from 'zod'
 import { PlusCircle } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
+import { useWindowSize } from '@vueuse/core'
 
 const message = useMessage()
 
@@ -159,6 +162,11 @@ const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
 const showAddCourseModal = ref(false)
+
+const isMobile = ref(false)
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 const handleAddCourse = () => {
   showAddCourseModal.value = true
@@ -209,6 +217,12 @@ const fetchCourses = async (page: number = 1) => {
 
 onMounted(async () => {
   await fetchCourses()
+  handleResize()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 const totalPages = computed(() => data.value?.max_page || 1)
