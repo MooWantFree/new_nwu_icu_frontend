@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-bold text-gray-900">教师列表</h1>
       <button @click="showAddTeacherModal = true"
