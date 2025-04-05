@@ -49,9 +49,10 @@
                     >》下的</span
                   >
                   <span class="text-blue-600 hover:underline"
-                    ><RouterLink :to="`/review/course/${reply.course.id}`"
-                      >我的评论</RouterLink
-                    ></span
+                  ><RouterLink
+                    :to="reply.raw_post.classify === 'review' ? `/review/course/${reply.course.id}#review-${reply.raw_post.id}`  : `/review/course/${reply.course.id}#reply-${reply.raw_post.id}`"
+                  >{{ reply.raw_post.classify === 'review' ? '我的评论' : '我的回复' }}</RouterLink
+                  ></span
                   >
                 </p>
                 <p class="text-sm text-gray-500">
