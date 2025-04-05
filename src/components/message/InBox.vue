@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-[calc(100vh-2rem)] bg-gray-100">
-    <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-2rem)]">
+    <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <div class="p-8 bg-white rounded-lg shadow-md">
         <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
         <p class="text-center text-gray-600">加载中...</p>
       </div>
     </div>
-    <div v-else class="flex min-h-[calc(100vh-2rem)]">
-      <div class="w-80 bg-white border-r flex flex-col shadow-sm">
+    <div v-else class="flex min-h-[calc(100vh-4rem)]">
+      <div class="w-80 bg-white border-r border-l flex flex-col shadow-sm">
         <div class="p-4 border-b flex justify-between items-center">
           <h2 class="font-semibold text-lg text-gray-800">我的消息</h2>
           <button @click="fetchMessages(currentPage)" class="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
