@@ -204,11 +204,19 @@ const routes = [
     },
   },
   {
-    path: '/about',
-    name: 'about',
-    component: () => import('@/views/About.vue'),
+    path: '/blog',
+    name: 'blogs',
+    component: () => import('@/views/blog/catalog.vue'),
     meta: {
-      pageTitle: '关于',
+      pageTitle: '文章目录',
+    },
+  },
+  {
+    path: '/blog/:id',
+    name: 'blog',
+    component: () => import('@/views/blog/article.vue'),
+    meta: {
+      pageTitle: '文章',
     },
   },
 ] as RouteRecordRaw[]

@@ -161,8 +161,8 @@ const menuOptions = [
   },
   {
     key: 'about',
-    text: '关于',
-    path: '/about',
+    text: '公告',
+    path: '/blog',
   },
 ]
 
