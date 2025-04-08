@@ -1,6 +1,11 @@
 <template>
   <div class="bg-gray-100 min-h-screen py-8">
     <div class="container mx-auto px-4">
+      <component
+        v-if="errorMsg.component"
+        :is="errorMsg.component"
+        :detail="errorMsg.detail"
+      />
       <div v-if="loading">
         <TeacherSkeleton />
       </div>
@@ -129,7 +134,9 @@
           </div>
         </div>
       </div>
-      <div v-else class="text-center text-gray-600">教师信息不存在</div>
+      <div v-else class="text-center text-gray-600">
+        <Page404 />
+      </div>
     </div>
   </div>
 </template>
@@ -144,11 +151,20 @@ import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
 import { APITeacherInfo } from '@/types/api/courseReview/teacher'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
+import Page404 from '@/components/infoNErrors/404.vue'
+import Page500 from '@/components/infoNErrors/500.vue'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 
+const errorMsg = ref<{
+  component: typeof Page404 | null,
+  detail: string,
+}>({
+  component: null,
+  detail: '',
+})
 const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
 const showTeacherSelectorModal = ref(false)
@@ -163,14 +179,22 @@ const fetchTeacherData = async () => {
     if (status === 200) {
       teacher.value = content
     } else if (status === 404) {
-      router.push('/404')
+      errorMsg.value = {
+        component: Page404,
+        detail: '教师信息不存在',
+      }
       return
     } else {
       throw new Error('Failed to fetch teacher data')
     }
   } catch (error) {
     console.error('Error fetching teacher data:', error)
-    message.error('获取教师信息失败，请稍后重试')
+    if (error instanceof Error) {
+      errorMsg.value = {
+        component: Page500,
+        detail: error.toString(),
+      }
+    }
   } finally {
     loading.value = false
   }

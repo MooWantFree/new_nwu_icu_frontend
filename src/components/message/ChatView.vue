@@ -96,7 +96,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
-import { MoreVertical, Image as ImageIcon, Send, Loader2, User, Clock, CalendarIcon, MessageSquare, InboxIcon } from 'lucide-vue-next'
+import { MoreVertical, Image as ImageIcon, Send, Loader2, User, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
 const message = useMessage()

@@ -1,5 +1,10 @@
 <template>
-  <CourseSkeleton v-if="courseLoading || !courseData" />
+  <component
+    v-if="errorMsg.component"
+    :is="errorMsg.component"
+    :detail="errorMsg.detail"
+  />
+  <CourseSkeleton v-else-if="courseLoading || !courseData" />
   <main class="min-h-screen bg-gray-100" v-else>
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
@@ -35,11 +40,19 @@ import CourseReviews from '@/components/courseReview/course/courseReviews/Course
 import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
 import CourseAlike from '@/components/courseReview/course/CourseAlike.vue'
 import CourseSkeleton from '@/components/courseReview/course/CourseSkeleton.vue'
+import Page404 from '@/components/infoNErrors/404.vue'
+import Page500 from '@/components/infoNErrors/500.vue'
 import { ArrowUp } from 'lucide-vue-next'
 
-const router = useRouter()
 const route = useRoute()
 
+const errorMsg = ref<{
+  component: typeof Page404 | typeof Page500 | null,
+  detail: string,
+}>({
+  component: null,
+  detail: '',
+})
 const courseLoading = ref(true)
 const courseData = ref<CourseData | null>(null)
 const showTopButton = ref(false)
@@ -56,7 +69,10 @@ const loadData = async () => {
     })
 
     if (status === 404) {
-      await router.push({ name: '404' })
+      errorMsg.value = {
+        component: Page404,
+        detail: '课程信息不存在',
+      }
       return
     }
 
@@ -70,7 +86,10 @@ const loadData = async () => {
   } catch (error) {
     console.error('Failed to fetch course data:', error)
     if (error instanceof Error) {
-      await router.push({ name: '500', query: { message: encodeURI(error.toString()) } })
+      errorMsg.value = {
+        component: Page500,
+        detail: error.toString(),
+      }
     }
   }
 }

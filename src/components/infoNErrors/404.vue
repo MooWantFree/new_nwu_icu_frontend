@@ -33,6 +33,6 @@ const goHome = () => {
 }
 
 const goBack = () => {
-  router.go(-2)
+  router.go(-1)
 }
 </script>
