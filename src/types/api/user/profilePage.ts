@@ -145,7 +145,8 @@ export type APIUserProfile = {
     date_joined: string
     nickname: string
     avatar: string
-    nwu_email?: string
+    college_email?: string
+    verified: boolean
     is_me: true
   }
   errors: ErrorFactory<ErrorNotLogin>[]
@@ -188,7 +189,7 @@ export type APIUserProfileFromId = {
         date_joined: string
         nickname: string
         avatar: string
-        nwu_email?: string
+        college_email?: string
         is_me: true
       }
     | {

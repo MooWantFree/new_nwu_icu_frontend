@@ -10,7 +10,7 @@
           <input
             type="text"
             :value="mainEmailAddress"
-            readonly
+            disabled
             class="flex-grow px-3 py-2 border border-gray-300 rounded-l-md text-gray-700 bg-gray-100"
           />
           <button
@@ -31,7 +31,7 @@
             ref="nwuEmailAddressInput"
             type="text"
             v-model="nwuEmailAddress"
-            :readonly="!editNwuEmailAddress"
+            :disabled="!editNwuEmailAddress"
             :placeholder="editNwuEmailAddress ? '请输入NWU邮箱' : '暂无'"
             class="flex-grow px-3 py-2 border border-gray-300 rounded-l-md text-gray-700"
             :class="{
@@ -68,7 +68,7 @@
           <div
             v-else
             @click="handleBindedNVerifiedNwuEmailAction"
-            class="flex items-center justify-center px-4 py-2 rounded-r-md transition duration-200 text-white bg-blue-500 hover:bg-blue-600 cursor-pointer"
+            class="flex items-center justify-center px-4 py-2 rounded-r-md transition duration-200 text-white bg-green-500 hover:bg-green-600 cursor-pointer"
           >
             <span>已绑定</span>
           </div>
@@ -96,9 +96,9 @@ const message = useMessage()
 const dialog = useDialog()
 
 const mainEmailAddress = ref(props.userInfo.email)
-const nwuEmailAddress = ref(props.userInfo.nwu_email || '')
+const nwuEmailAddress = ref(props.userInfo.college_email || '')
 const editNwuEmailAddress = ref(false)
-const isNWUEmailVerified = ref(true)
+const isNWUEmailVerified = ref(props.userInfo.verified)
 
 const nwuEmailAddressInput = useTemplateRef('nwuEmailAddressInput')
 
@@ -145,7 +145,6 @@ const handleNwuEmailAction = async () => {
       }
       message.success('NWU邮箱绑定成功')
       editNwuEmailAddress.value = false
-      // FIXME: Temp solution
       isNWUEmailVerified.value = false
       showNWUEmailVerifyDialog()
     } catch (error) {

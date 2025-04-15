@@ -86,7 +86,7 @@
         <div class="sm:col-span-1">
           <dt class="text-sm font-medium text-gray-500">西北大学邮箱</dt>
           <dd v-if="userInfo.is_me" class="mt-1 text-sm text-gray-900">
-            {{ userInfo.nwu_email || '未提供' }}
+            {{ userInfo.college_email || '未提供' }}
           </dd>
           <dd v-else class="mt-1 text-sm text-gray-900">
             <span>{{ userInfo.verified ? '已验证' : '未验证' }}</span>
