@@ -109,6 +109,14 @@ const userRoutes = [
       pageTitle: '用户激活',
     },
   },
+  {
+    path: '/user/bind-college-mail',
+    name: 'bindCollegeMail',
+    component: () => import('@/views/user/UserActivate.vue'),
+    meta: {
+      pageTitle: '绑定学院邮箱',
+    },
+  },
 ] satisfies RouteRecordRaw[]
 
 const messageRoutes = [

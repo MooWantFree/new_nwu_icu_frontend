@@ -77,8 +77,49 @@ const error = ref<string | null>(null)
 const token = ref<string>('')
 
 onMounted(() => {
-  checkUserAndActivate()
+  const routeName = route.name
+  if (routeName === 'bindCollegeMail') {
+    bindCollegeMail()
+  } else if (routeName === 'userActivate') {
+    checkUserAndActivate()
+  }
 })
+
+const bindCollegeMail = async () => {
+  // Get activation token
+  token.value = route.query.token as string
+
+  if (!token.value) {
+    error.value = '绑定令牌丢失，请检查你的绑定链接是否完整'
+    loading.value = false
+    return
+  }
+
+  loading.value = true
+  try {
+    const { status, errors } = await api.get({
+      url: '/api/user/bind-college-email/verify/',
+      query: {
+        token: token.value,
+      },
+    })
+    
+    const errorText = errors?.reduce((acc, cur) => acc + cur.err_msg, '')
+    
+    if (status === 200) {
+      success.value = true
+      message.success('绑定成功')
+    } else {
+      error.value = errorText || '绑定失败。请重试或联系客服支持。'
+    }
+  } catch (err) {
+    error.value = '网络连接错误，请检查你的网络连接并重试。'
+    console.error('Activation error:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
 
 const checkUserAndActivate = async () => {
   // Check if user is already logged in
