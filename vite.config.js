@@ -20,7 +20,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'https://hha.nwu.icu',
+        target: 'https://nwu.icu',
         changeOrigin: true,
       },
     },
