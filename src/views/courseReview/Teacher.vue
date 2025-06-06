@@ -57,12 +57,14 @@
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">教授课程</h2>
             <AddCourseModal v-model="showTeacherSelectorModal" :init-value="{teacher: teacher.teacher_info}" />
-            <n-button type="primary" @click="showTeacherSelectorModal = true">
-              <template #icon>
-                <n-icon><PlusCircle /></n-icon>
-              </template>
+            <button
+              type="button"
+              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              @click="handleAddCourseButtonClick"
+            >
+              <PlusCircle class="h-5 w-5 mr-2 -ml-1" />
               添加课程
-            </n-button>
+            </button>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
@@ -122,13 +124,12 @@
                 <span class="text-sm text-gray-500"
                   >评价数: {{ course.review_count }}</span
                 >
-                <n-button
-                  size="small"
-                  type="primary"
+                <button
+                  class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   @click="router.push(`/review/course/${course.course.id}`)"
                 >
                   查看详情
-                </n-button>
+                </button>
               </div>
             </div>
           </div>
@@ -145,7 +146,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { NButton, NIcon } from 'naive-ui'
+import { NButton } from 'naive-ui'
 import { PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
@@ -153,6 +154,7 @@ import { APITeacherInfo } from '@/types/api/courseReview/teacher'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import Page404 from '@/components/infoNErrors/404.vue'
 import Page500 from '@/components/infoNErrors/500.vue'
+import { checkLoginStatus } from '@/lib/logins'
 
 const route = useRoute()
 const router = useRouter()
@@ -168,6 +170,15 @@ const errorMsg = ref<{
 const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
 const showTeacherSelectorModal = ref(false)
+
+const handleAddCourseButtonClick = () => {
+  // If user already login then show the modal
+  if (checkLoginStatus()) {
+    showTeacherSelectorModal.value = true
+  } else {
+    message.error('请先登录后再进行课程添加')
+  }
+}
 
 const fetchTeacherData = async () => {
   const teacherId = parseInt(route.params.id as string)
