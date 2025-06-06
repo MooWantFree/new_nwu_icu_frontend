@@ -191,11 +191,23 @@ const systemInfoRoutes = [
   },
 ] satisfies RouteRecordRaw[]
 
+const diskRouters = [
+  {
+    path: '/disk/:path(.*)*',
+    name: 'disk',
+    component: () => import('@/views/disk/Disk.vue'),
+    meta: {
+      pageTitle: '网盘',
+    },
+  }
+] satisfies RouteRecordRaw[]
+
 const routes = [
   ...courseReviewRoutes,
   ...userRoutes,
   ...systemInfoRoutes,
   ...messageRoutes,
+  ...diskRouters,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
