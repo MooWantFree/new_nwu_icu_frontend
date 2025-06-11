@@ -19,6 +19,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     proxy: {
+      '/api/disk': {
+        target: 'https://resour.nwu.icu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/disk/, '/api'),
+      },
       '/api': {
         target: 'https://nwu.icu',
         changeOrigin: true,

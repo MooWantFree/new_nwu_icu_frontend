@@ -54,6 +54,9 @@ export type RequestEndpoints = {
     '/api/message/like/': Like.APILikeList
     '/api/message/reply/': Messages.APINotificationList
     '/api/message/unread/': Messages.APIUnreadMessageCount
+
+    // Disk
+    // Since Alist's API format is not same as present, so another method is used for it.
   }
   [MethodMap.POST]: {
     // User
