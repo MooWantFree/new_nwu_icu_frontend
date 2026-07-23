@@ -1,90 +1,163 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="flex min-h-[80dvh] flex-col justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        {{ linkSent ? '重置链接已发送' : '忘记密码？' }}
-      </h2>
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+        <KeyRound class="h-7 w-7" />
+      </div>
+      <h1 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        {{ pageTitle }}
+      </h1>
       <p class="mt-2 text-center text-sm text-gray-600">
-        {{ linkSent ? '请检查你的电子邮件以重置密码' : '输入你的电子邮件地址，我们将向你发送重置密码的链接。' }}
+        {{ pageDescription }}
       </p>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-
-        <div v-if="errorMessage" class="rounded-md bg-red-50 p-4 mb-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <TriangleAlert class="w-6 h-6"/>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">
-                {{ errorMessage }}
-              </h3>
-            </div>
-          </div>
+      <div class="rounded-2xl bg-white px-5 py-8 shadow sm:px-10">
+        <div v-if="isVerifyingToken" class="flex flex-col items-center py-10 text-center">
+          <LoaderCircle class="h-8 w-8 animate-spin text-blue-600" />
+          <p class="mt-4 text-sm font-medium text-gray-700">正在验证重置链接…</p>
         </div>
 
-        <form v-if="!linkSent" class="space-y-6" @submit.prevent="handleSubmit">
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              电子邮件地址
-            </label>
-            <div class="mt-1">
-              <input id="email" name="email" type="email" autocomplete="email" required v-model="email"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-            </div>
+        <div v-else-if="tokenError" class="text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <TriangleAlert class="h-8 w-8 text-red-600" />
+          </div>
+          <h2 class="mt-5 text-xl font-bold text-gray-900">重置链接不可用</h2>
+          <p class="mt-3 text-sm leading-6 text-gray-600">{{ tokenError }}</p>
+          <router-link
+            :to="{ name: 'forgetPassword' }"
+            class="mt-6 inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            重新申请重置链接
+          </router-link>
+        </div>
+
+        <div v-else-if="resetSucceeded" class="text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle2 class="h-8 w-8 text-green-600" />
+          </div>
+          <h2 class="mt-5 text-xl font-bold text-gray-900">密码已重置</h2>
+          <p class="mt-3 text-sm leading-6 text-gray-600">新密码已经生效，现在可以返回登录。</p>
+          <router-link
+            :to="{ name: 'login' }"
+            class="mt-6 inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            前往登录
+          </router-link>
+        </div>
+
+        <template v-else>
+          <div
+            v-if="errorMessage"
+            class="mb-5 flex items-start gap-3 rounded-md bg-red-50 p-4 text-sm text-red-800"
+            role="alert"
+          >
+            <TriangleAlert class="h-5 w-5 shrink-0" />
+            <span>{{ errorMessage }}</span>
           </div>
 
-          <div>
-            <label for="captcha" class="block text-sm font-medium text-gray-700">
-              验证码
-            </label>
-            <div class="mt-1 flex items-center space-x-2">
-              <input id="captcha" name="captcha" type="text" required v-model="captchaValue"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-              <div v-if="isLoadingCaptcha" class="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
-              <img v-else :src="captchaImageUrl" alt="Captcha" @click="getCaptcha"
-                class="h-10 w-32 object-contain bg-gray-100 cursor-pointer" />
+          <form v-if="hasToken" class="space-y-5" @submit.prevent="handlePasswordReset">
+            <div>
+              <label for="new-password" class="block text-sm font-medium text-gray-700">新密码</label>
+              <input
+                id="new-password"
+                v-model="newPassword"
+                type="password"
+                autocomplete="new-password"
+                required
+                placeholder="8–30 位，包含大小写字母和数字"
+                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm"
+              />
             </div>
-          </div>
-          <div>
-            <button type="submit" :disabled="isLoading"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ isLoading ? '发送中...' : '发送重置链接' }}
+
+            <div>
+              <label for="confirm-password" class="block text-sm font-medium text-gray-700">确认新密码</label>
+              <input
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                required
+                placeholder="再次输入新密码"
+                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm"
+              />
+            </div>
+
+            <CaptchaField
+              v-model="captchaValue"
+              :image-url="captchaImageUrl"
+              :loading="isLoadingCaptcha"
+              @refresh="getCaptcha"
+            />
+
+            <button
+              type="submit"
+              :disabled="isLoading || isLoadingCaptcha"
+              class="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LoaderCircle v-if="isLoading" class="mr-2 h-5 w-5 animate-spin" />
+              {{ isLoading ? '正在重置…' : '设置新密码' }}
             </button>
-          </div>
-        </form>
+          </form>
 
-        <div v-else class="text-center">
-          <p class="mb-4">我们已经向{{ ` ${email} ` }}发了送一封包含重置密码链接的电子邮件</p>
-          <p class="mb-4">如果你没有收到邮件，请检查你的垃圾邮件文件夹或重试</p>
-          <button @click="resetForm"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            重新发送链接
-          </button>
-        </div>
+          <template v-else>
+            <form v-if="!linkSent" class="space-y-6" @submit.prevent="handleResetRequest">
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">注册邮箱</label>
+                <input
+                  id="email"
+                  v-model="email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  placeholder="请输入注册时使用的邮箱"
+                  class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm"
+                />
+              </div>
 
-        <div class="mt-6">
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white text-gray-500">
-                或者
-              </span>
-            </div>
-          </div>
+              <CaptchaField
+                v-model="captchaValue"
+                :image-url="captchaImageUrl"
+                :loading="isLoadingCaptcha"
+                @refresh="getCaptcha"
+              />
 
-          <div class="mt-6">
-            <div class="text-center">
-              <router-link to="/" class="font-medium text-blue-600 hover:text-blue-500">
-                返回首页
-              </router-link>
+              <button
+                type="submit"
+                :disabled="isLoading || isLoadingCaptcha"
+                class="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <LoaderCircle v-if="isLoading" class="mr-2 h-5 w-5 animate-spin" />
+                {{ isLoading ? '发送中…' : '发送重置链接' }}
+              </button>
+            </form>
+
+            <div v-else class="text-center">
+              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                <MailCheck class="h-8 w-8 text-blue-600" />
+              </div>
+              <h2 class="mt-5 text-xl font-bold text-gray-900">重置链接已发送</h2>
+              <p class="mt-3 text-sm leading-6 text-gray-600">
+                我们已经向 <span class="font-medium text-gray-900">{{ email }}</span> 发送了重置密码邮件。
+              </p>
+              <p class="mt-2 text-xs leading-5 text-gray-500">如果没有收到，请检查垃圾邮件文件夹。</p>
+              <button
+                type="button"
+                class="mt-6 w-full rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                @click="resetRequestForm"
+              >
+                重新发送
+              </button>
             </div>
-          </div>
-          <!-- TODO: 要不要加一个`联系管理员`的指引？ -->
+          </template>
+        </template>
+
+        <div v-if="!isVerifyingToken && !resetSucceeded" class="mt-6 border-t border-gray-200 pt-6 text-center">
+          <router-link to="/" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+            返回首页
+          </router-link>
         </div>
       </div>
     </div>
@@ -92,92 +165,218 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, defineComponent, h, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import {
+  CheckCircle2,
+  KeyRound,
+  LoaderCircle,
+  MailCheck,
+  RefreshCw,
+  TriangleAlert,
+} from 'lucide-vue-next'
 import { api } from '@/lib/requests'
-import { TriangleAlert } from 'lucide-vue-next'
+import { basePasswordSchema } from '@/types/common/userBasicInfo'
 
+const CaptchaField = defineComponent({
+  props: {
+    modelValue: { type: String, required: true },
+    imageUrl: { type: String, required: true },
+    loading: { type: Boolean, required: true },
+  },
+  emits: ['update:modelValue', 'refresh'],
+  setup(props, { emit }) {
+    return () => h('div', [
+      h('label', { for: 'reset-captcha', class: 'block text-sm font-medium text-gray-700' }, '验证码'),
+      h('div', { class: 'mt-1 flex items-center gap-2' }, [
+        h('input', {
+          id: 'reset-captcha',
+          value: props.modelValue,
+          type: 'text',
+          required: true,
+          autocomplete: 'off',
+          placeholder: '请输入验证码',
+          class: 'block min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm',
+          onInput: (event: Event) => emit('update:modelValue', (event.target as HTMLInputElement).value),
+        }),
+        props.loading
+          ? h('div', { class: 'h-10 w-28 animate-pulse rounded bg-gray-200' })
+          : h('button', {
+            type: 'button',
+            class: 'relative h-10 w-28 overflow-hidden rounded border border-gray-200 bg-gray-50',
+            title: '刷新验证码',
+            onClick: () => emit('refresh'),
+          }, [
+            h('img', { src: props.imageUrl, alt: '验证码', class: 'h-full w-full object-contain' }),
+            h(RefreshCw, { class: 'absolute right-1 top-1 h-3.5 w-3.5 rounded bg-white/80 p-0.5 text-gray-500' }),
+          ]),
+      ]),
+    ])
+  },
+})
 
+const route = useRoute()
 const message = useMessage()
 
+const token = computed(() => typeof route.query.token === 'string' ? route.query.token : '')
+const hasToken = computed(() => Boolean(token.value))
 const email = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
 const isLoading = ref(false)
 const linkSent = ref(false)
+const resetSucceeded = ref(false)
+const isVerifyingToken = ref(false)
+const tokenError = ref('')
 const captchaImageUrl = ref('')
 const captchaKey = ref('')
 const captchaValue = ref('')
-const isLoadingCaptcha = ref(true)
+const isLoadingCaptcha = ref(false)
 const errorMessage = ref('')
+
+const pageTitle = computed(() => {
+  if (resetSucceeded.value) return '密码重置成功'
+  if (hasToken.value) return '设置新密码'
+  return linkSent.value ? '检查你的邮箱' : '忘记密码？'
+})
+
+const pageDescription = computed(() => {
+  if (resetSucceeded.value) return '你的账户现在可以使用新密码登录'
+  if (hasToken.value) return '请输入符合安全要求的新密码'
+  return linkSent.value
+    ? '重置链接将在 24 小时后失效'
+    : '输入注册邮箱，我们会发送一封重置密码邮件'
+})
+
+const getErrorText = (errors: { err_msg: string }[] | undefined, fallback: string) =>
+  errors?.map((item) => item.err_msg).filter(Boolean).join('；') || fallback
 
 const getCaptcha = async () => {
   isLoadingCaptcha.value = true
   try {
-    const { status, data, content } = await api.get({url: '/api/captcha/'})
-    if (status === 200) {
-      captchaImageUrl.value = content.image_url
-      captchaKey.value = content.key
-      captchaValue.value = '' // Clear previous captcha value
+    const response = await api.get({ url: '/api/captcha/' })
+    if (response.status === 200) {
+      captchaImageUrl.value = response.content.image_url
+      captchaKey.value = response.content.key
+      captchaValue.value = ''
     } else {
-      message.error('获取验证码失败，请重试')
+      errorMessage.value = '获取验证码失败，请重试'
     }
-  } catch (error) {
-    console.error('error: ', error)
-    message.error('获取验证码时发生错误，请重试')
+  } catch {
+    errorMessage.value = '获取验证码时发生错误，请重试'
   } finally {
     isLoadingCaptcha.value = false
   }
 }
 
-onMounted(async () => {
-  await getCaptcha()
-})
-
-const handleSubmit = async () => {
-  if (isLoadingCaptcha.value) {
-    return // Prevent submission if captcha is still loading
-  }
-
-  isLoading.value = true
-  errorMessage.value = '' // Clear previous error message
-
+const verifyToken = async () => {
+  isVerifyingToken.value = true
+  tokenError.value = ''
   try {
-    const { status, data, content } = await api.post(
-      {url: '/api/user/reset/',
-        query: {
-          email: email.value,
-          captcha_key: captchaKey.value,
-          captcha_value: captchaValue.value
-        }
-      },
-    )
-    if (status === 200) {
-      linkSent.value = true
-    } else {
-      // TODO: Handle error: if more than one error
-      if (data.errors?.find(it=>it.field==='captcha')) {
-        errorMessage.value = data.errors.find(it=>it.field==='captcha')?.err_msg!
-      } else if (data.errors?.find(it=>it.field==='email')) {
-        errorMessage.value = '邮箱不存在'
-      } else {
-        throw new Error(JSON.stringify(data.errors))
-      }
-      getCaptcha() // Refresh captcha if submission fails
+    const response = await api.get({
+      url: '/api/user/mail-reset/:token/',
+      params: { token: token.value },
+    })
+    if (response.status !== 200) {
+      tokenError.value = '重置链接无效或已经过期，请重新申请。'
+      return
     }
-  } catch (error) {
-    console.error('error: ', error)
-    errorMessage.value = '发生意外错误。请稍后重试'
-    getCaptcha() // Refresh captcha if submission fails
+    await getCaptcha()
+  } catch {
+    tokenError.value = '暂时无法验证重置链接，请稍后重试。'
+  } finally {
+    isVerifyingToken.value = false
+  }
+}
+
+const handleResetRequest = async () => {
+  if (isLoadingCaptcha.value) return
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const response = await api.post({
+      url: '/api/user/reset/',
+      query: {
+        email: email.value.trim(),
+        captcha_key: captchaKey.value,
+        captcha_value: captchaValue.value,
+      },
+    })
+    if (response.status === 200) {
+      linkSent.value = true
+    } else if (response.errors?.some((item) => item.field === 'email')) {
+      errorMessage.value = '该邮箱没有对应的账户'
+      await getCaptcha()
+    } else {
+      errorMessage.value = getErrorText(response.errors, '发送失败，请稍后重试')
+      await getCaptcha()
+    }
+  } catch {
+    errorMessage.value = '网络连接错误，请稍后重试'
+    await getCaptcha()
   } finally {
     isLoading.value = false
   }
 }
 
-const resetForm = () => {
-  linkSent.value = false
-  email.value = ''
-  captchaValue.value = ''
+const handlePasswordReset = async () => {
   errorMessage.value = ''
-  getCaptcha()
+  const passwordResult = basePasswordSchema.safeParse(newPassword.value)
+  if (!passwordResult.success) {
+    errorMessage.value = passwordResult.error.errors[0]?.message || '新密码不符合要求'
+    return
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    errorMessage.value = '两次输入的密码不一致'
+    return
+  }
+  if (!captchaValue.value) {
+    errorMessage.value = '请输入验证码'
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const response = await api.post({
+      url: '/api/user/mail-reset/:token/',
+      params: { token: token.value },
+      query: {
+        new_password: newPassword.value,
+        confirm_password: confirmPassword.value,
+        captcha_key: captchaKey.value,
+        captcha_value: captchaValue.value,
+      },
+    })
+    if (response.status === 200) {
+      resetSucceeded.value = true
+      message.success('密码重置成功')
+    } else if (response.status === 401) {
+      tokenError.value = '重置链接无效或已经过期，请重新申请。'
+    } else {
+      errorMessage.value = getErrorText(response.errors, '密码重置失败，请检查输入后重试')
+      await getCaptcha()
+    }
+  } catch {
+    errorMessage.value = '网络连接错误，请稍后重试'
+    await getCaptcha()
+  } finally {
+    isLoading.value = false
+  }
 }
 
+const resetRequestForm = async () => {
+  linkSent.value = false
+  captchaValue.value = ''
+  errorMessage.value = ''
+  await getCaptcha()
+}
+
+onMounted(async () => {
+  if (hasToken.value) {
+    await verifyToken()
+  } else {
+    await getCaptcha()
+  }
+})
 </script>

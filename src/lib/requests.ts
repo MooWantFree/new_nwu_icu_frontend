@@ -63,6 +63,7 @@ async function request<T extends APIBase>({
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest()
           xhr.open(method, fullUrl)
+          xhr.withCredentials = mergedOptions.credentials === 'include'
           
           // Copy headers from mergedOptions
           Object.entries(mergedOptions.headers || {}).forEach(([key, value]) => {
@@ -76,7 +77,7 @@ async function request<T extends APIBase>({
           })
           
           // Handle response
-          xhr.onload = async () => {
+          xhr.onload = () => {
             try {
               const result = JSON.parse(xhr.responseText)
               resolve({
@@ -85,12 +86,14 @@ async function request<T extends APIBase>({
                 content: result.contents as T['response'],
                 errors: result.errors as APIResponse<T>['errors'],
               })
-            } catch (error) {
-              reject(new Error('Failed to parse response'))
+            } catch {
+              reject(new Error(`服务器返回了无法解析的响应（HTTP ${xhr.status}）`))
             }
           }
           
-          xhr.onerror = () => reject(new Error('Network error'))
+          xhr.onerror = () => reject(new Error('网络连接中断'))
+          xhr.onabort = () => reject(new Error('上传已取消'))
+          xhr.ontimeout = () => reject(new Error('服务器处理超时'))
           xhr.send(query)
         })
       }

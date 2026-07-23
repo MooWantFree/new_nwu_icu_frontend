@@ -202,12 +202,24 @@ const diskRouters = [
   }
 ] satisfies RouteRecordRaw[]
 
+const resourceUploadRoutes = [
+  {
+    path: '/upload',
+    name: 'resourceUpload',
+    component: () => import('@/views/upload/ResourceUpload.vue'),
+    meta: {
+      pageTitle: '资料投稿',
+      requiresAuth: true,
+    },
+  },
+] satisfies RouteRecordRaw[]
+
 const routes = [
   ...courseReviewRoutes,
   ...userRoutes,
-  ...systemInfoRoutes,
   ...messageRoutes,
   ...diskRouters,
+  ...resourceUploadRoutes,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),
@@ -239,6 +251,7 @@ const routes = [
       pageTitle: '文章',
     },
   },
+  ...systemInfoRoutes,
 ] as RouteRecordRaw[]
 
 const Router = createRouter({
@@ -259,7 +272,13 @@ Router.beforeEach(async (to, from) => {
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
   if (to.meta?.requiresAuth && !checkLoginStatus()) {
-    return { name: '403', params: { message: '你尚未登录' } }
+    return {
+      name: 'login',
+      query: {
+        redirect: to.fullPath,
+        reason: '请先登录或注册，再继续投稿资料',
+      },
+    }
   }
   return
 })

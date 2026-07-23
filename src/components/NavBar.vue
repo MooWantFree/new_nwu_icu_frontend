@@ -160,6 +160,11 @@ const menuOptions = [
     },
   },
   {
+    key: 'resourceUpload',
+    text: '资料投稿',
+    path: '/upload',
+  },
+  {
     key: 'about',
     text: '公告',
     path: '/blog',

@@ -82,6 +82,7 @@ import {
   BookOpenText,
   Bus,
   Download,
+  Upload,
   Laptop,
   Library,
   Mail,
@@ -109,6 +110,7 @@ const sections = [
     items: [
       { label: '课程评价', icon: School, url: '/review/timeline', openIn: true },
       { label: '资料下载', icon: Download, url: 'https://resour.nwu.icu', openIn: false },
+      { label: '资料投稿', icon: Upload, url: '/upload', openIn: true },
     ],
   },
   {

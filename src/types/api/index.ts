@@ -5,6 +5,11 @@ import type { Search } from './search'
 import type { Captcha } from './captcha'
 import type { Text } from './text'
 import type { FileAPI } from './file'
+import type {
+  APIResourceDirectories,
+  APIResourceUploadCreate,
+  APIResourceUploadList,
+} from './resourceUpload'
 import { MethodMap } from './base'
 
 export type RequestEndpoints = {
@@ -47,6 +52,8 @@ export type RequestEndpoints = {
 
     // File
     '/api/download/:uuid/': FileAPI.APIFileDownload
+    '/api/upload/directories/': APIResourceDirectories
+    '/api/upload/request/': APIResourceUploadList
 
     // Messages
     '/api/message/user/': Inbox.APIUserMessageList
@@ -94,6 +101,7 @@ export type RequestEndpoints = {
 
     // File
     '/api/upload/': FileAPI.APIUploadFile
+    '/api/upload/request/': APIResourceUploadCreate
 
     // Message
     '/api/message/': Inbox.APISendMessage
