@@ -77,3 +77,16 @@ export type APIResourceUploadCreate = {
   }
   errors: ErrorFactory<ResourceUploadErrors>[]
 }
+
+export type APIResourceUploadUpdate = {
+  endpoint: '/api/upload/request/:requestId/'
+  method: MethodMap.PUT
+  params: {
+    requestId: number
+  }
+  query: FormData
+  response: {
+    upload_request: ResourceUploadRequest
+  }
+  errors: ErrorFactory<ResourceUploadErrors | 'upload_request' | 'remove_file_ids'>[]
+}

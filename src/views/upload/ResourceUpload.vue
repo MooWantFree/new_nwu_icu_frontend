@@ -301,6 +301,29 @@
           </button>
         </div>
 
+        <div class="mt-5 flex flex-wrap items-center gap-2">
+          <span class="mr-1 text-sm font-medium text-slate-500">筛选：</span>
+          <button
+            v-for="option in statusFilterOptions"
+            :key="option.value"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition"
+            :class="selectedStatuses.includes(option.value)
+              ? option.activeClass
+              : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600'"
+            @click="toggleStatusFilter(option.value)"
+          >
+            <span
+              class="flex h-4 w-4 items-center justify-center rounded border"
+              :class="selectedStatuses.includes(option.value) ? 'border-current' : 'border-slate-300'"
+            >
+              <Check v-if="selectedStatuses.includes(option.value)" class="h-3 w-3" />
+            </span>
+            {{ option.label }}
+            <span class="font-normal opacity-70">{{ statusCounts[option.value] }}</span>
+          </button>
+        </div>
+
         <div v-if="historyLoading && !uploadHistory.length" class="flex min-h-40 items-center justify-center text-sm text-slate-500">
           <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-600" />
           正在加载投稿记录…
@@ -308,14 +331,18 @@
         <div v-else-if="historyError" class="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {{ historyError }}
         </div>
-        <div v-else-if="!uploadHistory.length" class="mt-6 flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
+        <div v-else-if="!filteredUploadHistory.length" class="mt-6 flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
           <Archive class="h-8 w-8 text-slate-300" />
-          <p class="mt-3 text-sm font-medium text-slate-600">还没有投稿记录</p>
-          <p class="mt-1 text-xs text-slate-400">你的第一份分享会显示在这里</p>
+          <p class="mt-3 text-sm font-medium text-slate-600">
+            {{ uploadHistory.length ? '当前筛选条件下没有投稿' : '还没有投稿记录' }}
+          </p>
+          <p class="mt-1 text-xs text-slate-400">
+            {{ uploadHistory.length ? '可以重新选择上方状态筛选' : '你的第一份分享会显示在这里' }}
+          </p>
         </div>
         <div v-else class="mt-6 grid gap-3 md:grid-cols-2">
           <article
-            v-for="record in uploadHistory"
+            v-for="record in filteredUploadHistory"
             :key="record.id"
             class="rounded-xl border border-slate-200 p-4"
           >
@@ -344,9 +371,263 @@
             >
               退回原因：{{ record.rejection_reason }}
             </div>
+            <button
+              v-if="record.status === 'pending' || record.status === 'rejected'"
+              type="button"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              @click="openEditDialog(record)"
+            >
+              <Pencil class="h-3.5 w-3.5" />
+              编辑投稿
+            </button>
           </article>
         </div>
       </section>
+
+      <div
+        v-if="editingRequest"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-upload-title"
+        @click.self="closeEditDialog"
+      >
+        <div class="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+          <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
+            <div>
+              <p class="text-xs font-semibold text-blue-600">投稿 #{{ editingRequest.id }}</p>
+              <h2 id="edit-upload-title" class="mt-1 text-xl font-bold text-slate-900">编辑投稿</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                {{ editingRequest.status === 'rejected' ? '保存后将重新进入待审核状态。' : '保存后会更新当前待审核内容。' }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="关闭编辑窗口"
+              :disabled="editSubmitting"
+              @click="closeEditDialog"
+            >
+              <X class="h-5 w-5" />
+            </button>
+          </div>
+
+          <div class="grid gap-7 p-5 sm:p-7 lg:grid-cols-2">
+            <section>
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h3 class="font-bold text-slate-900">之前上传的文件</h3>
+                  <p class="mt-1 text-xs text-slate-500">点击删除可将文件标记为移除，再次点击可以撤销。</p>
+                </div>
+                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                  保留 {{ keptExistingFileCount }}
+                </span>
+              </div>
+
+              <ul class="mt-4 max-h-64 space-y-2 overflow-y-auto pr-1">
+                <li
+                  v-for="file in editingRequest.files"
+                  :key="file.id"
+                  class="flex items-center gap-3 rounded-xl border px-3 py-3 transition"
+                  :class="removedExistingFileIds.includes(file.id)
+                    ? 'border-red-100 bg-red-50/70 opacity-65'
+                    : 'border-slate-200 bg-white'"
+                >
+                  <component :is="getFileIcon(file.original_name)" class="h-5 w-5 shrink-0 text-slate-500" />
+                  <div class="min-w-0 flex-1">
+                    <p
+                      class="truncate text-sm font-medium"
+                      :class="removedExistingFileIds.includes(file.id) ? 'text-red-500 line-through' : 'text-slate-800'"
+                      :title="file.relative_path"
+                    >
+                      {{ file.relative_path }}
+                    </p>
+                    <p class="mt-0.5 text-xs text-slate-400">{{ file.size_display }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="removedExistingFileIds.includes(file.id)
+                      ? 'text-slate-500 hover:bg-white hover:text-blue-600'
+                      : 'text-slate-400 hover:bg-red-50 hover:text-red-600'"
+                    :aria-label="removedExistingFileIds.includes(file.id) ? `撤销删除 ${file.relative_path}` : `删除 ${file.relative_path}`"
+                    @click="toggleExistingFileRemoval(file.id)"
+                  >
+                    <RotateCcw v-if="removedExistingFileIds.includes(file.id)" class="h-4 w-4" />
+                    <Trash2 v-else class="h-4 w-4" />
+                  </button>
+                </li>
+              </ul>
+
+              <div class="mt-6 flex items-center justify-between gap-3">
+                <div>
+                  <h3 class="font-bold text-slate-900">追加新文件</h3>
+                  <p class="mt-1 text-xs text-slate-500">可选择文件或整个文件夹。</p>
+                </div>
+                <span class="text-xs font-semibold text-slate-500">{{ editResultFileCount }} / 20</span>
+              </div>
+
+              <input
+                ref="editFileInput"
+                class="hidden"
+                type="file"
+                multiple
+                :accept="acceptExtensions"
+                @change="handleEditFileInput"
+              />
+              <input
+                ref="editFolderInput"
+                class="hidden"
+                type="file"
+                multiple
+                webkitdirectory
+                @change="handleEditFileInput"
+              />
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                  @click="editFileInput?.click()"
+                >
+                  <Plus class="h-4 w-4" />
+                  添加文件
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  @click="editFolderInput?.click()"
+                >
+                  <FolderPlus class="h-4 w-4" />
+                  添加文件夹
+                </button>
+              </div>
+
+              <ul v-if="editSelectedFiles.length" class="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+                <li
+                  v-for="item in editSelectedFiles"
+                  :key="item.id"
+                  class="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2.5"
+                >
+                  <component :is="getFileIcon(item.file.name)" class="h-4 w-4 shrink-0 text-blue-600" />
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-medium text-slate-800" :title="item.relativePath">{{ item.relativePath }}</p>
+                    <p class="text-xs text-slate-400">{{ formatBytes(item.file.size) }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-red-600"
+                    @click="removeEditFile(item.id)"
+                  >
+                    <X class="h-4 w-4" />
+                  </button>
+                </li>
+              </ul>
+              <p v-if="editFileError" class="mt-3 text-sm text-red-600">{{ editFileError }}</p>
+            </section>
+
+            <section>
+              <h3 class="font-bold text-slate-900">修改上传目录</h3>
+              <p class="mt-1 text-xs text-slate-500">请选择资料审核通过后要归档的位置。</p>
+
+              <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+                <div class="flex min-h-12 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
+                  <button
+                    type="button"
+                    class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-white hover:text-blue-600"
+                    aria-label="返回根目录"
+                    @click="openEditDirectory('/')"
+                  >
+                    <Home class="h-4 w-4" />
+                  </button>
+                  <template v-for="crumb in editBreadcrumbs" :key="crumb.path">
+                    <ChevronRight class="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                    <button
+                      type="button"
+                      class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-white hover:text-blue-600"
+                      @click="openEditDirectory(crumb.path)"
+                    >
+                      {{ crumb.name }}
+                    </button>
+                  </template>
+                </div>
+                <div class="min-h-52 p-2">
+                  <div v-if="editDirectoryLoading" class="flex min-h-48 items-center justify-center text-sm text-slate-500">
+                    <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-600" />
+                    正在读取目录…
+                  </div>
+                  <div v-else-if="editDirectoryError" class="flex min-h-48 flex-col items-center justify-center px-4 text-center">
+                    <p class="text-sm text-amber-700">{{ editDirectoryError }}</p>
+                    <button type="button" class="mt-3 text-sm font-semibold text-blue-600" @click="loadEditDirectories">重试</button>
+                  </div>
+                  <div v-else-if="!editDirectories.length" class="flex min-h-48 items-center justify-center text-sm text-slate-400">
+                    当前目录下没有子文件夹
+                  </div>
+                  <ul v-else class="space-y-1">
+                    <li v-for="directory in editDirectories" :key="directory.path">
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-blue-50"
+                        @click="openEditDirectory(directory.path)"
+                      >
+                        <Folder class="h-5 w-5 fill-blue-100 text-blue-600" />
+                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{{ directory.name }}</span>
+                        <ChevronRight class="h-4 w-4 text-slate-300" />
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                <p class="text-xs font-medium text-blue-600">新的目标目录</p>
+                <p class="mt-1 break-all text-sm font-semibold text-blue-950">{{ editFinalTargetPath }}</p>
+              </div>
+
+              <label class="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50">
+                <input v-model="editCreateNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <span class="text-sm font-medium text-slate-700">在此处新建文件夹</span>
+              </label>
+              <input
+                v-if="editCreateNewFolder"
+                v-model.trim="editNewFolderName"
+                type="text"
+                maxlength="255"
+                placeholder="输入新文件夹名称"
+                class="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+
+              <div class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">保存后文件</span>
+                  <span class="font-semibold text-slate-800">{{ editResultFileCount }} 个 · {{ editTotalSizeDisplay }}</span>
+                </div>
+              </div>
+              <p v-if="editSubmitError" class="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ editSubmitError }}</p>
+            </section>
+          </div>
+
+          <div class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:px-7">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              :disabled="editSubmitting"
+              @click="closeEditDialog"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              :disabled="!canSaveEdit"
+              @click="saveEdit"
+            >
+              <Loader2 v-if="editSubmitting" class="h-4 w-4 animate-spin" />
+              <Save v-else class="h-4 w-4" />
+              {{ editSubmitting ? `保存中 ${editUploadProgress}%` : '保存修改' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -357,6 +638,7 @@ import { useMessage } from 'naive-ui'
 import {
   AlertCircle,
   Archive,
+  Check,
   CheckCircle2,
   ChevronRight,
   FileArchive,
@@ -367,14 +649,19 @@ import {
   FolderPlus,
   Home,
   Loader2,
+  Pencil,
+  Plus,
   RefreshCw,
+  RotateCcw,
+  Save,
+  Trash2,
   Upload,
   X,
   XCircle,
   Clock3,
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
-import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
+import type { ResourceUploadRequest, ResourceUploadFile } from '@/types/api/resourceUpload'
 
 const message = useMessage()
 const MAX_FILE_COUNT = 20
@@ -391,6 +678,8 @@ type SelectedFile = {
   file: File
   relativePath: string
 }
+
+type UploadStatus = ResourceUploadRequest['status']
 
 type FileSystemEntryLike = {
   isFile: boolean
@@ -419,6 +708,23 @@ const submitError = ref('')
 const uploadHistory = ref<ResourceUploadRequest[]>([])
 const historyLoading = ref(false)
 const historyError = ref('')
+const selectedStatuses = ref<UploadStatus[]>(['approved', 'pending', 'rejected'])
+
+const editingRequest = ref<ResourceUploadRequest | null>(null)
+const removedExistingFileIds = ref<number[]>([])
+const editSelectedFiles = ref<SelectedFile[]>([])
+const editFileError = ref('')
+const editFileInput = ref<HTMLInputElement | null>(null)
+const editFolderInput = ref<HTMLInputElement | null>(null)
+const editCurrentPath = ref('/')
+const editDirectories = ref<{ name: string; path: string; modified: string | null }[]>([])
+const editDirectoryLoading = ref(false)
+const editDirectoryError = ref('')
+const editCreateNewFolder = ref(false)
+const editNewFolderName = ref('')
+const editSubmitting = ref(false)
+const editUploadProgress = ref(0)
+const editSubmitError = ref('')
 
 const acceptExtensions = [...ALLOWED_EXTENSIONS].join(',')
 const totalSize = computed(() => selectedFiles.value.reduce((sum, item) => sum + item.file.size, 0))
@@ -438,6 +744,73 @@ const rootUploadBlocked = computed(
 )
 const canSubmit = computed(
   () => !isSubmitting.value && selectedFiles.value.length > 0 && !rootUploadBlocked.value,
+)
+const statusPriority: Record<UploadStatus, number> = {
+  rejected: 0,
+  pending: 1,
+  approved: 2,
+}
+const filteredUploadHistory = computed(() =>
+  uploadHistory.value
+    .filter((record) => selectedStatuses.value.includes(record.status))
+    .sort((a, b) =>
+      statusPriority[a.status] - statusPriority[b.status]
+      || new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    ),
+)
+const statusCounts = computed<Record<UploadStatus, number>>(() => ({
+  approved: uploadHistory.value.filter((record) => record.status === 'approved').length,
+  pending: uploadHistory.value.filter((record) => record.status === 'pending').length,
+  rejected: uploadHistory.value.filter((record) => record.status === 'rejected').length,
+}))
+const statusFilterOptions: {
+  value: UploadStatus
+  label: string
+  activeClass: string
+}[] = [
+  { value: 'approved', label: '已通过', activeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  { value: 'pending', label: '待审核', activeClass: 'border-amber-200 bg-amber-50 text-amber-700' },
+  { value: 'rejected', label: '已退回', activeClass: 'border-red-200 bg-red-50 text-red-700' },
+]
+
+const editBreadcrumbs = computed(() => {
+  const parts = editCurrentPath.value.split('/').filter(Boolean)
+  return parts.map((name, index) => ({
+    name,
+    path: `/${parts.slice(0, index + 1).join('/')}`,
+  }))
+})
+const editFinalTargetPath = computed(() => {
+  if (!editCreateNewFolder.value || !editNewFolderName.value) return editCurrentPath.value
+  return `${editCurrentPath.value === '/' ? '' : editCurrentPath.value}/${editNewFolderName.value}`
+})
+const keptExistingFiles = computed<ResourceUploadFile[]>(() =>
+  editingRequest.value?.files.filter((file) => !removedExistingFileIds.value.includes(file.id)) || [],
+)
+const keptExistingFileCount = computed(() => keptExistingFiles.value.length)
+const editResultFileCount = computed(() => keptExistingFileCount.value + editSelectedFiles.value.length)
+const editTotalSize = computed(() =>
+  keptExistingFiles.value.reduce((total, file) => total + file.size, 0)
+  + editSelectedFiles.value.reduce((total, item) => total + item.file.size, 0),
+)
+const editFolderNameInvalid = computed(() =>
+  editCreateNewFolder.value
+  && (
+    !editNewFolderName.value
+    || editNewFolderName.value === '.'
+    || editNewFolderName.value === '..'
+    || /[\\/]/.test(editNewFolderName.value)
+  ),
+)
+const editRootUploadBlocked = computed(
+  () => editCurrentPath.value === '/' && (!editCreateNewFolder.value || !editNewFolderName.value),
+)
+const canSaveEdit = computed(
+  () => !editSubmitting.value
+    && editResultFileCount.value > 0
+    && editResultFileCount.value <= MAX_FILE_COUNT
+    && !editFolderNameInvalid.value
+    && !editRootUploadBlocked.value,
 )
 
 const statusMeta = {
@@ -464,6 +837,7 @@ const formatBytes = (bytes: number) => {
   const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
+const editTotalSizeDisplay = computed(() => formatBytes(editTotalSize.value))
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('zh-CN', {
@@ -601,6 +975,144 @@ const clearFiles = () => {
   fileError.value = ''
 }
 
+const toggleStatusFilter = (status: UploadStatus) => {
+  selectedStatuses.value = selectedStatuses.value.includes(status)
+    ? selectedStatuses.value.filter((item) => item !== status)
+    : [...selectedStatuses.value, status]
+}
+
+const resetEditDialog = () => {
+  editingRequest.value = null
+  removedExistingFileIds.value = []
+  editSelectedFiles.value = []
+  editFileError.value = ''
+  editDirectoryError.value = ''
+  editCreateNewFolder.value = false
+  editNewFolderName.value = ''
+  editSubmitError.value = ''
+  editUploadProgress.value = 0
+}
+
+const closeEditDialog = () => {
+  if (!editSubmitting.value) resetEditDialog()
+}
+
+const loadEditDirectories = async () => {
+  editDirectoryLoading.value = true
+  editDirectoryError.value = ''
+  try {
+    const response = await api.get({
+      url: '/api/upload/directories/',
+      query: { path: editCurrentPath.value },
+    })
+    if (response.status !== 200) {
+      editDirectoryError.value = getErrorMessage(response.errors, '目录缓存暂时不可用，请稍后重试')
+      return
+    }
+    editCurrentPath.value = response.content.path
+    editDirectories.value = response.content.directories
+  } catch {
+    editDirectoryError.value = '暂时无法读取本地目录缓存，请稍后重试'
+  } finally {
+    editDirectoryLoading.value = false
+  }
+}
+
+const openEditDirectory = async (path: string) => {
+  if (editDirectoryLoading.value || path === editCurrentPath.value) return
+  editCurrentPath.value = path
+  editSubmitError.value = ''
+  await loadEditDirectories()
+}
+
+const openEditDialog = async (record: ResourceUploadRequest) => {
+  editingRequest.value = record
+  removedExistingFileIds.value = []
+  editSelectedFiles.value = []
+  editFileError.value = ''
+  editSubmitError.value = ''
+  editUploadProgress.value = 0
+
+  if (record.creates_new_folder) {
+    const parts = record.target_path.split('/').filter(Boolean)
+    editNewFolderName.value = parts.pop() || ''
+    editCurrentPath.value = parts.length ? `/${parts.join('/')}` : '/'
+    editCreateNewFolder.value = true
+  } else {
+    editCurrentPath.value = record.target_path
+    editCreateNewFolder.value = false
+    editNewFolderName.value = ''
+  }
+  await loadEditDirectories()
+}
+
+const toggleExistingFileRemoval = (fileId: number) => {
+  removedExistingFileIds.value = removedExistingFileIds.value.includes(fileId)
+    ? removedExistingFileIds.value.filter((id) => id !== fileId)
+    : [...removedExistingFileIds.value, fileId]
+  editFileError.value = ''
+}
+
+const addEditFiles = (incoming: { file: File; relativePath?: string }[]) => {
+  editFileError.value = ''
+  const next = [...editSelectedFiles.value]
+  const existingPaths = new Set([
+    ...keptExistingFiles.value.map((file) => file.relative_path),
+    ...next.map((item) => item.relativePath),
+  ])
+  const rejected: string[] = []
+
+  for (const incomingItem of incoming) {
+    const file = incomingItem.file
+    const relativePath = (incomingItem.relativePath || file.name).replaceAll('\\', '/').replace(/^\/+/, '')
+    if (keptExistingFileCount.value + next.length >= MAX_FILE_COUNT) {
+      rejected.push(`每次最多保留和上传 ${MAX_FILE_COUNT} 个文件`)
+      break
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      rejected.push(`${file.name} 超过 100 MB`)
+      continue
+    }
+    if (!ALLOWED_EXTENSIONS.has(getExtension(file.name))) {
+      rejected.push(`${file.name} 的格式暂不支持`)
+      continue
+    }
+    if (existingPaths.has(relativePath)) {
+      rejected.push(`${relativePath} 已经在投稿中`)
+      continue
+    }
+    existingPaths.add(relativePath)
+    next.push({
+      id: `edit-${relativePath}-${file.size}-${file.lastModified}`,
+      file,
+      relativePath,
+    })
+  }
+
+  editSelectedFiles.value = next
+  if (rejected.length) {
+    const visible = rejected.slice(0, 2).join('；')
+    editFileError.value = rejected.length > 2
+      ? `${visible}；另有 ${rejected.length - 2} 个文件未添加`
+      : visible
+  }
+}
+
+const handleEditFileInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files || []).map((file) => ({
+    file,
+    relativePath: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+  }))
+  addEditFiles(files)
+  input.value = ''
+}
+
+const removeEditFile = (id: string) => {
+  editSelectedFiles.value = editSelectedFiles.value.filter((item) => item.id !== id)
+  editFileError.value = ''
+}
+
 const loadDirectories = async () => {
   directoryLoading.value = true
   directoryError.value = ''
@@ -715,6 +1227,70 @@ const submitUpload = async () => {
       : '上传未完成，请稍后重试'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+const saveEdit = async () => {
+  if (!editingRequest.value) return
+  editSubmitError.value = ''
+  if (!editResultFileCount.value) {
+    editSubmitError.value = '请至少保留或新上传一个文件'
+    return
+  }
+  if (editResultFileCount.value > MAX_FILE_COUNT) {
+    editSubmitError.value = `每次最多保留和上传 ${MAX_FILE_COUNT} 个文件`
+    return
+  }
+  if (editFolderNameInvalid.value) {
+    editSubmitError.value = '请输入合法的新文件夹名称，名称不能是 .、.. 或包含斜杠'
+    return
+  }
+  if (editRootUploadBlocked.value) {
+    editSubmitError.value = '禁止直接投稿到根目录，请选择子目录或新建文件夹'
+    return
+  }
+
+  const requestId = editingRequest.value.id
+  const formData = new FormData()
+  formData.append('target_path', editCurrentPath.value)
+  if (editCreateNewFolder.value) formData.append('new_folder_name', editNewFolderName.value)
+  removedExistingFileIds.value.forEach((fileId) => {
+    formData.append('remove_file_ids', String(fileId))
+  })
+  editSelectedFiles.value.forEach((item) => {
+    formData.append('files', item.file, item.file.name)
+    formData.append('relative_paths', item.relativePath)
+  })
+
+  editSubmitting.value = true
+  editUploadProgress.value = 0
+  try {
+    const response = await api.put({
+      url: '/api/upload/request/:requestId/',
+      params: { requestId },
+      query: formData,
+      onUploadProgress: ({ loaded, total }) => {
+        if (total) editUploadProgress.value = Math.min(99, Math.round((loaded / total) * 100))
+      },
+    })
+    if (response.status !== 200) {
+      editSubmitError.value = getErrorMessage(response.errors, '保存失败，请检查文件和目录后重试')
+      return
+    }
+
+    editUploadProgress.value = 100
+    uploadHistory.value = uploadHistory.value.map((record) =>
+      record.id === requestId ? response.content.upload_request : record,
+    )
+    editSubmitting.value = false
+    resetEditDialog()
+    message.success(`投稿 #${requestId} 已更新${response.content.upload_request.status === 'pending' ? '，当前为待审核状态' : ''}`)
+  } catch (error) {
+    editSubmitError.value = error instanceof Error
+      ? `保存未完成：${error.message}`
+      : '保存未完成，请稍后重试'
+  } finally {
+    editSubmitting.value = false
   }
 }
 

@@ -9,6 +9,7 @@ import type {
   APIResourceDirectories,
   APIResourceUploadCreate,
   APIResourceUploadList,
+  APIResourceUploadUpdate,
 } from './resourceUpload'
 import { MethodMap } from './base'
 
@@ -120,5 +121,6 @@ export type RequestEndpoints = {
     // CourseReview
     // - Review
     '/api/assessment/review/': Review.APIUpdateReview
+    '/api/upload/request/:requestId/': APIResourceUploadUpdate
   }
 }
