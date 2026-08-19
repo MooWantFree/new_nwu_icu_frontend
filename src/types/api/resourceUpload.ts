@@ -31,6 +31,7 @@ export type ResourceUploadRequest = {
   } | null
   rejection_reason: string
   files_deleted_at: string | null
+  resource_url: string | null
 }
 
 type ResourceUploadErrors =
