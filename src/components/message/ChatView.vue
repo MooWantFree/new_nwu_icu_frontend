@@ -70,10 +70,7 @@
     <div class="p-4 border-t">
       <div class="max-w-2xl mx-auto">
         <div class="flex items-center gap-2">
-          <button class="p-2 hover:bg-gray-100 rounded-lg">
-            <ImageIcon class="w-5 h-5 text-gray-500" />
-          </button>
-          <input type="text" placeholder="发送消息..."
+          <input type="text" placeholder="发送消息..." maxlength="500"
             :disabled="isSending"
             class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="newMessage" @keyup.enter="sendMessage" />
@@ -100,8 +97,9 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
-import { MoreVertical, Image as ImageIcon, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
+import { MoreVertical, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import { drainAfterCursor, mergeByMessageId } from '@/lib/messageCursor'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
 const message = useMessage()
@@ -110,9 +108,9 @@ const { userInfo } = useUser()
 const props = defineProps<{
   chatTarget: APIUserMessageList['response']['results'][0]
 }>()
+const emit = defineEmits<{ read: [] }>()
 
 const messageList = ref<APIUserMessageDetail['response']['results']>([])
-const currentPage = ref(1)
 const isLoading = ref(true)
 const newMessage = ref('')
 const messageContainer = useTemplateRef('messageContainer')
@@ -120,23 +118,49 @@ const fetchInterval = ref<number | null>(null)
 const isSending = ref(false)
 const isLoadingMore = ref(false)
 const hasMoreMessages = ref(true)
+const isFetchingNew = ref(false)
+let conversationGeneration = 0
 
-const loadInitMessages = async (page: number) => {
+const mergeMessages = (items: APIUserMessageDetail['response']['results']) => {
+  messageList.value = mergeByMessageId(messageList.value, items)
+}
+
+const markRead = async (throughMessageId: number) => {
+  if (!throughMessageId) return
+  const response = await api.post({
+    url: '/api/message/user/:id/read/',
+    params: { id: props.chatTarget.chatter.id },
+    query: { through_message_id: throughMessageId },
+  })
+  if (!response.status.toString().startsWith('2')) throw new Error('Failed to mark conversation read')
+  emit('read')
+}
+
+const loadInitMessages = async () => {
+  const generation = ++conversationGeneration
   try {
     isLoading.value = true
     const resp = await api.get({
       url: '/api/message/user/:id',
       params: { id: props.chatTarget.chatter.id },
-      query: { page, order: 'before' },
+      query: {},
     })
     if (resp.status.toString().startsWith('2')) {
-      messageList.value = resp.data.contents.results
-      hasMoreMessages.value = resp.data.contents.results.length > 0
+      if (generation !== conversationGeneration) return
+      messageList.value = resp.content.results
+      hasMoreMessages.value = resp.content.has_more
+      await nextTick()
+      scrollToBottom()
+      try {
+        await markRead(resp.content.snapshot_latest_message_id)
+      } catch (error) {
+        console.error('Error marking conversation read:', error)
+      }
     } else {
       throw new Error('Failed to fetch messages')
     }
   } catch (e) {
-    if (props.chatTarget.last_message.datetime === '') {
+    if (!props.chatTarget.last_message.datetime) {
       // Which means this is the new chat
       messageList.value = []
       return
@@ -145,8 +169,7 @@ const loadInitMessages = async (page: number) => {
     console.error('Error fetching messages:', e)
   } finally {
     isLoading.value = false
-    await nextTick()
-    scrollToBottom()
+    if (generation === conversationGeneration) await nextTick()
   }
 }
 
@@ -158,23 +181,22 @@ const fetchOldMessage = async () => {
     const resp = await api.get({
       url: '/api/message/user/:id',
       params: { id: props.chatTarget.chatter.id },
-      query: { order: 'before', last_message_id: firstMessage.value.id },
+      query: { before_id: firstMessage.value.id },
     })
     if (resp.status.toString().startsWith('2')) {
       const oldScrollHeight = messageContainer.value?.scrollHeight || 0
-      const newMessages = resp.data.contents.results
+      const newMessages = resp.content.results
       
       if (newMessages.length > 0) {
-        messageList.value.unshift(...newMessages)
+        mergeMessages(newMessages)
         
         await nextTick()
         if (messageContainer.value) {
           const newScrollHeight = messageContainer.value.scrollHeight
           messageContainer.value.scrollTop = newScrollHeight - oldScrollHeight
         }
-      } else {
-        hasMoreMessages.value = false
       }
+      hasMoreMessages.value = resp.content.has_more
     } else {
       throw new Error('Failed to fetch old messages')
     }
@@ -195,27 +217,31 @@ const handleScroll = useDebounceFn(() => {
 }, 200)
 
 const fetchNewMessages = async () => {
-  if (!lastMessage.value) return
+  if (!lastMessage.value || isFetchingNew.value) return
 
   try {
-    const resp = await api.get({
-      url: '/api/message/user/:id',
-      params: { id: props.chatTarget.chatter.id },
-      query: { order: 'after', last_message_id: lastMessage.value.id },
+    isFetchingNew.value = true
+    const wasAtBottom = isScrolledToBottom()
+    const initialCursor = lastMessage.value.id
+    const drained = await drainAfterCursor(initialCursor, async afterId => {
+      const response = await api.get({
+        url: '/api/message/user/:id',
+        params: { id: props.chatTarget.chatter.id },
+        query: { after_id: afterId },
+      })
+      if (!response.status.toString().startsWith('2')) throw new Error('Failed to fetch new messages')
+      return response.content
     })
-    if (resp.status.toString().startsWith('2')) {
-      const wasAtBottom = isScrolledToBottom()
-      messageList.value.push(...resp.data.contents.results)
-      
-      if (wasAtBottom) {
-        await nextTick()
-        scrollToBottom()
-      }
-    } else {
-      throw new Error('Failed to fetch new messages')
+    mergeMessages(drained.results)
+    if (drained.cursor > initialCursor) {
+      await nextTick()
+      if (wasAtBottom) scrollToBottom()
+      await markRead(drained.cursor)
     }
   } catch (e) {
     console.error('Error fetching new messages:', e)
+  } finally {
+    isFetchingNew.value = false
   }
 }
 
@@ -228,7 +254,6 @@ const isScrolledToBottom = () => {
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isSending.value) return
   isSending.value = true
-  const dateNow = new Date().toISOString()
 
   try {
     const resp = await api.post({
@@ -240,19 +265,19 @@ const sendMessage = async () => {
     })
     if (resp.status.toString().startsWith('2')) {
       if (!userInfo.value) throw new Error('登录状态已失效')
-      if (!messageList.value.find(msg => msg.id === resp.data.contents.message)) {
+      if (!messageList.value.find(msg => msg.id === resp.content.message)) {
         messageList.value.push({
-        id: resp.data.contents.message, // FIXME: Remember to change it 
-        content: newMessage.value,
-        datetime: dateNow,
-        chatter: {
-          id: userInfo.value.id,
-          nickname: userInfo.value.nickname,
-          avatar: userInfo.value.avatar,
-          uuid: userInfo.value.uuid,
-          has_avatar: userInfo.value.has_avatar,
-        }
-      })
+          id: resp.content.message,
+          content: newMessage.value,
+          datetime: resp.content.datetime,
+          chatter: {
+            id: userInfo.value.id,
+            nickname: userInfo.value.nickname,
+            avatar: userInfo.value.avatar,
+            uuid: userInfo.value.uuid,
+            has_avatar: userInfo.value.has_avatar,
+          }
+        })
       }
       newMessage.value = ''
       await nextTick()
@@ -321,14 +346,13 @@ watch(
   () => props.chatTarget,
   useDebounceFn(() => {
     messageList.value = []
-    currentPage.value = 1
     hasMoreMessages.value = true
-    loadInitMessages(1)
+    loadInitMessages()
   }, 0)
 )
 
 onMounted(() => {
-  loadInitMessages(1)
+  loadInitMessages()
   fetchInterval.value = setInterval(fetchNewMessages, 5000) as unknown as number
 })
 

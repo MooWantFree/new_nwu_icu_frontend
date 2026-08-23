@@ -59,3 +59,32 @@ export type APIUnreadMessageCount = {
   }
   errors: ErrorFactory<'auth'>[]
 }
+
+export const APIReadNotificationsBody = z.object({
+  ids: z.array(z.number().min(1)).min(1).max(100),
+})
+export type APIReadNotifications = {
+  endpoint: '/api/message/notifications/read/'
+  method: MethodMap.POST
+  query: z.infer<typeof APIReadNotificationsBody>
+  response: { updated: number }
+  errors: ErrorFactory<'auth'>[]
+}
+
+export type APISystemNotificationList = {
+  endpoint: '/api/message/system/'
+  method: MethodMap.GET
+  query: { page?: number }
+  response: {
+    page: number
+    max_page: number
+    count: number
+    results: {
+      id: number
+      title: string
+      content: string
+      datetime: string
+    }[]
+  }
+  errors: ErrorFactory<'auth'>[]
+}

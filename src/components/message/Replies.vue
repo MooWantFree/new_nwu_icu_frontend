@@ -141,6 +141,16 @@ const fetchReplies = async (page: number) => {
     replies.value = response.content.results
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
+    if (replies.value.length) {
+      try {
+        await api.post({
+          url: '/api/message/notifications/read/',
+          query: { ids: replies.value.map(item => item.id) },
+        })
+      } catch (error) {
+        console.error('Error marking reply notifications read:', error)
+      }
+    }
   } catch (error) {
     message.error('获取回复列表失败')
   } finally {

@@ -66,7 +66,7 @@
         </div>
       </div>
       <div class="flex-1 bg-white shadow-sm">
-        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" />
+        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" @read="handleConversationRead" />
         <div v-else class="h-full flex flex-col items-center justify-center bg-gray-50">
           <MessageSquare class="h-16 w-16 text-gray-300 mb-4" />
           <p class="text-gray-500 text-lg">
@@ -101,9 +101,13 @@ const currentPage = ref(1)
 const selectedMessage = ref<
   APIUserMessageList['response']['results'][0] | null
 >(null)
+const isFetchingMessages = ref(false)
 
 const fetchMessages = async (page: number = 1) => {
+  if (isFetchingMessages.value) return
   try {
+    isFetchingMessages.value = true
+    const selectedId = selectedMessage.value?.chatter.id
     const resp = await api.get({
       url: '/api/message/user/',
       query: { page },
@@ -112,11 +116,15 @@ const fetchMessages = async (page: number = 1) => {
       messages.value = resp.data.contents.results
       totalPages.value = resp.data.contents.max_page
       currentPage.value = page
+      if (selectedId) {
+        selectedMessage.value = messages.value.find(item => item.chatter.id === selectedId) || selectedMessage.value
+      }
     }
   } catch (e) {
     console.error('Error fetching messages:', e)
     message.error('获取消息失败，请重试')
   } finally {
+    isFetchingMessages.value = false
   }
 }
 
@@ -149,9 +157,14 @@ const nextPage = () =>
 const prevPage = () =>
   currentPage.value > 1 && fetchMessages(currentPage.value - 1)
 const selectMessage = (msg: APIUserMessageList['response']['results'][0]) => {
-  // Set the unread count to 0
-  msg.unread_count = 0
   selectedMessage.value = msg
+}
+
+const handleConversationRead = () => {
+  if (!selectedMessage.value) return
+  selectedMessage.value.unread_count = 0
+  const listed = messages.value?.find(item => item.chatter.id === selectedMessage.value?.chatter.id)
+  if (listed) listed.unread_count = 0
 }
 
 const newMessage = ref<{
@@ -168,6 +181,7 @@ const finalMessages = computed(() => {
   const result = [...(messages.value || [])]
   if (newMessage.value && !result.find((msg) => msg.chatter.id === newMessage.value!.chatter.id)) {
     result.unshift({
+      conversation_id: 0,
       chatter: {
         id: newMessage.value.chatter.id,
         nickname: newMessage.value.chatter.nickname,
@@ -176,8 +190,9 @@ const finalMessages = computed(() => {
         has_avatar: newMessage.value.chatter.has_avatar,
       },
       last_message: {
+        id: null,
         content: '',
-        datetime: '',
+        datetime: null,
       },
       unread_count: 0,
     })
@@ -231,7 +246,7 @@ onMounted(async () => {
     selectedMessage.value = finalMessages.value.find((msg) => msg.chatter.id === newMessage.value?.chatter.id)!
   }
   loading.value = false
-  fetchInterval.value = setInterval(fetchMessages, 5000) as unknown as number
+  fetchInterval.value = setInterval(() => fetchMessages(currentPage.value), 5000) as unknown as number
 })
 
 onUnmounted(() => {

@@ -81,6 +81,7 @@ const unreadCount = ref({
   user: 0,
   reply: 0,
   like: 0,
+  system: 0,
 })
 
 const toggleSidebar = () => {
@@ -96,13 +97,21 @@ const navLinks = [
 
 const fetchUnreadCount = async () => {
   if (!isLoggedIn.value) return
+  if (isFetchingUnread.value) return
+  isFetchingUnread.value = true
+  try {
   const { content } = await api.get({ url: '/api/message/unread/' })
   unreadCount.value = {
     user: content.unread.user,
     reply: content.unread.reply,
     like: content.unread.like,
+    system: content.unread.system,
+  }
+  } finally {
+    isFetchingUnread.value = false
   }
 }
+const isFetchingUnread = ref(false)
 const intervalId = ref<ReturnType<typeof setInterval> | undefined>(undefined)
 
 onMounted(() => {

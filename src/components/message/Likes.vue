@@ -116,6 +116,16 @@ const fetchLikes = async (page: number) => {
     likes.value = response.content.results
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
+    if (likes.value.length) {
+      try {
+        await api.post({
+          url: '/api/message/notifications/read/',
+          query: { ids: likes.value.map(item => item.id) },
+        })
+      } catch (error) {
+        console.error('Error marking like notifications read:', error)
+      }
+    }
   } catch (error) {
     message.error('获取赞列表失败')
   } finally {

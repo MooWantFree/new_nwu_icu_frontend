@@ -16,6 +16,7 @@ export type APIUserMessageList = {
     max_page: number
     count: number
     results: {
+      conversation_id: number
       chatter: {
         id: number
         nickname: string
@@ -24,8 +25,9 @@ export type APIUserMessageList = {
         has_avatar: boolean
       }
       last_message: {
+        id: number | null
         content: string
-        datetime: string
+        datetime: string | null
       }
       unread_count: number
     }[]
@@ -39,9 +41,10 @@ export const APIUserMessageDetailParams = z.object({
   id: z.number(),
 })
 export const APIUserMessageDetailQuery = z.object({
-  page: z.number().optional(),
   page_size: z.number().optional(),
-  order: z.enum(['before', 'after']).default('after').optional(),
+  before_id: z.number().optional(),
+  after_id: z.number().optional(),
+  order: z.enum(['before', 'after']).optional(),
   last_message_id: z.number().optional(),
 })
 export type APIUserMessageDetail = {
@@ -50,9 +53,12 @@ export type APIUserMessageDetail = {
   params: z.infer<typeof APIUserMessageDetailParams>
   query: z.infer<typeof APIUserMessageDetailQuery>
   response: {
-    page: number
-    max_page: number
+    conversation_id: number
     count: number
+    has_more: boolean
+    before_id: number | null
+    after_id: number | null
+    snapshot_latest_message_id: number
     results: {
       chatter: {
         avatar: string
@@ -73,8 +79,7 @@ export type APIUserMessageDetail = {
 // 发送消息
 export const APISendMessageQuery = z.object({
   receiver: z.number(),
-  content: z.string(), // For image, use Base64
-  // TODO: Is there need to support file and reply to certain message?
+  content: z.string().min(1).max(500),
 })
 export type APISendMessage = {
   endpoint: '/api/message/'
@@ -82,6 +87,19 @@ export type APISendMessage = {
   query: z.infer<typeof APISendMessageQuery>
   response: {
     message: number // Message ID
+    conversation_id: number
+    datetime: string
   }
+  errors: ErrorFactory<'auth'>[]
+}
+
+export const APIReadConversationParams = z.object({ id: z.number() })
+export const APIReadConversationBody = z.object({ through_message_id: z.number().min(0) })
+export type APIReadConversation = {
+  endpoint: `/api/message/user/${string}/read/`
+  method: MethodMap.POST
+  params: z.infer<typeof APIReadConversationParams>
+  query: z.infer<typeof APIReadConversationBody>
+  response: { through_message_id: number }
   errors: ErrorFactory<'auth'>[]
 }

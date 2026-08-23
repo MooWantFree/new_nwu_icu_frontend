@@ -58,6 +58,7 @@ export type RequestEndpoints = {
     '/api/message/user/:id': Inbox.APIUserMessageDetail
     '/api/message/like/': Like.APILikeList
     '/api/message/reply/': Messages.APINotificationList
+    '/api/message/system/': Messages.APISystemNotificationList
     '/api/message/unread/': Messages.APIUnreadMessageCount
 
     // Disk
@@ -107,6 +108,8 @@ export type RequestEndpoints = {
 
     // Message
     '/api/message/': Inbox.APISendMessage
+    '/api/message/user/:id/read/': Inbox.APIReadConversation
+    '/api/message/notifications/read/': Messages.APIReadNotifications
   }
   [MethodMap.DELETE]: {
     // CourseReview
