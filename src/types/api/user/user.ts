@@ -73,14 +73,14 @@ export type APICheckUsername = {
   errors: ErrorFactory<'username'>[]
 }
 
-// GET
+// POST
 // 激活账号
 const APIActivateAccountQuery = z.object({
   token: z.string(),
 })
 export type APIActivateAccount = {
-  endpoint: '/api/user/register/'
-  method: MethodMap.GET
+  endpoint: '/api/user/register/activate/'
+  method: MethodMap.POST
   query: z.infer<typeof APIActivateAccountQuery>
   response: {}
   errors: ErrorFactory<'token'>[]

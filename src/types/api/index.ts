@@ -21,12 +21,7 @@ export type RequestEndpoints = {
     '/api/assessment/user/activities/reply/:id/': ProfilePage.APIUserActivitiesReply
     '/api/user/profile/': ProfilePage.APIUserProfile
     '/api/user/profile/:id/': ProfilePage.APIUserProfileGivenId
-    '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
     '/api/user/private/': ProfilePage.APIPrivate
-    // - Reset Password
-    '/api/user/mail-reset/:token/': ResetPassword.APIVerifyResetPasswordToken
-    // - User
-    '/api/user/register/': User.APIActivateAccount
 
     // CourseReview
     // - Profile
@@ -48,8 +43,10 @@ export type RequestEndpoints = {
     '/api/captcha/': Captcha.APICaptcha
 
     // Text
-    '/api/tos/': Text.APITos
+    '/api/blogs/': Text.APITos
+    '/api/blogs/:id': Text.APIBlogDetail
     '/api/about/': Text.APIAbout
+    '/api/bulletins/': Text.APIBulletins
 
     // File
     '/api/download/:uuid/': FileAPI.APIFileDownload
@@ -70,13 +67,17 @@ export type RequestEndpoints = {
     // User
     // - Profile
     '/api/user/bind-college-email/bind/': ProfilePage.APIBindScholarEmail
+    '/api/user/bind-college-email/verify/': ProfilePage.APIVerifyScholarEmail
     '/api/user/profile/': ProfilePage.APIUpdateProfile
+    '/api/user/private/': ProfilePage.APIUpdatePrivate
     // - Reset Password
     '/api/user/reset/': ResetPassword.APIResetPassword
-    '/api/user/mail-reset/:token/': ResetPassword.APIResetPasswordToken
+    '/api/user/mail-reset/': ResetPassword.APIResetPasswordToken
+    '/api/user/mail-reset/verify/': ResetPassword.APIVerifyResetPasswordToken
     '/api/user/reset-login/': ResetPassword.APIUserResetPassword
     // - User
     '/api/user/register/': User.APIRegister
+    '/api/user/register/activate/': User.APIActivateAccount
     '/api/user/login/': User.APILogin
     '/api/user/logout/': User.APILogout
     '/api/user/username/': User.APICheckUsername

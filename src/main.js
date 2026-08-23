@@ -5,37 +5,42 @@ import naive from 'naive-ui'
 import VueGtag from 'vue-gtag'
 import * as Sentry from '@sentry/vue'
 import '@/style/style.css'
+import { captureActionTokenFromUrl } from '@/lib/actionTokens'
+import { redactSensitiveUrl } from '@/lib/security'
 
+captureActionTokenFromUrl()
 const app = createApp(App)
 app.use(Router)
-app.use(VueGtag, {
-  config: { id: 'G-MYB5VKYR7S' },
-})
 app.use(naive)
-Sentry.init({
-  app,
-  dsn: 'https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395',
-  integrations: [
-    Sentry.browserTracingIntegration({ Router }),
-    Sentry.replayIntegration(),
-  ],
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-  tracesSampleRate: 1.0,
+const redactSentryEvent = (event) => {
+  if (event.request?.url) event.request.url = redactSensitiveUrl(event.request.url)
+  if (event.transaction) event.transaction = redactSensitiveUrl(event.transaction)
+  for (const breadcrumb of event.breadcrumbs ?? []) {
+    if (typeof breadcrumb.data?.url === 'string') {
+      breadcrumb.data.url = redactSensitiveUrl(breadcrumb.data.url)
+    }
+  }
+  for (const span of event.spans ?? []) {
+    if (typeof span.description === 'string') span.description = redactSensitiveUrl(span.description)
+    if (typeof span.data?.url === 'string') span.data.url = redactSensitiveUrl(span.data.url)
+  }
+  return event
+}
 
-  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-  // tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-})
+if (import.meta.env.PROD) {
+  app.use(VueGtag, {
+    config: { id: 'G-MYB5VKYR7S' },
+  })
+  Sentry.init({
+    app,
+    dsn: 'https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395',
+    integrations: [Sentry.browserTracingIntegration({ Router })],
+    tracesSampleRate: 0.1,
+    tracePropagationTargets: [window.location.host, /^\/api\//],
+    beforeSend: redactSentryEvent,
+    beforeSendTransaction: redactSentryEvent,
+  })
+}
 
 app.mount('#app')

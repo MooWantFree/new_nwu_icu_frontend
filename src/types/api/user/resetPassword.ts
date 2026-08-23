@@ -21,11 +21,9 @@ export type APIResetPassword = {
 
 // POST
 // 从邮箱链接重置密码
-const APIResetPasswordTokenParams = z.object({
-  token: z.string(),
-})
 const APIResetPasswordTokenQuery = z
   .object({
+    token: z.string(),
     new_password: basePasswordSchema,
     confirm_password: z.string(),
     captcha_key: z.string(),
@@ -36,23 +34,22 @@ const APIResetPasswordTokenQuery = z
     path: ['confirm_password'],
   })
 export type APIResetPasswordToken = {
-  endpoint: `/api/user/mail-reset/${string}/`
+  endpoint: '/api/user/mail-reset/'
   method: MethodMap.POST
-  params: z.infer<typeof APIResetPasswordTokenParams>
   query: z.infer<typeof APIResetPasswordTokenQuery>
   response: {}
   errors: ErrorFactory<'new_password' | 'confirm_password' | 'captcha'>[]
 }
 
-// GET
+// POST
 // 验证重置密码token
-const APIVerifyResetPasswordTokenParams = z.object({
+const APIVerifyResetPasswordTokenQuery = z.object({
   token: z.string(),
 })
 export type APIVerifyResetPasswordToken = {
-  endpoint: `/api/user/mail-reset/${string}/`
-  method: MethodMap.GET
-  params: z.infer<typeof APIVerifyResetPasswordTokenParams>
+  endpoint: '/api/user/mail-reset/verify/'
+  method: MethodMap.POST
+  query: z.infer<typeof APIVerifyResetPasswordTokenQuery>
   response: {}
   errors: ErrorFactory<'token'>[]
 }

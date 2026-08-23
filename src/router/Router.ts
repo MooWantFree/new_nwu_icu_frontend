@@ -110,11 +110,13 @@ const userRoutes = [
     },
   },
   {
-    path: '/user/bind-college-mail',
+    path: '/user/bind-college-email',
+    alias: ['/user/bind-college-mail', '/user/bind-college-email/'],
     name: 'bindCollegeMail',
     component: () => import('@/views/user/UserActivate.vue'),
     meta: {
       pageTitle: '绑定学院邮箱',
+      requiresAuth: true,
     },
   },
 ] satisfies RouteRecordRaw[]
@@ -126,6 +128,7 @@ const messageRoutes = [
     component: () => import('@/views/message/PMLayout.vue'),
     meta: {
       pageTitle: '消息',
+      requiresAuth: true,
     },
     children: [
       {
@@ -257,7 +260,7 @@ const routes = [
 const Router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: (from, to, savedPosition) => {
+  scrollBehavior: (_to, _from, savedPosition) => {
     if (savedPosition) {
       return savedPosition
     } else {
@@ -267,11 +270,11 @@ const Router = createRouter({
 
 })
 
-Router.beforeEach(async (to, from) => {
+Router.beforeEach(async (to) => {
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
-  if (to.meta?.requiresAuth && !checkLoginStatus()) {
+  if (to.meta?.requiresAuth && !(await checkLoginStatus())) {
     return {
       name: 'login',
       query: {

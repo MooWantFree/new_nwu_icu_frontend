@@ -177,6 +177,7 @@ import {
   TriangleAlert,
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
+import { clearActionToken, getActionToken } from '@/lib/actionTokens'
 import { basePasswordSchema } from '@/types/common/userBasicInfo'
 
 const CaptchaField = defineComponent({
@@ -219,7 +220,7 @@ const CaptchaField = defineComponent({
 const route = useRoute()
 const message = useMessage()
 
-const token = computed(() => typeof route.query.token === 'string' ? route.query.token : '')
+const token = computed(() => getActionToken('password-reset', route.query.token))
 const hasToken = computed(() => Boolean(token.value))
 const email = ref('')
 const newPassword = ref('')
@@ -274,9 +275,9 @@ const verifyToken = async () => {
   isVerifyingToken.value = true
   tokenError.value = ''
   try {
-    const response = await api.get({
-      url: '/api/user/mail-reset/:token/',
-      params: { token: token.value },
+    const response = await api.post({
+      url: '/api/user/mail-reset/verify/',
+      query: { token: token.value },
     })
     if (response.status !== 200) {
       tokenError.value = '重置链接无效或已经过期，请重新申请。'
@@ -339,9 +340,9 @@ const handlePasswordReset = async () => {
   isLoading.value = true
   try {
     const response = await api.post({
-      url: '/api/user/mail-reset/:token/',
-      params: { token: token.value },
+      url: '/api/user/mail-reset/',
       query: {
+        token: token.value,
         new_password: newPassword.value,
         confirm_password: confirmPassword.value,
         captcha_key: captchaKey.value,
@@ -350,6 +351,7 @@ const handlePasswordReset = async () => {
     })
     if (response.status === 200) {
       resetSucceeded.value = true
+      clearActionToken('password-reset')
       message.success('密码重置成功')
     } else if (response.status === 401) {
       tokenError.value = '重置链接无效或已经过期，请重新申请。'

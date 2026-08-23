@@ -35,9 +35,9 @@ const getSafeRedirect = () => {
     : '/'
 }
 
-onBeforeMount(() => {
-  if (checkLoginStatus()) {
-    router.replace(getSafeRedirect())
+onBeforeMount(async () => {
+  if (await checkLoginStatus()) {
+    await router.replace(getSafeRedirect())
   }
 })
 

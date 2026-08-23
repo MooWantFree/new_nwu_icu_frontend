@@ -1,9 +1,11 @@
-const checkLoginStatus = (): boolean => {
-  const cookies = document.cookie.split(';')
-  const sessionCookie = cookies.find((cookie) =>
-    cookie.trim().startsWith('sessionid=')
-  )
-  return !!sessionCookie && sessionCookie.split('=')[1].trim() !== ''
+const checkLoginStatus = async (): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/user/profile/', { credentials: 'include' })
+    return response.ok
+  }
+  catch {
+    return false
+  }
 }
 
 export { checkLoginStatus }

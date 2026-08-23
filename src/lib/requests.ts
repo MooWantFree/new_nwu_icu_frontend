@@ -7,6 +7,20 @@ type APIResponse<T extends APIBase> = {
   contents: T['response']
 }
 
+const parseResponseBody = <T extends APIBase>(body: string, statusText = ''): APIResponse<T> => {
+  if (!body.trim()) {
+    return { message: statusText, contents: {} as T['response'] }
+  }
+  try {
+    return JSON.parse(body) as APIResponse<T>
+  } catch {
+    return {
+      message: statusText || '服务器返回了无法解析的响应',
+      contents: {} as T['response'],
+    }
+  }
+}
+
 async function request<T extends APIBase>({
   method,
   url,
@@ -27,6 +41,10 @@ async function request<T extends APIBase>({
   errors: T['errors']
 }> {
   let fullUrl = `${url}`
+
+  if (method !== MethodMap.GET && !getCsrfToken()) {
+    await fetch('/api/user/csrf/', { credentials: 'include' })
+  }
 
   const defaultOptions: RequestInit = {
     method,
@@ -52,7 +70,7 @@ async function request<T extends APIBase>({
       Object.entries(query).forEach(([key, value]) => {
         searchParams.set(key, String(value))
       })
-      fullUrl += `?${searchParams.toString()}`
+      fullUrl += `${fullUrl.includes('?') ? '&' : '?'}${searchParams.toString()}`
     }
     else if (query instanceof FormData || query instanceof File) {
       delete (mergedOptions.headers as Record<string, string>)['Content-Type']
@@ -64,6 +82,7 @@ async function request<T extends APIBase>({
           const xhr = new XMLHttpRequest()
           xhr.open(method, fullUrl)
           xhr.withCredentials = mergedOptions.credentials === 'include'
+          xhr.timeout = 60_000
           
           // Copy headers from mergedOptions
           Object.entries(mergedOptions.headers || {}).forEach(([key, value]) => {
@@ -78,17 +97,13 @@ async function request<T extends APIBase>({
           
           // Handle response
           xhr.onload = () => {
-            try {
-              const result = JSON.parse(xhr.responseText)
-              resolve({
-                status: xhr.status,
-                data: result as APIResponse<T>,
-                content: result.contents as T['response'],
-                errors: result.errors as APIResponse<T>['errors'],
-              })
-            } catch {
-              reject(new Error(`服务器返回了无法解析的响应（HTTP ${xhr.status}）`))
-            }
+            const result = parseResponseBody<T>(xhr.responseText, xhr.statusText)
+            resolve({
+              status: xhr.status,
+              data: result,
+              content: result.contents,
+              errors: result.errors as T['errors'],
+            })
           }
           
           xhr.onerror = () => reject(new Error('网络连接中断'))
@@ -106,13 +121,13 @@ async function request<T extends APIBase>({
 
   try {
     const response = await fetch(fullUrl, mergedOptions)
-    const result = await response.json()
+    const result = parseResponseBody<T>(await response.text(), response.statusText)
 
     return {
       status: response.status,
-      data: result as APIResponse<T>,
-      content: result.contents as T['response'],
-      errors: result.errors as APIResponse<T>['errors'],
+      data: result,
+      content: result.contents,
+      errors: result.errors as T['errors'],
     }
   } catch (error) {
     console.error('Request failed:', error)
@@ -134,7 +149,7 @@ const fillURL = (url: string, params: any) => {
   if (!params) return filledURL
 
   Object.entries(params).forEach(([key, value]) => {
-    filledURL = filledURL.replace(`:${key}`, String(value))
+    filledURL = filledURL.replace(`:${key}`, encodeURIComponent(String(value)))
   })
 
   return filledURL

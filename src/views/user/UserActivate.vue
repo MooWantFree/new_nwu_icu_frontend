@@ -6,9 +6,28 @@
         <div class="h-16 w-16">
           <div class="h-full w-full animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"></div>
         </div>
-        <p class="mt-6 text-lg font-medium text-gray-700">正在激活你的账户...</p>
+        <p class="mt-6 text-lg font-medium text-gray-700">正在处理验证请求...</p>
         <p class="mt-2 text-sm text-gray-500">请稍候，这可能需要几秒钟时间</p>
       </div>
+
+      <!-- Explicit confirmation prevents link previews and prefetchers from consuming tokens. -->
+      <template v-else-if="readyToConfirm">
+        <div class="flex flex-col items-center text-center">
+          <div class="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+            <ShieldCheck class="h-10 w-10 text-blue-600" />
+          </div>
+          <h1 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">确认邮箱验证</h1>
+          <p class="mt-4 text-gray-600">
+            {{ isBindingCollegeEmail ? '点击下方按钮，将这个 NWU 邮箱绑定到当前账户。' : '点击下方按钮，激活你的账户。' }}
+          </p>
+          <button
+            class="mt-8 inline-flex items-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            @click="confirmAction"
+          >
+            {{ isBindingCollegeEmail ? '确认绑定' : '确认激活' }}
+          </button>
+        </div>
+      </template>
 
       <!-- Success state -->
       <template v-else-if="success">
@@ -64,7 +83,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
-import { Check, House, TriangleAlert } from 'lucide-vue-next'
+import { Check, House, ShieldCheck, TriangleAlert } from 'lucide-vue-next'
+import { clearActionToken, getActionToken } from '@/lib/actionTokens'
 
 const route = useRoute()
 const router = useRouter()
@@ -72,32 +92,39 @@ const message = useMessage()
 const user = useUser()
 
 const loading = ref<boolean>(true)
+const readyToConfirm = ref<boolean>(false)
 const success = ref<boolean>(false)
 const error = ref<string | null>(null)
 const token = ref<string>('')
+const isBindingCollegeEmail = ref<boolean>(false)
 
 onMounted(() => {
-  const routeName = route.name
-  if (routeName === 'bindCollegeMail') {
-    bindCollegeMail()
-  } else if (routeName === 'userActivate') {
-    checkUserAndActivate()
+  isBindingCollegeEmail.value = route.name === 'bindCollegeMail'
+
+  if (!isBindingCollegeEmail.value && user.isLoggedIn.value) {
+    message.success('你已登录，正在跳转至首页')
+    router.replace('/')
+    return
   }
-})
 
-const bindCollegeMail = async () => {
-  // Get activation token
-  token.value = route.query.token as string
-
+  const purpose = isBindingCollegeEmail.value ? 'college-email-bind' : 'account-activation'
+  token.value = getActionToken(purpose, route.query.token)
   if (!token.value) {
-    error.value = '绑定令牌丢失，请检查你的绑定链接是否完整'
+    error.value = isBindingCollegeEmail.value
+      ? '绑定令牌丢失，请检查你的绑定链接是否完整'
+      : '激活令牌丢失，请检查你的激活链接是否完整'
     loading.value = false
     return
   }
 
+  readyToConfirm.value = true
+  loading.value = false
+})
+
+const bindCollegeMail = async () => {
   loading.value = true
   try {
-    const { status, errors } = await api.get({
+    const { status, errors } = await api.post({
       url: '/api/user/bind-college-email/verify/',
       query: {
         token: token.value,
@@ -108,6 +135,7 @@ const bindCollegeMail = async () => {
     
     if (status === 200) {
       success.value = true
+      clearActionToken('college-email-bind')
       message.success('绑定成功')
     } else {
       error.value = errorText || '绑定失败。请重试或联系客服支持。'
@@ -121,32 +149,11 @@ const bindCollegeMail = async () => {
 }
 
 
-const checkUserAndActivate = async () => {
-  // Check if user is already logged in
-  const isLoggedIn = user.isLoggedIn.value
-  if (isLoggedIn) {
-    message.success('你已登录，正在跳转至首页')
-    router.replace('/')
-    return
-  }
-
-  // Get activation token
-  token.value = route.query.token as string
-
-  if (!token.value) {
-    error.value = '激活令牌丢失，请检查你的激活链接是否完整'
-    loading.value = false
-    return
-  }
-
-  await activateAccount()
-}
-
 const activateAccount = async () => {
   loading.value = true
   try {
-    const { status, errors } = await api.get({
-      url: '/api/user/register/',
+    const { status, errors } = await api.post({
+      url: '/api/user/register/activate/',
       query: {
         token: token.value,
       },
@@ -156,6 +163,7 @@ const activateAccount = async () => {
     
     if (status === 200) {
       success.value = true
+      clearActionToken('account-activation')
       message.success('账户激活成功')
     } else {
       error.value = errorText || '账户激活失败。请重试或联系客服支持。'
@@ -168,11 +176,21 @@ const activateAccount = async () => {
   }
 }
 
+const confirmAction = async () => {
+  readyToConfirm.value = false
+  error.value = null
+  if (isBindingCollegeEmail.value) {
+    await bindCollegeMail()
+  } else {
+    await activateAccount()
+  }
+}
+
 const retryActivation = () => {
   if (token.value) {
-    activateAccount()
+    confirmAction()
   } else {
-    error.value = '激活令牌丢失，无法重试'
+    error.value = '验证令牌丢失，无法重试'
   }
 }
 </script>

@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
-import { APIUserProfileFromId } from '@/types/api/user/profilePage'
+import type { APIUserProfile, APIUserProfileGivenId } from '@/types/api/user/profilePage'
 import UserInfo from '@/components/user/profilePage/UserInfo.vue'
 import History from '@/components/user/profilePage/History.vue'
 import { api } from '@/lib/requests'
@@ -24,7 +24,7 @@ const { id } = defineProps<{
 }>()
 
 const message = useMessage()
-const userInfo = ref<APIUserProfileFromId['response'] | null>(null)
+const userInfo = ref<APIUserProfile['response'] | APIUserProfileGivenId['response'] | null>(null)
 
 watch(
   () => id,

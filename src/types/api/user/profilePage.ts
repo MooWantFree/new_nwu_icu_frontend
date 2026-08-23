@@ -3,7 +3,7 @@ import type { ErrorFactory, ErrorNotLogin } from '../errors'
 import { usernameSchema } from '@/types/common/userBasicInfo'
 import { MethodMap } from '../base'
 
-// GET
+// POST
 // 获取已发表评价
 type APIUserActivityReviewBase = {
   id: number
@@ -161,14 +161,17 @@ export type APIUserProfileGivenId = {
   endpoint: '/api/user/profile/:id/'
   method: MethodMap.GET
   params: z.infer<typeof APIUserProfileGivenIdParams>
-  response: {
-    id: number
-    bio: string | null
-    nickname: string
-    avatar: string
-    is_me: boolean
-    verified: boolean
-  }
+  response:
+    | APIUserProfile['response']
+    | {
+        id: number
+        bio: string | null
+        nickname: string
+        avatar: string
+        is_me: false
+        verified: boolean
+        date_joined: string
+      }
   errors: ErrorFactory<ErrorNotLogin>[]
 }
 
@@ -211,7 +214,7 @@ const APIVerifyScholarEmailQuery = z.object({
 })
 export type APIVerifyScholarEmail = {
   endpoint: '/api/user/bind-college-email/verify/'
-  method: MethodMap.GET
+  method: MethodMap.POST
   query: z.infer<typeof APIVerifyScholarEmailQuery>
   response: {}
   errors: ErrorFactory<ErrorNotLogin>[]
@@ -256,4 +259,15 @@ export type APIPrivate = {
       explain: string
     }
   }
+}
+
+export type APIUpdatePrivate = {
+  endpoint: '/api/user/private/'
+  method: MethodMap.POST
+  query: {
+    private_review: number
+    private_reply: number
+  }
+  response: APIPrivate['response']
+  errors: ErrorFactory<ErrorNotLogin>[]
 }
