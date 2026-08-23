@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -57,6 +57,8 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import Link from '@tiptap/extension-link'
 import LinkConfirmModal from './LinkConfirmModal.vue'
+import { openSafeExternalUrl, toSafeExternalUrl } from '@/lib/security'
+import { sanitizeUserRichText } from '@/lib/richText'
 
 const {
   value = '',
@@ -112,22 +114,32 @@ const editor = useEditor({
       class:
         'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
     },
-    handleClick: (view, pos, event) => {
-      // FIXME: Jump before clicked
-      // const link = (event.target as HTMLElement).closest('a')
-      // if (link) {
-      //   event.preventDefault()
-      //   const href = link.getAttribute('href')
-      //   if (href) {
-      //     showLinkConfirm(href)
-      //   }
-      // }
+    handleClick: (_view, _pos, event) => {
+      const link = (event.target as HTMLElement).closest('a')
+      if (link) {
+        event.preventDefault()
+        const href = link.getAttribute('href')
+        const safeUrl = href ? toSafeExternalUrl(href) : null
+        if (safeUrl) showLinkConfirm(safeUrl)
+        return true
+      }
+      return false
     },
   },
   injectCSS: true,
   editable: false,
-  content: value,
+  content: sanitizeUserRichText(value),
 })
+
+watch(
+  () => value,
+  (newValue) => {
+    const safeContent = sanitizeUserRichText(newValue)
+    if (editor.value && editor.value.getHTML() !== safeContent) {
+      editor.value.commands.setContent(safeContent, false)
+    }
+  },
+)
 
 const editorContainer = ref<HTMLElement | null>()
 let resizeObserver: ResizeObserver | null = null
@@ -182,7 +194,7 @@ const showLinkConfirm = (url: string) => {
 }
 
 const handleConfirm = () => {
-  window.open(currentUrl.value, '_blank')
+  openSafeExternalUrl(currentUrl.value)
   showModal.value = false
 }
 

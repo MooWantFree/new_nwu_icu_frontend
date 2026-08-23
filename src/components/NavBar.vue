@@ -62,6 +62,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useUser } from '@/lib/useUser'
 import { APILogin } from '@/types/api/user/user'
 import { Search } from 'lucide-vue-next'
+import { openSafeExternalUrl } from '@/lib/security'
 
 // Import components
 import Logo from '@/components/navbar/Logo.vue'
@@ -75,7 +76,7 @@ import SearchModal from '@/components/search/SearchModal.vue'
 type UserProfile = APILogin['response']
 
 // User state
-const { isLoggedIn, login, logout, userInfo, isLoading } = useUser()
+const { isLoggedIn, logout, userInfo, isLoading } = useUser()
 
 // Modal states
 const showLoginPopup = ref(false)
@@ -155,7 +156,7 @@ const menuOptions = [
     onclick: () => {
       const shouldOpen = confirm('在新的标签页打开资料下载页面（虽然也是我们的）')
       if (shouldOpen) {
-        window.open('https://resour.nwu.icu', '_blank')
+        openSafeExternalUrl('https://resour.nwu.icu')
       }
     },
   },

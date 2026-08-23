@@ -36,6 +36,7 @@
 import { computed } from 'vue';
 import { FsGet } from '@/types/api/disk/fs'; // Assuming this type is still relevant
 import { File } from 'lucide-vue-next'
+import { openSafeExternalUrl } from '@/lib/security'
 
 const props = defineProps<{ data: FsGet['data'] }>()
 
@@ -77,9 +78,7 @@ const copyLink = () => {
 };
 
 const downloadFile = () => {
-  if (file.value.download_url && file.value.download_url !== '#') {
-    window.open(file.value.download_url, '_blank');
-  } else {
+  if (!file.value.download_url || file.value.download_url === '#' || !openSafeExternalUrl(file.value.download_url)) {
     alert('Download link not available.');
   }
 };

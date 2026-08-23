@@ -3,7 +3,6 @@ export const AllowedMimeTypes = [
   'image/jpeg',
   'image/jpg',
   'image/gif',
-  'image/svg+xml',
   'image/webp',
   'image/avif',
   'image/bmp',

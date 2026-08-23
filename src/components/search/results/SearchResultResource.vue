@@ -28,8 +28,10 @@
 
       <!-- Download button -->
       <a
-        :href="`${resource.url}/${resource.name}`"
+        v-if="safeResourceUrl"
+        :href="safeResourceUrl"
         target="_blank"
+        rel="noopener noreferrer"
         class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors"
         :class="{
           'text-white bg-blue-600 hover:bg-blue-700': resource.type === 'file',
@@ -40,18 +42,26 @@
         <span class="mr-2">{{ resource.type === 'file' ? '⬇️' : '👁️' }}</span>
         {{ resource.type === 'file' ? '下载' : '查看' }}
       </a>
+      <span v-else class="text-sm text-red-600">链接不可用</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Import the ResourceSearchResult type for type checking
+import { computed } from 'vue'
 import { ResourceSearchResult } from '@/types/api/search/search'
+import { toSafeExternalUrl } from '@/lib/security'
 
 // Define props with TypeScript type
-defineProps<{
+const props = defineProps<{
   resource: ResourceSearchResult
 }>()
+
+const safeResourceUrl = computed(() => {
+  const baseUrl = props.resource.url.replace(/\/+$/, '')
+  const path = props.resource.name.split('/').map(encodeURIComponent).join('/')
+  return toSafeExternalUrl(`${baseUrl}/${path}`)
+})
 
 // Utility function to format file size
 const formatFileSize = (bytes: number): string => {
