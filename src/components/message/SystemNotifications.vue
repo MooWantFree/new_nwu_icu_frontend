@@ -10,16 +10,16 @@
       <template v-else-if="systemNotifications.length">
         <div
           v-for="notification in systemNotifications"
-          :key="notification.id"
+          :key="`${notification.title}-${notification.update_time}`"
           class="p-4 border-b hover:bg-gray-50"
         >
           <div class="flex items-start space-x-3">
             <n-avatar src="/path/to/system-icon.png" />
             <div class="flex-1">
               <div class="flex items-center justify-between">
-                <span class="font-medium">系统通知</span>
+                <span class="font-medium">{{ notification.title }}</span>
                 <n-time
-                  :time="new Date(notification.timestamp)"
+                  :time="new Date(notification.update_time)"
                   format="yyyy-MM-dd HH:mm"
                 />
               </div>
@@ -32,42 +32,29 @@
       </template>
       <div v-else class="p-4 text-center text-gray-500">暂无系统通知</div>
     </div>
-    <n-pagination
-      v-if="totalCount > 0"
-      v-model:page="currentPage"
-      :page-count="totalPages"
-      :on-update:page="handlePageChange"
-      class="p-4"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 
 interface SystemNotification {
-  id: number
+  title: string
   content: string
-  timestamp: string
+  update_time: string
 }
 
 const message = useMessage()
 const loading = ref(true)
 const systemNotifications = ref<SystemNotification[]>([])
-const currentPage = ref(1)
-const totalCount = ref(0)
-const pageSize = 20
-
-const totalPages = computed(() => Math.ceil(totalCount.value / pageSize))
-
-const fetchSystemNotifications = async (page: number) => {
+const fetchSystemNotifications = async () => {
   try {
     loading.value = true
-    const response = await api.get(`/system-notifications?page=${page}`)
-    systemNotifications.value = response.data.results
-    totalCount.value = response.data.count
+    const response = await api.get({ url: '/api/bulletins/' })
+    if (response.status !== 200) throw new Error('Failed to fetch bulletins')
+    systemNotifications.value = response.content.bulletin_list
   } catch (error) {
     message.error('获取系统通知失败')
   } finally {
@@ -75,12 +62,7 @@ const fetchSystemNotifications = async (page: number) => {
   }
 }
 
-const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchSystemNotifications(page)
-}
-
 onMounted(() => {
-  fetchSystemNotifications(currentPage.value)
+  fetchSystemNotifications()
 })
 </script>

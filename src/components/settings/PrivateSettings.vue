@@ -58,7 +58,6 @@ import { api } from '@/lib/requests'
 import { LoaderCircle } from 'lucide-vue-next'
 import { useMessage } from 'naive-ui'
 
-const disabled = ref(true)
 const message = useMessage()
 const allPrivateExplain = ref([
   { key: 0, value: '允许所有人' },

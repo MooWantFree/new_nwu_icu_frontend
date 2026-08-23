@@ -19,7 +19,7 @@
       <p class="text-lg text-gray-800 mb-4">加载失败</p>
       <p class="text-gray-600 mb-6">{{ error }}</p>
       <button
-        @click="fetchContent"
+        @click="() => fetchContent()"
         class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
       >
         重试
@@ -29,7 +29,7 @@
   <div v-else class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
     <div class="max-w-4xl mx-auto">
       <h1 class="text-3xl font-bold text-gray-800 mb-8">文章</h1>
-      <div v-for="(item, index) in content" class="py-2">
+      <div v-for="item in content" :key="item.id" class="py-2">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
           <div class="p-8">
             <div class="flex justify-between mb-2">
@@ -83,7 +83,8 @@ import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 const currentPage = ref(1)
 const totalPages = ref(1)
 const router = useRouter()
-const content = ref<string | null>(null)
+type Blog = import('@/types/api/text/text').APITos['response']['results']['blogs'][number]
+const content = ref<Blog[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const formatDate = (timestamp: string) => {

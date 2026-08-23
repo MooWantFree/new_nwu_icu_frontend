@@ -146,7 +146,6 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { NButton } from 'naive-ui'
 import { PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
@@ -171,9 +170,9 @@ const teacher = ref<APITeacherInfo['response'] | null>(null)
 const loading = ref(true)
 const showTeacherSelectorModal = ref(false)
 
-const handleAddCourseButtonClick = () => {
+const handleAddCourseButtonClick = async () => {
   // If user already login then show the modal
-  if (checkLoginStatus()) {
+  if (await checkLoginStatus()) {
     showTeacherSelectorModal.value = true
   } else {
     message.error('请先登录后再进行课程添加')

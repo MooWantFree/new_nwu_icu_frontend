@@ -1,5 +1,5 @@
-import type { ErrorFactory, ErrorNotLogin } from '../errors'
-import { MethodMap } from '../base'
+import type { ErrorFactory, ErrorNotLogin } from './errors'
+import { MethodMap } from './base'
 
 export type ResourceUploadFile = {
   id: number

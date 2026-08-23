@@ -93,7 +93,7 @@ type DataType = APIUserActivitiesReply['response']
 const data = ref<DataType | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const errorDetail = ref<string>(null)
+const errorDetail = ref<string | null>(null)
 
 // Fetch data function
 const fetchData = async () => {

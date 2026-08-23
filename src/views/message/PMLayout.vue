@@ -26,7 +26,7 @@
             <component :is="link.icon" class="w-5 h-5 mr-3" />
             <span v-if="isSidebarOpen" class="text-sm font-medium">{{ link.text }}</span>
             <span 
-              v-if="unreadCount[link.name as keyof typeof unreadCount] > 0" 
+              v-if="isSidebarOpen && unreadCount[link.name as keyof typeof unreadCount] > 0"
               class="absolute right-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1 min-w-[20px] text-center"
             >
               {{ unreadCount[link.name as keyof typeof unreadCount] }}
@@ -66,6 +66,7 @@ import {
   ThumbsUp,
   MessageSquare,
   Users,
+  Bell,
   AlertCircle,
   ChevronLeft,
   ChevronRight
@@ -90,7 +91,7 @@ const navLinks = [
   { to: '/message/inbox', icon: MessageSquare, text: '我的消息', name: 'user' },
   { to: '/message/replies', icon: Users, text: '回复我的', name: 'reply' },
   { to: '/message/likes', icon: ThumbsUp, text: '收到的赞', name: 'like' },
-  // { to: '/message/system', icon: Bell, text: '系统通知' },
+  { to: '/message/system', icon: Bell, text: '系统通知', name: 'system' },
 ]
 
 const fetchUnreadCount = async () => {
@@ -102,7 +103,7 @@ const fetchUnreadCount = async () => {
     like: content.unread.like,
   }
 }
-const intervalId = ref<NodeJS.Timeout | undefined>(undefined)
+const intervalId = ref<ReturnType<typeof setInterval> | undefined>(undefined)
 
 onMounted(() => {
   if (window.innerWidth < 768) {

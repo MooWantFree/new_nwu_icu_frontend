@@ -31,7 +31,7 @@
   </div>
 
   <!-- Content -->
-  <div v-else class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
+  <div v-else-if="content" class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
     <div class="max-w-4xl mx-auto">
       <div class="flex justify-center w-full mb-4">
         <h1 class="text-2xl font-bold text-gray-800">{{ content.title }}</h1>
@@ -59,15 +59,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { XCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 
 const route = useRoute()
-const router = useRouter()
-
-const content = ref<string | null>(null)
+type Blog = import('@/types/api/text/text').APITos['response']['results']['blogs'][number]
+const content = ref<Blog | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -77,7 +76,8 @@ const fetchContent = async () => {
     loading.value = true
     error.value = null
     const res = await api.get({
-      url: `/api/blogs/${route.params.id}`,
+      url: '/api/blogs/:id',
+      params: { id: Number(route.params.id) },
     })
     content.value = res.content.results.blogs[0]
     document.title = `${content.value.title} | NWU.ICU`

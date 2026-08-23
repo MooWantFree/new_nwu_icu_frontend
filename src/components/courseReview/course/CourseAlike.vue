@@ -45,7 +45,7 @@ import { CourseData } from '@/types/courseReview'
 import { computed } from 'vue'
 
 const sortedSameNameCourses = computed(() => {
-  return courseData.other_dup_name_course.sort((a, b) => b.rating - a.rating)
+  return [...courseData.other_dup_name_course].sort((a, b) => b.rating - a.rating)
 })
 
 const { courseData } = defineProps<{

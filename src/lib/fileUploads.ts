@@ -1,7 +1,9 @@
 import { ref } from 'vue'
 import { api } from '@/lib/requests'
 
-export function useFileUpload() {
+export type UploadFileType = 'avatar' | 'img' | 'file'
+
+export function useFileUpload(fileType: UploadFileType = 'file') {
   const loading = ref(false)
   const succeed = ref(false)
   const errorsRef = ref<string[]>([])
@@ -12,11 +14,14 @@ export function useFileUpload() {
   const uploadFile = async (file: File) => {
     loading.value = true
     succeed.value = false
+    errorsRef.value = []
     imageUrl.value = ''
+    message.value = ''
     progress.value = 0
 
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('file_type', fileType)
 
     try {
       const { status, data, content, errors } = await api.post({
@@ -40,6 +45,9 @@ export function useFileUpload() {
       imageUrl.value = `/api/download/${content.uuid}/`
     } catch (error) {
       succeed.value = false
+      if (errorsRef.value.length === 0) {
+        errorsRef.value = [error instanceof Error ? error.message : '上传失败，请稍后重试']
+      }
     } finally {
       loading.value = false
     }

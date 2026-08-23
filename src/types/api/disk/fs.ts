@@ -1,6 +1,3 @@
-import { ErrorFactory } from '../errors'
-import { MethodMap } from '../base'
-
 // POST
 // 列出文件目录
 // export type APIDiskListDir = {

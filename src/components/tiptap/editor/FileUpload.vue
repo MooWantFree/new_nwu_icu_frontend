@@ -27,7 +27,7 @@
           @dragover.prevent="isDragging = true"
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
-          @click="$refs.fileInput.click()"
+          @click="openFilePicker"
         >
           <template v-if="!selectedFile">
             <CloudUpload class="w-12 h-12 mx-auto mb-4 text-blue-400" />
@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
 import { CloudUpload, File } from 'lucide-vue-next'
@@ -103,6 +103,8 @@ const messageAPI = useMessage()
 const dialog = useDialog()
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
+const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
+const openFilePicker = () => fileInput.value?.click()
 
 const emit = defineEmits<{
   (e: 'close'): void

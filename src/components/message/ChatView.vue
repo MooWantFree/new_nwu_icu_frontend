@@ -234,15 +234,16 @@ const sendMessage = async () => {
       }
     })
     if (resp.status.toString().startsWith('2')) {
+      if (!userInfo.value) throw new Error('登录状态已失效')
       if (!messageList.value.find(msg => msg.id === resp.data.contents.message)) {
         messageList.value.push({
         id: resp.data.contents.message, // FIXME: Remember to change it 
         content: newMessage.value,
         datetime: dateNow,
         chatter: {
-          id: userInfo.value?.id!,
-          nickname: userInfo.value?.nickname!,
-          avatar: userInfo.value?.avatar!,
+          id: userInfo.value.id,
+          nickname: userInfo.value.nickname,
+          avatar: userInfo.value.avatar,
         }
       })
       }

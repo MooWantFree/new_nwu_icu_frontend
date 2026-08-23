@@ -143,7 +143,6 @@ import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/cour
 import { z } from 'zod'
 import { PlusCircle } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
-import { useWindowSize } from '@vueuse/core'
 
 const message = useMessage()
 

@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { api } from '@/lib/requests'
 import { CourseData } from '@/types/courseReview'
 import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'

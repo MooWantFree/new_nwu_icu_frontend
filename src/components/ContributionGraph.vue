@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 interface DayContribution {
   date: string;
@@ -114,19 +114,6 @@ const generateContributionData = (): DayContribution[][] => {
 }
 
 const contributionData = ref<DayContribution[][]>(generateContributionData())
-
-// Calculate total contributions
-const totalContributions = computed(() => {
-  return contributionData.value.reduce((total, week) => {
-    return total + week.reduce((weekTotal, day) => weekTotal + day.count, 0)
-  }, 0)
-})
-
-// Month labels
-const months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-]
 
 // Tooltip state
 const tooltip = ref({

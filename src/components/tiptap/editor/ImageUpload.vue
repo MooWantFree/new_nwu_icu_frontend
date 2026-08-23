@@ -22,7 +22,7 @@
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           @paste="handlePaste"
-          @click="$refs.fileInput.click()"
+          @click="openFilePicker"
         >
           <div v-if="!selectedFile" class="space-y-3">
             <i class="fas fa-cloud-upload-alt text-4xl text-blue-400"></i>
@@ -38,7 +38,7 @@
             <img :src="previewUrl" alt="预览图片" class="max-h-48 max-w-full mb-4 rounded-lg shadow-md" />
             <span class="text-sm text-gray-600 break-all">{{ selectedFile.name }}</span>
             <button 
-              @click.stop="selectedFile = null; previewUrl = ''" 
+              @click.stop="clearSelection"
               class="mt-2 px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors"
             >
               重新选择
@@ -61,15 +61,6 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">或直接使用图片网址</label>
-          <input
-            v-model="imageUrl"
-            type="url"
-            placeholder="https://example.com/image.jpg"
-            class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
-        </div>
         <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-4">
           <button
             @click="confirmClose"
@@ -80,7 +71,7 @@
           <button
             @click="submitImage"
             class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            :disabled="!selectedFile && !imageUrl || loading || isCompressing"
+            :disabled="!selectedFile || loading || isCompressing"
           >
             <span v-if="loading || isCompressing" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
             {{ loading ? '上传中...' : isCompressing ? '压缩中...' : '上传' }}
@@ -92,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
 
@@ -103,15 +94,16 @@ const {
   uploadFile,
   progress,
   errors,
-} = useFileUpload()
+} = useFileUpload('img')
 
 const dialog = useDialog()
 const messageAPI = useMessage()
-const imageUrl = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const isDragging = ref(false)
 const isCompressing = ref(false)
+const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
+const openFilePicker = () => fileInput.value?.click()
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -119,6 +111,18 @@ const emit = defineEmits<{
 }>()
 
 const closeModal = () => emit('close')
+
+const releasePreviewUrl = () => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = ''
+}
+
+const clearSelection = () => {
+  selectedFile.value = null
+  releasePreviewUrl()
+}
+
+onBeforeUnmount(releasePreviewUrl)
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -180,8 +184,8 @@ const setSelectedFile = async (file: File) => {
   }
   
   selectedFile.value = compressedFile
+  releasePreviewUrl()
   previewUrl.value = URL.createObjectURL(compressedFile)
-  imageUrl.value = ''
 }
 
 const compressImage = (file: File, quality: number): Promise<File> => {
@@ -235,10 +239,6 @@ const submitImage = async () => {
         }
       }
     }, { once: true })
-  } else if (imageUrl.value) {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    emit('upload', imageUrl.value)
-    closeModal()
   }
 }
 

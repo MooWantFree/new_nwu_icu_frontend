@@ -143,19 +143,24 @@ const showImageUpload = ref(false)
 const handleImageUpload = async (url: string) => {
   formData.value.avatar_uuid = url.split('/')[3]
   isSubmitting.value = true
-  const resp = await api.post({
-    url: '/api/user/profile/',
-    query: {
-      avatar_uuid: formData.value.avatar_uuid,
-    },
-  })
-  if (resp.status !== 200) {
+  try {
+    const resp = await api.post({
+      url: '/api/user/profile/',
+      query: {
+        avatar_uuid: formData.value.avatar_uuid,
+      },
+    })
+    if (resp.status !== 200) {
+      message.error('头像上传失败')
+      return
+    }
+    showImageUpload.value = false
+    message.success('头像上传成功')
+  } catch {
     message.error('头像上传失败')
-    return
+  } finally {
+    isSubmitting.value = false
   }
-  isSubmitting.value = false
-  showImageUpload.value = false
-  message.success('头像上传成功')
 }
 
 const isSubmitting = ref(false)

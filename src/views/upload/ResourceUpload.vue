@@ -442,8 +442,8 @@
                 编辑投稿
               </button>
               <a
-                v-if="record.status === 'approved' && record.resource_url"
-                :href="record.resource_url"
+                v-if="record.status === 'approved' && toSafeExternalUrl(record.resource_url)"
+                :href="toSafeExternalUrl(record.resource_url) ?? undefined"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
@@ -731,6 +731,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { toSafeExternalUrl } from '@/lib/security'
 import { useMessage } from 'naive-ui'
 import {
   AlertCircle,
@@ -1077,10 +1078,10 @@ const handleDrop = async (event: DragEvent) => {
   const items = Array.from(event.dataTransfer?.items || [])
   const entries = items
     .map((item) => {
-      const withEntry = item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntryLike | null }
+      const withEntry = item as unknown as { webkitGetAsEntry?: () => FileSystemEntryLike | null }
       return withEntry.webkitGetAsEntry?.() || null
     })
-    .filter((entry): entry is FileSystemEntryLike => Boolean(entry))
+    .filter((entry): entry is FileSystemEntryLike => entry !== null)
 
   if (entries.length) {
     const nested = await Promise.all(entries.map((entry) => readEntry(entry)))

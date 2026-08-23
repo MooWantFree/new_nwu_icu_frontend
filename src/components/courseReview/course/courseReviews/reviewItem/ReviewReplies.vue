@@ -333,7 +333,8 @@ const handleJmpClick = async (
         }
         jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
       }
-      handleJmp(targetElement.querySelector(`[data-reply-id="${targetReplyId}"]`))
+      const replyElement = targetElement.querySelector<HTMLElement>(`[data-reply-id="${targetReplyId}"]`)
+      if (replyElement) await handleJmp(replyElement)
     }
   }
 }
@@ -342,13 +343,14 @@ const handleJmpBackClick = () => {
   if (jumpHistory.value.length > 0) {
     const previousReplyInfo = jumpHistory.value.pop()
     if (previousReplyInfo !== undefined) {
-      const domElements = Array.from(repliesRefs.value)
+      const domElements = Array.from(repliesRefs.value ?? [])
       const targetElement = domElements.find(el =>
         el.querySelector(`[data-reply-id="${previousReplyInfo.from}"]`),
       )
 
       if (targetElement) {
-        handleJmp(targetElement.querySelector(`[data-reply-id="${previousReplyInfo.from}"]`))
+        const replyElement = targetElement.querySelector<HTMLElement>(`[data-reply-id="${previousReplyInfo.from}"]`)
+        if (replyElement) void handleJmp(replyElement)
       }
     }
   }
@@ -407,6 +409,7 @@ const onReplySubmitted = async (
       dislike: 0,
       user_option: 0,
     },
+    is_deleted: false,
   })
   await nextTick()
   await handleJmpClick(replyId, parent)

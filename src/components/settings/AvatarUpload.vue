@@ -23,7 +23,7 @@
           @dragover.prevent
           @drop.prevent="handleDrop"
           @paste="handlePaste"
-          @click="$refs.fileInput.click()"
+          @click="openFilePicker"
         >
           <UploadCloud class="w-12 h-12 text-gray-400 mx-auto mb-2" />
           <p class="text-gray-600">
@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
+import { onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useFileUpload } from '@/lib/fileUploads'
 import VueCropper from 'vue-cropperjs'
@@ -143,12 +143,14 @@ const {
   uploadFile,
   progress,
   errors,
-} = useFileUpload()
+} = useFileUpload('avatar')
 
 const messageAPI = useMessage()
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const cropper = useTemplateRef('cropper')
+const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
+const openFilePicker = () => fileInput.value?.click()
 
 const emit = defineEmits(['close', 'upload'])
 
@@ -160,6 +162,13 @@ const MESSAGE_IMAGE_FILE_SIZE_EXCEED = '头像文件大小不能超过5MB'
 const closeModal = () => {
   emit('close')
 }
+
+const releasePreviewUrl = () => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = ''
+}
+
+onBeforeUnmount(releasePreviewUrl)
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -205,6 +214,7 @@ const setSelectedFile = (file: File) => {
     return
   }
   selectedFile.value = file
+  releasePreviewUrl()
   previewUrl.value = URL.createObjectURL(file)
 }
 
@@ -255,6 +265,6 @@ const rotateRight = () => {
 
 const resetSelection = () => {
   selectedFile.value = null
-  previewUrl.value = ''
+  releasePreviewUrl()
 }
 </script>

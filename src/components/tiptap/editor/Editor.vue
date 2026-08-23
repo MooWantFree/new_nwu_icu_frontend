@@ -17,7 +17,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-import FileHandler from '@tiptap-pro/extension-file-handler'
+import FileHandler from '@tiptap/extension-file-handler'
 import { useFileUpload } from '@/lib/fileUploads'
 import { useMessage } from 'naive-ui'
 import EditorToolbar from './EditorToolbar.vue'
@@ -29,6 +29,7 @@ import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import Link from '@tiptap/extension-link'
+import { sanitizeUserRichText } from '@/lib/richText'
 
 const {
   placeholder = '点击此处，在这里输入新内容...',
@@ -68,7 +69,6 @@ const editor = useEditor({
       allowedMimeTypes: AllowedMimeTypes,
       onPaste: async (currentEditor, files, htmlContent) => {
         if (htmlContent) {
-          console.log(htmlContent)
           return
         }
         for (const file of files) {
@@ -110,9 +110,9 @@ const editor = useEditor({
   },
   autofocus: true,
   injectCSS: true,
-  content: content.value,
+  content: sanitizeUserRichText(content.value || ''),
   onUpdate: ({ editor }) => {
-    emit('update:modelValue', editor.getHTML())
+    emit('update:modelValue', sanitizeUserRichText(editor.getHTML()))
   },
 })
 
@@ -124,13 +124,13 @@ watch(
       newContent !== editor.value.getHTML() &&
       newContent !== undefined
     ) {
-      editor.value.commands.setContent(newContent, false)
+      editor.value.commands.setContent(sanitizeUserRichText(newContent), false)
     }
   }
 )
 
 const handleFile = async (currentEditor: any, file: File, pos: number) => {
-  const { uploadFile, succeed, imageUrl, errors } = useFileUpload()
+  const { uploadFile, succeed, imageUrl, errors } = useFileUpload('img')
 
   await uploadFile(file)
 

@@ -132,6 +132,7 @@ export type APICourseInfo = {
       }
       reply: {
         id: number
+        content: string
         floor_number: number
         created_time: string
         parent: number
@@ -139,14 +140,14 @@ export type APICourseInfo = {
           id: number
           name: string
           avatar: string
-        },
+        }
         like: {
           like: number
           dislike: number
           user_option: number
         }
         is_deleted: boolean
-      }
+      }[]
     }[]
     other_dup_name_course: {
       course_id: number
