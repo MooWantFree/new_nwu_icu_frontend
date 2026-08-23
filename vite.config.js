@@ -7,7 +7,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const resourceServiceUrl = env.VITE_RESOURCE_SERVICE_URL || 'https://resour.nwu.icu'
-  const backendApiUrl = env.VITE_BACKEND_API_URL || 'http://127.0.0.1:8000'
+  const backendApiUrl = env.VITE_BACKEND_API_URL || 'https://nwu.icu'
 
   return {
     plugins: [
