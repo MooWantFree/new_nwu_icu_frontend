@@ -32,8 +32,10 @@
     <!-- Profile header -->
     <div class="px-4 py-5 sm:px-6">
       <div class="flex items-center mb-4">
-        <img
-          :src="`/api/download/${userInfo.avatar}`"
+        <UserAvatar
+          :avatar="userInfo.avatar"
+          :uuid="userInfo.uuid"
+          :has-avatar="userInfo.has_avatar"
           :alt="userInfo.nickname"
           class="h-24 w-24 rounded-full object-cover"
         />
@@ -99,6 +101,7 @@
 
 <script setup lang="ts">
 import Time from '@/components/tinyComponents/Time.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 import type { APIUserProfileFromId } from '@/types/api/user/profilePage'
 import { useRouter } from 'vue-router';
 

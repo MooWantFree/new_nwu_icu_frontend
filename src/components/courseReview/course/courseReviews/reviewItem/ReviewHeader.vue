@@ -2,10 +2,12 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <div class="flex items-center relative">
-        <div v-if="review.author.id > 0" class="relative group">
+        <div v-if="!review.author.anonymous" class="relative group">
           <router-link :to="`/user//${review.author.id}`">
-            <img
-              :src="`/api/download/${review.author.avatar}`"
+            <UserAvatar
+              :avatar="review.author.avatar"
+              :uuid="review.author.uuid"
+              :has-avatar="review.author.has_avatar"
               alt="Avatar"
               class="w-10 h-10 rounded-full mr-3 border-2 border-transparent group-hover:border-blue-500 transition-all duration-300"
             />
@@ -43,6 +45,7 @@
 
 <script setup lang="ts">
 import { Review } from '@/types/courseReview'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const { review, isAuthor } = defineProps<{
   review: Review

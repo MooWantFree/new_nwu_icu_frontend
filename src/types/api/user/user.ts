@@ -46,6 +46,8 @@ export type APILogin = {
     date_joined: string
     nickname: string
     avatar: string
+    uuid: string
+    has_avatar: boolean
     bio?: string
   }
   errors: ErrorFactory<'password' | 'login' | 'user'>[]

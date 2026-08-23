@@ -402,6 +402,8 @@ const onReplySubmitted = async (
       id: userInfo.value.id,
       name: userInfo.value.nickname ?? userInfo.value.username,
       avatar: userInfo.value.avatar,
+      uuid: userInfo.value.uuid,
+      has_avatar: userInfo.value.has_avatar,
     },
     floor_number: newFloorNumber,
     like: {

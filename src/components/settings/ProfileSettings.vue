@@ -12,11 +12,13 @@
           <div class="flex flex-col items-center space-y-4">
             <div class="relative group cursor-pointer" @click="showImageUpload = true">
               <div class="w-28 h-28 rounded-full border-4 border-blue-500 flex items-center justify-center">
-                <img 
-                  :src="`/api/download/${formData.avatar_uuid}`" 
+                <UserAvatar
+                  :avatar="displayedAvatar"
+                  :uuid="userInfo.uuid"
+                  :has-avatar="displayedHasAvatar"
                   alt="Avatar" 
                   class="w-24 h-24 rounded-full object-cover transition-all duration-300 group-hover:opacity-75"
-                >
+                />
               </div>
               <div 
                 class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -113,6 +115,8 @@ import { useMessage } from 'naive-ui'
 import { LoaderCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import AvatarUpload from './AvatarUpload.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import { useUser } from '@/lib/useUser'
 
 type ErrorsProfile = {
   nickname: string
@@ -127,6 +131,7 @@ const { userInfo } = defineProps<{
 }>()
 
 const message = useMessage()
+const { fetchUserInfo } = useUser(false)
 const errors = ref<ErrorsProfile>({
   nickname: '',
   avatar_uuid: '',
@@ -139,6 +144,8 @@ const formData = ref<FormData>({
   username: userInfo.username,
   bio: userInfo.bio,
 })
+const displayedAvatar = ref(userInfo.avatar)
+const displayedHasAvatar = ref(userInfo.has_avatar)
 const showImageUpload = ref(false)
 const handleImageUpload = async (url: string) => {
   formData.value.avatar_uuid = url.split('/')[3]
@@ -154,6 +161,9 @@ const handleImageUpload = async (url: string) => {
       message.error('头像上传失败')
       return
     }
+    displayedAvatar.value = resp.data.contents.avatar
+    displayedHasAvatar.value = resp.data.contents.has_avatar
+    await fetchUserInfo()
     showImageUpload.value = false
     message.success('头像上传成功')
   } catch {
@@ -198,6 +208,9 @@ const handleSubmit = async () => {
       query: formData.value,
     })
     if (resp.status !== 200) throw new Error('Failed to update profile')
+    displayedAvatar.value = resp.data.contents.avatar
+    displayedHasAvatar.value = resp.data.contents.has_avatar
+    await fetchUserInfo()
     message.success('个人资料更新成功')
   } catch (error) {
     message.error('更新个人资料失败')

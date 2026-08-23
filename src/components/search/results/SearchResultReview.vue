@@ -21,9 +21,18 @@
     </div>
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center">
-        <img
-          :src="`/api/download/${filteredReview.created_by.avatar}`"
+        <UserAvatar
+          v-if="filteredReview.created_by.id > 0"
+          :avatar="filteredReview.created_by.avatar_uuid"
+          :uuid="filteredReview.created_by.uuid"
+          :has-avatar="filteredReview.created_by.has_avatar"
           alt="User Avatar"
+          class="w-6 h-6 rounded-full mr-2"
+        />
+        <img
+          v-else
+          :src="`/api/download/${filteredReview.created_by.avatar_uuid}`"
+          alt="Anonymous Avatar"
           class="w-6 h-6 rounded-full mr-2"
         />
         <span class="text-sm font-medium text-gray-700">{{
@@ -67,6 +76,7 @@ import { ReviewSearchResult } from '@/types/api/search/search'
 import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import { computed } from 'vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const { review } = defineProps<{
   review: ReviewSearchResult

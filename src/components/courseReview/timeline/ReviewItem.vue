@@ -12,7 +12,16 @@
                 :offset="[-5, 33]"
                 color="green"
               >
+                <UserAvatar
+                  v-if="review.author.id > 0"
+                  :avatar="review.author.avatar_uuid"
+                  :uuid="review.author.uuid"
+                  :has-avatar="review.author.has_avatar"
+                  :alt="review.author.nickname"
+                  class="h-10 w-10 rounded-full object-cover"
+                />
                 <n-avatar
+                  v-else
                   round
                   size="medium"
                   :src="`/api/download/${review.author.avatar_uuid}`"
@@ -93,6 +102,7 @@ import { useRouter } from 'vue-router'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import type { ReviewTimeline } from '@/types/courseReview'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 dayjs.extend(relativeTime)
 

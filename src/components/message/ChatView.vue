@@ -34,9 +34,13 @@
             ]">
               <div
                 class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                <img v-if="msg.chatter.avatar" :src="`/api/download/${msg.chatter.avatar}`" :alt="msg.chatter.nickname"
-                  class="w-full h-full object-cover" />
-                <User v-else class="w-6 h-6 text-gray-400" />
+                <UserAvatar
+                  :avatar="msg.chatter.avatar"
+                  :uuid="msg.chatter.uuid"
+                  :has-avatar="msg.chatter.has_avatar"
+                  :alt="msg.chatter.nickname"
+                  class="w-full h-full object-cover"
+                />
               </div>
               <div :class="[
                 'flex flex-col',
@@ -96,7 +100,8 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
-import { MoreVertical, Image as ImageIcon, Send, Loader2, User, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
+import { MoreVertical, Image as ImageIcon, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
 const message = useMessage()
@@ -244,6 +249,8 @@ const sendMessage = async () => {
           id: userInfo.value.id,
           nickname: userInfo.value.nickname,
           avatar: userInfo.value.avatar,
+          uuid: userInfo.value.uuid,
+          has_avatar: userInfo.value.has_avatar,
         }
       })
       }

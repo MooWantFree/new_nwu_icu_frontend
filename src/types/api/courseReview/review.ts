@@ -102,6 +102,8 @@ export type APILatestReviews = {
         nickname: string
         id: number
         avatar_uuid: string
+        uuid?: string
+        has_avatar?: boolean
         is_student: boolean
       }
       datetime: string

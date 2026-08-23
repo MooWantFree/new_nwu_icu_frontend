@@ -31,8 +31,10 @@
         >
           <div class="p-4 border-b border-gray-100 flex justify-between items-center">
             <div class="flex items-center space-x-2">
-              <img
-                :src="`/api/download/${reply.created_by.avatar}`"
+              <UserAvatar
+                :avatar="reply.created_by.avatar"
+                :uuid="reply.created_by.uuid"
+                :has-avatar="reply.created_by.has_avatar"
                 alt="User avatar"
                 class="w-8 h-8 rounded-full"
               />
@@ -103,6 +105,7 @@ import { api } from '@/lib/requests'
 import type { APINotificationList } from '@/types/api/messages/messages'
 import Time from '@/components/tinyComponents/Time.vue'
 import { RefreshCw, MessageSquare } from 'lucide-vue-next'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const message = useMessage()
 const loading = ref(true)

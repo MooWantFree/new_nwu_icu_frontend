@@ -53,7 +53,13 @@ export type APIBulletins = {
     bulletin_list: {
       title: string
       content: string
-      publisher: { nickname: string; id: number; avatar: string }
+      publisher: {
+        nickname: string
+        id: number
+        avatar: string
+        uuid: string
+        has_avatar: boolean
+      }
       create_time: string
       update_time: string
     }[]

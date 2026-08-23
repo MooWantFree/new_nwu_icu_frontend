@@ -76,6 +76,8 @@ type APIUserActivityReplyBase = {
       nickname: string
       id: number
       avatar_uuid: string
+      uuid?: string
+      has_avatar?: boolean
       is_student: boolean
     }
     content: string
@@ -145,6 +147,8 @@ export type APIUserProfile = {
     date_joined: string
     nickname: string
     avatar: string
+    uuid: string
+    has_avatar: boolean
     college_email?: string
     verified: boolean
     is_me: true
@@ -168,6 +172,8 @@ export type APIUserProfileGivenId = {
         bio: string | null
         nickname: string
         avatar: string
+        uuid: string
+        has_avatar: boolean
         is_me: false
         verified: boolean
         date_joined: string
@@ -192,6 +198,8 @@ export type APIUserProfileFromId = {
         date_joined: string
         nickname: string
         avatar: string
+        uuid: string
+        has_avatar: boolean
         college_email?: string
         is_me: true
       }
@@ -200,6 +208,8 @@ export type APIUserProfileFromId = {
         bio: string | null
         nickname: string
         avatar: string
+        uuid: string
+        has_avatar: boolean
         is_me: false
         verified: boolean
         date_joined: string
@@ -239,7 +249,14 @@ export type APIUpdateProfile = {
   endpoint: '/api/user/profile/'
   method: MethodMap.POST
   query: z.infer<typeof APIUpdateProfileBody>
-  response: z.infer<typeof APIUpdateProfileBody> & { id: number }
+  response: {
+    id: number
+    nickname: string
+    avatar: string
+    uuid: string
+    has_avatar: boolean
+    bio?: string | null
+  }
   errors: ErrorFactory<
     ErrorNotLogin | 'bio' | 'avatar' | 'nickname' | 'username'
   >[]

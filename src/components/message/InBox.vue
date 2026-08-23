@@ -23,9 +23,13 @@
             }">
             <div class="flex items-start space-x-3">
               <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 flex items-center justify-center">
-                <img v-if="message.chatter.avatar" :src="`/api/download/${message.chatter.avatar}`" :alt="message.chatter.nickname"
-                  class="w-full h-full object-cover" />
-                <User v-else class="w-6 h-6 text-gray-400" />
+                <UserAvatar
+                  :avatar="message.chatter.avatar"
+                  :uuid="message.chatter.uuid"
+                  :has-avatar="message.chatter.has_avatar"
+                  :alt="message.chatter.nickname"
+                  class="w-full h-full object-cover"
+                />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-1">
@@ -84,7 +88,8 @@ import { api } from '@/lib/requests'
 import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
-import { User, RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 // TODO: Change this to inf scroll
 const route = useRoute()
@@ -154,6 +159,8 @@ const newMessage = ref<{
     id: number
     nickname: string
     avatar: string
+    uuid: string
+    has_avatar: boolean
   }
 }>()
 
@@ -165,6 +172,8 @@ const finalMessages = computed(() => {
         id: newMessage.value.chatter.id,
         nickname: newMessage.value.chatter.nickname,
         avatar: newMessage.value.chatter.avatar,
+        uuid: newMessage.value.chatter.uuid,
+        has_avatar: newMessage.value.chatter.has_avatar,
       },
       last_message: {
         content: '',
@@ -199,6 +208,8 @@ onMounted(async () => {
                 id: resp.data.contents.id,
                 nickname: resp.data.contents.nickname,
                 avatar: resp.data.contents.avatar,
+                uuid: resp.data.contents.uuid,
+                has_avatar: resp.data.contents.has_avatar,
               },
             }
           }

@@ -19,7 +19,9 @@ export type ReviewSearchResult = {
   created_by: {
     id: number
     nickname: string
-    avatar: string
+    avatar_uuid: string
+    uuid?: string
+    has_avatar?: boolean
   }
   modify_time: string
   like: {

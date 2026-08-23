@@ -16,18 +16,13 @@
         @click="isDropdownOpen = !isDropdownOpen"
         class="flex items-center focus:outline-none"
       >
-        <img
-          v-if="userInfo?.avatar"
-          :src="`/api/download/${userInfo.avatar}`"
+        <UserAvatar
+          :avatar="userInfo?.avatar"
+          :uuid="userInfo?.uuid"
+          :has-avatar="userInfo?.has_avatar"
           alt="User avatar"
           class="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
         />
-        <div
-          v-else
-          class="h-10 w-10 rounded-full bg-red-500 text-yellow-300 flex items-center justify-center font-bold"
-        >
-          {{ userInfo?.nickname?.charAt(0) || userInfo?.username?.charAt(0) || 'U' }}
-        </div>
       </button>
 
       <!-- Dropdown menu -->
@@ -76,6 +71,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/lib/requests'
 import { User, Pencil, LogOut } from 'lucide-vue-next'
 import { APILogin } from '@/types/api/user/user'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 type UserProfile = APILogin['response']
 

@@ -20,6 +20,8 @@ export type APIUserMessageList = {
         id: number
         nickname: string
         avatar: string
+        uuid: string
+        has_avatar: boolean
       }
       last_message: {
         content: string
@@ -54,6 +56,8 @@ export type APIUserMessageDetail = {
     results: {
       chatter: {
         avatar: string
+        uuid: string
+        has_avatar: boolean
         id: number
         nickname: string
       }

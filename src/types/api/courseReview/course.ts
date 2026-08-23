@@ -128,6 +128,8 @@ export type APICourseInfo = {
         id: number
         nickname: string
         avatar: string
+        uuid?: string
+        has_avatar?: boolean
         anonymous: boolean
       }
       reply: {
@@ -140,6 +142,8 @@ export type APICourseInfo = {
           id: number
           name: string
           avatar: string
+          uuid?: string
+          has_avatar?: boolean
         }
         like: {
           like: number

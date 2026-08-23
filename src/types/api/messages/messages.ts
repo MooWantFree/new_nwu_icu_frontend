@@ -22,6 +22,8 @@ export type APINotificationList = {
         id: number
         nickname: string
         avatar: string
+        uuid: string
+        has_avatar: boolean
       }
       course: {
         id: number
