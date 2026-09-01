@@ -1,8 +1,8 @@
 <template>
   <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
     <RouterLink to="/guestbook" class="mb-6 inline-block text-sm text-blue-700 hover:underline">← 返回留言板</RouterLink>
-    <div v-if="loading" class="py-16 text-center text-gray-500">加载讨论中…</div>
     <GuestbookComposerModal v-if="replyTarget && userInfo" :user-id="userInfo.id" :parent-id="replyTarget" @close="closeReply" @created="replyCreated" />
+    <div v-if="loading" class="py-16 text-center text-gray-500">加载讨论中…</div>
     <GuestbookThreadNode v-else-if="entry && userInfo" :entry="entry" :level="0" :user-id="userInfo.id" :focus-id="focusId" :open-path="openPath" @changed="refresh" />
     <div v-else-if="entry" class="rounded-xl border border-gray-200 bg-white p-4"><p class="mb-3 text-sm text-gray-600">登录后可参与讨论。</p><GuestbookEntryCard :entry="entry" /></div>
     <div v-else class="py-16 text-center text-gray-500">留言不存在或已被移除。</div>
