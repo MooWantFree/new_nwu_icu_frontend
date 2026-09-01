@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b">
     <main class="container mx-auto py-10 px-6">
-      <div class="flex flex-col md:flex-row gap-10">
-        <div class="flex-grow space-y-10">
+      <div class="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-3">
+        <div class="space-y-10 md:col-span-2 xl:col-span-1">
           <div class="mb-8 text-center md:text-left">
             <div class="flex flex-col md:flex-row items-center md:items-end gap-2">
               <h1 class="text-5xl font-bold text-gray-800">Welcome to</h1>
@@ -55,7 +55,7 @@
           </div>
         </div>
 
-        <div class="md:w-1/2 bg-white rounded-2xl shadow-sm p-8 border border-gray-100 h-fit sticky top-8">
+        <div class="h-fit rounded-2xl border border-gray-100 bg-white p-8 shadow-sm xl:sticky xl:top-8">
           <div class="flex items-center justify-between mb-8">
             <router-link :to="'/review/timeline'" class="group">
               <h2 class="text-2xl font-bold text-gray-800 group-hover:text-primary transition-colors">
@@ -70,6 +70,18 @@
             </router-link>
           </div>
           <ReviewTimeline :showHeader="false" :pageSize="3" />
+        </div>
+        <div class="h-fit rounded-2xl border border-gray-100 bg-white p-8 shadow-sm xl:sticky xl:top-8">
+          <div class="mb-8 flex items-center justify-between">
+            <router-link to="/guestbook" class="group">
+              <h2 class="text-2xl font-bold text-gray-800 transition-colors group-hover:text-primary">留言板</h2>
+            </router-link>
+            <router-link to="/guestbook" class="flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 font-medium text-primary transition-colors hover:bg-blue-100">
+              查看更多
+              <ChevronRight class="h-4 w-4" />
+            </router-link>
+          </div>
+          <GuestbookPreview />
         </div>
       </div>
     </main>
@@ -93,6 +105,7 @@ import {
   ChevronRight,
 } from 'lucide-vue-next'
 import ReviewTimeline from '@/views/courseReview/ReviewTimeline.vue'
+import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
 import { onMounted, ref } from 'vue'
 
 const showAnimation = ref(false)

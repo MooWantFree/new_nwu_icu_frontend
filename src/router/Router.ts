@@ -217,12 +217,28 @@ const resourceUploadRoutes = [
   },
 ] satisfies RouteRecordRaw[]
 
+const guestbookRoutes = [
+  {
+    path: '/guestbook',
+    name: 'guestbook',
+    component: () => import('@/views/guestbook/Guestbook.vue'),
+    meta: { pageTitle: '留言板' },
+  },
+  {
+    path: '/guestbook/:id(\\d+)',
+    name: 'guestbookDetail',
+    component: () => import('@/views/guestbook/GuestbookDetail.vue'),
+    meta: { pageTitle: '留言板讨论' },
+  },
+] satisfies RouteRecordRaw[]
+
 const routes = [
   ...courseReviewRoutes,
   ...userRoutes,
   ...messageRoutes,
   ...diskRouters,
   ...resourceUploadRoutes,
+  ...guestbookRoutes,
   {
     path: '/',
     component: () => import('@/views/Home.vue'),

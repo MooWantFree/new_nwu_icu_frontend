@@ -6,6 +6,12 @@ import type { Captcha } from './captcha'
 import type { Text } from './text'
 import type { FileAPI } from './file'
 import type {
+  APIGuestbookContext,
+  APIGuestbookDetail,
+  APIGuestbookList,
+  APIGuestbookReplies,
+} from './guestbook'
+import type {
   APIResourceDirectories,
   APIResourceUploadCreate,
   APIResourceUploadList,
@@ -60,6 +66,10 @@ export type RequestEndpoints = {
     '/api/message/reply/': Messages.APINotificationList
     '/api/message/system/': Messages.APISystemNotificationList
     '/api/message/unread/': Messages.APIUnreadMessageCount
+    '/api/guestbook/': APIGuestbookList
+    '/api/guestbook/:id/': APIGuestbookDetail
+    '/api/guestbook/:id/replies/': APIGuestbookReplies
+    '/api/guestbook/:id/context/': APIGuestbookContext
 
     // Disk
     // Since Alist's API format is not same as present, so another method is used for it.
@@ -110,6 +120,9 @@ export type RequestEndpoints = {
     '/api/message/': Inbox.APISendMessage
     '/api/message/user/:id/read/': Inbox.APIReadConversation
     '/api/message/notifications/read/': Messages.APIReadNotifications
+    '/api/guestbook/': import('./guestbook').APICreateGuestbook
+    '/api/guestbook/:id/replies/': import('./guestbook').APICreateGuestbookReply
+    '/api/guestbook/:id/reports/': import('./guestbook').APIReportGuestbook
   }
   [MethodMap.DELETE]: {
     // CourseReview
@@ -120,11 +133,13 @@ export type RequestEndpoints = {
 
     // File
     '/api/delete/:uuid/': FileAPI.APIFileDelete
+    '/api/guestbook/:id/': import('./guestbook').APIDeleteGuestbook
   }
   [MethodMap.PUT]: {
     // CourseReview
     // - Review
     '/api/assessment/review/': Review.APIUpdateReview
     '/api/upload/request/:requestId/': APIResourceUploadUpdate
+    '/api/guestbook/:id/like/': import('./guestbook').APISetGuestbookLike
   }
 }

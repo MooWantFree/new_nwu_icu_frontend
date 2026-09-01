@@ -151,6 +151,11 @@ const menuOptions = [
     ],
   },
   {
+    key: 'guestbook',
+    text: '留言板',
+    path: '/guestbook',
+  },
+  {
     key: 'resourceDownload',
     text: '资料下载',
     onclick: () => {
