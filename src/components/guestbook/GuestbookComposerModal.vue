@@ -88,6 +88,13 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 
+const handleBeforeLogout = (event: Event) => {
+  persistDraft()
+  if (hasContent.value && !confirm('草稿已自动保存。确定要退出登录吗？')) {
+    event.preventDefault()
+  }
+}
+
 const submit = async () => {
   if (!plainText.value || plainText.value.length > 500) return
   submitting.value = true
@@ -114,10 +121,12 @@ onMounted(() => {
     hasDraft.value = true
   }
   window.addEventListener('beforeunload', handleBeforeUnload)
+  window.addEventListener('guestbook:before-logout', handleBeforeLogout)
 })
 onUnmounted(() => {
   if (saveTimer) clearTimeout(saveTimer)
   persistDraft()
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('guestbook:before-logout', handleBeforeLogout)
 })
 </script>
