@@ -12,14 +12,8 @@ export type APINotificationList = {
   method: MethodMap.GET
   query: z.infer<typeof APINotificationListQuery>
   response: {
-    results: {
+    results: ({
       id: number
-      source?: 'guestbook'
-      guestbook?: {
-        root_id: number
-        entry_id: number
-        target_id: number
-      }
       reply: {
         id: number
         content: string
@@ -31,6 +25,12 @@ export type APINotificationList = {
         uuid: string
         has_avatar: boolean
       }
+      datetime: string
+    } & ({
+      source: 'guestbook'
+      guestbook: { root_id: number; entry_id: number; target_id: number }
+    } | {
+      source?: undefined
       course: {
         id: number
         name: string
@@ -40,8 +40,7 @@ export type APINotificationList = {
         classify: string
         content: string
       }
-      datetime: string
-    }[]
+    }))[]
     page: number
     max_page: number
     count: number

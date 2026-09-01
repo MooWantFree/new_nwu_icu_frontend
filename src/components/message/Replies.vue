@@ -54,12 +54,12 @@
           </div>
 
           <div class="p-4">
-            <template v-if="reply.source === 'guestbook' && reply.guestbook">
+            <template v-if="reply.source === 'guestbook'">
               <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
                 有人回复了你的
                 <RouterLink :to="`/guestbook/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-600 hover:underline">留言板内容</RouterLink>
               </div>
-              <div class="mt-2"><p class="text-sm text-gray-600">{{ reply.reply.content }}</p></div>
+              <div class="mt-2 text-sm text-gray-600" v-html="sanitizeGuestbookHtml(reply.reply.content)" />
             </template>
             <template v-else>
               <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
@@ -111,6 +111,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import { sanitizeGuestbookHtml } from '@/lib/guestbook'
 import type { APINotificationList } from '@/types/api/messages/messages'
 import Time from '@/components/tinyComponents/Time.vue'
 import { RefreshCw, MessageSquare } from 'lucide-vue-next'

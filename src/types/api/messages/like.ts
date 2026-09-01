@@ -15,13 +15,15 @@ export type APILikeList = {
     page: number
     max_page: number
     count: number
-    results: {
+    results: ({
       id: number
-      source?: 'guestbook'
-      guestbook?: {
-        root_id: number
-        entry_id: number
-      }
+      like: { like: number; dislike: number }
+      datetime: string
+    } & ({
+      source: 'guestbook'
+      guestbook: { root_id: number; entry_id: number }
+    } | {
+      source?: undefined
       raw_info: {
         course: {
           id: number
@@ -33,12 +35,7 @@ export type APILikeList = {
           id: number,
         }
       }
-      like: {
-        like: number
-        dislike: number
-      }
-      datetime: string
-    }[]
+    }))[]
   }
   errors: ErrorFactory<'auth'>[]
 }

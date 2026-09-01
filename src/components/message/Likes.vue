@@ -30,7 +30,7 @@
           class="bg-white rounded-lg shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
         >
           <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-            <RouterLink v-if="notice.source === 'guestbook' && notice.guestbook"
+            <RouterLink v-if="notice.source === 'guestbook'"
               :to="`/guestbook/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`"
               class="text-blue-600 hover:text-blue-800 font-medium truncate max-w-[70%]"
             >留言板</RouterLink>
@@ -60,11 +60,11 @@
                 <ThumbsUp class="w-4 h-4 text-green-500 mr-1" />
                 {{ notice.like.like }}
               </span>
-              <span class="flex items-center">
+              <span v-if="notice.source !== 'guestbook'" class="flex items-center">
                 <ThumbsDown class="w-4 h-4 text-red-500 mr-1" />
                 {{ notice.like.dislike }}
               </span>
-              <RouterLink v-if="notice.source === 'guestbook' && notice.guestbook"
+              <RouterLink v-if="notice.source === 'guestbook'"
                 :to="`/guestbook/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`"
                 class="ml-auto text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
               >查看详情</RouterLink>
