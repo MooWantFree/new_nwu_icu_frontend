@@ -12,15 +12,15 @@
         </div>
         <div class="guestbook-content mt-3 break-words text-gray-800" v-html="sanitizeGuestbookHtml(entry.content)" />
         <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
-          <button :disabled="entry.is_deleted || likePending" class="inline-flex items-center gap-1 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50" :class="{ 'text-blue-700': entry.liked_by_me }" @click="$emit('like', entry)">
+          <button v-if="!entry.is_deleted" :disabled="likePending" :aria-pressed="entry.liked_by_me" aria-label="点赞" class="inline-flex items-center gap-1 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50" :class="{ 'text-blue-700': entry.liked_by_me }" @click="$emit('like', entry)">
             <ThumbsUp class="h-4 w-4" /> {{ entry.like_count }}
           </button>
-          <button v-if="!entry.is_deleted" class="inline-flex items-center gap-1 hover:text-blue-700" @click="$emit('reply', entry)"><MessageCircle class="h-4 w-4" /> 回复</button>
+          <button v-if="!entry.is_deleted" :disabled="likePending" class="inline-flex items-center gap-1 hover:text-blue-700" @click="$emit('reply', entry)"><MessageCircle class="h-4 w-4" /> 回复</button>
           <RouterLink v-if="showThreadLink" :to="`/guestbook/${entry.root_id ?? entry.id}`" class="inline-flex items-center gap-1 hover:text-blue-700"><MessagesSquare class="h-4 w-4" /> {{ entry.reply_count || 0 }} 条回复</RouterLink>
-          <button v-if="!entry.is_deleted" class="ml-auto text-gray-400 hover:text-red-600" @click="showReport = !showReport">举报</button>
-          <button v-if="entry.is_me && !entry.is_deleted" class="text-gray-400 hover:text-red-600" @click="remove">删除</button>
+          <button v-if="!entry.is_deleted" :disabled="likePending" class="ml-auto text-gray-400 hover:text-red-600" @click="showReport = !showReport">举报</button>
+          <button v-if="entry.is_me && !entry.is_deleted" :disabled="likePending" class="text-gray-400 hover:text-red-600" @click="remove">删除</button>
         </div>
-        <div v-if="showReport" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm">
+        <div v-if="showReport && !entry.is_deleted" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm">
           <span class="text-gray-600">举报原因：</span>
           <button v-for="reason in reportReasons" :key="reason.value" class="rounded border border-gray-300 px-2 py-1 hover:border-red-400 hover:text-red-600" @click="report(reason.value)">{{ reason.label }}</button>
         </div>
