@@ -54,7 +54,15 @@
           </div>
 
           <div class="p-4">
-            <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
+            <template v-if="reply.source === 'guestbook' && reply.guestbook">
+              <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
+                有人回复了你的
+                <RouterLink :to="`/guestbook/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-600 hover:underline">留言板内容</RouterLink>
+              </div>
+              <div class="mt-2"><p class="text-sm text-gray-600">{{ reply.reply.content }}</p></div>
+            </template>
+            <template v-else>
+              <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
               《
               <RouterLink
                 :to="`/review/course/${reply.course.id}`"
@@ -73,6 +81,7 @@
             >
               <p class="text-sm text-gray-600">{{ reply.raw_post.content }}</p>
             </div>
+            </template>
           </div>
         </div>
       </div>

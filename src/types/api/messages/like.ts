@@ -17,6 +17,11 @@ export type APILikeList = {
     count: number
     results: {
       id: number
+      source?: 'guestbook'
+      guestbook?: {
+        root_id: number
+        entry_id: number
+      }
       raw_info: {
         course: {
           id: number

@@ -14,6 +14,12 @@ export type APINotificationList = {
   response: {
     results: {
       id: number
+      source?: 'guestbook'
+      guestbook?: {
+        root_id: number
+        entry_id: number
+        target_id: number
+      }
       reply: {
         id: number
         content: string
