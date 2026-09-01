@@ -188,6 +188,7 @@ const handleCustomClick = (item: MenuItem) => {
 }
 
 const handleLogout = async () => {
+  if (!window.dispatchEvent(new CustomEvent('guestbook:before-logout', { cancelable: true }))) return
   try {
     const { status } = await api.post({ url: '/api/user/logout/' })
     if (status !== 200) {

@@ -21,14 +21,15 @@ export type GuestbookEntry = {
   created_at: string
   like_count: number
   reply_count?: number
+  children_count: number
   author: GuestbookAuthor
   is_me: boolean
   liked_by_me: boolean
 }
 
 const pageQuery = z.object({ page: z.number().optional(), pageSize: z.number().optional() })
-const contentQuery = z.object({ content: z.string(), anonymous: z.boolean().optional() })
-const replyQuery = z.object({ content: z.string() })
+const contentQuery = z.object({ content: z.string(), anonymous: z.boolean().optional(), submission_id: z.string().uuid() })
+const replyQuery = z.object({ content: z.string(), submission_id: z.string().uuid() })
 
 type PaginatedEntries = { page: number; max_page: number; count: number; results: GuestbookEntry[] }
 
@@ -89,5 +90,5 @@ export type APIGuestbookContext = {
   endpoint: '/api/guestbook/:id/context/'
   method: MethodMap.GET
   params: { id: number }
-  response: { root_id: number; path: number[] }
+  response: { root_id: number; path: number[]; entries: GuestbookEntry[] }
 }

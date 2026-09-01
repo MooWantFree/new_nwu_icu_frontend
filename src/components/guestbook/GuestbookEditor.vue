@@ -7,6 +7,8 @@
         type="button"
         :title="button.title"
         :aria-label="button.title"
+        :aria-pressed="editor?.isActive(button.name) || false"
+        :disabled="disabled"
         class="rounded p-2 text-gray-700 hover:bg-gray-100"
         :class="{ 'bg-blue-100 text-blue-700': editor?.isActive(button.name) }"
         @click="button.toggle"
@@ -26,13 +28,14 @@ import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Bold, Italic, Strikethrough, Underline as UnderlineIcon } from 'lucide-vue-next'
 
-import { sanitizeGuestbookHtml } from '@/lib/guestbook'
+import { guestbookPasteContent, sanitizeGuestbookHtml } from '@/lib/guestbook'
 
-const props = defineProps<{ modelValue: string; placeholder?: string }>()
+const props = defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 
 const editor = useEditor({
   content: sanitizeGuestbookHtml(props.modelValue),
+  editable: !props.disabled,
   extensions: [
     StarterKit.configure({
       blockquote: false,
@@ -47,12 +50,12 @@ const editor = useEditor({
     Placeholder.configure({ placeholder: props.placeholder || '写下你的留言…' }),
   ],
   editorProps: {
-    attributes: { class: 'min-h-32 outline-none prose prose-sm max-w-none' },
+    attributes: { class: 'min-h-32 outline-none prose prose-sm max-w-none', role: 'textbox', 'aria-label': '留言内容', 'aria-multiline': 'true' },
     handlePaste: (_view, event) => {
       const text = event.clipboardData?.getData('text/plain')
-      if (!text) return false
+      if (text === undefined) return false
       event.preventDefault()
-      editor.value?.chain().focus().insertContent(text).run()
+      if (text) editor.value?.chain().focus().insertContent(guestbookPasteContent(text)).run()
       return true
     },
   },
@@ -64,6 +67,7 @@ watch(() => props.modelValue, (value) => {
     editor.value.commands.setContent(sanitizeGuestbookHtml(value), false)
   }
 })
+watch(() => props.disabled, disabled => editor.value?.setEditable(!disabled))
 
 const buttons = computed(() => [
   { name: 'bold', title: '加粗', icon: Bold, toggle: () => editor.value?.chain().focus().toggleBold().run() },
