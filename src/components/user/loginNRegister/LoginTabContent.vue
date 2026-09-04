@@ -31,6 +31,15 @@
         忘记密码？
       </button>
     </div>
+
+    <div
+      v-if="errors.general"
+      role="alert"
+      aria-live="polite"
+      class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+    >
+      {{ errors.general }}
+    </div>
     
     <button
       type="submit"
@@ -96,7 +105,7 @@ const handleLogin = async () => {
   emit('update:loading', true);
   
   try {
-    const { status, content, errors: apiErrors } = await api.post({
+    const { status, data, content, errors: apiErrors } = await api.post({
       url: '/api/user/login/',
       query: {
         username: formData.username,
@@ -105,14 +114,24 @@ const handleLogin = async () => {
     });
 
     if (!status.toString().startsWith('2')) {
+      let displayedError = false;
       for (const error of apiErrors || []) {
         if (error.field === 'user') {
           errors.username = error.err_msg;
         } else if (error.field === 'password') {
           errors.password = error.err_msg;
+        } else if (error.field === 'credentials') {
+          errors.general = error.err_msg;
         } else {
           errors.general = error.err_msg;
         }
+        displayedError = true;
+      }
+
+      if (!displayedError) {
+        errors.general = status === 403
+          ? '登录请求未通过安全校验，请刷新页面后重试'
+          : data?.message || '登录失败，请稍后重试';
       }
     } else {
       emit('login-success', content);

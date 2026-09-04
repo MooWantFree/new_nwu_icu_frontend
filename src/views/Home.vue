@@ -1,170 +1,113 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b">
-    <main class="container mx-auto py-10 px-6">
-      <div class="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-3">
-        <div class="space-y-10 md:col-span-2 xl:col-span-1">
-          <div class="mb-8 text-center md:text-left">
-            <div class="flex flex-col md:flex-row items-center md:items-end gap-2">
-              <h1 class="text-5xl font-bold text-gray-800">Welcome to</h1>
-              <span
-                class="text-5xl font-bold text-primary bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600"
-                :class="{ 'animate__animated animate__rubberBand': showAnimation }"
-              >
-                NWU.ICU
-              </span>
-            </div>
-            <!-- <p class="mt-4 text-gray-600 max-w-2xl mx-auto md:mx-0 text-lg">Your comprehensive portal for Northwestern University resources and services.</p> -->
-          </div>
-
-          <div
-            v-for="section in sections"
-            :key="section.title"
-            class="bg-white rounded-2xl shadow-sm p-8 transition-all hover:shadow-lg border border-gray-100"
-          >
-            <div class="flex items-center gap-4 mb-8">
-              <div :class="`bg-gradient-to-r  rounded-full p-3 shadow-md ${section.color}`">
-                <!-- <BookIcon class="w-7 h-7 text-white" /> -->
-              </div>
-              <h2 class="text-2xl font-bold text-gray-800">{{ section.title }}</h2>
-            </div>
-            <div class="grid grid-cols-2 gap-5">
-              <div v-for="item in section.items" :key="item.label">
-                <router-link
-                  v-if="item.openIn"
-                  :to="item.url"
-                  class="bg-gray-50 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-gradient-to-r from-blue-300 to-purple-400 hover:text-white transition-all duration-300 group shadow-sm hover:shadow-md border border-gray-100 hover:border-transparent"
-                >
-                  <component :is="item.icon"
-                             class="w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
-                  <span class="text-center font-medium">{{ item.label }}</span>
-                </router-link>
-                <a
-                  v-else
-                  :href="item.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="bg-gray-50 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-gradient-to-r from-blue-300 to-purple-400 hover:text-white transition-all duration-300 group shadow-sm hover:shadow-md border border-gray-100 hover:border-transparent"
-                >
-                  <component :is="item.icon"
-                             class="w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
-                  <span class="text-center font-medium">{{ item.label }}</span>
-                </a>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <div class="h-fit rounded-2xl border border-gray-100 bg-white p-8 shadow-sm xl:sticky xl:top-8">
-          <div class="flex items-center justify-between mb-8">
-            <router-link :to="'/review/timeline'" class="group">
-              <h2 class="text-2xl font-bold text-gray-800 group-hover:text-primary transition-colors">
+  <div class="min-h-screen bg-slate-50/80">
+    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+        <section
+          aria-labelledby="latest-reviews-title"
+          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+          <header class="flex items-center justify-between gap-4 px-5 pb-3 pt-5 sm:px-7 sm:pt-7">
+            <div class="flex min-w-0 items-center gap-3">
+              <MessageSquareText class="h-7 w-7 shrink-0 text-blue-700" aria-hidden="true" />
+              <h1 id="latest-reviews-title" class="text-xl font-bold text-slate-900 sm:text-2xl">
                 最近评价
-              </h2>
-            </router-link>
-            <router-link
-              :to="'/review/timeline'"
-              class="text-primary font-medium flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors">
-              查看更多
-              <ChevronRight class="w-4 h-4" />
-            </router-link>
+              </h1>
+            </div>
+          </header>
+
+          <HomeReviewPreview />
+
+          <div class="border-t border-slate-200 px-5 py-4 text-center sm:px-7">
+            <RouterLink
+              to="/review/timeline"
+              class="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-3 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+              查看全部评价
+              <ChevronRight class="h-4 w-4" aria-hidden="true" />
+            </RouterLink>
           </div>
-          <ReviewTimeline :showHeader="false" :pageSize="3" />
-        </div>
-        <div class="h-fit rounded-2xl border border-gray-100 bg-white p-8 shadow-sm xl:sticky xl:top-8">
-          <div class="mb-8 flex items-center justify-between">
-            <router-link to="/guestbook" class="group">
-              <h2 class="text-2xl font-bold text-gray-800 transition-colors group-hover:text-primary">留言板</h2>
-            </router-link>
-            <router-link to="/guestbook" class="flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 font-medium text-primary transition-colors hover:bg-blue-100">
-              查看更多
-              <ChevronRight class="h-4 w-4" />
-            </router-link>
-          </div>
+        </section>
+
+        <section
+          aria-labelledby="guestbook-title"
+          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+          <header class="flex items-center gap-3 px-5 pb-3 pt-5 sm:px-6 sm:pt-7">
+            <MessagesSquare class="h-7 w-7 shrink-0 text-blue-700" aria-hidden="true" />
+            <h2 id="guestbook-title" class="text-xl font-bold text-slate-900 sm:text-2xl">
+              留言板
+            </h2>
+          </header>
+
           <GuestbookPreview />
-        </div>
+
+          <div class="border-t border-slate-200 px-5 py-4 text-center sm:px-6">
+            <RouterLink
+              to="/guestbook"
+              class="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-3 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+              查看更多
+              <ChevronRight class="h-4 w-4" aria-hidden="true" />
+            </RouterLink>
+          </div>
+        </section>
       </div>
+
+      <details class="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary
+          class="flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl px-5 text-base font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:px-7 [&::-webkit-details-marker]:hidden"
+        >
+          <School class="h-5 w-5 text-slate-700" aria-hidden="true" />
+          <span>常用校内入口</span>
+          <ChevronDown
+            class="ml-auto h-5 w-5 text-slate-500 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <div class="border-t border-slate-200 px-5 py-5 sm:px-7">
+          <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <a
+              v-for="service in campusServices"
+              :key="service.label"
+              :href="service.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex min-h-11 items-center rounded-lg px-3 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              {{ service.label }}
+              <ExternalLink class="ml-auto h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </details>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  Bike,
-  BookOpenText,
-  Bus,
-  Download,
-  Upload,
-  Laptop,
-  Library,
-  Mail,
-  Phone,
-  Printer,
-  School,
-  Waypoints,
+  ChevronDown,
   ChevronRight,
+  ExternalLink,
+  MessagesSquare,
+  MessageSquareText,
+  School,
 } from 'lucide-vue-next'
-import ReviewTimeline from '@/views/courseReview/ReviewTimeline.vue'
+import HomeReviewPreview from '@/components/courseReview/HomeReviewPreview.vue'
 import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
-import { onMounted, ref } from 'vue'
 
-const showAnimation = ref(false)
-
-onMounted(() => {
-  setTimeout(() => {
-    showAnimation.value = true
-  }, 500)
-})
-
-const sections = [
+const campusServices = [
+  { label: '教务管理系统', url: 'https://jwgl.nwu.edu.cn/sso/jziotlogin' },
+  { label: '图书馆自助打印', url: 'https://weixinprinthost.woquyun.com/wq-web/#/index' },
+  { label: '西大邮箱', url: 'https://mail.stumail.nwu.edu.cn/' },
+  { label: 'WEB VPN', url: 'https://webvpn.nwu.edu.cn/' },
+  { label: '彩虹体育馆预约', url: 'http://cgzx.nwu.edu.cn:8080/venues/auth' },
   {
-    title: '本站服务',
-    color: 'from-blue-500 to-purple-400',
-    items: [
-      { label: '课程评价', icon: School, url: '/review/timeline', openIn: true },
-      { label: '资料下载', icon: Download, url: 'https://resour.nwu.icu', openIn: false },
-      { label: '资料投稿', icon: Upload, url: '/upload', openIn: true },
-    ],
+    label: '图书馆馆藏检索',
+    url: 'https://agentdockingopac.featurelib.libsou.com/showhome/search/showSearch?schoolId=25',
   },
-  {
-    title: '西大服务',
-    color: 'from-purple-500 to-blue-400',
-    items: [
-      { label: '教务管理系统', icon: BookOpenText, url: 'https://jwgl.nwu.edu.cn/sso/jziotlogin', openIn: false },
-      {
-        label: '图书馆自助打印',
-        icon: Printer,
-        url: 'https://weixinprinthost.woquyun.com/wq-web/#/index',
-        openIn: false,
-      },
-      { label: '西大邮箱', icon: Mail, url: 'https://mail.stumail.nwu.edu.cn/', openIn: false },
-      { label: 'WEB VPN', icon: Waypoints, url: 'https://webvpn.nwu.edu.cn/', openIn: false },
-      { label: '彩虹体育馆预约', icon: Bike, url: 'http://cgzx.nwu.edu.cn:8080/venues/auth', openIn: false },
-      {
-        label: '图书馆馆藏检索',
-        icon: Library,
-        url: 'https://agentdockingopac.featurelib.libsou.com/showhome/search/showSearch?schoolId=25',
-        openIn: false,
-      },
-      {
-        label: '班车时刻表',
-        icon: Bus,
-        url: 'https://hqjt.nwu.edu.cn/fwdt/bcsk.htm',
-        openIn: false,
-      },
-      {
-        label: '西大电话',
-        icon: Phone,
-        url: 'https://www.nwu.edu.cn/ggzy/xddh.htm',
-        openIn: false,
-      },
-      {
-        label: '正版软件',
-        icon: Laptop,
-        url: 'https://zhengban.nwu.edu.cn/',
-        openIn: false,
-      },
-    ],
-  },
+  { label: '班车时刻表', url: 'https://hqjt.nwu.edu.cn/fwdt/bcsk.htm' },
+  { label: '西大电话', url: 'https://www.nwu.edu.cn/ggzy/xddh.htm' },
+  { label: '正版软件', url: 'https://zhengban.nwu.edu.cn/' },
 ]
 </script>

@@ -13,18 +13,6 @@
       v-if="isMenuOpen"
       class="absolute top-16 right-4 w-72 bg-white rounded-lg shadow-lg z-50 overflow-hidden"
     >
-      <!-- Home button -->
-      <div class="border-b border-gray-100">
-        <router-link
-          to="/"
-          class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
-          @click="isMenuOpen = false"
-        >
-          <House class="h-5 w-5 mr-3" />
-          主页
-        </router-link>
-      </div>
-
       <!-- Main menu items -->
       <div class="max-h-[60vh] overflow-y-auto">
         <div v-for="item in menuItems" :key="item.key">
@@ -140,7 +128,6 @@ import {
   LogIn,
   Mail,
   Menu,
-  House,
   ChevronDown,
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'

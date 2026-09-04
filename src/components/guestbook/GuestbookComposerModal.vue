@@ -1,6 +1,6 @@
 <template>
   <NModal :show="true" @update:show="close">
-    <div role="dialog" aria-modal="true" aria-labelledby="guestbook-composer-title" class="mx-4 w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+    <div role="dialog" aria-modal="true" aria-labelledby="guestbook-composer-title" class="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <h2 id="guestbook-composer-title" class="text-xl font-semibold">{{ isReply ? '添加回复' : '添加留言' }}</h2>
         <button type="button" aria-label="关闭编辑窗口" :disabled="submitting" class="px-2 text-xl text-gray-500" @click="close">×</button>

@@ -50,7 +50,7 @@ export type APILogin = {
     has_avatar: boolean
     bio?: string
   }
-  errors: ErrorFactory<'password' | 'login' | 'user'>[]
+  errors: ErrorFactory<'credentials' | 'password' | 'login' | 'user'>[]
 }
 
 // POST
