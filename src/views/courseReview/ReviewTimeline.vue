@@ -1,20 +1,27 @@
 <template>
-  <AppPageLayout title="时间线" :show-header="showHeader">
+  <AppPageLayout
+    title="时间线"
+    description="分享课程体验，也欢迎客观、友善地交流。"
+    :show-header="showHeader"
+  >
     <template #meta>
       <span>({{ totalReviewCount }})</span>
     </template>
 
-    <div class="space-y-6">
-      <template v-if="loading">
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载课程评价">
         <review-item-skeleton v-for="index in pageSize" :key="index" />
-      </template>
-      <template v-else>
+      </div>
+      <div v-else-if="reviews.length" class="divide-y divide-slate-200">
         <review-item
           v-for="review in reviews"
-          :review="review"
           :key="review.id"
+          :review="review"
         />
-      </template>
+      </div>
+      <div v-else class="px-5 py-16 text-center text-sm text-slate-500 sm:px-7">
+        暂时还没有课程评价。
+      </div>
     </div>
     <div
       v-if="totalReviewCount > 0 && showHeader"
@@ -25,7 +32,10 @@
         :item-count="totalReviewCount"
         :page-slot="5"
         :page-size="pageSize"
+        :page-sizes="pageSizeOptions"
+        :show-size-picker="true"
         @update:page="onPageUpdate"
+        @update:page-size="onPageSizeUpdate"
         show-quick-jumper
       >
       </n-pagination>
@@ -50,7 +60,7 @@ const props = defineProps({
   },
   pageSize: {
     type: Number,
-    default: 5,
+    default: 8,
   },
 })
 
@@ -62,11 +72,16 @@ const reviews = ref<APILatestReviews['response']['results']>([])
 const totalReviewCount = ref(0)
 const loading = ref(true)
 const currentPage = ref(parseInt(route.query.page as string) || 1)
+const pageSizeOptions = [8, 20, 50]
+const requestedPageSize = parseInt(route.query.pageSize as string)
+const pageSize = ref(
+  pageSizeOptions.includes(requestedPageSize) ? requestedPageSize : props.pageSize,
+)
 
 const fetchReviews = async (page: number, desc: number = 1) => {
   const searchParams = {
     page: page,
-    pageSize: props.pageSize,
+    pageSize: pageSize.value,
     desc: desc,
   }
   try {
@@ -89,8 +104,29 @@ const fetchReviews = async (page: number, desc: number = 1) => {
 
 const onPageUpdate = async (page: number) => {
   loading.value = true
-  await router.push({ query: { ...route.query, page: page.toString() } })
+  await router.push({
+    query: {
+      ...route.query,
+      page: page.toString(),
+      pageSize: pageSize.value.toString(),
+    },
+  })
   await fetchReviews(page)
+  loading.value = false
+}
+
+const onPageSizeUpdate = async (size: number) => {
+  pageSize.value = size
+  currentPage.value = 1
+  loading.value = true
+  await router.push({
+    query: {
+      ...route.query,
+      page: '1',
+      pageSize: size.toString(),
+    },
+  })
+  await fetchReviews(1)
   loading.value = false
 }
 
