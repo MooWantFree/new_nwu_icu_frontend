@@ -1,23 +1,35 @@
 <template>
-  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+  <div class="flex h-[min(40rem,calc(100dvh-2rem))] flex-col overflow-hidden rounded-lg bg-white shadow-md">
     <div class="p-6 border-b border-gray-200">
-      <div class="relative">
-        <input
-          type="text"
-          placeholder="搜索课程、评价、教师及资源..."
-          class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-          v-model="searchQuery"
-          ref="searchInput"
-          @input="()=> debouncedSearch()"
-          @keyup.enter="()=> handleSearch()"
-        />
-        <div class="absolute top-3 left-3">
-          <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
-          <LoaderCircle v-else class="w-6 h-6 text-blue-700 animate-spin" />
-        </div>
+      <div class="flex items-center gap-2">
+        <form class="relative min-w-0 flex-1" @submit.prevent="submitSearch">
+          <input
+            type="text"
+            placeholder="搜索课程、评价、教师及资源..."
+            class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            v-model="searchQuery"
+            ref="searchInput"
+            enterkeyhint="search"
+            @input="scheduleSearch"
+            @keydown.enter="handleSearchKeydown"
+          />
+          <div class="absolute top-3 left-3">
+            <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
+            <LoaderCircle v-else class="w-6 h-6 text-blue-700 animate-spin" />
+          </div>
+        </form>
+        <button
+          type="button"
+          class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="关闭搜索"
+          title="关闭搜索"
+          @click="$emit('close')"
+        >
+          <X class="h-5 w-5" />
+        </button>
       </div>
     </div>
-    <div class="p-6">
+    <div class="flex min-h-0 flex-1 flex-col p-6">
       <nav
         class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg"
         aria-label="Tabs"
@@ -38,7 +50,10 @@
       </nav>
       <div
         v-if="!searchLoading && searchResults?.search_result.length"
-        class="space-y-4 max-h-[50vh] overflow-y-auto"
+        :class="[
+          'min-h-0 flex-1 overflow-y-auto',
+          activeTab === searchEnums.review ? '' : 'space-y-4',
+        ]"
         @scroll="handleScroll"
         ref="scrollContainer"
       >
@@ -48,7 +63,7 @@
             :key="result.id"
             @close="$emit('close')"
             :review="result as ReviewSearchResult"
-            class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+            class="border-b border-slate-200 last:border-b-0"
           />
         </template>
         <template v-if="activeTab === searchEnums.course">
@@ -82,12 +97,16 @@
           <LoaderCircle class="w-8 h-8 mx-auto text-blue-700 animate-spin" />
         </div>
       </div>
-      <div v-else class="text-center py-12">
+      <div v-else class="flex flex-1 flex-col items-center justify-center text-center py-12">
         <template v-if="searchLoading">
           <LoaderCircle
             class="w-16 h-16 mx-auto mb-4 text-blue-700 animate-spin"
           />
           <p class="text-lg font-medium text-gray-600">搜索中...</p>
+        </template>
+        <template v-else-if="searchPending">
+          <Search class="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <p class="text-lg font-medium text-gray-600">输入完成后自动搜索</p>
         </template>
         <template v-else-if="searchQuery">
           <Search class="w-16 h-16 mx-auto mb-4 text-gray-400" />
@@ -117,9 +136,8 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, onMounted } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
-import { LoaderCircle, Search, PlusCircle } from 'lucide-vue-next'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { LoaderCircle, Search, PlusCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { searchEnums, SearchType, searchTypeTooltip } from './enums'
 import {
@@ -141,15 +159,23 @@ const activeTab = ref<SearchType>(searchEnums.review)
 
 const searchResults = ref<APISearch['response'] | null>(null)
 const searchLoading = ref(false)
+const searchPending = ref(false)
 const scrollLoading = ref(false)
 
 const showAddCourseModal = ref(false)
+let searchRequestId = 0
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const handleSearch = async (loadMore = false) => {
   if (!searchQuery.value.trim() && !loadMore) {
+    searchRequestId++
+    searchPending.value = false
     searchResults.value = null
     return
   }
+
+  const requestId = loadMore ? searchRequestId : ++searchRequestId
+  searchPending.value = false
 
   if (!loadMore) {
     searchLoading.value = true
@@ -170,6 +196,8 @@ const handleSearch = async (loadMore = false) => {
       url: '/api/search/',
       query: requestQueryData,
     })
+    if (requestId !== searchRequestId) return
+
     if (loadMore && searchResults.value) {
       searchResults.value.search_result = [
         ...searchResults.value.search_result,
@@ -180,22 +208,60 @@ const handleSearch = async (loadMore = false) => {
     }
     totalPage.value = response.content.total_pages
   } catch (error) {
-    console.error('Search failed:', error)
+    if (requestId === searchRequestId) {
+      console.error('Search failed:', error)
+    }
   } finally {
-    searchLoading.value = false
-    scrollLoading.value = false
+    if (requestId === searchRequestId) {
+      searchLoading.value = false
+      scrollLoading.value = false
+    }
   }
 }
 
-const debouncedSearch = () => {
-  searchLoading.value = true
-  useDebounceFn(handleSearch, 500)()
+const cancelScheduledSearch = () => {
+  if (searchDebounceTimer !== undefined) {
+    clearTimeout(searchDebounceTimer)
+    searchDebounceTimer = undefined
+  }
+}
+
+const scheduleSearch = () => {
+  searchRequestId++
+  searchLoading.value = false
+  scrollLoading.value = false
+  cancelScheduledSearch()
+
+  if (!searchQuery.value.trim()) {
+    searchPending.value = false
+    searchResults.value = null
+    return
+  }
+
+  searchPending.value = true
+  searchDebounceTimer = setTimeout(() => {
+    searchDebounceTimer = undefined
+    void handleSearch()
+  }, 1300)
+}
+
+const handleSearchKeydown = (event: KeyboardEvent) => {
+  if (event.isComposing) return
+
+  event.preventDefault()
+  submitSearch()
+}
+
+const submitSearch = () => {
+  cancelScheduledSearch()
+  handleSearch()
 }
 
 const handleTabClick = (tab: SearchType) => {
   if (activeTab.value === tab) return
   activeTab.value = tab
   currentPage.value = 1
+  cancelScheduledSearch()
   handleSearch()
 }
 
@@ -217,9 +283,9 @@ const handleScroll = () => {
 
 onMounted(() => {
   nextTick(() => searchInput.value?.focus())
+})
 
-  if (scrollContainer.value) {
-    scrollContainer.value.addEventListener('scroll', handleScroll)
-  }
+onUnmounted(() => {
+  cancelScheduledSearch()
 })
 </script>

@@ -3,28 +3,11 @@
   <div
     class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
   >
-    <!-- Teacher information section with avatar -->
-    <div class="flex items-center mb-4 cursor-pointer" @click="handleTeacherClick">
-      <n-avatar round :src="`/api/download/${teacher.avatar_uuid}`">
-        <template #fallback>
-          <div
-            :class="[
-              'w-full h-full flex justify-center items-center text-white text-2xl font-semibold',
-              [
-                'bg-indigo-500',
-                'bg-teal-600',
-                'bg-orange-600',
-                'bg-pink-600',
-                'bg-cyan-600',
-              ][teacher.name.charCodeAt(0) % 5],
-            ]"
-          >
-            {{ teacher.name.charAt(0).toUpperCase() }}
-          </div>
-        </template>
-      </n-avatar>
-      <div class="ml-4">
-        <h3 class="text-lg font-semibold text-blue-700 hover:underline">{{ teacher.name }}</h3>
+    <div class="cursor-pointer" @click="handleTeacherClick">
+      <div>
+        <h3 class="text-lg font-semibold text-blue-700 hover:underline">
+          <SearchHighlight :text="teacher.name" :highlight-ranges="teacher.name_highlight_ranges" />
+        </h3>
         <p class="text-sm text-gray-600">{{ teacher.school }}</p>
       </div>
     </div>
@@ -40,6 +23,7 @@
 // Import the TeacherSearchResult type for type checking
 import { TeacherSearchResult } from '@/types/api/search/search'
 import { useRouter } from 'vue-router'
+import SearchHighlight from '@/components/tinyComponents/SearchHighlight.vue'
 
 const router = useRouter()
 

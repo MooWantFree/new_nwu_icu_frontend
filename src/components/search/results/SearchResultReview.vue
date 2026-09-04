@@ -1,122 +1,54 @@
 <template>
-  <div
-    class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
-  >
-    <a
-      @click="handleReviewClick(filteredReview.course.id)"
-      class="cursor-pointer"
-    >
-      <h3 class="text-lg font-semibold text-blue-700 mb-2 hover:underline">
-        {{ filteredReview.course.name }}
-      </h3>
-    </a>
-    <div class="h-18 overflow-hidden mb-3">
-      <div class="text-sm text-gray-700 line-clamp-3">
-        <!-- <div v-html="filteredReview.content"></div> -->
-        <div>
-          {{ extractText(filteredReview.content) }}
-        </div>
-        <!-- FIXME: EVIL! DO NOT USE V-HTML FOR UGC -->
-      </div>
-    </div>
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center">
-        <UserAvatar
-          v-if="filteredReview.created_by.id > 0"
-          :avatar="filteredReview.created_by.avatar_uuid"
-          :uuid="filteredReview.created_by.uuid"
-          :has-avatar="filteredReview.created_by.has_avatar"
-          alt="User Avatar"
-          class="w-6 h-6 rounded-full mr-2"
-        />
-        <img
-          v-else
-          :src="`/api/download/${filteredReview.created_by.avatar_uuid}`"
-          alt="Anonymous Avatar"
-          class="w-6 h-6 rounded-full mr-2"
-        />
-        <span class="text-sm font-medium text-gray-700">{{
-          filteredReview.created_by.nickname
-        }}</span>
-        <Time :time="filteredReview.modify_time" class="ml-2" />
-      </div>
-      <button
-        @click="handleReviewClick(filteredReview.course.id, filteredReview.id)"
-        class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-      >
-        查看详情
-      </button>
-    </div>
-    <div class="flex items-center justify-between">
-      <div class="flex items-center">
-        <span class="text-yellow-500 mr-1">★</span>
-        <span class="font-medium">{{ filteredReview.rating.toFixed(1) }}</span>
-        <span class="text-sm text-gray-500 ml-2"
-          >({{ filteredReview.semester }})</span
+  <article class="px-5 py-6 sm:px-7">
+    <div class="min-w-0">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <RouterLink
+          :to="{
+            name: 'courseReviewItem',
+            params: { id: review.course.id },
+            hash: `#review-${review.id}`,
+          }"
+          class="break-words text-base font-semibold text-blue-700 underline-offset-4 hover:text-blue-900 hover:underline sm:text-lg"
+          @click="emit('close')"
         >
-      </div>
-      <div class="flex items-center space-x-4 text-sm text-gray-600">
-        <div class="flex items-center">
-          <ThumbsUp class="w-5 h-5 text-green-500 mr-1" />
-          <span>{{ filteredReview.like.like }}</span>
+          {{ review.course.name }}
+        </RouterLink>
+
+        <div class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 sm:justify-end">
+          <span class="max-w-36 truncate text-slate-700">{{ review.created_by.nickname }}</span>
+          <Time :time="review.modify_time" class="whitespace-nowrap" />
+          <span class="flex items-center gap-1 text-slate-500">
+            <ThumbsUp class="h-4 w-4 text-slate-400" />
+            {{ review.like.like }}
+          </span>
+          <span class="flex items-center gap-1 text-slate-500">
+            <ThumbsDown class="h-4 w-4 text-slate-400" />
+            {{ review.like.dislike }}
+          </span>
         </div>
-        <div class="flex items-center">
-          <ThumbsDown class="w-5 h-5 text-red-500 mr-1" />
-          <span>{{ filteredReview.like.dislike }}</span>
-        </div>
       </div>
+
+      <ReviewPlainText
+        :content="review.content"
+        :highlight-ranges="review.content_highlight_ranges"
+        :lines="3"
+        class="mt-3 text-sm leading-7 text-slate-600"
+      />
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
-import { ReviewSearchResult } from '@/types/api/search/search'
-import { useRouter } from 'vue-router'
-import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
-import { computed } from 'vue'
-import UserAvatar from '@/components/common/UserAvatar.vue'
+import { ThumbsDown, ThumbsUp } from 'lucide-vue-next'
+import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
+import type { ReviewSearchResult } from '@/types/api/search/search'
 
-const { review } = defineProps<{
+defineProps<{
   review: ReviewSearchResult
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
-
-const filteredReview = computed(() => {
-  return {
-    ...review,
-    content: review.content.replace(/<img[^>]*>/g, '<p>[图片]</p><br />'),
-  }
-})
-
-const router = useRouter()
-
-const handleReviewClick = (courseId: number, reviewId: number = -1) => {
-  if (reviewId === -1) {
-    router.push({
-      name: 'courseReviewItem',
-      params: {
-        id: courseId,
-      },
-    })
-  } else {
-    router.push({
-      name: 'courseReviewItem',
-      params: {
-        id: courseId,
-      },
-      hash: `#review-${reviewId}`,
-    })
-  }
-  emit('close')
-}
-
-function extractText(html: string) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
-}
 </script>

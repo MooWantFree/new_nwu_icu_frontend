@@ -15,6 +15,7 @@ export type ReviewSearchResult = {
     name: string
   }
   content: string
+  content_highlight_ranges?: [number, number][]
   rating: number
   created_by: {
     id: number
@@ -33,6 +34,7 @@ export type ReviewSearchResult = {
 export type CourseSearchResult = {
   id: number
   name: string
+  name_highlight_ranges?: [number, number][]
   teacher: string
   classification: string
   school: string
@@ -51,6 +53,7 @@ export type CourseSearchResult = {
 export type TeacherSearchResult = {
   id: number
   name: string
+  name_highlight_ranges?: [number, number][]
   school: string
   avatar_uuid?: string
 }

@@ -4,7 +4,7 @@
     <!-- Course title with clickable link -->
     <a @click="handleCourseClick" class="cursor-pointer">
       <h3 class="text-lg font-semibold text-blue-700 mb-2 hover:underline">
-        {{ course.name }}
+        <SearchHighlight :text="course.name" :highlight-ranges="course.name_highlight_ranges" />
       </h3>
     </a>
 
@@ -39,11 +39,11 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-4 text-sm text-gray-600">
         <div class="flex items-center">
-          <ThumbsUp class="w-5 h-5 text-green-500 mr-1" />
+          <ThumbsUp class="w-5 h-5 text-slate-400 mr-1" />
           <span>{{ course.like.like }}</span>
         </div>
         <div class="flex items-center">
-          <ThumbsDown class="w-5 h-5 text-red-500 mr-1" />
+          <ThumbsDown class="w-5 h-5 text-slate-400 mr-1" />
           <span>{{ course.like.dislike }}</span>
         </div>
       </div>
@@ -63,6 +63,7 @@ import { CourseSearchResult } from '@/types/api/search/search'
 import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import Time from '@/components/tinyComponents/Time.vue'
+import SearchHighlight from '@/components/tinyComponents/SearchHighlight.vue'
 
 // Define component props
 const { course } = defineProps<{
