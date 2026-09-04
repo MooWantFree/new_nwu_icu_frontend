@@ -7,6 +7,7 @@
           placeholder="搜索课程、评价、教师及资源..."
           class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
           v-model="searchQuery"
+          ref="searchInput"
           @input="()=> debouncedSearch()"
           @keyup.enter="()=> handleSearch()"
         />
@@ -116,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { nextTick, ref, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { LoaderCircle, Search, PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
@@ -135,6 +136,7 @@ import SearchResultResource from './results/SearchResultResource.vue'
 import AddCourseModal from '../courseReview/course/AddCourseModal.vue'
 
 const searchQuery = ref('')
+const searchInput = ref<HTMLInputElement | null>(null)
 const activeTab = ref<SearchType>(searchEnums.review)
 
 const searchResults = ref<APISearch['response'] | null>(null)
@@ -214,6 +216,8 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
+  nextTick(() => searchInput.value?.focus())
+
   if (scrollContainer.value) {
     scrollContainer.value.addEventListener('scroll', handleScroll)
   }
