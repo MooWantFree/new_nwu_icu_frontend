@@ -11,7 +11,7 @@
         </span>
       </h1>
       <button @click="showAddTeacherModal = true"
-        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center self-end sm:self-auto">
+        class="btn-primary self-end sm:self-auto">
         <PlusCircle class="w-5 h-5 mr-2" />
         添加教师
       </button>
@@ -35,7 +35,7 @@
         </option>
       </select>
       <button @click="handlePageChange(1)" :disabled="loading"
-        class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        class="btn-primary w-full sm:w-auto">
         {{ loading ? '加载中...' : '应用筛选' }}
       </button>
     </div>

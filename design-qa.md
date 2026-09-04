@@ -1,61 +1,63 @@
-# Homepage redesign QA
+# Visual system unification QA
 
-- Source visual truth path: `C:\Users\ms\.codex\generated_images\01a06c7c-94a7-7971-a116-6c9b3ed63e2a\exec-f7de8a3a-06d6-4eca-b517-7922d03d6fd9.png`
-- Implementation: `http://127.0.0.1:5173/`
-- Implementation screenshot path: Codex in-app Browser inline capture for the local URL (desktop, tablet, and mobile captures are attached to the task run; the browser API did not expose a filesystem save path).
-- Source pixels: 1487 × 1058.
-- Implementation desktop viewport and capture: 1440 × 1024 CSS px at 1× density.
-- Additional responsive captures: 768 × 1024 and 390 × 844 CSS px at 1× density.
-- State: logged out; latest reviews loaded from the local Django backend; guestbook loaded successfully with an empty result; school-service disclosure collapsed by default.
+- Source visual truth: Codex in-app Browser captures of the pre-change homepage and review timeline from this run. The browser returned inline JPEG evidence but did not expose filesystem paths.
+- Implementation: local Vite preview on the homepage, review timeline, and course list.
+- Implementation screenshots: Codex in-app Browser inline captures from this run; no filesystem path was exposed.
+- Desktop CSS viewport: 1002 × 911 at device pixel ratio 2. Full-page evidence was normalized by the browser to 987 px width (homepage 1072 px high; timeline 1715 px high).
+- Responsive target: 390 × 844 viewport override. Browser content captures were 375 × 812 px.
+- State: logged out, light appearance, real local API data.
 
 ## Full-view comparison evidence
 
-The selected source and the browser-rendered implementation were reviewed together in the task context at the desktop target size. Both use the selected 2:1 review/guestbook grid, place content immediately below the navigation, omit the page-level NWU.ICU welcome copy, keep only the green logo in the top-left, and relegate school services to a full-width collapsed disclosure. The implementation intentionally uses the installed Lucide icon family for all UI icons and the real project logo asset.
+The pre-change homepage and timeline captures were reviewed together with the post-change captures. The review links now share one semantic link color, the timeline pagination follows the same system blue instead of Naive UI's default green, and both routes use the same cool-neutral page background. Timeline cards were reduced from heavy elevation and small radii to the same lightweight border, 16 px radius, and subtle shadow used by the homepage.
 
-The responsive captures preserve the same hierarchy: latest reviews first, guestbook second, and the school-service disclosure last. No horizontal clipping, overlap, unusable controls, or broken long-course-name wrapping was observed at 768 px or 390 px.
+The course-list capture confirms that “登录/注册”, “添加课程”, and “应用筛选” use the same primary blue and control treatment. The 390 × 844 homepage and timeline captures preserve the new hierarchy without horizontal overflow, clipped controls, or broken long-title wrapping.
 
 ## Focused-region comparison evidence
 
-- Header: the dashed NWU.ICU wordmark and the large page title/subtitle are absent. Logo scale, navigation rhythm, and white header surface match the revised direction.
-- Latest reviews: the gradient ornament is replaced by a single-color `MessageSquareText` outline icon. Rows use one grouped surface, lightweight dividers, blue course links, secondary teacher/author/time metadata, and three-line excerpts.
-- Guestbook: the region uses the same surface language and lightweight rows. Loading, success, empty, and retry states share the final spacing and typography tokens.
-- School links: the disclosure is keyboard-operable, collapsed by default, rotates its chevron when opened, and exposes all nine existing external links with safe new-tab attributes.
+- Color tokens: homepage and timeline course links both resolve to `rgb(0, 102, 204)`; primary actions resolve to `rgb(0, 122, 255)`; active pagination uses the same `rgb(0, 122, 255)` system blue.
+- Surfaces: timeline review cards resolve to 16 px radii with a subtle 1 px shadow and neutral border, matching the homepage surface language.
+- Typography: the product now prefers the Apple system font stack, with unified `#1D1D1F` primary text and Apple-style secondary gray ramps.
+- Semantic color: green remains only for success, verified-user, strength, contribution, and avatar states. It is no longer used for ordinary primary actions.
+- Component library: Naive UI receives the same primary, neutral, border, radius, and system-font tokens as Tailwind-rendered components.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: passed. Existing Inter/system stack is retained; headings, body text, metadata, wrapping, truncation, and line heights match the selected hierarchy.
-- Spacing and layout rhythm: passed. Desktop 2:1 tracks, single-column breakpoints, card padding, dividers, radii, and vertical spacing remain stable across all three viewports.
-- Colors and visual tokens: passed. Neutral slate surfaces and brand-blue links/icons match the target without reintroducing gradient decorations.
-- Image quality and asset fidelity: passed. The real logo and existing avatar pipeline are retained; no fake imagery, handcrafted SVG, CSS illustration, or placeholder art was introduced.
-- Copy and content: passed. Removed copy stays removed; all remaining labels are task-relevant and existing routes keep their original names.
-- Accessibility and behavior: passed. Semantic regions and headings, focus-visible rings, descriptive logo control, native disclosure behavior, and practical touch targets are present.
+- Fonts and typography: passed. System font stack, antialiasing, weights, and primary/secondary text hierarchy are consistent on inspected routes.
+- Spacing and layout rhythm: passed. Homepage, timeline, and course-list captures use consistent page padding, card radii, borders, and reduced elevation.
+- Colors and visual tokens: passed. The mismatched homepage/timeline blues and green primary controls are resolved.
+- Image quality and asset fidelity: passed. Existing logo and user-avatar pipelines were preserved; no replacement imagery or drawn assets were introduced.
+- Copy and content: passed. Labels, route content, and real API data were preserved.
+- Interaction and accessibility: passed for the inspected surfaces. Focus-visible treatment remains present, primary controls retain disabled states, and desktop/mobile layouts showed no clipping. Screenshot review does not establish full WCAG conformance.
+
+## Findings
+
+No actionable P0, P1, or P2 visual differences remain for the requested color and style unification.
 
 ## Comparison history
 
-### Pass 1 — blocked
+### Pass 1 — issues found
 
-- P2 mobile density: per-review “查看详情” controls made each mobile row unnecessarily tall compared with the selected digest design.
-- P2 mobile navigation: the existing mobile menu rendered “主页” twice.
-- Fixes: linked each course title directly to the exact review anchor and removed redundant row actions; removed the hard-coded duplicate home entry from `MobileMenu.vue`.
+- P2: homepage used deep-blue links while the timeline used light-blue links.
+- P2: Naive UI pagination and several primary actions used green, while comparable actions used blue.
+- P2: timeline cards used visibly heavier elevation and smaller radii than homepage cards.
+- P2: gray/slate text and background ramps were not governed by one token set.
 
 ### Pass 2 — passed
 
-- Recaptured 1440 × 1024, 768 × 1024, and 390 × 844 views after the fixes.
-- Confirmed the compact review rows, single mobile home entry, collapsed service disclosure, link targets, loading/error rendering, and zero browser console warnings or errors.
-- No actionable P0, P1, or P2 findings remain.
+- Added shared Apple-style color, typography, radius, and elevation tokens.
+- Added a matching Naive UI theme override.
+- Replaced non-semantic green actions with the shared primary button treatment.
+- Reworked timeline links, cards, heading, page background, and pagination styling.
+- Recaptured desktop homepage, timeline, course list, and 390 × 844 homepage/timeline states.
+- Confirmed zero browser console warnings or errors on the final timeline state.
 
 ## Test evidence
 
-- `pnpm check`: passed.
-- Vitest: 8 files, 31 tests passed.
-- New homepage integration coverage verifies review and guestbook success, retry, empty, metadata, and detail-link behavior.
-- Production build completed successfully; the existing large-chunk advisory remains unrelated to this change.
-
-## Local integration evidence
-
-- The development-only `.env.local` points `VITE_BACKEND_API_URL` to `http://127.0.0.1:8000`.
-- Requests through Vite to `/api/assessment/latest-review/` and `/api/guestbook/` both returned HTTP 200 from the local Django backend.
-- The browser rendered the real guestbook empty state (`还没有留言。`) instead of the previous remote-backend 404 retry state.
-- Populated guestbook content remains covered by the homepage integration tests because the current local database has no guestbook rows.
+- `pnpm typecheck`: passed.
+- `pnpm lint`: passed.
+- Vitest: 9 files, 33 tests passed.
+- `pnpm build`: passed.
+- Existing Vite large-chunk advisory remains and is unrelated to this visual change.
 
 final result: passed

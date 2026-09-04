@@ -98,7 +98,7 @@
             <button
               type="button"
               @click="showAddCourseModal = true"
-              class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center transition-colors duration-200"
+              class="btn-primary w-full"
             >
               <PlusCircle class="w-5 h-5 mr-2" />
               添加新课程

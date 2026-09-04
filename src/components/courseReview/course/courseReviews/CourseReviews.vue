@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 mt-6 bg-white rounded-md shadow-md">
+  <div class="surface-card mt-6 p-6">
     <div
       class="flex flex-col space-y-4 mt-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4"
     >
@@ -54,14 +54,14 @@
       </div>
       <button
         v-if="!userReviewed"
-        class="w-full sm:w-auto mt-4 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        class="btn-primary mt-4 w-full sm:mt-0 sm:w-auto"
         @click="handleNewReviewButtonClicked"
       >
         新建一个评价
       </button>
       <button
         v-else
-        class="w-full sm:w-auto mt-4 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        class="btn-primary mt-4 w-full sm:mt-0 sm:w-auto"
         @click="handleEditReviewButtonClicked"
       >
         编辑我的评价

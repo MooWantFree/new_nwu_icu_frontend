@@ -15,7 +15,7 @@
           />
           <button
             @click="handleEditMainEmailAddressClicked"
-            class="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition duration-200"
+            class="min-h-10 rounded-r-[10px] bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             编辑
           </button>
@@ -45,8 +45,8 @@
             class="flex items-center justify-center px-4 py-2 rounded-r-md transition duration-200 text-white"
             :class="
               editNwuEmailAddress
-                ? 'bg-green-500 hover:bg-green-600'
-                : 'bg-blue-500 hover:bg-blue-600'
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-blue-600 hover:bg-blue-700'
             "
           >
             <span v-if="!isLoadingBindNWUEmail">{{

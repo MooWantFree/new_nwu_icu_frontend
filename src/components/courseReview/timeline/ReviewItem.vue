@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+  <article class="surface-card overflow-hidden">
     <div class="p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row sm:items-center mb-4">
         <div class="flex items-center mb-3 sm:mb-0">
@@ -58,12 +58,12 @@
           </div>
         </div>
         <div class="sm:ml-auto flex flex-col items-end">
-          <h2 class="text-base sm:text-xl font-medium">
+          <h2 class="text-base font-semibold sm:text-xl">
             <router-link :to="`/review/course/${review.course.id}`">
               <span class="link">{{ review.course.name }}</span>
             </router-link>
           </h2>
-          <p class="text-sm flex flex-wrap">
+          <p class="flex flex-wrap text-sm text-gray-500">
             [
             <template v-for="(teacher, index) in review.teachers">
               <router-link :to="`/review/teacher/${teacher.id}`">
@@ -75,7 +75,7 @@
           </p>
         </div>
       </div>
-      <div class="text-gray-600 mb-3 sm:mb-4 relative">
+      <div class="relative mb-3 text-gray-600 sm:mb-4">
         <Viewer 
           @toggle="handleMoreButtonClick" 
           :emitToggle="true" 
@@ -87,13 +87,13 @@
       <div class="flex items-center justify-end text-sm">
         <button 
           @click="handleMoreButtonClick" 
-          class="link font-medium px-3 py-1 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors"
+          class="btn-ghost"
         >
           查看详情
         </button>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
@@ -122,6 +122,6 @@ const handleMoreButtonClick = () => {
 
 <style lang="postcss">
 .link {
-  @apply underline-offset-4 text-blue-400 hover:text-blue-800;
+  @apply text-blue-700 underline-offset-4 transition-colors hover:text-blue-800 hover:underline;
 }
 </style>

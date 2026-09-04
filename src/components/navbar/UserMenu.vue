@@ -5,7 +5,7 @@
       v-if="!isLoggedIn"
       @click="$emit('showLoginModal')"
       :disabled="isLoading"
-      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+      class="btn-primary"
     >
       登录/注册
     </button>

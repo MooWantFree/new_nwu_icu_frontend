@@ -40,7 +40,7 @@
           <div class="mt-8">
             <router-link
               to="/"
-              class="inline-flex items-center rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              class="btn-primary px-6 py-3 text-base"
             >
               <House class="mr-2 h-5 w-5" />
               前往首页

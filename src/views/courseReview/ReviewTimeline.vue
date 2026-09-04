@@ -1,7 +1,7 @@
 <template>
-  <div :class="['min-h-screen px-4 sm:px-6 lg:px-8', { 'py-12': showHeader }]">
-    <div class="max-w-6xl mx-auto">
-      <h1 v-if="showHeader" class="text-3xl font-bold text-gray-900 mb-8">时间线 ({{ totalReviewCount }})</h1>
+  <div :class="['min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8', { 'py-8 sm:py-10': showHeader }]">
+    <div class="mx-auto max-w-7xl">
+      <h1 v-if="showHeader" class="mb-6 text-3xl font-semibold tracking-tight text-gray-900 sm:mb-8">时间线 <span class="text-gray-500">({{ totalReviewCount }})</span></h1>
       <div class="space-y-6">
         <template v-if="loading">
           <review-item-skeleton v-for="index in pageSize" :key="index" />
@@ -16,7 +16,7 @@
       </div>
       <div
         v-if="totalReviewCount > 0 && showHeader"
-        class="flex items-center justify-center mt-8"
+        class="mt-8 flex items-center justify-center"
       >
         <n-pagination
           v-model:page="currentPage"
