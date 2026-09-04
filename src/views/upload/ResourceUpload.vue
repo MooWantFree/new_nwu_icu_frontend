@@ -161,7 +161,7 @@
             <h2 class="mt-1 text-xl font-bold text-slate-900">选择目标目录</h2>
             <p class="mt-1 text-sm text-slate-500">资料审核通过后会归档到此位置。</p>
             <p v-if="directoryUpdatedAt" class="mt-2 text-xs text-slate-400">
-              目录缓存更新于 {{ formatFullDate(directoryUpdatedAt) }}，通常每天 03:00 重新扫描。
+              目录缓存更新于 <Time :time="directoryUpdatedAt" />，通常每天 03:00 重新扫描。
             </p>
           </div>
 
@@ -408,9 +408,9 @@
             <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>{{ record.files.length }} 个文件 · {{ record.total_size_display }}</span>
               <span>
-                提交 <time :datetime="record.created_at">{{ formatDate(record.created_at) }}</time>
+                提交 <Time :time="record.created_at" />
                 <template v-if="record.reviewed_at">
-                  · 审核 <time :datetime="record.reviewed_at">{{ formatDate(record.reviewed_at) }}</time>
+                  · 审核 <Time :time="record.reviewed_at" />
                 </template>
               </span>
             </div>
@@ -610,7 +610,7 @@
               <h3 class="font-bold text-slate-900">修改上传目录</h3>
               <p class="mt-1 text-xs text-slate-500">请选择资料审核通过后要归档的位置。</p>
               <p v-if="editDirectoryUpdatedAt" class="mt-1 text-xs text-slate-400">
-                目录缓存更新于 {{ formatFullDate(editDirectoryUpdatedAt) }}。
+                目录缓存更新于 <Time :time="editDirectoryUpdatedAt" />。
               </p>
 
               <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200">
@@ -761,6 +761,7 @@ import {
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import type { ResourceUploadRequest, ResourceUploadFile } from '@/types/api/resourceUpload'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const message = useMessage()
 const MAX_FILE_COUNT = 20
@@ -961,23 +962,6 @@ const formatBytes = (bytes: number) => {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 const editTotalSizeDisplay = computed(() => formatBytes(editTotalSize.value))
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
-
-const formatFullDate = (value: string) =>
-  new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
 
 const getExtension = (name: string) => {
   const lastDot = name.lastIndexOf('.')

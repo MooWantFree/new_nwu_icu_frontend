@@ -42,8 +42,6 @@
             </RouterLink>
             <Time
               :time="new Date(notice.datetime)"
-              format="yyyy-MM-dd HH:mm"
-              class="text-xs text-gray-500"
             />
           </div>
           

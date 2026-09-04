@@ -49,12 +49,8 @@
       </div>
       <div class="text-sm text-gray-600">
         评价数: {{ course.review_count }}
-        <span
-          v-if="course.latest_review_time"
-          class="text-xs text-gray-500 ml-2"
-        >
-          (最新:
-          {{ new Date(course.latest_review_time).toLocaleDateString() }})
+        <span v-if="course.latest_review_time" class="ml-2">
+          (最新: <Time :time="course.latest_review_time" />)
         </span>
       </div>
     </div>
@@ -66,6 +62,7 @@
 import { CourseSearchResult } from '@/types/api/search/search'
 import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import Time from '@/components/tinyComponents/Time.vue'
 
 // Define component props
 const { course } = defineProps<{

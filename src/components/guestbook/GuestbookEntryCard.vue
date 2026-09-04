@@ -7,7 +7,7 @@
         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
           <RouterLink v-if="entry.author.id" :to="`/user/${entry.author.id}`" class="font-semibold text-blue-700 hover:underline">{{ entry.author.nickname }}</RouterLink>
           <span v-else class="font-semibold text-gray-700">{{ entry.author.nickname }}</span>
-          <Time :time="entry.created_at" class="text-xs text-gray-500" />
+          <Time :time="entry.created_at" />
           <span v-if="entry.is_deleted" class="text-xs text-gray-400">已删除</span>
         </div>
         <div class="guestbook-content mt-3 break-words text-gray-700" v-html="sanitizeGuestbookHtml(entry.content)" />

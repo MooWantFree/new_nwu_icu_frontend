@@ -35,9 +35,7 @@
             >
               {{ item.title }}
             </RouterLink>
-            <time class="shrink-0 text-sm text-gray-500" :datetime="item.modify_time">
-              {{ formatDate(item.modify_time) }}
-            </time>
+            <Time :time="item.modify_time" class="shrink-0" />
           </div>
 
           <div class="prose prose-lg prose-blue max-w-none">
@@ -84,6 +82,7 @@ import { XCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const currentPage = ref(1)
 const totalPages = ref(1)
@@ -92,20 +91,6 @@ type Blog = import('@/types/api/text/text').APITos['response']['results']['blogs
 const content = ref<Blog[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const formatDate = (timestamp: string) => {
-  const date = new Date(timestamp)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (date.toDateString() === today.toDateString()) {
-    return '今天'
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return '昨天'
-  } else {
-    return date.toLocaleDateString()
-  }
-}
 const handleMoreButtonClick = (id: number) => {
   router.push({
     name: 'blog',

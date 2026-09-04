@@ -10,7 +10,7 @@
       <p class="text-sm text-gray-500 mb-8">
         <span>{{ formatSize(file.size) }}</span>
         <span class="mx-1">·</span>
-        <span>{{ formatDate(file.updated_at) }}</span>
+        <Time :time="file.updated_at" />
       </p>
 
       <!-- Action Buttons -->
@@ -37,6 +37,7 @@ import { computed } from 'vue';
 import { FsGet } from '@/types/api/disk/fs'; // Assuming this type is still relevant
 import { File } from 'lucide-vue-next'
 import { openSafeExternalUrl } from '@/lib/security'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const props = defineProps<{ data: FsGet['data'] }>()
 
@@ -59,11 +60,6 @@ const formatSize = (bytes: number): string => {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-const formatDate = (dateString: string): string => {
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-  return new Date(dateString).toLocaleDateString(undefined, options).replace(/\//g, '-');
 };
 
 const copyLink = () => {

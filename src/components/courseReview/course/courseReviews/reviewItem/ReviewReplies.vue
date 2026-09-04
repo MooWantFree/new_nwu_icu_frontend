@@ -87,7 +87,7 @@
               </div>
               <div>
                 <div class="flex text-xs text-gray-500 mt-3">
-                  <Time type="relative" :time="new Date(reply.created_time)" />
+                  <Time :time="new Date(reply.created_time)" />
                   <div class="flex-grow"></div>
                   <button
                     v-if="isLoggedIn && reply.created_by.id === userInfo?.id  && !reply.is_deleted"

@@ -13,9 +13,7 @@
           >
             {{ reply.course.name }}
           </router-link>
-          <span class="text-sm text-gray-500">{{
-            new Date(reply.datetime).toLocaleDateString()
-          }}</span>
+          <Time :time="reply.datetime" />
         </div>
         <div class="mb-4">
           <div class="bg-gray-100 p-3 rounded mb-2">
@@ -82,6 +80,7 @@ import { APIUserActivitiesReply } from '@/types/api/user/profilePage'
 import { ref, watchEffect } from 'vue'
 import { LoaderCircle } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 // Define props
 const props = defineProps<{

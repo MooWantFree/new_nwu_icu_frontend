@@ -35,8 +35,8 @@
         <td class="px-4 py-3 text-sm text-gray-600">
           {{ item.is_dir ? '-' : formatFileSize(item.size) }}
         </td>
-        <td class="px-4 py-3 text-sm text-gray-600">
-          {{ new Date(item.modified).toLocaleString() }}
+        <td class="px-4 py-3">
+          <Time :time="item.modified" />
         </td>
       </tr>
     </tbody>
@@ -50,6 +50,7 @@ import { DirList } from '@/types/api/disk/fs';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Folder, File } from 'lucide-vue-next'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const $route = useRoute();
 const sortColumn = ref('name');

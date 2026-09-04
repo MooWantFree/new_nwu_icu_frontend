@@ -38,9 +38,7 @@
         <span class="text-sm font-medium text-gray-700">{{
           filteredReview.created_by.nickname
         }}</span>
-        <span class="text-xs text-gray-500 ml-2">
-          {{ new Date(filteredReview.modify_time).toLocaleDateString() }}
-        </span>
+        <Time :time="filteredReview.modify_time" class="ml-2" />
       </div>
       <button
         @click="handleReviewClick(filteredReview.course.id, filteredReview.id)"
@@ -77,6 +75,7 @@ import { useRouter } from 'vue-router'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import { computed } from 'vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const { review } = defineProps<{
   review: ReviewSearchResult

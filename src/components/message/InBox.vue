@@ -41,8 +41,8 @@
                 <p class="text-sm text-gray-500 truncate">
                   {{ message.last_message.content || '开始新对话' }}
                 </p>
-                <p class="text-xs text-gray-400 mt-1">
-                  {{ message.last_message.datetime ? formatTime(message.last_message.datetime) : '' }}
+                <p class="mt-1">
+                  <Time v-if="message.last_message.datetime" :time="message.last_message.datetime" />
                 </p>
               </div>
             </div>
@@ -90,6 +90,7 @@ import { useRoute } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
 import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 // TODO: Change this to inf scroll
 const route = useRoute()
@@ -126,30 +127,6 @@ const fetchMessages = async (page: number = 1) => {
   } finally {
     isFetchingMessages.value = false
   }
-}
-
-const formatTime = (datetime: string) => {
-  const date = new Date(datetime)
-  const now = new Date()
-  
-  // Same day
-  if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  }
-  
-  // This week
-  const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-  if (daysDiff < 7) {
-    return `${daysDiff}天前`
-  }
-  
-  // This year
-  if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-  }
-  
-  // Different year
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const nextPage = () =>

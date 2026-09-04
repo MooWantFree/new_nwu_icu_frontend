@@ -26,7 +26,7 @@
             <div v-if="showDateDivider(msg, index)"
               class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
               <CalendarIcon class="w-4 h-4 mr-2" />
-              {{ formatDate(msg.datetime) }}
+              <Time :time="msg.datetime" />
             </div>
             <div :class="[
               'flex items-start gap-3',
@@ -49,9 +49,9 @@
                 <div class="flex items-center gap-2 mb-1"
                   :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
                   <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
-                  <span class="text-sm text-gray-500 flex items-center">
+                  <span class="flex items-center">
                     <Clock class="w-3 h-3 mr-1" />
-                    {{ formatTime(msg.datetime) }}
+                    <Time :time="msg.datetime" />
                   </span>
                 </div>
                 <div :class="[
@@ -99,6 +99,7 @@ import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/i
 import { useUser } from '@/lib/useUser'
 import { MoreVertical, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 import { drainAfterCursor, mergeByMessageId } from '@/lib/messageCursor'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
@@ -299,26 +300,6 @@ const scrollToBottom = () => {
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
   })
-}
-
-const formatDate = (timestamp: string) => {
-  const date = new Date(timestamp)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (date.toDateString() === today.toDateString()) {
-    return '今天'
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return '昨天'
-  } else {
-    return date.toLocaleDateString()
-  }
-}
-
-const formatTime = (timestamp: string) => {
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 const showDateDivider = (msg: APIUserMessageDetail['response']['results'][0], index: number) => {

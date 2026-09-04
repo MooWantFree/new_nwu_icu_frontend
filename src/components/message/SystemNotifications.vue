@@ -19,10 +19,7 @@
             <div class="flex-1">
               <div class="flex items-center justify-between">
                 <span class="font-medium">{{ notification.title }}</span>
-                <n-time
-                  :time="new Date(notification.datetime)"
-                  format="yyyy-MM-dd HH:mm"
-                />
+                <Time :time="notification.datetime" />
               </div>
               <p class="mt-1 text-sm text-gray-600">
                 {{ notification.content }}
@@ -43,7 +40,7 @@
             <div class="flex-1">
               <div class="flex items-center justify-between">
                 <span class="font-medium">{{ bulletin.title }}</span>
-                <n-time :time="new Date(bulletin.update_time)" format="yyyy-MM-dd HH:mm" />
+                <Time :time="bulletin.update_time" />
               </div>
               <p class="mt-1 text-sm text-gray-600">{{ bulletin.content }}</p>
             </div>
@@ -59,6 +56,7 @@
 import { ref, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import Time from '@/components/tinyComponents/Time.vue'
 
 interface Bulletin {
   title: string

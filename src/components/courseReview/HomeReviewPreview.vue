@@ -63,7 +63,7 @@
                 {{ review.author.nickname }}
               </RouterLink>
               <span v-else class="max-w-36 truncate text-slate-700">{{ review.author.nickname }}</span>
-              <Time :time="review.datetime" class="whitespace-nowrap text-xs" />
+              <Time :time="review.datetime" class="whitespace-nowrap" />
             </div>
           </div>
 

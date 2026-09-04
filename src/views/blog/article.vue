@@ -37,7 +37,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ content.title }}</h1>
       </div>
       <div class="flex justify-end mb-4">
-        <h1 class="text-base text-gray-600">最后修改于: {{ formatDate(content.modify_time) }}</h1>
+        <p class="flex items-center gap-1 text-base text-gray-600">最后修改于: <Time :time="content.modify_time" /></p>
       </div>
 
       <div class="py-2">
@@ -63,6 +63,7 @@ import { useRoute } from 'vue-router'
 import { XCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 const route = useRoute()
 type Blog = import('@/types/api/text/text').APITos['response']['results']['blogs'][number]
@@ -86,10 +87,6 @@ const fetchContent = async () => {
   } finally {
     loading.value = false
   }
-}
-const formatDate = (timestamp: string) => {
-  const date = new Date(timestamp)
-  return date.toLocaleDateString()
 }
 // Initialize component
 onMounted(() => {

@@ -13,9 +13,7 @@
           >
             {{ review.course.name }}
           </router-link>
-          <span class="text-sm text-gray-500">{{
-            new Date(review.datetime).toLocaleDateString()
-          }}</span>
+          <Time :time="review.datetime" />
         </div>
         <div class="flex items-center mb-2">
           <span class="mr-2 text-sm text-gray-600">评分:</span>
@@ -120,6 +118,7 @@ import Rate from '@/components/tinyComponents/Rate.vue'
 import { NRate } from 'naive-ui'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
+import Time from '@/components/tinyComponents/Time.vue'
 
 // Define props
 const props = defineProps<{
