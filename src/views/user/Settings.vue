@@ -1,8 +1,8 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-4xl min-h-svh">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">用户设置</h1>
+    <h1 class="mb-8 text-3xl font-bold text-gray-900">用户设置</h1>
     <div v-if="isLoading || !userInfo" class="flex justify-center items-center h-64">
-      <LoaderCircle class="animate-spin h-16 w-16 text-blue-500" />
+      <LoaderCircle class="animate-spin h-16 w-16 text-blue-700" />
       <p class="text-gray-600">加载中，请稍候...</p>
     </div>
     <div v-else class="bg-white shadow-md rounded-lg overflow-hidden flex">
@@ -13,7 +13,7 @@
           :to="{ name: tab.name }"
           :class="[
             $route.name === tab.name
-              ? 'bg-blue-50 border-blue-500 text-blue-600'
+              ? 'bg-blue-50 border-blue-500 text-blue-700'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50',
             'block py-4 px-4 border-l-4 font-medium text-sm transition-colors duration-200',
           ]"

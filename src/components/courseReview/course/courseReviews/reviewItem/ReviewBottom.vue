@@ -11,7 +11,7 @@
           @click="toggleDropdownMenu"
           id="dropdownButton"
           type="button"
-          class="inline-flex items-center p-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          class="inline-flex items-center rounded-lg bg-white p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-expanded="true"
           aria-haspopup="true"
         >
@@ -65,7 +65,7 @@
             'flex items-center px-3 py-1 rounded transition-colors text-sm',
             review.like.user_option === 1
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white',
+              : 'bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white',
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >

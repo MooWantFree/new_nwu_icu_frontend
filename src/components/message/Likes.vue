@@ -1,13 +1,13 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50">
     <div class="sticky top-0 z-10 flex justify-between items-center p-4 bg-white shadow-sm border-b">
-      <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
-        <ThumbsUp class="w-5 h-5 mr-2 text-blue-500" />
+      <h2 class="flex items-center text-xl font-bold text-gray-900 md:text-2xl">
+        <ThumbsUp class="w-5 h-5 mr-2 text-blue-700" />
         收到的赞
       </h2>
       <button
         @click="refreshLikes"
-        class="px-3 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 flex items-center shadow-sm"
+        class="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center shadow-sm"
         :disabled="loading"
       >
         <RefreshCw class="w-4 h-4 mr-1 md:mr-2" :class="{ 'animate-spin': loading }" />
@@ -18,7 +18,7 @@
     <div class="flex-grow overflow-y-auto px-2 md:px-4 py-4">
       <div v-if="loading" class="flex items-center justify-center h-full">
         <div class="p-6 rounded-lg">
-          <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-100 border-t-blue-500 rounded-full animate-spin" />
+          <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin" />
           <p class="text-center text-gray-600">加载中...</p>
         </div>
       </div>
@@ -32,11 +32,11 @@
           <div class="p-4 border-b border-gray-100 flex justify-between items-center">
             <RouterLink v-if="notice.source === 'guestbook'"
               :to="`/guestbook/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`"
-              class="text-blue-600 hover:text-blue-800 font-medium truncate max-w-[70%]"
+              class="text-blue-700 hover:text-blue-800 font-medium truncate max-w-[70%]"
             >留言板</RouterLink>
             <RouterLink v-else
               :to="`/review/course/${notice.raw_info.course.id}`" 
-              class="text-blue-600 hover:text-blue-800 font-medium truncate max-w-[70%]"
+              class="text-blue-700 hover:text-blue-800 font-medium truncate max-w-[70%]"
             >
               {{ notice.raw_info.course.name }}
             </RouterLink>
@@ -66,11 +66,11 @@
               </span>
               <RouterLink v-if="notice.source === 'guestbook'"
                 :to="`/guestbook/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`"
-                class="ml-auto text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
+                class="ml-auto text-xs text-blue-700 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
               >查看详情</RouterLink>
               <RouterLink v-else
                 :to="`/review/course/${notice.raw_info.course.id}`" 
-                class="ml-auto text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
+                class="ml-auto text-xs text-blue-700 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-full hover:bg-blue-50"
               >
                 查看详情
               </RouterLink>

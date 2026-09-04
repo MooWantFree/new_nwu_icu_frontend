@@ -1,6 +1,6 @@
 <template>
-  <div class="p-6 bg-white rounded-md shadow-md">
-    <h3 class="text-lg font-bold">其他老师的「{{ courseData.name }}」课</h3>
+  <div class="surface-card p-6">
+    <h3 class="text-lg font-bold text-gray-900">其他老师的「{{ courseData.name }}」课</h3>
     <ul class="mt-2 space-y-2 text-sm text-gray-600">
       <li v-for="course in sortedSameNameCourses" :key="course.course_id">
         <router-link
@@ -8,7 +8,7 @@
             name: 'courseReviewItem',
             params: { id: course.course_id },
           }"
-          class="hover:underline text-blue-600"
+          class="hover:underline text-blue-700"
         >
           {{ course.teacher_name }}
         </router-link>
@@ -16,9 +16,9 @@
       </li>
     </ul>
   </div>
-  <div class="p-6 bg-white rounded-md shadow-md">
+  <div class="surface-card p-6">
     <div v-for="(teacher, index) in courseData.teachers" :key="index">
-      <h3 class="text-lg font-bold">{{ teacher.name }}老师的其他课</h3>
+      <h3 class="text-lg font-bold text-gray-900">{{ teacher.name }}老师的其他课</h3>
       <ul class="mt-2 space-y-2 text-sm text-gray-600">
         <li v-for="course in teacher.course" :key="course.id">
           <router-link
@@ -26,7 +26,7 @@
               name: 'courseReviewItem',
               params: { id: course.id },
             }"
-            class="hover:underline text-blue-600"
+            class="hover:underline text-blue-700"
           >
             「{{ course.name }}」
           </router-link>

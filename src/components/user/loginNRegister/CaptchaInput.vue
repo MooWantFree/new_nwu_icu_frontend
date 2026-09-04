@@ -30,7 +30,7 @@
           @click="$emit('refresh')" 
         />
         <div v-else class="w-full h-full flex items-center justify-center bg-gray-100">
-          <LoaderCircle class="animate-spin h-5 w-5 text-blue-500" />
+          <LoaderCircle class="animate-spin h-5 w-5 text-blue-700" />
         </div>
       </div>
     </div>

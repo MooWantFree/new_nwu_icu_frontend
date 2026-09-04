@@ -10,7 +10,7 @@
     </div>
     <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer" @scroll="handleScroll">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
-        <Loader2 class="w-8 h-8 text-blue-500 animate-spin" />
+        <Loader2 class="w-8 h-8 text-blue-700 animate-spin" />
       </div>
       <div v-else class="max-w-screen-md mx-auto space-y-4">
         <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">
@@ -19,7 +19,7 @@
         </div>
         <template v-else>
           <div v-if="isLoadingMore" class="text-center py-2">
-            <Loader2 class="w-5 h-5 text-blue-500 animate-spin mx-auto" />
+            <Loader2 class="w-5 h-5 text-blue-700 animate-spin mx-auto" />
             <span class="text-xs text-gray-500">加载更多消息...</span>
           </div>
           <template v-for="(msg, index) in finalMessageList" :key="msg.id">
@@ -56,7 +56,7 @@
                 </div>
                 <div :class="[
                   'rounded-lg p-3 shadow-sm max-w-xs',
-                  msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-500 text-white'
+                  msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-600 text-white'
                 ]">
                   <p class="text-sm">{{ msg.content }}</p>
                 </div>
@@ -75,7 +75,7 @@
             class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="newMessage" @keyup.enter="sendMessage" />
           <button @click="sendMessage"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
             :disabled="!newMessage.trim() || isSending">
             <span v-if="!isSending">发送</span>
             <Loader2 v-else class="w-4 h-4 animate-spin" />

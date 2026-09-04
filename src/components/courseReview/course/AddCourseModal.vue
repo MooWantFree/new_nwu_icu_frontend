@@ -12,7 +12,7 @@
       </div>
       <div class="p-4 sm:p-6">
         <div v-if="loading" class="flex justify-center items-center py-12">
-          <LoaderCircle class="w-10 h-10 animate-spin text-blue-500" />
+          <LoaderCircle class="w-10 h-10 animate-spin text-blue-700" />
         </div>
         <div v-else class="space-y-6">
           <p v-if="errorMessage.other" class="mt-1 text-sm text-red-600">{{ errorMessage.other }}</p>
@@ -76,7 +76,7 @@
                   </div>
                 </div>
                 <span v-else class="text-gray-500">选择授课教师</span>
-                <span class="text-blue-600">
+                <span class="text-blue-700">
                   <span v-if="selectedTeacher.id">更换</span>
                   <span v-else>选择</span>
                 </span>

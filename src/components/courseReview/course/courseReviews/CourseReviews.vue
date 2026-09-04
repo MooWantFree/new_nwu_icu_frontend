@@ -1,5 +1,5 @@
 <template>
-  <div class="surface-card mt-6 p-6">
+  <div class="surface-card mt-6 p-6 text-gray-700">
     <div
       class="flex flex-col space-y-4 mt-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4"
     >

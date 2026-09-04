@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col items-center justify-center p-8 bg-white min-h-[50vh]">
     <div class="text-center">
-      <File class="h-32 w-32 text-blue-500 mx-auto mb-6" />
+      <File class="h-32 w-32 text-blue-700 mx-auto mb-6" />
 
       <!-- File Name -->
-      <h1 class="text-2xl font-semibold text-gray-800 mb-2">{{ file.name }}</h1>
+      <h1 class="mb-2 text-2xl font-semibold text-gray-900">{{ file.name }}</h1>
 
       <!-- File Metadata -->
       <p class="text-sm text-gray-500 mb-8">
@@ -17,13 +17,13 @@
       <div class="flex space-x-4 justify-center">
         <button 
           @click="copyLink"
-          class="px-6 py-3 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+          class="btn-secondary px-6 py-3"
         >
           Copy link
         </button>
         <button 
           @click="downloadFile"
-          class="px-6 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          class="btn-primary px-6 py-3"
         >
           Download
         </button>

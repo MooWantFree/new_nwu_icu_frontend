@@ -10,7 +10,7 @@
         <div
           class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 rounded-t"
         >
-          <h3 class="text-xl sm:text-2xl font-bold text-gray-800">
+          <h3 class="text-xl font-bold text-gray-900 sm:text-2xl">
             {{ initContent?.content ? '编辑' : '新建' }}评价
           </h3>
           <button
@@ -142,7 +142,7 @@
                   type="checkbox"
                   id="anonymous"
                   v-model="isAnonymous"
-                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  class="w-4 h-4 text-blue-700 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label for="anonymous" class="ml-2 text-sm font-medium text-gray-700">匿名发布</label>
               </div>

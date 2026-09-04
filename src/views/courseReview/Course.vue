@@ -5,7 +5,7 @@
     :detail="errorMsg.detail"
   />
   <CourseSkeleton v-else-if="courseLoading || !courseData" />
-  <main class="min-h-screen bg-gray-100" v-else>
+  <main class="min-h-screen bg-gray-50" v-else>
     <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <CourseMeta :course-data="courseData" :loading="courseLoading" />
@@ -22,7 +22,7 @@
     </div>
     <button
       @click="scrollToTop"
-      class="fixed bottom-8 right-8 bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-300"
+      class="fixed bottom-8 right-8 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
       v-show="showTopButton"
     >
       <ArrowUp class="w-6 h-6" />

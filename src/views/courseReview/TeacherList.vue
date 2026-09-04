@@ -69,7 +69,7 @@
                 'w-full h-full flex justify-center items-center text-white text-xl sm:text-2xl font-bold',
                 [
                   'bg-red-500',
-                  'bg-blue-500',
+                  'bg-blue-600',
                   'bg-green-500',
                   'bg-yellow-500',
                   'bg-purple-500',
@@ -82,7 +82,7 @@
           <div class="ml-4">
             <h2 class="text-lg sm:text-xl font-semibold">
               <router-link :to="`/review/teacher/${teacher.id}`"
-                class="text-blue-600 hover:text-blue-800 transition duration-300">
+                class="text-blue-700 hover:text-blue-800 transition duration-300">
                 {{ teacher.name }}
               </router-link>
             </h2>

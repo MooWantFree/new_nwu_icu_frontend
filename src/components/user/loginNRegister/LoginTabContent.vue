@@ -25,7 +25,7 @@
       <div></div>
       <button 
         type="button" 
-        class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+        class="text-sm font-medium text-blue-700 hover:text-blue-800 transition-colors"
         @click="goToForgotPassword"
       >
         忘记密码？

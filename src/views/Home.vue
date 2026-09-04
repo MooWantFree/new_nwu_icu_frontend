@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-slate-50/80">
-    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+  <div class="bg-slate-50/80">
+    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div class="grid items-stretch gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
         <section
           aria-labelledby="latest-reviews-title"
-          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
         >
           <header class="flex items-center justify-between gap-4 px-5 pb-3 pt-5 sm:px-7 sm:pt-7">
             <div class="flex min-w-0 items-center gap-3">
@@ -15,7 +15,9 @@
             </div>
           </header>
 
-          <HomeReviewPreview />
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <HomeReviewPreview />
+          </div>
 
           <div class="border-t border-slate-200 px-5 py-4 text-center sm:px-7">
             <RouterLink
@@ -30,18 +32,20 @@
 
         <section
           aria-labelledby="guestbook-title"
-          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
         >
-          <header class="flex items-center gap-3 px-5 pb-3 pt-5 sm:px-6 sm:pt-7">
+          <header class="flex items-center gap-3 px-5 pb-3 pt-5 sm:px-7 sm:pt-7">
             <MessagesSquare class="h-7 w-7 shrink-0 text-blue-700" aria-hidden="true" />
             <h2 id="guestbook-title" class="text-xl font-bold text-slate-900 sm:text-2xl">
               留言板
             </h2>
           </header>
 
-          <GuestbookPreview />
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <GuestbookPreview />
+          </div>
 
-          <div class="border-t border-slate-200 px-5 py-4 text-center sm:px-6">
+          <div class="border-t border-slate-200 px-5 py-4 text-center sm:px-7">
             <RouterLink
               to="/guestbook"
               class="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-3 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
@@ -53,7 +57,7 @@
         </section>
       </div>
 
-      <details class="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <details open class="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary
           class="flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl px-5 text-base font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:px-7 [&::-webkit-details-marker]:hidden"
         >

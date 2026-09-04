@@ -119,7 +119,7 @@ defineExpose({
 
 .tab-headers {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e5ea;
 }
 
 .tab-button {
@@ -132,16 +132,16 @@ defineExpose({
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #6b7280;
+  color: #6e6e73;
 }
 
 .tab-button:hover:not(:disabled) {
-  color: #1d4ed8;
+  color: #0066cc;
 }
 
 .tab-button.active {
-  color: #1d4ed8;
-  border-bottom: 2px solid #1d4ed8;
+  color: #0066cc;
+  border-bottom: 2px solid #0071e3;
 }
 
 .tab-button:disabled {

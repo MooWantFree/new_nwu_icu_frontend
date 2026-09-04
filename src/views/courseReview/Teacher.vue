@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 min-h-screen py-8">
+  <div class="min-h-screen bg-gray-50 py-8 text-gray-700">
     <div class="container mx-auto px-4">
       <component
         v-if="errorMsg.component"
@@ -10,7 +10,7 @@
         <TeacherSkeleton />
       </div>
       <div v-else-if="teacher">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
           <div class="flex items-center mb-4">
             <n-avatar
               round
@@ -26,7 +26,7 @@
                     'w-full h-full flex justify-center items-center text-white text-4xl font-bold',
                     [
                       'bg-red-500',
-                      'bg-blue-500',
+                      'bg-blue-600',
                       'bg-green-500',
                       'bg-yellow-500',
                       'bg-purple-500',
@@ -38,7 +38,7 @@
               </template>
             </n-avatar>
             <div class="ml-4">
-              <h1 class="text-2xl font-bold">
+              <h1 class="text-2xl font-bold text-gray-900">
                 {{ teacher.teacher_info.name }}
               </h1>
               <p class="text-gray-600">{{ teacher.teacher_info.school }}</p>
@@ -53,13 +53,13 @@
           </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold">教授课程</h2>
+            <h2 class="text-xl font-semibold text-gray-900">教授课程</h2>
             <AddCourseModal v-model="showTeacherSelectorModal" :init-value="{teacher: teacher.teacher_info}" />
             <button
               type="button"
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              class="btn-primary"
               @click="handleAddCourseButtonClick"
             >
               <PlusCircle class="h-5 w-5 mr-2 -ml-1" />
@@ -70,12 +70,12 @@
             <div
               v-for="course in teacher.course_list"
               :key="course.course.id"
-              class="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+              class="rounded-xl border border-gray-200 p-6 shadow-sm transition-shadow hover:shadow-md"
             >
               <h3 class="text-lg font-semibold mb-2">
                 <router-link
                   :to="`/review/course/${course.course.id}`"
-                  class="text-blue-600 hover:underline"
+                  class="text-blue-700 hover:text-blue-800 hover:underline"
                 >
                   {{ course.course.name }}
                 </router-link>
@@ -125,7 +125,7 @@
                   >评价数: {{ course.review_count }}</span
                 >
                 <button
-                  class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="btn-primary"
                   @click="router.push(`/review/course/${course.course.id}`)"
                 >
                   查看详情

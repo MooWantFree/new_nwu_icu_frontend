@@ -24,7 +24,7 @@
         </template>
       </n-avatar>
       <div class="ml-4">
-        <h3 class="text-lg font-semibold text-blue-600 hover:underline">{{ teacher.name }}</h3>
+        <h3 class="text-lg font-semibold text-blue-700 hover:underline">{{ teacher.name }}</h3>
         <p class="text-sm text-gray-600">{{ teacher.school }}</p>
       </div>
     </div>

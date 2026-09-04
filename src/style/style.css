@@ -4,6 +4,18 @@
 
 @layer base {
   :root {
+    --ui-background: #f5f5f7;
+    --ui-surface: #ffffff;
+    --ui-surface-muted: #f2f2f7;
+    --ui-text-primary: #1d1d1f;
+    --ui-text-secondary: #48484a;
+    --ui-text-tertiary: #6e6e73;
+    --ui-text-muted: #8e8e93;
+    --ui-border: #e5e5ea;
+    --ui-border-strong: #d1d1d6;
+    --ui-accent: #0071e3;
+    --ui-link: #0066cc;
+    --ui-accent-hover: #0066cc;
     color: #1d1d1f;
     background: #f5f5f7;
     font-family:
@@ -44,14 +56,14 @@
   }
 
   :focus-visible {
-    outline: 2px solid #007aff;
+    outline: 2px solid #0071e3;
     outline-offset: 2px;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-100;
   }
 
   .btn-secondary {
@@ -60,6 +72,10 @@
 
   .btn-ghost {
     @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-sm font-medium text-blue-700 transition-colors duration-200 hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .surface-card {

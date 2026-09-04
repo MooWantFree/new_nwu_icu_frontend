@@ -10,7 +10,7 @@
           <Time :time="entry.created_at" class="text-xs text-gray-500" />
           <span v-if="entry.is_deleted" class="text-xs text-gray-400">已删除</span>
         </div>
-        <div class="guestbook-content mt-3 break-words text-gray-800" v-html="sanitizeGuestbookHtml(entry.content)" />
+        <div class="guestbook-content mt-3 break-words text-gray-700" v-html="sanitizeGuestbookHtml(entry.content)" />
         <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
           <button v-if="!entry.is_deleted" :disabled="likePending" :aria-pressed="entry.liked_by_me" aria-label="点赞" class="inline-flex items-center gap-1 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50" :class="{ 'text-blue-700': entry.liked_by_me }" @click="$emit('like', entry)">
             <ThumbsUp class="h-4 w-4" /> {{ entry.like_count }}

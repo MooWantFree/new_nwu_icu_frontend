@@ -5,11 +5,11 @@ const systemFont =
 
 export const themeOverrides: GlobalThemeOverrides = {
   common: {
-    primaryColor: '#007AFF',
+    primaryColor: '#0071E3',
     primaryColorHover: '#0A84FF',
     primaryColorPressed: '#0066CC',
-    primaryColorSuppl: '#007AFF',
-    infoColor: '#007AFF',
+    primaryColorSuppl: '#0071E3',
+    infoColor: '#0071E3',
     infoColorHover: '#0A84FF',
     infoColorPressed: '#0066CC',
     successColor: '#34C759',

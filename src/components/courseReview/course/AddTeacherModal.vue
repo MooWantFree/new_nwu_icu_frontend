@@ -12,7 +12,7 @@
       </div>
       <div class="p-4 sm:p-6">
         <div v-if="loading" class="flex justify-center items-center py-12">
-          <LoaderCircle class="w-10 h-10 animate-spin text-blue-500" />
+          <LoaderCircle class="w-10 h-10 animate-spin text-blue-700" />
         </div>
         <div v-else class="space-y-6">
           <p v-if="errorMessage.other" class="mt-1 text-sm text-red-600">{{ errorMessage.other }}</p>

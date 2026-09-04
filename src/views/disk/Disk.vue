@@ -4,7 +4,7 @@
 
     <div v-if="loading" class="flex-grow flex items-center justify-center">
       <div class="flex flex-col items-center justify-center">
-        <div class="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <div class="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
         <p class="text-gray-600 font-medium">加载中...</p>
       </div>
     </div>

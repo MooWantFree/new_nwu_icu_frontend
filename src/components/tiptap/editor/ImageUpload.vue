@@ -30,7 +30,7 @@
               {{ isDragging ? '松开以上传图片' : '拖放图片到此处，或点击选择' }}
             </p>
             <p class="text-sm text-gray-500">支持 JPEG, PNG, GIF 和 WebP 格式，最大 100MB</p>
-            <div v-if="isCompressing" class="text-sm text-blue-600 font-medium">
+            <div v-if="isCompressing" class="text-sm text-blue-700 font-medium">
               正在压缩图片，请稍候...
             </div>
           </div>
@@ -53,8 +53,8 @@
           />
         </div>
         <div v-if="progress > 0" class="w-full bg-gray-100 rounded-full h-5 overflow-hidden">
-          <div 
-            class="bg-blue-500 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
+          <div
+            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold"
             :style="{ width: `${progress}%` }"
           >
             {{ `${Math.round(progress)}%` }}
@@ -70,7 +70,7 @@
           </button>
           <button
             @click="submitImage"
-            class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             :disabled="!selectedFile || loading || isCompressing"
           >
             <span v-if="loading || isCompressing" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>

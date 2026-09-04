@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="bg-white shadow-md rounded-lg p-6">
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div class="border-b border-gray-200">
         <nav class="-mb-px flex relative">
           <button
@@ -10,14 +10,14 @@
             :class="[
               'w-1/2 py-4 px-1 text-center font-medium text-sm transition-colors duration-200',
               activeTab === tab.name
-                ? 'text-indigo-600'
+                ? 'text-blue-700'
                 : 'text-gray-500 hover:text-gray-700',
             ]"
           >
             {{ tab.label }}
           </button>
           <div
-            class="absolute bottom-0 w-1/2 h-0.5 bg-indigo-500 transition-transform duration-300 ease-in-out"
+            class="absolute bottom-0 h-0.5 w-1/2 bg-blue-600 transition-transform duration-300 ease-in-out"
             :style="{
               transform: `translateX(${
                 activeTab === 'reviews' ? '0%' : '100%'

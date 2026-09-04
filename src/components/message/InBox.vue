@@ -2,15 +2,15 @@
   <div class="min-h-[calc(100vh-4rem)] bg-gray-100">
     <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <div class="p-8 bg-white rounded-lg shadow-md">
-        <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+        <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
         <p class="text-center text-gray-600">加载中...</p>
       </div>
     </div>
     <div v-else class="flex min-h-[calc(100vh-4rem)]">
       <div class="w-80 bg-white border-r border-l flex flex-col shadow-sm">
         <div class="p-4 border-b flex justify-between items-center">
-          <h2 class="font-semibold text-lg text-gray-800">我的消息</h2>
-          <button @click="fetchMessages(currentPage)" class="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+          <h2 class="text-lg font-semibold text-gray-900">我的消息</h2>
+          <button @click="fetchMessages(currentPage)" class="p-2 text-blue-700 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors">
             <RefreshCw class="h-5 w-5" />
           </button>
         </div>
@@ -53,13 +53,13 @@
         </div>
         <div class="p-4 border-t flex justify-between items-center bg-gray-50">
           <button @click="prevPage" :disabled="currentPage === 1"
-            class="px-3 py-1.5 bg-blue-500 text-white rounded-md disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out flex items-center">
+            class="px-3 py-1.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition duration-150 ease-in-out flex items-center">
             <ChevronLeft class="w-4 h-4 mr-1" />
             上一页
           </button>
           <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages || 1 }}</span>
           <button @click="nextPage" :disabled="currentPage === totalPages"
-            class="px-3 py-1.5 bg-blue-500 text-white rounded-md disabled:opacity-50 hover:bg-blue-600 transition duration-150 ease-in-out flex items-center">
+            class="px-3 py-1.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition duration-150 ease-in-out flex items-center">
             下一页
             <ChevronRight class="w-4 h-4 ml-1" />
           </button>

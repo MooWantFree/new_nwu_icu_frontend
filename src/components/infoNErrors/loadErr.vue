@@ -7,7 +7,7 @@
       <p class="text-lg text-gray-700 mb-6">{{ description }}</p>
       <button
         @click="reload"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
       >
         重新加载
       </button>

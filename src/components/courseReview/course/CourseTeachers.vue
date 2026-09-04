@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 bg-white rounded-md shadow-md">
+  <div class="surface-card p-6 text-gray-700">
     <div v-for="(teacher, index) in courseData.teachers" :key="index">
       <div class="flex">
         <router-link
@@ -26,7 +26,7 @@
             </template>
           </n-avatar>
           <n-a :href="href" @click="navigate" class="flex">
-            <h2 class="text-xl font-bold mx-3.5 my-auto">{{ teacher.name }}</h2>
+            <h2 class="mx-3.5 my-auto text-xl font-bold text-blue-700">{{ teacher.name }}</h2>
           </n-a>
         </router-link>
         <span class="mt-3 -mx-3">{{ teacher.school }}</span>

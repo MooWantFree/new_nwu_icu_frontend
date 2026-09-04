@@ -97,7 +97,7 @@ const editor = useEditor({
     Link.configure({
       openOnClick: false,
       HTMLAttributes: {
-        class: 'text-blue-500 hover:text-blue-600',
+        class: 'text-blue-700 hover:text-blue-700',
       },
       defaultProtocol: 'https',
     }),
@@ -155,7 +155,7 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
 <style>
 /* Styles for the placeholder */
 .tiptap p.is-editor-empty:first-child::before {
-  color: #adb5bd;
+  color: #8e8e93;
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -173,7 +173,7 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
 
 .ProseMirror td,
 .ProseMirror th {
-  border: 2px solid #ced4da;
+  border: 2px solid #d1d1d6;
   box-sizing: border-box;
   min-width: 1em;
   padding: 8px;
@@ -182,13 +182,13 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
 }
 
 .ProseMirror th {
-  background-color: #f8f9fa;
+  background-color: #f5f5f7;
   font-weight: bold;
   text-align: left;
 }
 
 .ProseMirror .selectedCell:after {
-  background: rgba(200, 200, 255, 0.4);
+  background: rgba(10, 132, 255, 0.18);
   content: '';
   left: 0;
   right: 0;
@@ -200,7 +200,7 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
 }
 
 .ProseMirror .column-resize-handle {
-  background-color: #adf;
+  background-color: #dceeff;
   bottom: -2px;
   position: absolute;
   right: -2px;

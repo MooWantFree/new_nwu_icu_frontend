@@ -36,7 +36,7 @@
       
       <!-- Loading spinner -->
       <div v-if="loading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-        <LoaderCircle class="animate-spin h-5 w-5 text-blue-500" />
+        <LoaderCircle class="animate-spin h-5 w-5 text-blue-700" />
       </div>
     </div>
     

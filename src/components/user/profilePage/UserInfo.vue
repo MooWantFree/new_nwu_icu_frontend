@@ -1,7 +1,7 @@
 <template>
   <!-- Skeleton -->
   <template v-if="!userInfo">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg animate-pulse">
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm animate-pulse">
       <div class="px-4 py-5 sm:px-6 flex items-center">
         <div class="h-24 w-24 bg-gray-200 rounded-full"></div>
         <div class="ml-6">
@@ -28,7 +28,7 @@
     </div>
   </template>
 
-  <div v-else class="bg-white shadow overflow-hidden sm:rounded-lg">
+  <div v-else class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
     <!-- Profile header -->
     <div class="px-4 py-5 sm:px-6">
       <div class="flex items-center mb-4">
@@ -51,7 +51,7 @@
       <div class="flex justify-end">
         <button
           v-if="userInfo.is_me"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+          class="btn-primary"
           @click="handleEdit"
         >
           编辑资料
@@ -59,7 +59,7 @@
         <RouterLink
           v-else
           :to="`/message/inbox?talkTo=${userInfo.id}`"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+          class="btn-primary"
         >
           发送消息
         </RouterLink>

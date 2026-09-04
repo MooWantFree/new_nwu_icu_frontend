@@ -5,7 +5,7 @@
   >
     <!-- Resource name and type section -->
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-semibold text-blue-600 truncate mr-2">
+      <h3 class="text-lg font-semibold text-blue-700 truncate mr-2">
         {{ resource.name }}
       </h3>
       <!-- File type badge -->
@@ -35,7 +35,7 @@
         class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors"
         :class="{
           'text-white bg-blue-600 hover:bg-blue-700': resource.type === 'file',
-          'text-blue-600 bg-blue-100 hover:bg-blue-200':
+          'text-blue-700 bg-blue-100 hover:bg-blue-200':
             resource.type !== 'file',
         }"
       >

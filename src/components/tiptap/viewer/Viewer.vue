@@ -105,7 +105,7 @@ const editor = useEditor({
       defaultProtocol: 'https',
       autolink: false,
       HTMLAttributes: {
-        class: 'text-blue-500 hover:text-blue-600',
+        class: 'text-blue-700 hover:text-blue-700',
       },
     }),
   ],

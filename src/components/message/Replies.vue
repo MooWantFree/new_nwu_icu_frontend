@@ -1,13 +1,13 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50">
     <div class="sticky top-0 z-10 flex justify-between items-center p-4 bg-white shadow-sm border-b">
-      <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
-        <MessageSquare class="w-5 h-5 mr-2 text-blue-500" />
+      <h2 class="flex items-center text-xl font-bold text-gray-900 md:text-2xl">
+        <MessageSquare class="w-5 h-5 mr-2 text-blue-700" />
         回复我的
       </h2>
       <button
         @click="refreshReplies"
-        class="px-3 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 flex items-center shadow-sm"
+        class="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center shadow-sm"
         :disabled="loading"
       >
         <RefreshCw class="w-4 h-4 mr-1 md:mr-2" :class="{ 'animate-spin': loading }" />
@@ -18,7 +18,7 @@
     <div class="flex-grow overflow-y-auto px-2 md:px-4 py-4">
       <div v-if="loading" class="flex items-center justify-center h-full">
         <div class="p-6 rounded-lg">
-          <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-100 border-t-blue-500 rounded-full animate-spin" />
+          <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin" />
           <p class="text-center text-gray-600">加载中...</p>
         </div>
       </div>
@@ -40,7 +40,7 @@
               />
               <RouterLink
                 :to="`/user/${reply.created_by.id}`"
-                class="text-blue-600 hover:text-blue-800 font-medium"
+                class="text-blue-700 hover:text-blue-800 font-medium"
               >
                 {{ reply.created_by.nickname }}
               </RouterLink>
@@ -57,7 +57,7 @@
             <template v-if="reply.source === 'guestbook'">
               <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
                 有人回复了你的
-                <RouterLink :to="`/guestbook/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-600 hover:underline">留言板内容</RouterLink>
+                <RouterLink :to="`/guestbook/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-700 hover:underline">留言板内容</RouterLink>
               </div>
               <div class="mt-2 text-sm text-gray-600" v-html="sanitizeGuestbookHtml(reply.reply.content)" />
             </template>
@@ -66,7 +66,7 @@
               《
               <RouterLink
                 :to="`/review/course/${reply.course.id}`"
-                class="text-blue-600 hover:underline"
+                class="text-blue-700 hover:underline"
               >{{ reply.course.name }}</RouterLink>》下我的
               <RouterLink
                     :to="reply.raw_post.classify === 'review' ? `/review/course/${reply.course.id}#review-${reply.raw_post.id}`  : `/review/course/${reply.course.id}#reply-${reply.raw_post.id}`"

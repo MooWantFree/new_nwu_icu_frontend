@@ -94,7 +94,14 @@ describe('homepage previews', () => {
   it('renders recent reviews and links the course title to the exact review', async () => {
     vi.mocked(api.get).mockResolvedValue({
       status: 200,
-      content: { results: [review] },
+      content: {
+        results: [
+          review,
+          { ...review, id: 8 },
+          { ...review, id: 9 },
+          { ...review, id: 10 },
+        ],
+      },
     } as never)
 
     await mount(HomeReviewPreview)
@@ -106,6 +113,8 @@ describe('homepage previews', () => {
     expect(container.textContent).toContain('数据结构与算法')
     expect(container.textContent).toContain('讲解清晰，作业反馈及时。')
     expect(container.querySelector('a[href="/review/course/42#review-7"]')).not.toBeNull()
+    expect(container.querySelector('.line-clamp-1')).not.toBeNull()
+    expect(container.querySelectorAll('article')).toHaveLength(3)
   })
 
   it('shows the review error state and retries into the empty state', async () => {
@@ -126,7 +135,14 @@ describe('homepage previews', () => {
   it('renders the guestbook preview with message metadata and detail link', async () => {
     vi.mocked(api.get).mockResolvedValue({
       status: 200,
-      content: { results: [guestbookEntry] },
+      content: {
+        results: [
+          guestbookEntry,
+          { ...guestbookEntry, id: 12 },
+          { ...guestbookEntry, id: 13 },
+          { ...guestbookEntry, id: 14 },
+        ],
+      },
     } as never)
 
     await mount(GuestbookPreview)
@@ -139,6 +155,8 @@ describe('homepage previews', () => {
     expect(container.textContent).toContain('12')
     expect(container.textContent).toContain('3')
     expect(container.querySelector('a[href="/guestbook/11"]')).not.toBeNull()
+    expect(container.querySelector('.line-clamp-1')).not.toBeNull()
+    expect(container.querySelectorAll('a[href^="/guestbook/"]')).toHaveLength(3)
   })
 
   it('shows guestbook error and empty states without hiding retry', async () => {

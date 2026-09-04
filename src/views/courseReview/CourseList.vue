@@ -90,7 +90,7 @@
         <h2 class="text-xl sm:text-2xl font-semibold mb-3">
           <router-link
             :to="`/review/course/${course.id}`"
-            class="text-blue-600 hover:text-blue-800 transition duration-300"
+            class="text-blue-700 hover:text-blue-800 transition duration-300"
           >
             {{ course.name }}
           </router-link>

@@ -7,7 +7,7 @@
         <h3 class="text-lg font-medium">选择教师</h3>
         <div class="flex items-center gap-2">
           <button @click="showAddTeacherModal = true"
-            class="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-1.5">
+            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1.5">
             <PlusCircle />
             添加教师
           </button>
@@ -26,7 +26,7 @@
             v-model="searchQuery" @input="() => debouncedSearch()" @keyup.enter="() => handleSearch()" />
           <div class="absolute top-3 left-3">
             <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
-            <LoaderCircle v-else class="w-6 h-6 text-blue-500 animate-spin" />
+            <LoaderCircle v-else class="w-6 h-6 text-blue-700 animate-spin" />
           </div>
         </div>
 
@@ -53,20 +53,20 @@
                 </div>
               </div>
               <div class="ml-3">
-                <div class="text-base font-medium text-blue-600">{{ teacher.name }}</div>
+                <div class="text-base font-medium text-blue-700">{{ teacher.name }}</div>
                 <div class="text-sm text-gray-600">{{ teacher.school }}</div>
               </div>
             </div>
           </div>
 
           <div v-if="scrollLoading" class="text-center py-4">
-            <LoaderCircle class="w-8 h-8 mx-auto text-blue-500 animate-spin" />
+            <LoaderCircle class="w-8 h-8 mx-auto text-blue-700 animate-spin" />
           </div>
         </div>
 
         <div v-else class="text-center py-8">
           <template v-if="searchLoading">
-            <LoaderCircle class="w-12 h-12 mx-auto mb-4 text-blue-500 animate-spin" />
+            <LoaderCircle class="w-12 h-12 mx-auto mb-4 text-blue-700 animate-spin" />
             <p class="text-lg font-medium text-gray-600">搜索中...</p>
           </template>
           <template v-else-if="searchQuery">
@@ -76,7 +76,7 @@
             <div class="border-t border-gray-200 my-4 w-full"></div>
             <p class="text-sm text-gray-600 mb-2">找不到教师？你可以添加一个新教师</p>
             <button @click="showAddTeacherModal = true"
-              class="w-full px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-2">
+              class="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2">
               <PlusCircle />
               添加新教师
             </button>

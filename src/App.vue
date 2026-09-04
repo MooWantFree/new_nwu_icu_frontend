@@ -5,21 +5,19 @@
         <n-notification-provider>
           <n-modal-provider>
             <n-dialog-provider>
-              <div>
-                <div class="flex flex-col min-h-screen">
-                  <n-layout>
-                    <NavBar />
-                    <div class="bg-gray-50 text-gray-900">
-                      <div class="flex-grow">
-                        <RouterView />
-                      </div>
-                      <div class="py-5 text-center text-xs text-gray-500">
-                        2019-{{ new Date().getFullYear() }} NWU.ICU
-                      </div>
+              <n-layout class="min-h-screen">
+                <div class="flex min-h-screen flex-col">
+                  <NavBar />
+                  <div class="flex flex-1 flex-col bg-gray-50 text-gray-900">
+                    <div class="flex-1">
+                      <RouterView />
                     </div>
-                  </n-layout>
+                    <footer class="py-5 text-center text-xs text-gray-500">
+                      2019-{{ new Date().getFullYear() }} NWU.ICU
+                    </footer>
+                  </div>
                 </div>
-              </div>
+              </n-layout>
             </n-dialog-provider>
           </n-modal-provider>
         </n-notification-provider>

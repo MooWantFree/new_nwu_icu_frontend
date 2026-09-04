@@ -15,7 +15,7 @@
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
       <div class="rounded-2xl bg-white px-5 py-8 shadow sm:px-10">
         <div v-if="isVerifyingToken" class="flex flex-col items-center py-10 text-center">
-          <LoaderCircle class="h-8 w-8 animate-spin text-blue-600" />
+          <LoaderCircle class="h-8 w-8 animate-spin text-blue-700" />
           <p class="mt-4 text-sm font-medium text-gray-700">正在验证重置链接…</p>
         </div>
 
@@ -136,7 +136,7 @@
 
             <div v-else class="text-center">
               <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <MailCheck class="h-8 w-8 text-blue-600" />
+                <MailCheck class="h-8 w-8 text-blue-700" />
               </div>
               <h2 class="mt-5 text-xl font-bold text-gray-900">重置链接已发送</h2>
               <p class="mt-3 text-sm leading-6 text-gray-600">
@@ -155,7 +155,7 @@
         </template>
 
         <div v-if="!isVerifyingToken && !resetSucceeded" class="mt-6 border-t border-gray-200 pt-6 text-center">
-          <router-link to="/" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <router-link to="/" class="text-sm font-medium text-blue-700 hover:text-blue-800">
             返回首页
           </router-link>
         </div>

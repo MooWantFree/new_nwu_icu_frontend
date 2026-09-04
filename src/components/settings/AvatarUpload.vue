@@ -79,12 +79,12 @@
         <div v-if="progress > 0" class="relative pt-1">
           <div class="flex mb-2 items-center justify-between">
             <div>
-              <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+              <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-700 bg-blue-200">
                 上传进度
               </span>
             </div>
             <div class="text-right">
-              <span class="text-xs font-semibold inline-block text-blue-600">
+              <span class="text-xs font-semibold inline-block text-blue-700">
                 {{ progress }}%
               </span>
             </div>
@@ -92,7 +92,7 @@
           <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
             <div
               :style="{ width: `${progress}%` }"
-              class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300 ease-in-out"
+              class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600 transition-all duration-300 ease-in-out"
             ></div>
           </div>
         </div>
@@ -116,7 +116,7 @@
           <button
             v-if="selectedFile"
             @click.prevent="submitImage"
-            class="px-4 py-2 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors"
+            class="px-4 py-2 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors"
             :disabled="loading"
           >
             <Loader v-if="loading" class="w-5 h-5 animate-spin mr-2" />

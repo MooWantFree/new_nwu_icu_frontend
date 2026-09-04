@@ -2,8 +2,8 @@
   <div class="min-h-screen bg-slate-50">
     <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <section class="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-9 text-white shadow-xl sm:px-10">
-        <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl"></div>
-        <div class="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
+        <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl"></div>
+        <div class="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl"></div>
         <div class="relative max-w-3xl">
           <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm text-blue-100">
             <Upload class="h-4 w-4" />
@@ -36,7 +36,7 @@
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="text-sm font-semibold text-blue-600">第一步</p>
+              <p class="text-sm font-semibold text-blue-700">第一步</p>
               <h2 class="mt-1 text-xl font-bold text-slate-900">选择投稿文件</h2>
               <p class="mt-1 text-sm text-slate-500">可拖入文件或整个文件夹，文件夹结构会被保留。</p>
             </div>
@@ -157,7 +157,7 @@
 
         <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <div>
-            <p class="text-sm font-semibold text-blue-600">第二步</p>
+            <p class="text-sm font-semibold text-blue-700">第二步</p>
             <h2 class="mt-1 text-xl font-bold text-slate-900">选择目标目录</h2>
             <p class="mt-1 text-sm text-slate-500">资料审核通过后会归档到此位置。</p>
             <p v-if="directoryUpdatedAt" class="mt-2 text-xs text-slate-400">
@@ -169,7 +169,7 @@
             <div class="flex min-h-12 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
               <button
                 type="button"
-                class="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-white hover:text-blue-600"
+                class="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-white hover:text-blue-700"
                 aria-label="返回根目录"
                 @click="openDirectory('/')"
               >
@@ -179,7 +179,7 @@
                 <ChevronRight class="h-3.5 w-3.5 shrink-0 text-slate-300" />
                 <button
                   type="button"
-                  class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-blue-600"
+                  class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-blue-700"
                   @click="openDirectory(crumb.path)"
                 >
                   {{ crumb.name }}
@@ -189,7 +189,7 @@
 
             <div class="min-h-64 p-2">
               <div v-if="directoryLoading" class="flex min-h-60 flex-col items-center justify-center text-slate-500">
-                <Loader2 class="h-6 w-6 animate-spin text-blue-600" />
+                <Loader2 class="h-6 w-6 animate-spin text-blue-700" />
                 <p class="mt-3 text-sm">正在读取目录…</p>
               </div>
               <div v-else-if="directoryError" class="flex min-h-60 flex-col items-center justify-center px-5 text-center">
@@ -216,7 +216,7 @@
                     class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-100"
                     @click="openDirectory(directory.path)"
                   >
-                    <Folder class="h-5 w-5 shrink-0 fill-blue-100 text-blue-600" />
+                    <Folder class="h-5 w-5 shrink-0 fill-blue-100 text-blue-700" />
                     <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
                       {{ directory.name }}
                     </span>
@@ -228,7 +228,7 @@
           </div>
 
           <div class="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-            <p class="text-xs font-medium text-blue-600">当前选择</p>
+            <p class="text-xs font-medium text-blue-700">当前选择</p>
             <p class="mt-1 break-all text-sm font-semibold text-blue-950">{{ finalTargetPath }}</p>
             <p v-if="rootUploadBlocked" class="mt-2 text-xs font-medium text-amber-700">
               不能直接投稿到根目录，请先选择一个子目录，或勾选下方选项新建文件夹。
@@ -244,14 +244,14 @@
                   {{ path }}
                 </li>
               </ul>
-              <p v-if="selectedFiles.length > publishedPathPreview.length" class="mt-1 text-xs text-blue-600">
+              <p v-if="selectedFiles.length > publishedPathPreview.length" class="mt-1 text-xs text-blue-700">
                 另有 {{ selectedFiles.length - publishedPathPreview.length }} 个文件
               </p>
             </div>
           </div>
 
           <label class="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 transition hover:bg-slate-50">
-            <input v-model="createNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+            <input v-model="createNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500" />
             <span class="flex flex-1 items-center gap-2 text-sm font-medium text-slate-700">
               <FolderPlus class="h-4 w-4 text-slate-500" />
               在此处新建文件夹
@@ -359,7 +359,7 @@
           </button>
           <button
             type="button"
-            class="ml-1 rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+            class="ml-1 rounded-full px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
             @click="selectAllStatuses"
           >
             {{ allStatusesSelected ? '取消全选' : '全选' }}
@@ -367,7 +367,7 @@
         </div>
 
         <div v-if="historyLoading && !uploadHistory.length" class="flex min-h-40 items-center justify-center text-sm text-slate-500">
-          <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-600" />
+          <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-700" />
           正在加载投稿记录…
         </div>
         <div v-else-if="historyError" class="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -476,7 +476,7 @@
         <div class="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
           <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
             <div>
-              <p class="text-xs font-semibold text-blue-600">投稿 #{{ editingRequest.id }}</p>
+              <p class="text-xs font-semibold text-blue-700">投稿 #{{ editingRequest.id }}</p>
               <h2 id="edit-upload-title" class="mt-1 text-xl font-bold text-slate-900">编辑投稿</h2>
               <p class="mt-1 text-sm text-slate-500">
                 {{ editingRequest.status === 'rejected' ? '保存后将重新进入待审核状态。' : '保存后会更新当前待审核内容。' }}
@@ -529,7 +529,7 @@
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="removedExistingFileIds.includes(file.id)
-                      ? 'text-slate-500 hover:bg-white hover:text-blue-600'
+                      ? 'text-slate-500 hover:bg-white hover:text-blue-700'
                       : 'text-slate-400 hover:bg-red-50 hover:text-red-600'"
                     :aria-label="removedExistingFileIds.includes(file.id) ? `撤销删除 ${file.relative_path}` : `删除 ${file.relative_path}`"
                     @click="toggleExistingFileRemoval(file.id)"
@@ -589,7 +589,7 @@
                   :key="item.id"
                   class="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2.5"
                 >
-                  <component :is="getFileIcon(item.file.name)" class="h-4 w-4 shrink-0 text-blue-600" />
+                  <component :is="getFileIcon(item.file.name)" class="h-4 w-4 shrink-0 text-blue-700" />
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-medium text-slate-800" :title="item.relativePath">{{ item.relativePath }}</p>
                     <p class="text-xs text-slate-400">{{ formatBytes(item.file.size) }}</p>
@@ -617,7 +617,7 @@
                 <div class="flex min-h-12 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
                   <button
                     type="button"
-                    class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-white hover:text-blue-600"
+                    class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-white hover:text-blue-700"
                     aria-label="返回根目录"
                     @click="openEditDirectory('/')"
                   >
@@ -627,7 +627,7 @@
                     <ChevronRight class="h-3.5 w-3.5 shrink-0 text-slate-300" />
                     <button
                       type="button"
-                      class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-white hover:text-blue-600"
+                      class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-white hover:text-blue-700"
                       @click="openEditDirectory(crumb.path)"
                     >
                       {{ crumb.name }}
@@ -636,12 +636,12 @@
                 </div>
                 <div class="min-h-52 p-2">
                   <div v-if="editDirectoryLoading" class="flex min-h-48 items-center justify-center text-sm text-slate-500">
-                    <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-600" />
+                    <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-700" />
                     正在读取目录…
                   </div>
                   <div v-else-if="editDirectoryError" class="flex min-h-48 flex-col items-center justify-center px-4 text-center">
                     <p class="text-sm text-amber-700">{{ editDirectoryError }}</p>
-                    <button type="button" class="mt-3 text-sm font-semibold text-blue-600" @click="loadEditDirectories">重试</button>
+                    <button type="button" class="mt-3 text-sm font-semibold text-blue-700" @click="loadEditDirectories">重试</button>
                   </div>
                   <div v-else-if="!editDirectories.length" class="flex min-h-48 items-center justify-center text-sm text-slate-400">
                     当前目录下没有子文件夹
@@ -653,7 +653,7 @@
                         class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-blue-50"
                         @click="openEditDirectory(directory.path)"
                       >
-                        <Folder class="h-5 w-5 fill-blue-100 text-blue-600" />
+                        <Folder class="h-5 w-5 fill-blue-100 text-blue-700" />
                         <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{{ directory.name }}</span>
                         <ChevronRight class="h-4 w-4 text-slate-300" />
                       </button>
@@ -663,12 +663,12 @@
               </div>
 
               <div class="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-                <p class="text-xs font-medium text-blue-600">新的目标目录</p>
+                <p class="text-xs font-medium text-blue-700">新的目标目录</p>
                 <p class="mt-1 break-all text-sm font-semibold text-blue-950">{{ editFinalTargetPath }}</p>
               </div>
 
               <label class="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50">
-                <input v-model="editCreateNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <input v-model="editCreateNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500" />
                 <span class="text-sm font-medium text-slate-700">在此处新建文件夹</span>
               </label>
               <input

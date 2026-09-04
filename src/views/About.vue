@@ -15,7 +15,7 @@
   >
     <div class="p-8 bg-white rounded-lg shadow-md">
       <div
-        class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+        class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"
       />
       <p class="text-center text-gray-600">加载中...</p>
     </div>
@@ -28,11 +28,11 @@
   >
     <div class="p-8 bg-white rounded-lg shadow-md text-center">
       <XCircle class="w-16 h-16 mx-auto mb-4 text-red-500" />
-      <p class="text-lg text-gray-800 mb-4">加载失败</p>
+      <p class="mb-4 text-lg font-semibold text-gray-900">加载失败</p>
       <p class="text-gray-600 mb-6">{{ error }}</p>
       <button
         @click="fetchContent"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
       >
         重试
       </button>
@@ -44,7 +44,7 @@
     <div class="max-w-4xl mx-auto">
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="p-8">
-          <h1 class="text-3xl font-bold text-gray-800 mb-8">关于我们</h1>
+          <h1 class="mb-8 text-3xl font-bold text-gray-900">关于我们</h1>
           <div class="prose prose-lg prose-blue max-w-none">
             <Viewer :value="content!" :need-expand="false" />
           </div>

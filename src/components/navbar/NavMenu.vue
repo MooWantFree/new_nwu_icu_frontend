@@ -5,7 +5,7 @@
         <!-- Menu item with children -->
         <template v-if="item.children">
           <button 
-            class="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors"
+            class="flex items-center px-3 py-2 text-gray-700 hover:text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
             @click="toggleSubmenu(item.key)"
           >
             <span class="mr-2">{{ item.text }}</span>
@@ -23,7 +23,7 @@
               v-for="child in item.children" 
               :key="child.key"
               :to="child.path"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-700 transition-colors"
               @click="closeAllSubmenus"
             >
               {{ child.text }}
@@ -35,7 +35,7 @@
         <template v-else-if="item.path">
           <router-link 
             :to="item.path" 
-            class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors"
+            class="block px-3 py-2 text-gray-700 hover:text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             {{ item.text }}
           </router-link>
@@ -45,7 +45,7 @@
         <template v-else-if="item.onclick">
           <button 
             @click="item.onclick" 
-            class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors"
+            class="block px-3 py-2 text-gray-700 hover:text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             {{ item.text }}
           </button>

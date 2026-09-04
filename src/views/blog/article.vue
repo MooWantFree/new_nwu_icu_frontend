@@ -6,7 +6,7 @@
   >
     <div class="p-8 bg-white rounded-lg shadow-md">
       <div
-        class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+        class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"
       />
       <p class="text-center text-gray-600">加载中...</p>
     </div>
@@ -19,11 +19,11 @@
   >
     <div class="p-8 bg-white rounded-lg shadow-md text-center">
       <XCircle class="w-16 h-16 mx-auto mb-4 text-red-500" />
-      <p class="text-lg text-gray-800 mb-4">加载失败</p>
+      <p class="mb-4 text-lg font-semibold text-gray-900">加载失败</p>
       <p class="text-gray-600 mb-6">{{ error }}</p>
       <button
         @click="fetchContent"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
       >
         重试
       </button>
@@ -34,7 +34,7 @@
   <div v-else-if="content" class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
     <div class="max-w-4xl mx-auto">
       <div class="flex justify-center w-full mb-4">
-        <h1 class="text-2xl font-bold text-gray-800">{{ content.title }}</h1>
+        <h1 class="text-2xl font-bold text-gray-900">{{ content.title }}</h1>
       </div>
       <div class="flex justify-end mb-4">
         <h1 class="text-base text-gray-600">最后修改于: {{ formatDate(content.modify_time) }}</h1>

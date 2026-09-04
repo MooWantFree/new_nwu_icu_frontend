@@ -4,12 +4,12 @@
       <div
         v-for="review in data.results"
         :key="review.id"
-        class="mb-6 p-4 bg-gray-50 rounded-lg shadow"
+        class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
       >
         <div class="flex justify-between items-center mb-2">
           <router-link
             :to="`/review/course/${review.course.id}`"
-            class="text-lg font-bold text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+            class="text-lg font-bold text-blue-700 transition-colors duration-200 hover:text-blue-800"
           >
             {{ review.course.name }}
           </router-link>
@@ -69,7 +69,7 @@
               (匿名评价)
             </span>
             <button
-              class="px-3 py-1 text-sm text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-600 hover:text-white transition-colors duration-200"
+              class="btn-secondary min-h-8 px-3 py-1"
               @click="
                 $router.push(
                   `/review/course/${review.course.id}#review-${review.id}`
@@ -105,7 +105,7 @@
       <p class="text-gray-500">暂无评价</p>
     </div>
     <div v-else class="flex justify-center items-center h-32">
-      <LoaderCircle class="w-8 h-8 text-indigo-500 animate-spin" />
+      <LoaderCircle class="w-8 h-8 text-blue-700 animate-spin" />
       <span class="ml-2 text-gray-600">加载中...</span>
     </div>
   </div>

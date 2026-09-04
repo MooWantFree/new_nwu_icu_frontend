@@ -24,7 +24,7 @@
             <router-link
               v-if="review.author.id > 0"
               :to="`/user/${review.author.id}`"
-              class="text-blue-600 hover:text-blue-800 transition-colors duration-300"
+              class="text-blue-700 hover:text-blue-800 transition-colors duration-300"
             >
               {{ review.author.nickname }}
             </router-link>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 rounded-lg shadow-md p-6" ref="courseReviewItem">
+  <div class="rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-sm" ref="courseReviewItem">
     <ReviewHeader :review="review" :is-author="isAuthor" />
     <ReviewContent :review="review" />
     <ReviewBottom

@@ -3,7 +3,7 @@
   <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
     <!-- Course title with clickable link -->
     <a @click="handleCourseClick" class="cursor-pointer">
-      <h3 class="text-lg font-semibold text-blue-600 mb-2 hover:underline">
+      <h3 class="text-lg font-semibold text-blue-700 mb-2 hover:underline">
         {{ course.name }}
       </h3>
     </a>
@@ -29,7 +29,7 @@
       </div>
       <button
         @click="handleCourseClick"
-        class="px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
+        class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
       >
         查看详情
       </button>

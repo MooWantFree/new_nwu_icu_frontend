@@ -9,7 +9,7 @@
         <button
           v-if="isLoggedIn"
           @click="toggleReply(0)"
-          class="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer"
+          class="text-blue-700 hover:text-blue-800 bg-transparent border-none cursor-pointer"
         >
           {{ showReply && replyTarget === 0 ? '取消回复' : '添加回复' }}
         </button>
@@ -19,7 +19,7 @@
         <span>排序：</span>
         <button
           @click="toggleReplyOrder"
-          class="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer"
+          class="text-blue-700 hover:text-blue-800 bg-transparent border-none cursor-pointer"
         >
           {{ reverseReplies ? '最新回复' : '最早回复' }}
         </button>
@@ -39,7 +39,7 @@
                     <router-link
                       v-if="reply.created_by.id > 0"
                       :to="`/user/${reply.created_by.id}`"
-                      class="text-blue-600 hover:underline"
+                      class="text-blue-700 hover:underline"
                     >
                       {{ reply.created_by.name }}
                     </router-link>
@@ -58,7 +58,7 @@
                         orderedReplies.find((it) => it.id === reply.parent)
                           ?.created_by.id
                       }`"
-                      class="text-blue-600 hover:underline"
+                      class="text-blue-700 hover:underline"
                     >
                       {{
                         orderedReplies.find((it) => it.id === reply.parent)
@@ -67,7 +67,7 @@
                     </router-link>
                     (
                     <button
-                      class="text-blue-600 hover:underline"
+                      class="text-blue-700 hover:underline"
                       @click="handleJmpClick(reply.parent, reply.id)"
                     >
                       #{{
@@ -77,7 +77,7 @@
                     </button>
                     )
                   </span>
-                  <span class="text-gray-800 break-all">
+                  <span class="break-all text-gray-700">
                     : {{ reply.content }}
                   </span>
                 </p>
@@ -129,7 +129,7 @@
             @click="handleJmpBackClick"
           >
             <button
-              class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-600 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
+              class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-700 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
             >
               <MoveLeft class="inline-block w-4 h-4 sm:mr-1" />
               <span class="hidden sm:inline">
@@ -162,7 +162,7 @@
       v-if="isLoggedIn"
       text
       @click="() => toggleReply()"
-      class="text-blue-600 hover:text-blue-800"
+      class="text-blue-700 hover:text-blue-800"
     >
       {{ showReply && formerReplyTarget == 0 ? '取消回复' : '回复' }}
     </n-button>

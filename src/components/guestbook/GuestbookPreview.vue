@@ -43,7 +43,7 @@
             <span class="truncate text-sm font-semibold text-slate-800">{{ entry.author.nickname }}</span>
             <Time :time="entry.created_at" class="shrink-0 whitespace-nowrap text-xs text-slate-400" />
           </div>
-          <p class="mt-2 line-clamp-3 break-words text-sm leading-6 text-slate-600">
+          <p class="mt-2 line-clamp-1 break-words text-sm leading-6 text-slate-600">
             {{ guestbookPlainText(entry.content) }}
           </p>
           <div class="mt-3 flex items-center gap-4 text-xs text-slate-400">
@@ -97,7 +97,7 @@ const load = async () => {
   try {
     const response = await api.get({ url: '/api/guestbook/', query: { page: 1, pageSize: 3 } })
     if (response.status !== 200) throw new Error('获取留言失败')
-    entries.value = response.content.results
+    entries.value = response.content.results.slice(0, 3)
   } catch {
     failed.value = true
   } finally {

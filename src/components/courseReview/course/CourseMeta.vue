@@ -1,6 +1,6 @@
 <template>
-  <div class="p-6 bg-white rounded-md shadow-md">
-    <h1 class="text-2xl font-bold">{{ courseData.name }}</h1>
+  <div class="surface-card p-6 text-gray-700">
+    <h1 class="text-2xl font-bold text-gray-900">{{ courseData.name }}</h1>
     <div class="mt-2 text-sm text-gray-600 space-y-0.5">
       <span v-for="semester in courseData.semester">{{ semester }}&nbsp;</span>
     </div>
@@ -13,7 +13,7 @@
             :default-value="Number(courseData.rating_avg)"
           />
         </div>
-        <div class="text-lg font-bold">{{ courseData.rating_avg }}</div>
+        <div class="text-lg font-bold text-gray-900">{{ courseData.rating_avg }}</div>
         <div class="text-sm text-gray-600">
           ({{ courseData.reviews.length }}人评价)
         </div>
@@ -33,7 +33,7 @@
           <span>归一化平均分</span>
           <n-tooltip placement="top">
             <template #trigger>
-              <n-button text class="text-blue-500 p-0">
+              <n-button text class="text-blue-700 p-0">
                 <CircleHelp class="w-4 h-4" />
               </n-button>
             </template>
@@ -62,7 +62,7 @@
             'flex items-center px-4 py-2 rounded transition-colors w-full sm:w-auto',
             courseData.like.user_option === 1
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white',
+              : 'bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white',
             isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >

@@ -349,7 +349,7 @@ const passwordStrengthBarClass = computed(() => {
     case 0: return 'bg-gray-300';
     case 1: return 'bg-red-500';
     case 2: return 'bg-yellow-500';
-    case 3: return 'bg-blue-500';
+    case 3: return 'bg-blue-600';
     case 4: return 'bg-green-500';
     default: return 'bg-gray-300';
   }
@@ -361,7 +361,7 @@ const passwordStrengthTextClass = computed(() => {
     case 0: return 'text-gray-500';
     case 1: return 'text-red-500';
     case 2: return 'text-yellow-500';
-    case 3: return 'text-blue-500';
+    case 3: return 'text-blue-700';
     case 4: return 'text-green-500';
     default: return 'text-gray-500';
   }

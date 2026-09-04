@@ -14,7 +14,7 @@
               v-for="i in 3"
               :key="i"
               class="w-4 h-4"
-              :fill="i <= review[key] ? '#FACC15' : '#D1D5DB'"
+              :fill="i <= review[key] ? '#FACC15' : '#D1D1D6'"
               :class="i <= review[key] ? 'text-yellow-400' : 'text-gray-300'"
             />
           </div>
@@ -22,7 +22,7 @@
       </div>
     </div>
   </div>
-  <div class="text-gray-800 mb-4">
+  <div class="mb-4 text-gray-700">
     <Viewer :value="review.content" />
   </div>
 </template>

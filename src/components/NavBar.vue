@@ -103,7 +103,7 @@ const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') 
   const toast = document.createElement('div')
   toast.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md shadow-md z-50 transition-opacity duration-300 ${
     type === 'success' ? 'bg-green-500' : 
-    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    type === 'error' ? 'bg-red-500' : 'bg-blue-600'
   } text-white`
   toast.textContent = text
   document.body.appendChild(toast)

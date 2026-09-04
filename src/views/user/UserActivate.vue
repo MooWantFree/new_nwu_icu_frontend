@@ -14,7 +14,7 @@
       <template v-else-if="readyToConfirm">
         <div class="flex flex-col items-center text-center">
           <div class="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
-            <ShieldCheck class="h-10 w-10 text-blue-600" />
+            <ShieldCheck class="h-10 w-10 text-blue-700" />
           </div>
           <h1 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">确认邮箱验证</h1>
           <p class="mt-4 text-gray-600">

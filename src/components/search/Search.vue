@@ -12,7 +12,7 @@
         />
         <div class="absolute top-3 left-3">
           <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
-          <LoaderCircle v-else class="w-6 h-6 text-blue-500 animate-spin" />
+          <LoaderCircle v-else class="w-6 h-6 text-blue-700 animate-spin" />
         </div>
       </div>
     </div>
@@ -28,7 +28,7 @@
           :class="[
             'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200',
             activeTab === tab
-              ? 'bg-white text-blue-600 shadow'
+              ? 'bg-white text-blue-700 shadow'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200',
           ]"
         >
@@ -78,13 +78,13 @@
           />
         </template>
         <div v-if="scrollLoading" class="text-center py-4">
-          <LoaderCircle class="w-8 h-8 mx-auto text-blue-500 animate-spin" />
+          <LoaderCircle class="w-8 h-8 mx-auto text-blue-700 animate-spin" />
         </div>
       </div>
       <div v-else class="text-center py-12">
         <template v-if="searchLoading">
           <LoaderCircle
-            class="w-16 h-16 mx-auto mb-4 text-blue-500 animate-spin"
+            class="w-16 h-16 mx-auto mb-4 text-blue-700 animate-spin"
           />
           <p class="text-lg font-medium text-gray-600">搜索中...</p>
         </template>

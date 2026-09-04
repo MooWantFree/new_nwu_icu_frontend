@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100">
     <div v-if="isLoading" class="flex items-center justify-center h-screen">
-      <LoaderCircle class="w-16 h-16 text-blue-500 animate-spin" />
+      <LoaderCircle class="w-16 h-16 text-blue-700 animate-spin" />
     </div>
     <div v-else-if="isLoggedIn" class="flex h-screen overflow-hidden">
       <aside :class="[
@@ -9,7 +9,7 @@
         isSidebarOpen ? 'w-64' : 'w-20'
       ]">
         <div class="p-5 flex items-center justify-between">
-          <h2 v-if="isSidebarOpen" class="text-xl font-semibold text-gray-800">消息中心</h2>
+          <h2 v-if="isSidebarOpen" class="text-xl font-semibold text-gray-900">消息中心</h2>
           <button @click="toggleSidebar" class="p-2 rounded-full hover:bg-gray-200">
             <ChevronLeft v-if="isSidebarOpen" class="w-6 h-6 text-gray-600" />
             <ChevronRight v-else class="w-6 h-6 text-gray-600" />
@@ -20,8 +20,8 @@
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            class="group flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200 relative"
-            active-class="bg-blue-100 text-blue-600"
+            class="group flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors duration-200 relative"
+            active-class="bg-blue-100 text-blue-700"
           >
             <component :is="link.icon" class="w-5 h-5 mr-3" />
             <span v-if="isSidebarOpen" class="text-sm font-medium">{{ link.text }}</span>
@@ -47,7 +47,7 @@
     <div v-else class="flex items-center justify-center h-screen bg-gray-100">
       <div class="text-center bg-white p-8 rounded-xl shadow-2xl max-w-md w-full">
         <AlertCircle class="w-20 h-20 mx-auto text-yellow-500 mb-6" />
-        <h2 class="text-3xl font-bold text-gray-800 mb-3">需要登录</h2>
+        <h2 class="mb-3 text-3xl font-bold text-gray-900">需要登录</h2>
         <p class="text-gray-600 mb-8">请先登录以访问消息中心</p>
         <router-link
           to="/"

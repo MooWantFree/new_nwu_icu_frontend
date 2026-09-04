@@ -23,11 +23,11 @@
           <div class="flex items-center">
             <div class="mr-2">
               <Folder v-if="item.is_dir" class="w-5 h-5 text-yellow-500" />
-              <File v-else class="w-5 h-5 text-blue-500" />
+              <File v-else class="w-5 h-5 text-blue-700" />
             </div>
             <router-link 
               :to="handleLink(item)"
-              class="text-blue-600 hover:underline">
+              class="text-blue-700 hover:underline">
               {{ item.name }}
             </router-link>
           </div>

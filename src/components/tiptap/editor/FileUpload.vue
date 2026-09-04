@@ -5,7 +5,7 @@
   >
     <div class="bg-white p-5 sm:p-8 rounded-xl shadow-2xl w-full max-w-[480px] animate-fade-in">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">上传文件</h2>
+        <h2 class="text-xl font-bold text-gray-900 sm:text-2xl">上传文件</h2>
         <button 
           @click="confirmClose"
           class="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
@@ -37,7 +37,7 @@
             <p class="mt-2 text-sm text-gray-500">支持所有文件类型，最大 25MB</p>
           </template>
           <div v-else class="flex flex-col items-center">
-            <File class="w-12 h-12 text-blue-500 mb-4" />
+            <File class="w-12 h-12 text-blue-700 mb-4" />
             <span class="text-lg font-medium text-gray-700 break-all">{{ selectedFile.name }}</span>
             <span class="mt-1 text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
             <button 
@@ -56,8 +56,8 @@
         </div>
         
         <div v-if="progress > 0" class="w-full bg-gray-100 rounded-full h-5 overflow-hidden">
-          <div 
-            class="bg-blue-500 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold" 
+          <div
+            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold"
             :style="{ width: `${progress}%` }"
           >
             {{ `${Math.round(progress)}%` }}
@@ -73,7 +73,7 @@
           </button>
           <button
             @click="submitFile"
-            class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             :disabled="!selectedFile || loading"
           >
             <span v-if="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>

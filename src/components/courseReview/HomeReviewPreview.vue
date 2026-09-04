@@ -28,7 +28,7 @@
   <div v-else-if="reviews.length" class="divide-y divide-slate-200">
     <article v-for="review in reviews" :key="review.id" class="px-5 py-6 sm:px-7">
       <div class="flex gap-3">
-        <Circle class="mt-1.5 h-3 w-3 shrink-0 fill-current text-blue-600" aria-hidden="true" />
+        <Circle class="mt-1.5 h-3 w-3 shrink-0 fill-current text-blue-700" aria-hidden="true" />
         <div class="min-w-0 flex-1">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div class="min-w-0">
@@ -67,7 +67,11 @@
             </div>
           </div>
 
-          <ReviewPlainText :content="review.content" class="mt-3 text-sm leading-7 text-slate-600" />
+          <ReviewPlainText
+            :content="review.content"
+            :lines="1"
+            class="mt-3 text-sm leading-7 text-slate-600"
+          />
         </div>
       </div>
     </article>
@@ -102,7 +106,7 @@ const load = async () => {
     })
 
     if (status !== 200) throw new Error('获取最近评价失败')
-    reviews.value = content.results
+    reviews.value = content.results.slice(0, pageSize)
   } catch {
     failed.value = true
   } finally {

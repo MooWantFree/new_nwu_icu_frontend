@@ -27,7 +27,7 @@
       </div>
       <button
         @click="insertTable"
-        class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+        class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
       >
         插入表格
       </button>
