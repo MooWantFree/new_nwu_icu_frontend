@@ -1,9 +1,12 @@
 <template>
-  <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-    <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-      <div><h1 class="text-3xl font-bold text-gray-900">留言板</h1><p class="mt-2 text-gray-600">分享想法，也欢迎友善地参与讨论。</p></div>
+  <AppPageLayout
+    title="留言板"
+    description="分享想法，也欢迎友善地参与讨论。"
+  >
+    <template #actions>
       <button class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">添加留言</button>
-    </div>
+    </template>
+
     <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" @close="composerOpen = false" @created="created" />
     <div v-if="loading" class="py-16 text-center text-gray-500">加载留言中…</div>
     <div v-else-if="loadFailed" class="py-16 text-center text-gray-500">获取留言失败。<button class="ml-2 text-blue-700" @click="load">重试</button></div>
@@ -12,7 +15,7 @@
     </div>
     <div v-else class="rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center text-gray-500">还没有留言，来写下第一条吧。</div>
     <div v-if="pageCount > 1" class="mt-8 flex justify-center"><n-pagination :page="page" :page-count="pageCount" @update:page="changePage" /></div>
-  </main>
+  </AppPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -20,6 +23,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GuestbookComposerModal from '@/components/guestbook/GuestbookComposerModal.vue'
 import GuestbookEntryCard from '@/components/guestbook/GuestbookEntryCard.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import { api } from '@/lib/requests'
 import { useUser } from '@/lib/useUser'
 import { useGuestbookActions } from '@/lib/useGuestbookActions'

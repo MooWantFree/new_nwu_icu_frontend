@@ -1,6 +1,5 @@
 <template>
-  <div class="bg-slate-50/80">
-    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+  <AppPageLayout>
       <div class="grid items-stretch gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
         <section
           aria-labelledby="latest-reviews-title"
@@ -84,8 +83,7 @@
           </div>
         </div>
       </details>
-    </main>
-  </div>
+  </AppPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -99,6 +97,7 @@ import {
 } from 'lucide-vue-next'
 import HomeReviewPreview from '@/components/courseReview/HomeReviewPreview.vue'
 import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 
 const campusServices = [
   { label: '教务管理系统', url: 'https://jwgl.nwu.edu.cn/sso/jziotlogin' },

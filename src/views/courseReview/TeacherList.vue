@@ -1,21 +1,18 @@
 <template>
-  <div class="container mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-7rem-6px)]">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-8">
-      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 relative">
-        教师列表
-        <span 
-          v-if="totalTeachers > 0" 
-          class="absolute -bottom-1 -right-2 text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full transform translate-x-full"
-        >
-          共 {{ totalTeachers }} 位教师
-        </span>
-      </h1>
-      <button @click="showAddTeacherModal = true"
-        class="btn-primary self-end sm:self-auto">
+  <AppPageLayout title="教师列表">
+    <template #meta>
+      <span v-if="totalTeachers > 0">共 {{ totalTeachers }} 位教师</span>
+    </template>
+    <template #actions>
+      <button
+        @click="showAddTeacherModal = true"
+        class="btn-primary"
+      >
         <PlusCircle class="w-5 h-5 mr-2" />
         添加教师
       </button>
-    </div>
+    </template>
+
     <AddTeacherModal v-model="showAddTeacherModal" @add="handleTeacherAdded" />
 
     <div class="mb-8 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start sm:justify-end gap-4">
@@ -105,7 +102,7 @@
         </template>
       </n-pagination>
     </div>
-  </div>
+  </AppPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -115,6 +112,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { PlusCircle } from 'lucide-vue-next'
 import AddTeacherModal from '@/components/courseReview/course/AddTeacherModal.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 
 const router = useRouter()
 const message = useMessage()

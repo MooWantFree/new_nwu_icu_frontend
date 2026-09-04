@@ -1,35 +1,36 @@
 <template>
-  <div :class="['min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8', { 'py-8 sm:py-10': showHeader }]">
-    <div class="mx-auto max-w-7xl">
-      <h1 v-if="showHeader" class="mb-6 text-3xl font-semibold tracking-tight text-gray-900 sm:mb-8">时间线 <span class="text-gray-500">({{ totalReviewCount }})</span></h1>
-      <div class="space-y-6">
-        <template v-if="loading">
-          <review-item-skeleton v-for="index in pageSize" :key="index" />
-        </template>
-        <template v-else>
-          <review-item
-            v-for="review in reviews"
-            :review="review"
-            :key="review.id"
-          />
-        </template>
-      </div>
-      <div
-        v-if="totalReviewCount > 0 && showHeader"
-        class="mt-8 flex items-center justify-center"
-      >
-        <n-pagination
-          v-model:page="currentPage"
-          :item-count="totalReviewCount"
-          :page-slot="5"
-          :page-size="pageSize"
-          @update:page="onPageUpdate"
-          show-quick-jumper
-        >
-        </n-pagination>
-      </div>
+  <AppPageLayout title="时间线" :show-header="showHeader">
+    <template #meta>
+      <span>({{ totalReviewCount }})</span>
+    </template>
+
+    <div class="space-y-6">
+      <template v-if="loading">
+        <review-item-skeleton v-for="index in pageSize" :key="index" />
+      </template>
+      <template v-else>
+        <review-item
+          v-for="review in reviews"
+          :review="review"
+          :key="review.id"
+        />
+      </template>
     </div>
-  </div>
+    <div
+      v-if="totalReviewCount > 0 && showHeader"
+      class="mt-8 flex items-center justify-center"
+    >
+      <n-pagination
+        v-model:page="currentPage"
+        :item-count="totalReviewCount"
+        :page-slot="5"
+        :page-size="pageSize"
+        @update:page="onPageUpdate"
+        show-quick-jumper
+      >
+      </n-pagination>
+    </div>
+  </AppPageLayout>
 </template>
 
 <script lang="ts" setup>
@@ -39,6 +40,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
 import ReviewItemSkeleton from '@/components/courseReview/timeline/ReviewItemSkeleton.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import { APILatestReviews } from '@/types/api/courseReview/review'
 
 const props = defineProps({
