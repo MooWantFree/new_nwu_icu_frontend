@@ -117,6 +117,11 @@ export type APILatestReviews = {
         name: string
         id: number
       }[]
+      like: {
+        like: number
+        dislike: number
+        user_option: number
+      }
       edited: boolean
     }[]
   }

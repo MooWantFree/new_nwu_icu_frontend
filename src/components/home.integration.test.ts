@@ -38,6 +38,7 @@ const review: APILatestReviews['response']['results'][number] = {
   course: { id: 42, name: '数据结构与算法', semester: '2026-2027-1' },
   content: '<p>讲解清晰，作业反馈及时。</p>',
   teachers: [{ id: 8, name: '张老师' }],
+  like: { like: 0, dislike: 0, user_option: 0 },
   edited: false,
 }
 
