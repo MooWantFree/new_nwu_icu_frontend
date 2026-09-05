@@ -1,6 +1,6 @@
 <template>
   <AppPageLayout title="资料投稿" description="分享一份资料，让后来者少走一点弯路。">
-      <section class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
+      <section class="mx-auto max-w-4xl">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
@@ -128,154 +128,124 @@
               </span>
             </div>
           </div>
-        </div>
 
-        <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div>
-            <p class="text-sm font-semibold text-blue-700">第二步</p>
-            <h2 class="mt-1 text-xl font-bold text-slate-900">选择目标目录</h2>
-            <p class="mt-1 text-sm text-slate-500">资料审核通过后会归档到此位置。</p>
-            <p v-if="directoryUpdatedAt" class="mt-2 text-xs text-slate-400">
-              目录缓存更新于 <Time :time="directoryUpdatedAt" />，通常每天 03:00 重新扫描。
-            </p>
-          </div>
-
-          <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200">
-            <div class="flex min-h-12 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <div class="mt-7 border-t border-slate-200 pt-6">
+            <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">目标目录</p>
+                <p
+                  class="mt-1 break-all text-sm font-semibold"
+                  :class="targetConfirmed ? 'text-slate-900' : 'text-slate-500'"
+                >
+                  {{ targetConfirmed ? finalTargetPath : '尚未选择目录' }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ targetConfirmed ? '资料审核通过后会归档到此位置。' : '添加文件后请选择资料最终归档的位置。' }}
+                </p>
+              </div>
               <button
                 type="button"
-                class="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-white hover:text-blue-700"
-                aria-label="返回根目录"
-                @click="openDirectory('/')"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="isSubmitting || !selectedFiles.length"
+                @click="openDirectoryModal"
               >
-                <Home class="h-4 w-4" />
+                <Folder class="h-4 w-4" />
+                {{ targetConfirmed ? '更改目录' : '选择目录' }}
               </button>
-              <template v-for="crumb in breadcrumbs" :key="crumb.path">
-                <ChevronRight class="h-3.5 w-3.5 shrink-0 text-slate-300" />
-                <button
-                  type="button"
-                  class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-blue-700"
-                  @click="openDirectory(crumb.path)"
-                >
-                  {{ crumb.name }}
-                </button>
-              </template>
             </div>
 
-            <div class="min-h-64 p-2">
-              <div v-if="directoryLoading" class="flex min-h-60 flex-col items-center justify-center text-slate-500">
-                <Loader2 class="h-6 w-6 animate-spin text-blue-700" />
-                <p class="mt-3 text-sm">正在读取目录…</p>
-              </div>
-              <div v-else-if="directoryError" class="flex min-h-60 flex-col items-center justify-center px-5 text-center">
-                <AlertCircle class="h-8 w-8 text-amber-500" />
-                <p class="mt-3 text-sm font-medium text-slate-700">{{ directoryError }}</p>
-                <button
-                  type="button"
-                  class="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                  @click="loadDirectories"
-                >
-                  <RefreshCw class="h-4 w-4" />
-                  重新加载
-                </button>
-              </div>
-              <div v-else-if="!directories.length" class="flex min-h-60 flex-col items-center justify-center text-center text-slate-500">
-                <Folder class="h-9 w-9 text-slate-300" />
-                <p class="mt-3 text-sm">当前目录下没有子文件夹</p>
-                <p class="mt-1 text-xs">可以直接选择当前目录</p>
-              </div>
-              <ul v-else class="space-y-1">
-                <li v-for="directory in directories" :key="directory.path">
-                  <button
-                    type="button"
-                    class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    @click="openDirectory(directory.path)"
-                  >
-                    <Folder class="h-5 w-5 shrink-0 fill-blue-100 text-blue-700" />
-                    <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
-                      {{ directory.name }}
-                    </span>
-                    <ChevronRight class="h-4 w-4 shrink-0 text-slate-300" />
-                  </button>
-                </li>
-              </ul>
+            <div
+              v-if="submitError"
+              class="mt-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{{ submitError }}</span>
             </div>
-          </div>
 
-          <div class="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-            <p class="text-xs font-medium text-blue-700">当前选择</p>
-            <p class="mt-1 break-all text-sm font-semibold text-blue-950">{{ finalTargetPath }}</p>
-            <p v-if="rootUploadBlocked" class="mt-2 text-xs font-medium text-amber-700">
-              不能直接投稿到根目录，请先选择一个子目录，或勾选下方选项新建文件夹。
+            <button
+              type="button"
+              class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+              :disabled="!canSubmit"
+              @click="submitUpload"
+            >
+              <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
+              <Upload v-else class="h-5 w-5" />
+              {{ submitButtonText }}
+            </button>
+
+            <div v-if="isSubmitting" class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                class="h-full rounded-full bg-blue-600 transition-all duration-300"
+                :style="{ width: `${uploadProgress}%` }"
+              ></div>
+            </div>
+            <p class="mt-3 text-center text-xs leading-5 text-slate-400">
+              提交即表示你确认资料不含隐私信息，并同意由管理员审核后公开。
             </p>
-            <div v-if="publishedPathPreview.length" class="mt-3 border-t border-blue-100 pt-3">
-              <p class="text-xs font-medium text-blue-700">最终文件路径预览</p>
-              <ul class="mt-1.5 space-y-1">
-                <li
-                  v-for="path in publishedPathPreview"
-                  :key="path"
-                  class="break-all font-mono text-xs text-blue-950"
-                >
-                  {{ path }}
-                </li>
-              </ul>
-              <p v-if="selectedFiles.length > publishedPathPreview.length" class="mt-1 text-xs text-blue-700">
-                另有 {{ selectedFiles.length - publishedPathPreview.length }} 个文件
-              </p>
+          </div>
+        </div>
+      </section>
+
+      <NModal
+        :show="directoryModalOpen"
+        :mask-closable="!isSubmitting"
+        :close-on-esc="!isSubmitting"
+        @update:show="handleDirectoryModalShow"
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="directory-modal-title"
+          class="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]"
+        >
+          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6">
+            <div>
+              <p class="text-xs font-semibold text-blue-700">第二步</p>
+              <h2 id="directory-modal-title" class="mt-1 text-xl font-bold text-slate-900">选择目标目录</h2>
+              <p class="mt-1 text-sm text-slate-500">确认后还可以在提交前再次更改。</p>
             </div>
+            <button
+              type="button"
+              class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200"
+              aria-label="关闭目录选择窗口"
+              :disabled="isSubmitting"
+              @click="cancelDirectorySelection"
+            >
+              <X class="h-5 w-5" />
+            </button>
           </div>
 
-          <label class="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 transition hover:bg-slate-50">
-            <input v-model="createNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500" />
-            <span class="flex flex-1 items-center gap-2 text-sm font-medium text-slate-700">
-              <FolderPlus class="h-4 w-4 text-slate-500" />
-              在此处新建文件夹
-            </span>
-          </label>
-          <div v-if="createNewFolder" class="mt-3">
-            <label for="new-folder-name" class="sr-only">新文件夹名称</label>
-            <input
-              id="new-folder-name"
-              v-model.trim="newFolderName"
-              type="text"
-              maxlength="255"
-              placeholder="输入新文件夹名称"
-              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              @input="submitError = ''"
+          <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+            <ResourceDirectoryPicker
+              v-model:path="directoryDraftPath"
+              v-model:create-new-folder="directoryDraftCreateNewFolder"
+              v-model:new-folder-name="directoryDraftNewFolderName"
+              :preview-relative-paths="selectedRelativePaths"
+              input-id="submission-new-folder-name"
             />
           </div>
 
-          <div
-            v-if="submitError"
-            class="mt-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
-            role="alert"
-          >
-            <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{{ submitError }}</span>
+          <div class="flex shrink-0 items-center justify-end gap-3 border-t border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+            <button
+              type="button"
+              class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200"
+              :disabled="isSubmitting"
+              @click="cancelDirectorySelection"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-300"
+              :disabled="!canConfirmDirectory || isSubmitting"
+              @click="confirmDirectorySelection"
+            >
+              确认目录
+            </button>
           </div>
-
-          <button
-            type="button"
-            class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
-            :disabled="!canSubmit"
-            @click="submitUpload"
-          >
-            <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
-            <Upload v-else class="h-5 w-5" />
-            {{ submitButtonText }}
-          </button>
-
-          <div v-if="isSubmitting" class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-            <div
-              class="h-full rounded-full bg-blue-600 transition-all duration-300"
-              :style="{ width: `${uploadProgress}%` }"
-            ></div>
-          </div>
-          <p class="mt-3 text-center text-xs leading-5 text-slate-400">
-            提交即表示你确认资料不含隐私信息，并同意由管理员审核后公开。
-          </p>
-        </aside>
-      </section>
+        </div>
+      </NModal>
 
       <section
         v-if="lastSubmittedRequest"
@@ -311,33 +281,20 @@
           </button>
         </div>
 
-        <div class="mt-5 flex flex-wrap items-center gap-2">
-          <span class="mr-1 text-sm font-medium text-slate-500">筛选：</span>
+        <div class="mt-5 grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1" aria-label="投稿记录筛选">
           <button
-            v-for="option in statusFilterOptions"
+            v-for="option in historyFilterOptions"
             :key="option.value"
             type="button"
-            class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition"
-            :class="selectedStatuses.includes(option.value)
-              ? option.activeClass
-              : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600'"
-            @click="toggleStatusFilter(option.value)"
+            class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-300 sm:gap-2 sm:px-3"
+            :class="selectedHistoryFilter === option.value
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-800'"
+            :aria-pressed="selectedHistoryFilter === option.value"
+            @click="selectedHistoryFilter = option.value"
           >
-            <span
-              class="flex h-4 w-4 items-center justify-center rounded border"
-              :class="selectedStatuses.includes(option.value) ? 'border-current' : 'border-slate-300'"
-            >
-              <Check v-if="selectedStatuses.includes(option.value)" class="h-3 w-3" />
-            </span>
             {{ option.label }}
-            <span class="font-normal opacity-70">{{ statusCounts[option.value] }}</span>
-          </button>
-          <button
-            type="button"
-            class="ml-1 rounded-full px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
-            @click="selectAllStatuses"
-          >
-            {{ allStatusesSelected ? '取消全选' : '全选' }}
+            <span class="font-normal text-slate-400">{{ historyFilterCounts[option.value] }}</span>
           </button>
         </div>
 
@@ -357,45 +314,50 @@
             {{ uploadHistory.length ? '可以重新选择上方状态筛选' : '你的第一份分享会显示在这里' }}
           </p>
         </div>
-        <div v-else class="mt-6 grid gap-3 md:grid-cols-2">
+        <div v-else class="mt-6 divide-y divide-slate-200 border-y border-slate-200">
           <article
             v-for="record in filteredUploadHistory"
             :key="record.id"
             :id="`upload-record-${record.id}`"
-            class="rounded-xl border border-slate-200 p-4 transition"
-            :class="highlightedRequestId === record.id ? 'border-blue-300 ring-4 ring-blue-100' : ''"
+            class="px-1 py-5 transition sm:px-3"
+            :class="highlightedRequestId === record.id ? 'bg-blue-50/60' : ''"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-xs font-semibold text-slate-400">投稿 #{{ record.id }}</p>
-                <p class="mt-1 truncate text-sm font-semibold text-slate-800" :title="record.target_path">
+                <p class="break-all text-sm font-semibold text-slate-900" :title="record.target_path">
                   {{ record.target_path }}
                 </p>
+                <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                  <span>投稿 #{{ record.id }}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{{ record.files.length }} 个文件</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{{ record.total_size_display }}</span>
+                </div>
               </div>
               <span
-                class="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
-                :class="statusMeta[record.status].className"
+                class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600"
               >
-                <component :is="statusMeta[record.status].icon" class="h-3.5 w-3.5" />
+                <span class="h-1.5 w-1.5 rounded-full" :class="statusMeta[record.status].dotClass"></span>
                 {{ statusMeta[record.status].label }}
               </span>
             </div>
-            <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
-              <span>{{ record.files.length }} 个文件 · {{ record.total_size_display }}</span>
+            <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
               <span>
                 提交 <Time :time="record.created_at" />
-                <template v-if="record.reviewed_at">
-                  · 审核 <Time :time="record.reviewed_at" />
-                </template>
               </span>
+              <template v-if="record.reviewed_at">
+                <span aria-hidden="true">·</span>
+                <span>审核 <Time :time="record.reviewed_at" /></span>
+              </template>
             </div>
             <div
               v-if="record.status === 'rejected' && record.rejection_reason"
-              class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs leading-5 text-red-700"
+              class="mt-3 rounded-r-lg border-l-2 border-red-300 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700"
             >
               退回原因：{{ record.rejection_reason }}
             </div>
-            <div v-if="record.status === 'publish_failed' && record.publish_error" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+            <div v-if="record.status === 'publish_failed' && record.publish_error" class="mt-3 rounded-r-lg border-l-2 border-orange-300 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700">
               发布异常：{{ record.publish_error }}
             </div>
             <div v-if="record.files_deleted_at" class="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs leading-5 text-slate-600">
@@ -404,10 +366,10 @@
             <div v-else-if="record.files_expires_at" class="mt-3 text-xs text-slate-500">
               暂存文件将在 <Time :time="record.files_expires_at" /> 后清理。
             </div>
-            <div class="mt-4 flex flex-wrap gap-2">
+            <div class="mt-4 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                 @click="toggleRecordFiles(record.id)"
               >
                 <ChevronRight
@@ -419,7 +381,7 @@
               <button
                 v-if="record.can_edit"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                 @click="openEditDialog(record)"
               >
                 <Pencil class="h-3.5 w-3.5" />
@@ -430,7 +392,7 @@
                 :href="toSafeExternalUrl(record.resource_url) ?? undefined"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
               >
                 <ExternalLink class="h-3.5 w-3.5" />
                 在资料站查看
@@ -593,76 +555,15 @@
             <section>
               <h3 class="font-bold text-slate-900">修改上传目录</h3>
               <p class="mt-1 text-xs text-slate-500">请选择资料审核通过后要归档的位置。</p>
-              <p v-if="editDirectoryUpdatedAt" class="mt-1 text-xs text-slate-400">
-                目录缓存更新于 <Time :time="editDirectoryUpdatedAt" />。
-              </p>
-
-              <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-                <div class="flex min-h-12 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2">
-                  <button
-                    type="button"
-                    class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-white hover:text-blue-700"
-                    aria-label="返回根目录"
-                    @click="openEditDirectory('/')"
-                  >
-                    <Home class="h-4 w-4" />
-                  </button>
-                  <template v-for="crumb in editBreadcrumbs" :key="crumb.path">
-                    <ChevronRight class="h-3.5 w-3.5 shrink-0 text-slate-300" />
-                    <button
-                      type="button"
-                      class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-white hover:text-blue-700"
-                      @click="openEditDirectory(crumb.path)"
-                    >
-                      {{ crumb.name }}
-                    </button>
-                  </template>
-                </div>
-                <div class="min-h-52 p-2">
-                  <div v-if="editDirectoryLoading" class="flex min-h-48 items-center justify-center text-sm text-slate-500">
-                    <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-700" />
-                    正在读取目录…
-                  </div>
-                  <div v-else-if="editDirectoryError" class="flex min-h-48 flex-col items-center justify-center px-4 text-center">
-                    <p class="text-sm text-amber-700">{{ editDirectoryError }}</p>
-                    <button type="button" class="mt-3 text-sm font-semibold text-blue-700" @click="loadEditDirectories">重试</button>
-                  </div>
-                  <div v-else-if="!editDirectories.length" class="flex min-h-48 items-center justify-center text-sm text-slate-400">
-                    当前目录下没有子文件夹
-                  </div>
-                  <ul v-else class="space-y-1">
-                    <li v-for="directory in editDirectories" :key="directory.path">
-                      <button
-                        type="button"
-                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-blue-50"
-                        @click="openEditDirectory(directory.path)"
-                      >
-                        <Folder class="h-5 w-5 fill-blue-100 text-blue-700" />
-                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{{ directory.name }}</span>
-                        <ChevronRight class="h-4 w-4 text-slate-300" />
-                      </button>
-                    </li>
-                  </ul>
-                </div>
+              <div class="mt-4">
+                <ResourceDirectoryPicker
+                  v-model:path="editCurrentPath"
+                  v-model:create-new-folder="editCreateNewFolder"
+                  v-model:new-folder-name="editNewFolderName"
+                  compact
+                  input-id="edit-new-folder-name"
+                />
               </div>
-
-              <div class="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-                <p class="text-xs font-medium text-blue-700">新的目标目录</p>
-                <p class="mt-1 break-all text-sm font-semibold text-blue-950">{{ editFinalTargetPath }}</p>
-              </div>
-
-              <label class="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50">
-                <input v-model="editCreateNewFolder" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500" />
-                <span class="text-sm font-medium text-slate-700">在此处新建文件夹</span>
-              </label>
-              <input
-                v-if="editCreateNewFolder"
-                v-model.trim="editNewFolderName"
-                type="text"
-                maxlength="255"
-                placeholder="输入新文件夹名称"
-                class="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
 
               <div class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm">
                 <div class="flex items-center justify-between">
@@ -715,11 +616,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { toSafeExternalUrl } from '@/lib/security'
-import { useMessage } from 'naive-ui'
+import { NModal, useMessage } from 'naive-ui'
 import {
   AlertCircle,
   Archive,
-  Check,
   CheckCircle2,
   ChevronRight,
   FileArchive,
@@ -729,7 +629,6 @@ import {
   Folder,
   FolderPlus,
   ExternalLink,
-  Home,
   Loader2,
   Pencil,
   Plus,
@@ -739,13 +638,12 @@ import {
   Trash2,
   Upload,
   X,
-  XCircle,
-  Clock3,
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import type { ResourceUploadRequest, ResourceUploadFile } from '@/types/api/resourceUpload'
 import Time from '@/components/tinyComponents/Time.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import ResourceDirectoryPicker from '@/components/upload/ResourceDirectoryPicker.vue'
 
 const message = useMessage()
 const DEFAULT_MAX_FILE_COUNT = 20
@@ -763,8 +661,8 @@ type SelectedFile = {
   relativePath: string
 }
 
-type UploadStatus = ResourceUploadRequest['status']
 type UploadStage = 'idle' | 'uploading' | 'confirming'
+type UploadHistoryFilter = 'all' | 'processing' | 'approved' | 'issues'
 
 type FileSystemEntryLike = {
   isFile: boolean
@@ -782,12 +680,13 @@ const selectedFiles = ref<SelectedFile[]>([])
 const fileError = ref('')
 const isDragging = ref(false)
 const currentPath = ref('/')
-const directories = ref<{ name: string; path: string; modified: string | null }[]>([])
-const directoryUpdatedAt = ref<string | null>(null)
-const directoryLoading = ref(false)
-const directoryError = ref('')
 const createNewFolder = ref(false)
 const newFolderName = ref('')
+const targetConfirmed = ref(false)
+const directoryModalOpen = ref(false)
+const directoryDraftPath = ref('/')
+const directoryDraftCreateNewFolder = ref(false)
+const directoryDraftNewFolderName = ref('')
 const isSubmitting = ref(false)
 const uploadProgress = ref(0)
 const uploadStage = ref<UploadStage>('idle')
@@ -795,7 +694,7 @@ const submitError = ref('')
 const uploadHistory = ref<ResourceUploadRequest[]>([])
 const historyLoading = ref(false)
 const historyError = ref('')
-const selectedStatuses = ref<UploadStatus[]>(['rejected', 'pending', 'publishing', 'publish_failed', 'approved'])
+const selectedHistoryFilter = ref<UploadHistoryFilter>('all')
 const expandedRecordIds = ref<number[]>([])
 const lastSubmittedRequest = ref<ResourceUploadRequest | null>(null)
 const highlightedRequestId = ref<number | null>(null)
@@ -807,10 +706,6 @@ const editFileError = ref('')
 const editFileInput = ref<HTMLInputElement | null>(null)
 const editFolderInput = ref<HTMLInputElement | null>(null)
 const editCurrentPath = ref('/')
-const editDirectories = ref<{ name: string; path: string; modified: string | null }[]>([])
-const editDirectoryUpdatedAt = ref<string | null>(null)
-const editDirectoryLoading = ref(false)
-const editDirectoryError = ref('')
 const editCreateNewFolder = ref(false)
 const editNewFolderName = ref('')
 const editSubmitting = ref(false)
@@ -825,73 +720,66 @@ let highlightTimer: ReturnType<typeof setTimeout> | undefined
 
 const acceptExtensions = computed(() => [...allowedExtensions.value].join(','))
 const totalSize = computed(() => selectedFiles.value.reduce((sum, item) => sum + item.file.size, 0))
-const breadcrumbs = computed(() => {
-  const parts = currentPath.value.split('/').filter(Boolean)
-  return parts.map((name, index) => ({
-    name,
-    path: `/${parts.slice(0, index + 1).join('/')}`,
-  }))
-})
+const selectedRelativePaths = computed(() => selectedFiles.value.map((item) => item.relativePath))
 const finalTargetPath = computed(() => {
   if (!createNewFolder.value || !newFolderName.value) return currentPath.value
   return `${currentPath.value === '/' ? '' : currentPath.value}/${newFolderName.value}`
 })
-const publishedPathPreview = computed(() => selectedFiles.value.slice(0, 3).map((item) =>
-  `${finalTargetPath.value.replace(/\/$/, '')}/${item.relativePath}`,
-))
 const rootUploadBlocked = computed(
   () => currentPath.value === '/' && (!createNewFolder.value || !newFolderName.value),
 )
+const directoryDraftFolderNameInvalid = computed(() =>
+  directoryDraftCreateNewFolder.value
+  && (
+    !directoryDraftNewFolderName.value.trim()
+    || directoryDraftNewFolderName.value.trim() === '.'
+    || directoryDraftNewFolderName.value.trim() === '..'
+    || /[\\/]/.test(directoryDraftNewFolderName.value)
+  ),
+)
+const directoryDraftRootBlocked = computed(
+  () => directoryDraftPath.value === '/'
+    && (!directoryDraftCreateNewFolder.value || !directoryDraftNewFolderName.value.trim()),
+)
+const canConfirmDirectory = computed(
+  () => selectedFiles.value.length > 0
+    && !directoryDraftFolderNameInvalid.value
+    && !directoryDraftRootBlocked.value,
+)
 const canSubmit = computed(
-  () => !isSubmitting.value && selectedFiles.value.length > 0 && !rootUploadBlocked.value,
+  () => !isSubmitting.value
+    && selectedFiles.value.length > 0
+    && targetConfirmed.value
+    && !rootUploadBlocked.value,
 )
 const submitButtonText = computed(() => {
   if (!isSubmitting.value) return '提交审核'
   if (uploadStage.value === 'confirming') return '文件已上传，正在创建投稿记录…'
   return `正在上传 ${uploadProgress.value}%`
 })
-const statusPriority: Record<UploadStatus, number> = {
-  rejected: 0,
-  pending: 1,
-  publishing: 2,
-  publish_failed: 3,
-  approved: 4,
+const historyFilterOptions: { value: UploadHistoryFilter; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'processing', label: '处理中' },
+  { value: 'approved', label: '已通过' },
+  { value: 'issues', label: '异常' },
+]
+const matchesHistoryFilter = (record: ResourceUploadRequest, filter: UploadHistoryFilter) => {
+  if (filter === 'all') return true
+  if (filter === 'processing') return record.status === 'pending' || record.status === 'publishing'
+  if (filter === 'approved') return record.status === 'approved'
+  return record.status === 'rejected' || record.status === 'publish_failed'
 }
 const filteredUploadHistory = computed(() =>
   uploadHistory.value
-    .filter((record) => selectedStatuses.value.includes(record.status))
-    .sort((a, b) =>
-      statusPriority[a.status] - statusPriority[b.status]
-      || new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    ),
+    .filter((record) => matchesHistoryFilter(record, selectedHistoryFilter.value))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
 )
-const statusCounts = computed<Record<UploadStatus, number>>(() => ({
-  approved: uploadHistory.value.filter((record) => record.status === 'approved').length,
-  pending: uploadHistory.value.filter((record) => record.status === 'pending').length,
-  rejected: uploadHistory.value.filter((record) => record.status === 'rejected').length,
-  publishing: uploadHistory.value.filter((record) => record.status === 'publishing').length,
-  publish_failed: uploadHistory.value.filter((record) => record.status === 'publish_failed').length,
+const historyFilterCounts = computed<Record<UploadHistoryFilter, number>>(() => ({
+  all: uploadHistory.value.length,
+  processing: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'processing')).length,
+  approved: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'approved')).length,
+  issues: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'issues')).length,
 }))
-const statusFilterOptions: {
-  value: UploadStatus
-  label: string
-  activeClass: string
-}[] = [
-  { value: 'rejected', label: '已退回', activeClass: 'border-red-200 bg-red-50 text-red-700' },
-  { value: 'pending', label: '待审核', activeClass: 'border-amber-200 bg-amber-50 text-amber-700' },
-  { value: 'publishing', label: '发布中', activeClass: 'border-blue-200 bg-blue-50 text-blue-700' },
-  { value: 'publish_failed', label: '发布异常', activeClass: 'border-orange-200 bg-orange-50 text-orange-700' },
-  { value: 'approved', label: '已通过', activeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-]
-const allStatusesSelected = computed(() => selectedStatuses.value.length === statusFilterOptions.length)
-
-const editBreadcrumbs = computed(() => {
-  const parts = editCurrentPath.value.split('/').filter(Boolean)
-  return parts.map((name, index) => ({
-    name,
-    path: `/${parts.slice(0, index + 1).join('/')}`,
-  }))
-})
 const editFinalTargetPath = computed(() => {
   if (!editCreateNewFolder.value || !editNewFolderName.value) return editCurrentPath.value
   return `${editCurrentPath.value === '/' ? '' : editCurrentPath.value}/${editNewFolderName.value}`
@@ -933,28 +821,23 @@ const editSubmitButtonText = computed(() => {
 const statusMeta = {
   pending: {
     label: '待审核',
-    icon: Clock3,
-    className: 'bg-amber-50 text-amber-700',
+    dotClass: 'bg-amber-500',
   },
   publishing: {
     label: '发布中',
-    icon: Loader2,
-    className: 'bg-blue-50 text-blue-700',
+    dotClass: 'bg-blue-500',
   },
   publish_failed: {
     label: '发布异常',
-    icon: AlertCircle,
-    className: 'bg-orange-50 text-orange-700',
+    dotClass: 'bg-orange-500',
   },
   approved: {
     label: '已通过',
-    icon: CheckCircle2,
-    className: 'bg-emerald-50 text-emerald-700',
+    dotClass: 'bg-emerald-500',
   },
   rejected: {
     label: '已退回',
-    icon: XCircle,
-    className: 'bg-red-50 text-red-700',
+    dotClass: 'bg-red-500',
   },
 }
 
@@ -987,6 +870,7 @@ const getErrorMessage = (errors: { err_msg: string }[] | undefined, fallback: st
 const addFiles = (incoming: { file: File; relativePath?: string }[]) => {
   fileError.value = ''
   const next = [...selectedFiles.value]
+  const initialCount = next.length
   const existing = new Set(next.map((item) => item.relativePath))
   const rejected: string[] = []
 
@@ -1022,6 +906,34 @@ const addFiles = (incoming: { file: File; relativePath?: string }[]) => {
     const visible = rejected.slice(0, 2).join('；')
     fileError.value = rejected.length > 2 ? `${visible}；另有 ${rejected.length - 2} 个文件未添加` : visible
   }
+  return next.length - initialCount
+}
+
+const openDirectoryModal = () => {
+  if (!selectedFiles.value.length || isSubmitting.value) return
+  directoryDraftPath.value = currentPath.value
+  directoryDraftCreateNewFolder.value = targetConfirmed.value ? createNewFolder.value : false
+  directoryDraftNewFolderName.value = targetConfirmed.value ? newFolderName.value : ''
+  submitError.value = ''
+  directoryModalOpen.value = true
+}
+
+const cancelDirectorySelection = () => {
+  if (!isSubmitting.value) directoryModalOpen.value = false
+}
+
+const handleDirectoryModalShow = (show: boolean) => {
+  if (!show) cancelDirectorySelection()
+}
+
+const confirmDirectorySelection = () => {
+  if (!canConfirmDirectory.value) return
+  currentPath.value = directoryDraftPath.value
+  createNewFolder.value = directoryDraftCreateNewFolder.value
+  newFolderName.value = directoryDraftNewFolderName.value.trim()
+  targetConfirmed.value = true
+  submitError.value = ''
+  directoryModalOpen.value = false
 }
 
 const handleFileInput = (event: Event) => {
@@ -1030,8 +942,9 @@ const handleFileInput = (event: Event) => {
     file,
     relativePath: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
   }))
-  addFiles(files)
+  const addedCount = addFiles(files)
   input.value = ''
+  if (addedCount > 0 && !targetConfirmed.value) openDirectoryModal()
 }
 
 const readAllDirectoryEntries = async (entry: FileSystemEntryLike): Promise<FileSystemEntryLike[]> => {
@@ -1072,10 +985,12 @@ const handleDrop = async (event: DragEvent) => {
 
   if (entries.length) {
     const nested = await Promise.all(entries.map((entry) => readEntry(entry)))
-    addFiles(nested.flat())
+    const addedCount = addFiles(nested.flat())
+    if (addedCount > 0 && !targetConfirmed.value) openDirectoryModal()
     return
   }
-  addFiles(Array.from(event.dataTransfer?.files || []).map((file) => ({ file, relativePath: file.name })))
+  const addedCount = addFiles(Array.from(event.dataTransfer?.files || []).map((file) => ({ file, relativePath: file.name })))
+  if (addedCount > 0 && !targetConfirmed.value) openDirectoryModal()
 }
 
 const handleDragLeave = (event: DragEvent) => {
@@ -1086,24 +1001,22 @@ const handleDragLeave = (event: DragEvent) => {
 
 const removeFile = (id: string) => {
   selectedFiles.value = selectedFiles.value.filter((item) => item.id !== id)
+  if (!selectedFiles.value.length) {
+    targetConfirmed.value = false
+    createNewFolder.value = false
+    newFolderName.value = ''
+    directoryModalOpen.value = false
+  }
   fileError.value = ''
 }
 
 const clearFiles = () => {
   selectedFiles.value = []
   fileError.value = ''
-}
-
-const toggleStatusFilter = (status: UploadStatus) => {
-  selectedStatuses.value = selectedStatuses.value.includes(status)
-    ? selectedStatuses.value.filter((item) => item !== status)
-    : [...selectedStatuses.value, status]
-}
-
-const selectAllStatuses = () => {
-  selectedStatuses.value = allStatusesSelected.value
-    ? []
-    : statusFilterOptions.map((option) => option.value)
+  targetConfirmed.value = false
+  createNewFolder.value = false
+  newFolderName.value = ''
+  directoryModalOpen.value = false
 }
 
 const toggleRecordFiles = (requestId: number) => {
@@ -1117,7 +1030,6 @@ const resetEditDialog = () => {
   removedExistingFileIds.value = []
   editSelectedFiles.value = []
   editFileError.value = ''
-  editDirectoryError.value = ''
   editCreateNewFolder.value = false
   editNewFolderName.value = ''
   editSubmitError.value = ''
@@ -1129,36 +1041,7 @@ const closeEditDialog = () => {
   if (!editSubmitting.value) resetEditDialog()
 }
 
-const loadEditDirectories = async () => {
-  editDirectoryLoading.value = true
-  editDirectoryError.value = ''
-  try {
-    const response = await api.get({
-      url: '/api/upload/directories/',
-      query: { path: editCurrentPath.value },
-    })
-    if (response.status !== 200) {
-      editDirectoryError.value = getErrorMessage(response.errors, '目录缓存暂时不可用，请稍后重试')
-      return
-    }
-    editCurrentPath.value = response.content.path
-    editDirectories.value = response.content.directories
-    editDirectoryUpdatedAt.value = response.content.updated_at
-  } catch {
-    editDirectoryError.value = '暂时无法读取本地目录缓存，请稍后重试'
-  } finally {
-    editDirectoryLoading.value = false
-  }
-}
-
-const openEditDirectory = async (path: string) => {
-  if (editDirectoryLoading.value || path === editCurrentPath.value) return
-  editCurrentPath.value = path
-  editSubmitError.value = ''
-  await loadEditDirectories()
-}
-
-const openEditDialog = async (record: ResourceUploadRequest) => {
+const openEditDialog = (record: ResourceUploadRequest) => {
   editingRequest.value = record
   removedExistingFileIds.value = []
   editSelectedFiles.value = []
@@ -1176,7 +1059,6 @@ const openEditDialog = async (record: ResourceUploadRequest) => {
     editCreateNewFolder.value = false
     editNewFolderName.value = ''
   }
-  await loadEditDirectories()
 }
 
 const toggleExistingFileRemoval = (fileId: number) => {
@@ -1246,28 +1128,6 @@ const removeEditFile = (id: string) => {
   editFileError.value = ''
 }
 
-const loadDirectories = async () => {
-  directoryLoading.value = true
-  directoryError.value = ''
-  try {
-    const response = await api.get({
-      url: '/api/upload/directories/',
-      query: { path: currentPath.value },
-    })
-    if (response.status !== 200) {
-      directoryError.value = getErrorMessage(response.errors, '目录缓存暂时不可用，请稍后重试')
-      return
-    }
-    currentPath.value = response.content.path
-    directories.value = response.content.directories
-    directoryUpdatedAt.value = response.content.updated_at
-  } catch {
-    directoryError.value = '暂时无法读取本地目录缓存，请稍后重试'
-  } finally {
-    directoryLoading.value = false
-  }
-}
-
 const loadUploadConfig = async () => {
   try {
     const response = await api.get({ url: '/api/upload/config/' })
@@ -1278,14 +1138,6 @@ const loadUploadConfig = async () => {
   } catch {
     // Keep the safe bundled defaults when the configuration endpoint is temporarily unavailable.
   }
-}
-
-const openDirectory = async (path: string) => {
-  if (directoryLoading.value || path === currentPath.value) return
-  currentPath.value = path
-  createNewFolder.value = false
-  newFolderName.value = ''
-  await loadDirectories()
 }
 
 const loadUploadHistory = async () => {
@@ -1317,9 +1169,7 @@ const completeSubmission = async (uploadRequest: ResourceUploadRequest) => {
   else {
     uploadHistory.value = [uploadRequest, ...uploadHistory.value]
   }
-  if (!selectedStatuses.value.includes('pending')) {
-    selectedStatuses.value = [...selectedStatuses.value, 'pending']
-  }
+  selectedHistoryFilter.value = 'all'
   lastSubmittedRequest.value = uploadRequest
   highlightedRequestId.value = uploadRequest.id
   if (highlightTimer) clearTimeout(highlightTimer)
@@ -1337,6 +1187,11 @@ const submitUpload = async () => {
   submitError.value = ''
   if (!selectedFiles.value.length) {
     submitError.value = '请先选择要投稿的文件'
+    return
+  }
+  if (!targetConfirmed.value) {
+    submitError.value = '请先选择并确认目标目录'
+    openDirectoryModal()
     return
   }
   if (createNewFolder.value && !newFolderName.value) {
@@ -1504,7 +1359,6 @@ const refreshUploadHistoryWhenVisible = () => {
 
 onMounted(() => {
   loadUploadConfig()
-  loadDirectories()
   loadUploadHistory()
   window.addEventListener('focus', refreshUploadHistoryWhenVisible)
   document.addEventListener('visibilitychange', refreshUploadHistoryWhenVisible)
