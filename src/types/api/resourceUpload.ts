@@ -7,6 +7,8 @@ export type ResourceUploadFile = {
   relative_path: string
   size: number
   size_display: string
+  published_path: string
+  published_at: string | null
 }
 
 export type ResourceUploadRequest = {
@@ -18,11 +20,13 @@ export type ResourceUploadRequest = {
   }
   target_path: string
   creates_new_folder: boolean
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'publishing' | 'approved' | 'rejected' | 'publish_failed'
   total_size: number
   total_size_display: string
   files: ResourceUploadFile[]
   created_at: string
+  updated_at: string
+  revision: number
   reviewed_at: string | null
   reviewed_by: {
     id: number
@@ -30,7 +34,10 @@ export type ResourceUploadRequest = {
     nickname: string
   } | null
   rejection_reason: string
+  publish_error: string
   files_deleted_at: string | null
+  files_expires_at: string | null
+  can_edit: boolean
   resource_url: string | null
 }
 
@@ -56,6 +63,17 @@ export type APIResourceDirectories = {
       path: string
       modified: string | null
     }[]
+  }
+  errors: ErrorFactory<ResourceUploadErrors>[]
+}
+
+export type APIResourceUploadConfig = {
+  endpoint: '/api/upload/config/'
+  method: MethodMap.GET
+  response: {
+    max_file_size: number
+    max_file_count: number
+    allowed_extensions: string[]
   }
   errors: ErrorFactory<ResourceUploadErrors>[]
 }
@@ -89,5 +107,5 @@ export type APIResourceUploadUpdate = {
   response: {
     upload_request: ResourceUploadRequest
   }
-  errors: ErrorFactory<ResourceUploadErrors | 'upload_request' | 'remove_file_ids'>[]
+  errors: ErrorFactory<ResourceUploadErrors | 'upload_request' | 'remove_file_ids' | 'expected_revision'>[]
 }

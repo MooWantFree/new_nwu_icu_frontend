@@ -13,6 +13,7 @@ import type {
 } from './guestbook'
 import type {
   APIResourceDirectories,
+  APIResourceUploadConfig,
   APIResourceUploadCreate,
   APIResourceUploadList,
   APIResourceUploadUpdate,
@@ -56,7 +57,8 @@ export type RequestEndpoints = {
 
     // File
     '/api/download/:uuid/': FileAPI.APIFileDownload
-    '/api/upload/directories/': APIResourceDirectories
+  '/api/upload/directories/': APIResourceDirectories
+  '/api/upload/config/': APIResourceUploadConfig
     '/api/upload/request/': APIResourceUploadList
 
     // Messages

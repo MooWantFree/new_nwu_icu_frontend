@@ -1,38 +1,6 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <section class="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-9 text-white shadow-xl sm:px-10">
-        <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl"></div>
-        <div class="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl"></div>
-        <div class="relative max-w-3xl">
-          <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm text-blue-100">
-            <Upload class="h-4 w-4" />
-            资料共建计划
-          </div>
-          <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
-            分享一份资料，让后来者少走一点弯路
-          </h1>
-          <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-            选择文件和目标目录后提交。管理员审核通过后，资料会出现在资料站中。
-          </p>
-          <div class="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-sm text-slate-300">
-            <span class="flex items-center gap-2">
-              <CheckCircle2 class="h-4 w-4 text-emerald-400" />
-              单个文件不超过 100 MB
-            </span>
-            <span class="flex items-center gap-2">
-              <CheckCircle2 class="h-4 w-4 text-emerald-400" />
-              每次最多 20 个文件
-            </span>
-            <span class="flex items-center gap-2">
-              <CheckCircle2 class="h-4 w-4 text-emerald-400" />
-              支持常见资料与压缩格式
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section class="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
+  <AppPageLayout title="资料投稿" description="分享一份资料，让后来者少走一点弯路。">
+      <section class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
@@ -41,7 +9,7 @@
               <p class="mt-1 text-sm text-slate-500">可拖入文件或整个文件夹，文件夹结构会被保留。</p>
             </div>
             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-              {{ selectedFiles.length }} / 20
+              {{ selectedFiles.length }} / {{ maxFileCount }}
             </span>
           </div>
 
@@ -83,6 +51,13 @@
             </div>
             <p class="mt-5 text-base font-semibold text-slate-900">拖放文件或文件夹到这里</p>
             <p class="mt-2 text-sm text-slate-500">图片、PDF、Office、文本与常见压缩包</p>
+            <div class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs leading-5 text-slate-500">
+              <span>单个文件不超过 {{ formatBytes(maxFileSize) }}</span>
+              <span class="hidden text-slate-300 sm:inline">·</span>
+              <span>每次最多 {{ maxFileCount }} 个文件</span>
+              <span class="hidden text-slate-300 sm:inline">·</span>
+              <span>支持常见资料与压缩格式</span>
+            </div>
             <div class="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
@@ -420,6 +395,15 @@
             >
               退回原因：{{ record.rejection_reason }}
             </div>
+            <div v-if="record.status === 'publish_failed' && record.publish_error" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+              发布异常：{{ record.publish_error }}
+            </div>
+            <div v-if="record.files_deleted_at" class="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs leading-5 text-slate-600">
+              暂存文件已清理，投稿记录仅供查看。
+            </div>
+            <div v-else-if="record.files_expires_at" class="mt-3 text-xs text-slate-500">
+              暂存文件将在 <Time :time="record.files_expires_at" /> 后清理。
+            </div>
             <div class="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -433,7 +417,7 @@
                 {{ expandedRecordIds.includes(record.id) ? '收起文件' : '查看文件' }}
               </button>
               <button
-                v-if="record.status === 'pending' || record.status === 'rejected'"
+                v-if="record.can_edit"
                 type="button"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                 @click="openEditDialog(record)"
@@ -545,7 +529,7 @@
                   <h3 class="font-bold text-slate-900">追加新文件</h3>
                   <p class="mt-1 text-xs text-slate-500">可选择文件或整个文件夹。</p>
                 </div>
-                <span class="text-xs font-semibold text-slate-500">{{ editResultFileCount }} / 20</span>
+                <span class="text-xs font-semibold text-slate-500">{{ editResultFileCount }} / {{ maxFileCount }}</span>
               </div>
 
               <input
@@ -725,8 +709,7 @@
           </div>
         </div>
       </div>
-    </main>
-  </div>
+  </AppPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -762,11 +745,12 @@ import {
 import { api } from '@/lib/requests'
 import type { ResourceUploadRequest, ResourceUploadFile } from '@/types/api/resourceUpload'
 import Time from '@/components/tinyComponents/Time.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 
 const message = useMessage()
-const MAX_FILE_COUNT = 20
-const MAX_FILE_SIZE = 100 * 1024 * 1024
-const ALLOWED_EXTENSIONS = new Set([
+const DEFAULT_MAX_FILE_COUNT = 20
+const DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024
+const DEFAULT_ALLOWED_EXTENSIONS = new Set([
   '.7z', '.avif', '.bmp', '.bz2', '.csv', '.doc', '.docx', '.gif', '.gz',
   '.heic', '.heif', '.ico', '.jfif', '.jpeg', '.jpg', '.md', '.ods', '.odp',
   '.odt', '.pdf', '.png', '.ppt', '.pptx', '.rar', '.svg', '.tar', '.tif',
@@ -811,7 +795,7 @@ const submitError = ref('')
 const uploadHistory = ref<ResourceUploadRequest[]>([])
 const historyLoading = ref(false)
 const historyError = ref('')
-const selectedStatuses = ref<UploadStatus[]>(['rejected', 'pending', 'approved'])
+const selectedStatuses = ref<UploadStatus[]>(['rejected', 'pending', 'publishing', 'publish_failed', 'approved'])
 const expandedRecordIds = ref<number[]>([])
 const lastSubmittedRequest = ref<ResourceUploadRequest | null>(null)
 const highlightedRequestId = ref<number | null>(null)
@@ -833,10 +817,13 @@ const editSubmitting = ref(false)
 const editUploadProgress = ref(0)
 const editUploadStage = ref<UploadStage>('idle')
 const editSubmitError = ref('')
+const maxFileCount = ref(DEFAULT_MAX_FILE_COUNT)
+const maxFileSize = ref(DEFAULT_MAX_FILE_SIZE)
+const allowedExtensions = ref(DEFAULT_ALLOWED_EXTENSIONS)
 let uploadHistoryRefreshTimer: ReturnType<typeof setInterval> | undefined
 let highlightTimer: ReturnType<typeof setTimeout> | undefined
 
-const acceptExtensions = [...ALLOWED_EXTENSIONS].join(',')
+const acceptExtensions = computed(() => [...allowedExtensions.value].join(','))
 const totalSize = computed(() => selectedFiles.value.reduce((sum, item) => sum + item.file.size, 0))
 const breadcrumbs = computed(() => {
   const parts = currentPath.value.split('/').filter(Boolean)
@@ -866,7 +853,9 @@ const submitButtonText = computed(() => {
 const statusPriority: Record<UploadStatus, number> = {
   rejected: 0,
   pending: 1,
-  approved: 2,
+  publishing: 2,
+  publish_failed: 3,
+  approved: 4,
 }
 const filteredUploadHistory = computed(() =>
   uploadHistory.value
@@ -880,8 +869,9 @@ const statusCounts = computed<Record<UploadStatus, number>>(() => ({
   approved: uploadHistory.value.filter((record) => record.status === 'approved').length,
   pending: uploadHistory.value.filter((record) => record.status === 'pending').length,
   rejected: uploadHistory.value.filter((record) => record.status === 'rejected').length,
+  publishing: uploadHistory.value.filter((record) => record.status === 'publishing').length,
+  publish_failed: uploadHistory.value.filter((record) => record.status === 'publish_failed').length,
 }))
-const allStatusesSelected = computed(() => selectedStatuses.value.length === 3)
 const statusFilterOptions: {
   value: UploadStatus
   label: string
@@ -889,8 +879,11 @@ const statusFilterOptions: {
 }[] = [
   { value: 'rejected', label: '已退回', activeClass: 'border-red-200 bg-red-50 text-red-700' },
   { value: 'pending', label: '待审核', activeClass: 'border-amber-200 bg-amber-50 text-amber-700' },
+  { value: 'publishing', label: '发布中', activeClass: 'border-blue-200 bg-blue-50 text-blue-700' },
+  { value: 'publish_failed', label: '发布异常', activeClass: 'border-orange-200 bg-orange-50 text-orange-700' },
   { value: 'approved', label: '已通过', activeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
 ]
+const allStatusesSelected = computed(() => selectedStatuses.value.length === statusFilterOptions.length)
 
 const editBreadcrumbs = computed(() => {
   const parts = editCurrentPath.value.split('/').filter(Boolean)
@@ -927,7 +920,7 @@ const editRootUploadBlocked = computed(
 const canSaveEdit = computed(
   () => !editSubmitting.value
     && editResultFileCount.value > 0
-    && editResultFileCount.value <= MAX_FILE_COUNT
+    && editResultFileCount.value <= maxFileCount.value
     && !editFolderNameInvalid.value
     && !editRootUploadBlocked.value,
 )
@@ -942,6 +935,16 @@ const statusMeta = {
     label: '待审核',
     icon: Clock3,
     className: 'bg-amber-50 text-amber-700',
+  },
+  publishing: {
+    label: '发布中',
+    icon: Loader2,
+    className: 'bg-blue-50 text-blue-700',
+  },
+  publish_failed: {
+    label: '发布异常',
+    icon: AlertCircle,
+    className: 'bg-orange-50 text-orange-700',
   },
   approved: {
     label: '已通过',
@@ -990,15 +993,15 @@ const addFiles = (incoming: { file: File; relativePath?: string }[]) => {
   for (const incomingItem of incoming) {
     const file = incomingItem.file
     const relativePath = (incomingItem.relativePath || file.name).replaceAll('\\', '/').replace(/^\/+/, '')
-    if (next.length >= MAX_FILE_COUNT) {
-      rejected.push(`每次最多选择 ${MAX_FILE_COUNT} 个文件`)
+    if (next.length >= maxFileCount.value) {
+      rejected.push(`每次最多选择 ${maxFileCount.value} 个文件`)
       break
     }
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > maxFileSize.value) {
       rejected.push(`${file.name} 超过 100 MB`)
       continue
     }
-    if (!ALLOWED_EXTENSIONS.has(getExtension(file.name))) {
+    if (!allowedExtensions.value.has(getExtension(file.name))) {
       rejected.push(`${file.name} 的格式暂不支持`)
       continue
     }
@@ -1100,7 +1103,7 @@ const toggleStatusFilter = (status: UploadStatus) => {
 const selectAllStatuses = () => {
   selectedStatuses.value = allStatusesSelected.value
     ? []
-    : ['rejected', 'pending', 'approved']
+    : statusFilterOptions.map((option) => option.value)
 }
 
 const toggleRecordFiles = (requestId: number) => {
@@ -1195,15 +1198,15 @@ const addEditFiles = (incoming: { file: File; relativePath?: string }[]) => {
   for (const incomingItem of incoming) {
     const file = incomingItem.file
     const relativePath = (incomingItem.relativePath || file.name).replaceAll('\\', '/').replace(/^\/+/, '')
-    if (keptExistingFileCount.value + next.length >= MAX_FILE_COUNT) {
-      rejected.push(`每次最多保留和上传 ${MAX_FILE_COUNT} 个文件`)
+    if (keptExistingFileCount.value + next.length >= maxFileCount.value) {
+      rejected.push(`每次最多保留和上传 ${maxFileCount.value} 个文件`)
       break
     }
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > maxFileSize.value) {
       rejected.push(`${file.name} 超过 100 MB`)
       continue
     }
-    if (!ALLOWED_EXTENSIONS.has(getExtension(file.name))) {
+    if (!allowedExtensions.value.has(getExtension(file.name))) {
       rejected.push(`${file.name} 的格式暂不支持`)
       continue
     }
@@ -1262,6 +1265,18 @@ const loadDirectories = async () => {
     directoryError.value = '暂时无法读取本地目录缓存，请稍后重试'
   } finally {
     directoryLoading.value = false
+  }
+}
+
+const loadUploadConfig = async () => {
+  try {
+    const response = await api.get({ url: '/api/upload/config/' })
+    if (response.status !== 200) return
+    maxFileCount.value = response.content.max_file_count
+    maxFileSize.value = response.content.max_file_size
+    allowedExtensions.value = new Set(response.content.allowed_extensions)
+  } catch {
+    // Keep the safe bundled defaults when the configuration endpoint is temporarily unavailable.
   }
 }
 
@@ -1401,8 +1416,8 @@ const saveEdit = async () => {
     editSubmitError.value = '请至少保留或新上传一个文件'
     return
   }
-  if (editResultFileCount.value > MAX_FILE_COUNT) {
-    editSubmitError.value = `每次最多保留和上传 ${MAX_FILE_COUNT} 个文件`
+  if (editResultFileCount.value > maxFileCount.value) {
+    editSubmitError.value = `每次最多保留和上传 ${maxFileCount.value} 个文件`
     return
   }
   if (editFolderNameInvalid.value) {
@@ -1416,6 +1431,7 @@ const saveEdit = async () => {
 
   const requestId = editingRequest.value.id
   const formData = new FormData()
+  formData.append('expected_revision', String(editingRequest.value.revision))
   formData.append('target_path', editCurrentPath.value)
   if (editCreateNewFolder.value) formData.append('new_folder_name', editNewFolderName.value)
   removedExistingFileIds.value.forEach((fileId) => {
@@ -1442,6 +1458,19 @@ const saveEdit = async () => {
       },
     })
     if (response.status !== 200) {
+      if (response.status === 409) {
+        await loadUploadHistory()
+        const latestRecord = uploadHistory.value.find((record) => record.id === requestId)
+        if (latestRecord?.can_edit) {
+          await openEditDialog(latestRecord)
+          editSubmitError.value = '投稿内容已更新，已重新载入最新版本；请确认后再次保存。'
+        }
+        else {
+          resetEditDialog()
+          message.warning('投稿已进入发布流程或文件已清理，无法继续编辑。')
+        }
+        return
+      }
       editSubmitError.value = getErrorMessage(response.errors, '保存失败，请检查文件和目录后重试')
       return
     }
@@ -1467,13 +1496,14 @@ const refreshUploadHistoryWhenVisible = () => {
   if (
     document.visibilityState === 'visible'
     && !historyLoading.value
-    && uploadHistory.value.some((record) => record.status === 'pending')
+    && uploadHistory.value.some((record) => record.status === 'pending' || record.status === 'publishing')
   ) {
     loadUploadHistory()
   }
 }
 
 onMounted(() => {
+  loadUploadConfig()
   loadDirectories()
   loadUploadHistory()
   window.addEventListener('focus', refreshUploadHistoryWhenVisible)
