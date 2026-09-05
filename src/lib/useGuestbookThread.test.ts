@@ -1,3 +1,4 @@
+import { isReactive } from 'vue'
 import { describe, expect, it } from 'vitest'
 import { createGuestbookThread } from './useGuestbookThread'
 import type { GuestbookEntry } from '../types/api/guestbook'
@@ -9,6 +10,32 @@ const entry = (id: number, parent: number | null = 1): GuestbookEntry => ({
 })
 
 describe('guestbook discussion state', () => {
+  it('returns reactive branch state for a newly discovered reply', () => {
+    const thread = createGuestbookThread(async () => ({ results: [], max_page: 1 }))
+    thread.reset(entry(1, null))
+    const state = thread.branch(2)
+    expect(isReactive(state)).toBe(true)
+    expect(state.collapsed).toBe(false)
+    state.collapsed = true
+    expect(thread.branch(2).collapsed).toBe(true)
+  })
+
+  it('loads every page and nested branch for an expanded discussion', async () => {
+    const thread = createGuestbookThread(async (id, page) => {
+      if (id === 1) return {
+        results: page === 1 ? [{ ...entry(2), children_count: 1 }] : [entry(3)],
+        max_page: 2,
+      }
+      return { results: [entry(4, 2)], max_page: 1 }
+    })
+    thread.reset({ ...entry(1, null), children_count: 2, reply_count: 3 })
+    await thread.loadAll(1)
+    expect(thread.branch(1).ids).toEqual([2, 3])
+    expect(thread.branch(1).page).toBe(2)
+    expect(thread.branch(2).ids).toEqual([4])
+    expect(thread.entries[4]).toBeDefined()
+  })
+
   it('reveals a later-page target without skipping or duplicating paginated replies', async () => {
     const thread = createGuestbookThread(async (_id, page) => ({
       results: page === 1 ? Array.from({ length: 10 }, (_, i) => entry(i + 2)) : [entry(12)], max_page: 2,

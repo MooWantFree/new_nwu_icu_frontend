@@ -60,4 +60,16 @@ No actionable P0, P1, or P2 visual differences remain for the requested color an
 - `pnpm build`: passed.
 - Existing Vite large-chunk advisory remains and is unrelated to this visual change.
 
+## Addendum — Guestbook collapsed reply
+
+- Source visual truth path: `C:\Users\ms\AppData\Local\Temp\codex-clipboard-65cdd963-d8d9-42f2-ae7e-e1dd5ff0125b.png` (1713 × 1260 px).
+- Implementation: `http://localhost:5173/guestbook/3`, 959 × 911 CSS px at device pixel ratio 2.
+- Implementation screenshot: focused 860 × 90 inline Codex in-app Browser capture; the browser surface did not expose a filesystem path.
+- State: direct child reply collapsed while its parent remains expanded.
+- Full-view evidence: the existing NWU.ICU card system is intentionally preserved; the source is used for the reply-tree interaction pattern rather than wholesale Reddit restyling.
+- Focused-region evidence: the collapsed row contains only a circular plus, author, separator, and relative time. Body, actions, avatar, and descendants are hidden. Clicking the plus restores the complete reply and its loaded descendant.
+- Typography, spacing, colors, imagery, and copy: passed within scope. Existing product font and blue/neutral tokens remain; compact hierarchy matches the source; the icon comes from the installed Lucide set; author and relative time use live entry data.
+- Comparison history: the first pass found a P1 reactive-state defect for newly discovered branches. The branch factory now returns the reactive collection entry, a regression test covers it, and the post-fix browser pass verified collapse, expansion, descendant restoration, and zero console warnings or errors.
+- Result: no actionable P0, P1, or P2 differences remain for the requested collapsed-reply state.
+
 final result: passed

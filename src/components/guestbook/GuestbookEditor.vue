@@ -76,6 +76,9 @@ const buttons = computed(() => [
   { name: 'underline', title: '下划线', icon: UnderlineIcon, toggle: () => editor.value?.chain().focus().toggleUnderline().run() },
 ])
 
+const focus = () => editor.value?.commands.focus()
+defineExpose({ focus })
+
 onBeforeUnmount(() => editor.value?.destroy())
 </script>
 

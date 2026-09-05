@@ -1,12 +1,13 @@
 <template>
   <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
     <RouterLink to="/guestbook" class="mb-6 inline-block text-sm text-blue-700 hover:underline">← 返回留言板</RouterLink>
-    <GuestbookComposerModal v-if="replyTarget && userInfo" :key="`${userInfo.id}:${replyTarget}`" :user-id="userInfo.id" :parent-id="replyTarget" @close="replyTarget = null" @created="replyCreated" />
     <div v-if="loading" class="py-16 text-center text-gray-500">加载讨论中…</div>
     <template v-else-if="entry">
       <p v-if="!userInfo" class="mb-4 text-sm text-gray-600">登录后可参与讨论。</p>
       <GuestbookThreadNode :key="entry.id" :entry-id="entry.id" :thread="thread" :level="0" :focus-id="focusId" :pending="pending"
-        @like="setLike" @reply="startReply" @delete="remove" @report="report" />
+        :reply-target-id="replyTarget" :reply-user-id="userInfo?.id"
+        @like="setLike" @reply="startReply" @delete="remove" @report="report"
+        @cancel-reply="replyTarget = null" @reply-created="replyCreated" />
     </template>
     <div v-else class="py-16 text-center text-gray-500">留言不存在或暂时无法加载。<button class="ml-2 text-blue-700" @click="refresh">重试</button></div>
   </main>
@@ -16,7 +17,6 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import GuestbookComposerModal from '@/components/guestbook/GuestbookComposerModal.vue'
 import GuestbookThreadNode from '@/components/guestbook/GuestbookThreadNode.vue'
 import { api } from '@/lib/requests'
 import { useUser } from '@/lib/useUser'
@@ -74,6 +74,8 @@ const refresh = async () => {
     if (response.status !== 200) throw new Error('留言不存在')
     root.value = response.content.entry.id
     thread.reset(response.content.entry)
+    await thread.loadAll(response.content.entry.id)
+    if (version !== requestVersion) return
     loading.value = false
     await revealFocus()
     if (version === requestVersion) openLinkedReply()

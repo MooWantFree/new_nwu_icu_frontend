@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref, type App } from 'vue'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
+import Guestbook from '@/views/guestbook/Guestbook.vue'
 import GuestbookDetail from '@/views/guestbook/GuestbookDetail.vue'
 import GuestbookComposerModal from './GuestbookComposerModal.vue'
+import GuestbookReplyComposer from './GuestbookReplyComposer.vue'
 import { api } from '@/lib/requests'
 import { loadGuestbookDraft, saveGuestbookDraft } from '@/lib/guestbook'
 import type { GuestbookEntry } from '@/types/api/guestbook'
@@ -51,6 +53,30 @@ beforeEach(() => {
 afterEach(() => { app?.unmount(); container.remove(); vi.restoreAllMocks() })
 
 describe('guestbook rendered flows', () => {
+  it('renders the complete discussion tree on the board without detail links', async () => {
+    const root = { ...entry(1, null, 1), reply_count: 2 }
+    const child = entry(2, 1, 1)
+    const leaf = entry(3, 2)
+    vi.mocked(api.get).mockImplementation(async ({ url, params }: any) => {
+      if (url === '/api/guestbook/') return { status: 200, content: { results: [root], max_page: 1 } } as any
+      return { status: 200, content: { results: params.id === 1 ? [child] : [leaf], max_page: 1 } } as any
+    })
+    const router = createRouter({ history: createMemoryHistory(), routes: [
+      { path: '/guestbook', component: Guestbook },
+      { path: '/user/:id', component: { render: () => null } },
+      { path: '/login', name: 'login', component: { render: () => null } },
+    ] })
+    await router.push('/guestbook')
+    app = createApp({ render: () => h(RouterView) }).use(router)
+    app.component('n-pagination', { render: () => null })
+    app.mount(container)
+    await flush()
+    expect(container.querySelector('#guestbook-1')).not.toBeNull()
+    expect(container.querySelector('#guestbook-2')).not.toBeNull()
+    expect(container.querySelector('#guestbook-3')).not.toBeNull()
+    expect([...container.querySelectorAll('a')].some(link => /^\/guestbook\/\d/.test(link.getAttribute('href') || ''))).toBe(false)
+  })
+
   it('lets visitors read and locate nested replies on later pages and sends reply actions to login', async () => {
     const root = entry(1, null, 11)
     const target = entry(12, 1, 1)
@@ -128,5 +154,32 @@ describe('guestbook rendered flows', () => {
     await flush()
     expect(container.querySelector('form')).toBeNull()
     expect(loadGuestbookDraft(1, null)).toBeNull()
+  })
+
+  it('submits a reply from the inline floor composer', async () => {
+    const parent = entry(9, null)
+    const reply = entry(10, 9)
+    saveGuestbookDraft(1, 9, { content: '<p>inline reply</p>', anonymous: false, updatedAt: '' })
+    vi.mocked(api.post).mockResolvedValue({ status: 201, content: { entry: reply }, data: { message: '' } } as any)
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/guestbook', component: { render: () => null } }] })
+    await router.push('/guestbook')
+    const Host = defineComponent({ setup() {
+      const opened = ref(true)
+      return () => opened.value ? h(GuestbookReplyComposer, {
+        userId: 1,
+        parent,
+        onCreated: () => { opened.value = false },
+      }) : null
+    } })
+    app = createApp(Host).use(router)
+    app.mount(container)
+    container.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await flush()
+    expect(api.post).toHaveBeenCalledWith(expect.objectContaining({
+      url: '/api/guestbook/:id/replies/',
+      params: { id: 9 },
+    }))
+    expect(container.querySelector('form')).toBeNull()
+    expect(loadGuestbookDraft(1, 9)).toBeNull()
   })
 })
