@@ -1,58 +1,5 @@
 <template>
-  <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-500">
-    <div class="flex items-center space-x-4">
-      <!-- Dropdown Menu -->
-      <div
-        v-if="isAuthor"
-        class="relative inline-block text-left"
-        ref="dropdownMenuRef"
-      >
-        <button
-          @click="toggleDropdownMenu"
-          id="dropdownButton"
-          type="button"
-          class="inline-flex items-center rounded-lg border border-slate-200 bg-white p-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          aria-expanded="true"
-          aria-haspopup="true"
-        >
-          <span class="sr-only">打开下拉菜单</span>
-          <EllipsisVertical class="w-5 h-5" />
-        </button>
-
-        <div
-          v-if="showDropdownMenu"
-          id="dropdownMenu"
-          class="z-50 origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
-          role="menu"
-          aria-orientation="vertical"
-          aria-labelledby="dropdownButton"
-          tabindex="-1"
-        >
-          <div class="py-1" role="none">
-            <button
-              @click="handleEdit"
-              class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
-              role="menuitem"
-              tabindex="-1"
-              id="editButton"
-            >
-              <Pencil class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-              编辑评价
-            </button>
-            <button
-              @click="handleDelete"
-              class="group flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-100 hover:text-red-900 w-full text-left"
-              role="menuitem"
-              tabindex="-1"
-              id="deleteButton"
-            >
-              <Trash2 class="mr-3 h-5 w-5 text-red-400 group-hover:text-red-500" />
-              删除评价
-            </button>
-          </div>
-        </div>
-      </div>
-
+  <div class="flex items-center pt-3 text-sm text-slate-500">
       <div class="flex items-center space-x-2">
         <button
           @click="
@@ -93,59 +40,20 @@
           <span>{{ review.like.dislike }}</span>
         </button>
       </div>
-    </div>
-
-    <div class="flex flex-col items-center space-x-2">
-      <Time :time="new Date(review.created_time)" />
-      <div v-if="review.edited">
-        <span
-          >(最后修改于: <Time :time="new Date(review.modified_time)" />)</span
-        >
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { onClickOutside } from '@vueuse/core'
-import Time from '@/components/tinyComponents/Time.vue'
 import { useUser } from '@/lib/useUser'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { ThumbsUp, ThumbsDown, EllipsisVertical, Pencil, Trash2 } from 'lucide-vue-next'
+import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import { Review } from '@/types/courseReview'
 
-const { review, isAuthor } = defineProps<{
+const { review } = defineProps<{
   review: Review
-  isAuthor: boolean
 }>()
-
-const emit = defineEmits<{
-  (e: 'reviewEdit'): void
-  (e: 'reviewDelete'): void
-}>()
-
-const dropdownMenuRef = ref(null)
-const showDropdownMenu = ref(false)
-
-onClickOutside(dropdownMenuRef, () => {
-  showDropdownMenu.value = false
-})
-
-const toggleDropdownMenu = () => {
-  showDropdownMenu.value = !showDropdownMenu.value
-}
-
-const handleEdit = () => {
-  emit('reviewEdit')
-  showDropdownMenu.value = false
-}
-
-const handleDelete = () => {
-  emit('reviewDelete')
-  showDropdownMenu.value = false
-}
 
 const isLikeNDislikeButtonDisabled = ref(false)
 const { isLoggedIn } = useUser()

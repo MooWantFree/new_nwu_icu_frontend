@@ -1,13 +1,13 @@
 <template>
   <article class="min-w-0" ref="courseReviewItem">
-    <ReviewHeader :review="review" :is-author="isAuthor" />
-    <ReviewContent :review="review" />
-    <ReviewBottom
+    <ReviewHeader
       :review="review"
       :is-author="isAuthor"
       @review-edit="handleEdit"
       @review-delete="handleDeleteReview"
     />
+    <ReviewContent :review="review" />
+    <ReviewBottom :review="review" />
     <ReviewReplies :review="review" @reply-deleted="handleReplyDeleted" />
   </article>
 </template>
