@@ -171,9 +171,9 @@ const menuOptions = [
     path: '/upload',
   },
   {
-    key: 'about',
-    text: '公告',
-    path: '/blog',
+    key: 'announcements',
+    text: '公告栏',
+    path: '/announcements',
   },
 ]
 

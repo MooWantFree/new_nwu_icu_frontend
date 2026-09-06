@@ -6,6 +6,9 @@ import type { Captcha } from './captcha'
 import type { Text } from './text'
 import type { FileAPI } from './file'
 import type {
+  APIAnnouncementContext,
+  APIAnnouncementDetail,
+  APIAnnouncementList,
   APIGuestbookContext,
   APIGuestbookDetail,
   APIGuestbookList,
@@ -72,6 +75,10 @@ export type RequestEndpoints = {
     '/api/guestbook/:id/': APIGuestbookDetail
     '/api/guestbook/:id/replies/': APIGuestbookReplies
     '/api/guestbook/:id/context/': APIGuestbookContext
+    '/api/announcements/': APIAnnouncementList
+    '/api/announcements/:id/': APIAnnouncementDetail
+    '/api/announcements/:id/replies/': import('./guestbook').APIAnnouncementReplies
+    '/api/announcements/:id/context/': APIAnnouncementContext
 
     // Disk
     // Since Alist's API format is not same as present, so another method is used for it.
@@ -125,6 +132,9 @@ export type RequestEndpoints = {
     '/api/guestbook/': import('./guestbook').APICreateGuestbook
     '/api/guestbook/:id/replies/': import('./guestbook').APICreateGuestbookReply
     '/api/guestbook/:id/reports/': import('./guestbook').APIReportGuestbook
+    '/api/announcements/': import('./guestbook').APICreateAnnouncement
+    '/api/announcements/:id/replies/': import('./guestbook').APICreateAnnouncementReply
+    '/api/announcements/:id/reports/': import('./guestbook').APIReportAnnouncement
   }
   [MethodMap.DELETE]: {
     // CourseReview
@@ -136,6 +146,7 @@ export type RequestEndpoints = {
     // File
     '/api/delete/:uuid/': FileAPI.APIFileDelete
     '/api/guestbook/:id/': import('./guestbook').APIDeleteGuestbook
+    '/api/announcements/:id/': import('./guestbook').APIDeleteAnnouncement
   }
   [MethodMap.PUT]: {
     // CourseReview
@@ -143,5 +154,6 @@ export type RequestEndpoints = {
     '/api/assessment/review/': Review.APIUpdateReview
     '/api/upload/request/:requestId/': APIResourceUploadUpdate
     '/api/guestbook/:id/like/': import('./guestbook').APISetGuestbookLike
+    '/api/announcements/:id/like/': import('./guestbook').APISetAnnouncementLike
   }
 }

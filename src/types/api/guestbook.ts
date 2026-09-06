@@ -27,6 +27,8 @@ export type GuestbookEntry = {
   liked_by_me: boolean
 }
 
+export type DiscussionBoard = 'guestbook' | 'announcements'
+
 const pageQuery = z.object({ page: z.number().optional(), pageSize: z.number().optional() })
 const contentQuery = z.object({ content: z.string(), anonymous: z.boolean().optional(), submission_id: z.string().uuid() })
 const replyQuery = z.object({ content: z.string(), submission_id: z.string().uuid() })
@@ -92,3 +94,13 @@ export type APIGuestbookContext = {
   params: { id: number }
   response: { root_id: number; path: number[]; entries: GuestbookEntry[] }
 }
+
+export type APIAnnouncementList = Omit<APIGuestbookList, 'endpoint'> & { endpoint: '/api/announcements/' }
+export type APICreateAnnouncement = Omit<APICreateGuestbook, 'endpoint'> & { endpoint: '/api/announcements/' }
+export type APIAnnouncementDetail = Omit<APIGuestbookDetail, 'endpoint'> & { endpoint: '/api/announcements/:id/' }
+export type APIDeleteAnnouncement = Omit<APIDeleteGuestbook, 'endpoint'> & { endpoint: '/api/announcements/:id/' }
+export type APIAnnouncementReplies = Omit<APIGuestbookReplies, 'endpoint'> & { endpoint: '/api/announcements/:id/replies/' }
+export type APICreateAnnouncementReply = Omit<APICreateGuestbookReply, 'endpoint'> & { endpoint: '/api/announcements/:id/replies/' }
+export type APISetAnnouncementLike = Omit<APISetGuestbookLike, 'endpoint'> & { endpoint: '/api/announcements/:id/like/' }
+export type APIReportAnnouncement = Omit<APIReportGuestbook, 'endpoint'> & { endpoint: '/api/announcements/:id/reports/' }
+export type APIAnnouncementContext = Omit<APIGuestbookContext, 'endpoint'> & { endpoint: '/api/announcements/:id/context/' }

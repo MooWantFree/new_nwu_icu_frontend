@@ -1,8 +1,8 @@
 import { computed, onScopeDispose, ref, watch } from 'vue'
 import { clearGuestbookDraft, guestbookTextLength, loadGuestbookDraft, saveGuestbookDraft } from './guestbook'
 
-export function useGuestbookDraft(userId: number, parentId: number | null) {
-  const saved = loadGuestbookDraft(userId, parentId)
+export function useGuestbookDraft(userId: number, parentId: number | null, board = 'guestbook') {
+  const saved = loadGuestbookDraft(userId, parentId, board)
   const content = ref(saved?.content ?? '')
   const anonymous = ref(parentId === null && (saved?.anonymous ?? false))
   const submissionId = ref(saved?.submissionId ?? crypto.randomUUID())
@@ -18,8 +18,8 @@ export function useGuestbookDraft(userId: number, parentId: number | null) {
       ? saveGuestbookDraft(userId, parentId, {
         content: content.value, anonymous: anonymous.value, submissionId: submissionId.value,
         updatedAt: new Date().toISOString(),
-      })
-      : clearGuestbookDraft(userId, parentId)
+      }, board)
+      : clearGuestbookDraft(userId, parentId, board)
     saveState.value = ok ? (textLength.value ? 'saved' : 'empty') : 'failed'
     return ok
   }
@@ -41,9 +41,9 @@ export function useGuestbookDraft(userId: number, parentId: number | null) {
     clearTimeout(timer)
     content.value = ''
     anonymous.value = false
-    const cleared = clearGuestbookDraft(userId, parentId) || saveGuestbookDraft(userId, parentId, {
+    const cleared = clearGuestbookDraft(userId, parentId, board) || saveGuestbookDraft(userId, parentId, {
       content: '', anonymous: false, updatedAt: new Date().toISOString(),
-    })
+    }, board)
     saveState.value = cleared ? 'empty' : 'failed'
     return cleared
   }

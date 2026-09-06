@@ -2,13 +2,13 @@
   <NModal :show="true" @update:show="close">
     <div role="dialog" aria-modal="true" aria-labelledby="guestbook-composer-title" class="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
-        <h2 id="guestbook-composer-title" class="text-xl font-semibold">{{ isReply ? '添加回复' : '添加留言' }}</h2>
+        <h2 id="guestbook-composer-title" class="text-xl font-semibold">{{ isReply ? '添加回复' : `添加${itemLabel}` }}</h2>
         <button type="button" aria-label="关闭编辑窗口" :disabled="submitting" class="px-2 text-xl text-gray-500" @click="close">×</button>
       </div>
       <form @submit.prevent="submit">
-        <GuestbookEditor v-model="content" :disabled="submitting" :placeholder="isReply ? '写下你的回复…' : '写下你的留言…'" />
+        <GuestbookEditor v-model="content" :disabled="submitting" :placeholder="isReply ? '写下你的回复…' : `写下你的${itemLabel}…`" />
         <div class="mt-3 flex flex-wrap justify-between gap-2 text-sm text-gray-500">
-          <label v-if="!isReply" class="flex items-center gap-2"><input v-model="anonymous" :disabled="submitting" type="checkbox" />匿名发布</label>
+          <label v-if="!isReply && board === 'guestbook'" class="flex items-center gap-2"><input v-model="anonymous" :disabled="submitting" type="checkbox" />匿名发布</label>
           <span v-else>回复将显示你的昵称和头像</span>
           <span :class="{ 'text-red-600': textLength > 500 }">{{ textLength }} / 500</span>
         </div>
@@ -32,16 +32,17 @@ import { NModal, useMessage } from 'naive-ui'
 import GuestbookEditor from './GuestbookEditor.vue'
 import { useGuestbookDraft } from '@/lib/useGuestbookDraft'
 import { api } from '@/lib/requests'
-import type { GuestbookEntry } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
-const props = defineProps<{ userId: number; parentId?: number | null }>()
+const props = withDefaults(defineProps<{ userId: number; parentId?: number | null; board?: DiscussionBoard }>(), { board: 'guestbook' })
 const emit = defineEmits<{ (event: 'close'): void; (event: 'created', entry: GuestbookEntry): void }>()
 const message = useMessage()
 const router = useRouter()
 // A composer belongs to one account and target for its entire lifetime.
 const parentId = props.parentId ?? null
 const isReply = parentId !== null
-const { content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, parentId)
+const itemLabel = props.board === 'announcements' ? '公告' : '留言'
+const { content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, parentId, props.board)
 const submitting = ref(false)
 
 const canLeave = () => {
@@ -68,13 +69,17 @@ const submit = async () => {
   submitting.value = true
   try {
     const query = { content: content.value, submission_id: submissionId.value }
-    const response = isReply
-      ? await api.post({ url: '/api/guestbook/:id/replies/', params: { id: parentId! }, query })
-      : await api.post({ url: '/api/guestbook/', query: { ...query, anonymous: anonymous.value } })
+    const response = props.board === 'announcements'
+      ? (isReply
+        ? await api.post({ url: '/api/announcements/:id/replies/', params: { id: parentId! }, query })
+        : await api.post({ url: '/api/announcements/', query: { ...query, anonymous: false } }))
+      : (isReply
+        ? await api.post({ url: '/api/guestbook/:id/replies/', params: { id: parentId! }, query })
+        : await api.post({ url: '/api/guestbook/', query: { ...query, anonymous: anonymous.value } }))
     if (response.status !== 201) throw new Error(response.data.message || '发布失败，请稍后重试')
     if (!markPublished()) message.warning('已发布，但浏览器未能清除旧草稿。再次打开时请核对内容。')
     submitting.value = false
-    message.success(isReply ? '回复已发布' : '留言已发布')
+    message.success(isReply ? '回复已发布' : `${itemLabel}已发布`)
     emit('created', response.content.entry)
   } catch (error) {
     message.error(error instanceof Error ? error.message : '发布失败，请稍后重试')

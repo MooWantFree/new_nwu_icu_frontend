@@ -34,9 +34,9 @@ import { useMessage } from 'naive-ui'
 import GuestbookEditor from './GuestbookEditor.vue'
 import { useGuestbookDraft } from '@/lib/useGuestbookDraft'
 import { api } from '@/lib/requests'
-import type { GuestbookEntry } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
-const props = defineProps<{ userId: number; parent: GuestbookEntry }>()
+const props = withDefaults(defineProps<{ userId: number; parent: GuestbookEntry; board?: DiscussionBoard }>(), { board: 'guestbook' })
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'created', entry: GuestbookEntry): void
@@ -45,7 +45,7 @@ const message = useMessage()
 const router = useRouter()
 const editor = useTemplateRef<InstanceType<typeof GuestbookEditor>>('editor')
 const titleId = `guestbook-reply-title-${props.parent.id}`
-const { content, submissionId, textLength, saveState, persist, markPublished } = useGuestbookDraft(props.userId, props.parent.id)
+const { content, submissionId, textLength, saveState, persist, markPublished } = useGuestbookDraft(props.userId, props.parent.id, props.board)
 const submitting = ref(false)
 
 const canLeave = () => {
@@ -71,11 +71,10 @@ const submit = async () => {
   persist()
   submitting.value = true
   try {
-    const response = await api.post({
-      url: '/api/guestbook/:id/replies/',
-      params: { id: props.parent.id },
-      query: { content: content.value, submission_id: submissionId.value },
-    })
+    const request = { params: { id: props.parent.id }, query: { content: content.value, submission_id: submissionId.value } }
+    const response = props.board === 'announcements'
+      ? await api.post({ url: '/api/announcements/:id/replies/', ...request })
+      : await api.post({ url: '/api/guestbook/:id/replies/', ...request })
     if (response.status !== 201) throw new Error(response.data.message || '回复失败，请稍后重试')
     if (!markPublished()) message.warning('已回复，但浏览器未能清除旧草稿。再次打开时请核对内容。')
     message.success('回复已发布')

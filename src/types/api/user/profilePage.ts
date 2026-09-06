@@ -152,6 +152,7 @@ export type APIUserProfile = {
     college_email?: string
     verified: boolean
     is_me: true
+    is_staff: boolean
   }
   errors: ErrorFactory<ErrorNotLogin>[]
 }

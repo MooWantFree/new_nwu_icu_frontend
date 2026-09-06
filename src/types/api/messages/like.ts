@@ -23,6 +23,9 @@ export type APILikeList = {
       source: 'guestbook'
       guestbook: { root_id: number; entry_id: number }
     } | {
+      source: 'announcement'
+      guestbook: { root_id: number; entry_id: number }
+    } | {
       source?: undefined
       raw_info: {
         course: {

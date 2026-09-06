@@ -8,14 +8,14 @@
           class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-200 transition-colors group-hover:bg-gray-400 group-focus-visible:bg-blue-600" />
       </button>
       <div class="min-w-0 flex-1 space-y-3 pl-1 sm:pl-2">
-        <GuestbookEntryCard :entry="entry" :highlighted="focusId === entry.id" :like-pending="pending.has(entry.id)"
+        <GuestbookEntryCard :entry="entry" :highlighted="focusId === entry.id" :like-pending="pending.has(entry.id)" :board="board"
           @like="emit('like', $event)" @reply="emit('reply', $event)" @delete="emit('delete', $event)"
           @report="(item, reason) => emit('report', item, reason)" />
-        <GuestbookReplyComposer v-if="replyTargetId === entry.id && replyUserId" :user-id="replyUserId" :parent="entry"
+        <GuestbookReplyComposer v-if="replyTargetId === entry.id && replyUserId" :user-id="replyUserId" :parent="entry" :board="board"
           @close="emit('cancelReply')" @created="emit('replyCreated', $event)" />
         <div v-if="entry.children_count || state.ids.length" class="space-y-3">
           <GuestbookThreadNode v-for="id in state.ids" :key="id" :entry-id="id" :thread="thread" :level="level + 1" :focus-id="focusId" :pending="pending"
-            :reply-target-id="replyTargetId" :reply-user-id="replyUserId"
+            :reply-target-id="replyTargetId" :reply-user-id="replyUserId" :board="board"
             @like="emit('like', $event)" @reply="emit('reply', $event)" @delete="emit('delete', $event)"
             @report="(item, reason) => emit('report', item, reason)" @cancel-reply="emit('cancelReply')"
             @reply-created="emit('replyCreated', $event)" />
@@ -49,7 +49,7 @@ import GuestbookEntryCard from './GuestbookEntryCard.vue'
 import GuestbookReplyComposer from './GuestbookReplyComposer.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import type { GuestbookThread } from '@/lib/useGuestbookThread'
-import type { GuestbookEntry, APIReportGuestbook } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry, APIReportGuestbook } from '@/types/api/guestbook'
 
 defineOptions({ name: 'GuestbookThreadNode' })
 const props = defineProps<{
@@ -60,6 +60,7 @@ const props = defineProps<{
   pending: Set<number>
   replyTargetId?: number | null
   replyUserId?: number
+  board?: DiscussionBoard
 }>()
 const emit = defineEmits<{
   (event: 'like' | 'reply' | 'delete', entry: GuestbookEntry): void

@@ -17,7 +17,7 @@
           </button>
           <button v-if="!entry.is_deleted" :disabled="likePending" class="inline-flex items-center gap-1 hover:text-blue-700" @click="$emit('reply', entry)"><MessageCircle class="h-4 w-4" /> 回复</button>
           <span v-if="entry.parent_id === null" class="inline-flex items-center gap-1"><MessagesSquare class="h-4 w-4" /> {{ entry.reply_count || 0 }} 条回复</span>
-          <button v-if="!entry.is_deleted" :disabled="likePending" class="ml-auto text-gray-400 hover:text-red-600" @click="showReport = !showReport">举报</button>
+          <button v-if="!entry.is_deleted && (board !== 'announcements' || entry.parent_id !== null)" :disabled="likePending" class="ml-auto text-gray-400 hover:text-red-600" @click="showReport = !showReport">举报</button>
           <button v-if="entry.is_me && !entry.is_deleted" :disabled="likePending" class="text-gray-400 hover:text-red-600" @click="remove">删除</button>
         </div>
         <div v-if="showReport && !entry.is_deleted" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm">
@@ -35,9 +35,9 @@ import { MessageCircle, MessagesSquare, ThumbsUp } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import { sanitizeGuestbookHtml } from '@/lib/guestbook'
-import type { GuestbookEntry } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
-const props = defineProps<{ entry: GuestbookEntry; highlighted?: boolean; likePending?: boolean }>()
+const props = withDefaults(defineProps<{ entry: GuestbookEntry; highlighted?: boolean; likePending?: boolean; board?: DiscussionBoard }>(), { board: 'guestbook' })
 const emit = defineEmits<{
   (event: 'like', entry: GuestbookEntry): void
   (event: 'reply', entry: GuestbookEntry): void

@@ -52,10 +52,10 @@
           </div>
 
           <div class="p-4">
-            <template v-if="reply.source === 'guestbook'">
+            <template v-if="reply.source === 'guestbook' || reply.source === 'announcement'">
               <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm md:text-base text-gray-700">
                 有人回复了你的
-                <RouterLink :to="`/guestbook/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-700 hover:underline">留言板内容</RouterLink>
+                <RouterLink :to="`/${reply.source === 'announcement' ? 'announcements' : 'guestbook'}/${reply.guestbook.root_id}?focus=${reply.guestbook.entry_id}`" class="text-blue-700 hover:underline">{{ reply.source === 'announcement' ? '公告栏内容' : '留言板内容' }}</RouterLink>
               </div>
               <div class="mt-2 text-sm text-gray-600" v-html="sanitizeGuestbookHtml(reply.reply.content)" />
             </template>

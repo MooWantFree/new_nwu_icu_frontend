@@ -30,6 +30,9 @@ export type APINotificationList = {
       source: 'guestbook'
       guestbook: { root_id: number; entry_id: number; target_id: number }
     } | {
+      source: 'announcement'
+      guestbook: { root_id: number; entry_id: number; target_id: number }
+    } | {
       source?: undefined
       course: {
         id: number

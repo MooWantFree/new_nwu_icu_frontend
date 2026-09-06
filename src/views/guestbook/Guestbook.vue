@@ -1,22 +1,22 @@
 <template>
   <AppPageLayout
-    title="留言板"
-    description="分享想法，也欢迎友善地参与讨论。"
+    :title="isAnnouncements ? '公告栏' : '留言板'"
+    :description="isAnnouncements ? '查看站内公告，也欢迎友善地参与讨论。' : '分享想法，也欢迎友善地参与讨论。'"
   >
     <template #actions>
-      <button class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">添加留言</button>
+      <button v-if="!isAnnouncements || userInfo?.is_staff" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">{{ isAnnouncements ? '添加公告' : '添加留言' }}</button>
     </template>
 
-    <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" @close="composerOpen = false" @created="created" />
-    <div v-if="loading" class="py-16 text-center text-gray-500">加载留言中…</div>
-    <div v-else-if="loadFailed" class="py-16 text-center text-gray-500">获取留言失败。<button class="ml-2 text-blue-700" @click="load">重试</button></div>
+    <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" :board="board" @close="composerOpen = false" @created="created" />
+    <div v-if="loading" class="py-16 text-center text-gray-500">加载{{ itemLabel }}中…</div>
+    <div v-else-if="loadFailed" class="py-16 text-center text-gray-500">获取{{ itemLabel }}失败。<button class="ml-2 text-blue-700" @click="load">重试</button></div>
     <div v-else-if="entries.length" class="space-y-4">
       <GuestbookThreadNode v-for="entry in entries" :key="entry.id" :entry-id="entry.id" :thread="thread" :level="0"
-        :pending="pending" :reply-target-id="replyTarget" :reply-user-id="userInfo?.id"
+        :pending="pending" :reply-target-id="replyTarget" :reply-user-id="userInfo?.id" :board="board"
         @like="setLike" @reply="reply" @delete="remove" @report="report"
         @cancel-reply="replyTarget = null" @reply-created="replyCreated" />
     </div>
-    <div v-else class="rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center text-gray-500">还没有留言，来写下第一条吧。</div>
+    <div v-else class="rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center text-gray-500">{{ isAnnouncements ? '暂无公告。' : '还没有留言，来写下第一条吧。' }}</div>
     <div v-if="pageCount > 1" class="mt-8 flex justify-center"><n-pagination :page="page" :page-count="pageCount" @update:page="changePage" /></div>
   </AppPageLayout>
 </template>
@@ -31,12 +31,15 @@ import { api } from '@/lib/requests'
 import { useUser } from '@/lib/useUser'
 import { useGuestbookActions } from '@/lib/useGuestbookActions'
 import { createGuestbookThread } from '@/lib/useGuestbookThread'
-import type { GuestbookEntry } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
 const route = useRoute()
 const router = useRouter()
+const isAnnouncements = computed(() => route.name === 'announcements')
+const board = computed<DiscussionBoard>(() => isAnnouncements.value ? 'announcements' : 'guestbook')
+const itemLabel = computed(() => isAnnouncements.value ? '公告' : '留言')
 const { userInfo } = useUser()
-const { pending, requireLogin, setLike, remove, report } = useGuestbookActions()
+const { pending, requireLogin, setLike, remove, report } = useGuestbookActions(board)
 const rootIds = ref<number[]>([])
 const loading = ref(true)
 const loadFailed = ref(false)
@@ -46,7 +49,10 @@ const composerOpen = ref(false)
 const replyTarget = ref<number | null>(null)
 let requestVersion = 0
 const thread = createGuestbookThread(async (id, replyPage) => {
-  const response = await api.get({ url: '/api/guestbook/:id/replies/', params: { id }, query: { page: replyPage, pageSize: 100 } })
+  const request = { params: { id }, query: { page: replyPage, pageSize: 100 } }
+  const response = board.value === 'announcements'
+    ? await api.get({ url: '/api/announcements/:id/replies/', ...request })
+    : await api.get({ url: '/api/guestbook/:id/replies/', ...request })
   if (response.status !== 200) throw new Error('获取回复失败')
   return response.content
 })
@@ -57,7 +63,10 @@ const load = async () => {
   loading.value = true
   loadFailed.value = false
   try {
-    const response = await api.get({ url: '/api/guestbook/', query: { page: page.value, pageSize: 10 } })
+    const query = { page: page.value, pageSize: 10 }
+    const response = board.value === 'announcements'
+      ? await api.get({ url: '/api/announcements/', query })
+      : await api.get({ url: '/api/guestbook/', query })
     if (version !== requestVersion) return
     if (response.status !== 200) throw new Error('获取留言失败')
     thread.resetAll(response.content.results)
@@ -70,7 +79,8 @@ const load = async () => {
 }
 const changePage = (value: number) => router.push({ query: { ...route.query, page: String(value) } })
 const openComposer = () => {
-  if (requireLogin('/guestbook?compose=1')) composerOpen.value = true
+  if (isAnnouncements.value && !userInfo.value?.is_staff) return
+  if (requireLogin(`${isAnnouncements.value ? '/announcements' : '/guestbook'}?compose=1`)) composerOpen.value = true
 }
 const created = async () => {
   composerOpen.value = false
@@ -78,7 +88,7 @@ const created = async () => {
   else await load()
 }
 const reply = (entry: GuestbookEntry) => {
-  if (entry.is_deleted || !requireLogin('/guestbook')) return
+  if (entry.is_deleted || !requireLogin(isAnnouncements.value ? '/announcements' : '/guestbook')) return
   thread.branch(entry.id).collapsed = false
   replyTarget.value = entry.id
 }
@@ -89,9 +99,9 @@ const replyCreated = async (entry: GuestbookEntry) => {
   document.getElementById(`guestbook-${entry.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-watch([page, () => userInfo.value?.id], () => { void load() }, { immediate: true })
+watch([page, board, () => userInfo.value?.id], () => { void load() }, { immediate: true })
 watch(() => [userInfo.value?.id, route.query.compose], async ([user, compose]) => {
-  if (user && compose === '1') {
+  if (user && compose === '1' && (!isAnnouncements.value || userInfo.value?.is_staff)) {
     await router.replace({ query: { ...route.query, compose: undefined } })
     composerOpen.value = true
   }

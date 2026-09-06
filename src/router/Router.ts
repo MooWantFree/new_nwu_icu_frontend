@@ -230,6 +230,20 @@ const guestbookRoutes = [
     component: () => import('@/views/guestbook/GuestbookDetail.vue'),
     meta: { pageTitle: '留言板讨论' },
   },
+  {
+    path: '/announcements',
+    alias: '/blog',
+    name: 'announcements',
+    component: () => import('@/views/guestbook/Guestbook.vue'),
+    meta: { pageTitle: '公告栏' },
+  },
+  {
+    path: '/announcements/:id(\\d+)',
+    alias: '/blog/:id(\\d+)',
+    name: 'announcementDetail',
+    component: () => import('@/views/guestbook/GuestbookDetail.vue'),
+    meta: { pageTitle: '公告栏讨论' },
+  },
 ] satisfies RouteRecordRaw[]
 
 const routes = [
@@ -252,22 +266,6 @@ const routes = [
     component: () => import('@/views/Home.vue'),
     meta: {
       pageTitle: '主页',
-    },
-  },
-  {
-    path: '/blog',
-    name: 'blogs',
-    component: () => import('@/views/blog/catalog.vue'),
-    meta: {
-      pageTitle: '文章目录',
-    },
-  },
-  {
-    path: '/blog/:id',
-    name: 'blog',
-    component: () => import('@/views/blog/article.vue'),
-    meta: {
-      pageTitle: '文章',
     },
   },
   ...systemInfoRoutes,
