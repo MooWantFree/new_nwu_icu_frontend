@@ -61,37 +61,25 @@
                 <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   <div class="flex items-center justify-between">
                     <span class="text-sm font-medium text-gray-700">课程难度：</span>
-                    <div class="flex items-center">
-                      <Rate :max="3" v-model="difficulty" class="mx-2" />
-                      <span class="text-gray-600 text-xs">{{ ratingTooltip(difficulty) }}</span>
-                    </div>
+                    <ReviewMetricScale v-model="difficulty" label="课程难度" :levels="['很简单', '较简单', '适中', '较难', '很难']" />
                   </div>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">作业多少：</span>
-                    <div class="flex items-center">
-                      <Rate :max="3" v-model="homework" class="mx-2" />
-                      <span class="text-gray-600 text-xs">{{ ratingTooltip(homework) }}</span>
-                    </div>
+                    <span class="text-sm font-medium text-gray-700">作业负担：</span>
+                    <ReviewMetricScale v-model="homework" label="作业负担" :levels="['很少', '较少', '适中', '较多', '很多']" />
                   </div>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">给分好坏：</span>
-                    <div class="flex items-center">
-                      <Rate :max="3" v-model="grade" class="mx-2" />
-                      <span class="text-gray-600 text-xs">{{ ratingTooltip(grade) }}</span>
-                    </div>
+                    <span class="text-sm font-medium text-gray-700">给分情况：</span>
+                    <ReviewMetricScale v-model="grade" label="给分情况" :levels="['很严', '偏严', '一般', '偏宽', '很宽']" />
                   </div>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">收获大小：</span>
-                    <div class="flex items-center">
-                      <Rate :max="3" v-model="reward" class="mx-2" />
-                      <span class="text-gray-600 text-xs">{{ ratingTooltip(reward) }}</span>
-                    </div>
+                    <span class="text-sm font-medium text-gray-700">学习收获：</span>
+                    <ReviewMetricScale v-model="reward" label="学习收获" :levels="['很少', '较少', '一般', '较多', '很多']" />
                   </div>
                 </div>
               </div>
@@ -185,10 +173,10 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch, computed, ref } from 'vue'
 import { api } from '@/lib/requests'
-import { ratingTooltip } from '../tooltips'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import Editor from '@/components/tiptap/editor/Editor.vue'
 import Rate from '@/components/tinyComponents/Rate.vue'
+import ReviewMetricScale from './ReviewMetricScale.vue'
 import { LoaderCircle, ChevronUp, ChevronDown } from 'lucide-vue-next'
 import { APISemesterList } from '@/types/api/courseReview/course'
 

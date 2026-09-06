@@ -9,10 +9,10 @@ export const APIPostReviewQuery = z.object({
   content: z.string(),
   rating: z.number().min(1).max(5),
   anonymous: z.boolean(),
-  difficulty: z.number().min(1).max(3),
-  grade: z.number().min(1).max(3),
-  homework: z.number().min(1).max(3),
-  reward: z.number().min(1).max(3),
+  difficulty: z.number().min(1).max(5),
+  grade: z.number().min(1).max(5),
+  homework: z.number().min(1).max(5),
+  reward: z.number().min(1).max(5),
   semester: z.number(),
 })
 export type APIPostReview = {
@@ -47,10 +47,10 @@ export const APIUpdateReviewQuery = z.object({
   content: z.string(),
   rating: z.number().min(1).max(5),
   anonymous: z.boolean(),
-  difficulty: z.number().min(1).max(3),
-  grade: z.number().min(1).max(3),
-  homework: z.number().min(1).max(3),
-  reward: z.number().min(1).max(3),
+  difficulty: z.number().min(1).max(5),
+  grade: z.number().min(1).max(5),
+  homework: z.number().min(1).max(5),
+  reward: z.number().min(1).max(5),
   semester: z.number(),
 })
 export type APIUpdateReview = {

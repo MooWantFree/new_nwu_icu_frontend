@@ -36,19 +36,19 @@
         <div class="flex flex-wrap gap-4 text-sm text-gray-600">
           <span class="flex items-center">
             <span class="font-medium mr-1">难度:</span>
-            <Rate v-model="review.rating.difficulty" :readonly="true" :max="3"/>
+            <ReviewMetricScale :model-value="review.rating.difficulty" label="课程难度" :levels="['很简单', '较简单', '适中', '较难', '很难']" readonly />
           </span>
           <span class="flex items-center">
             <span class="font-medium mr-1">给分:</span>
-            <Rate v-model="review.rating.grade" :readonly="true" :max="3"/>
+            <ReviewMetricScale :model-value="review.rating.grade" label="给分情况" :levels="['很严', '偏严', '一般', '偏宽', '很宽']" readonly />
           </span>
           <span class="flex items-center">
-            <span class="font-medium mr-1">作业量:</span>
-            <Rate v-model="review.rating.homework" :readonly="true" :max="3" />
+            <span class="font-medium mr-1">作业负担:</span>
+            <ReviewMetricScale :model-value="review.rating.homework" label="作业负担" :levels="['很少', '较少', '适中', '较多', '很多']" readonly />
           </span>
           <span class="flex items-center">
             <span class="font-medium mr-1">收获:</span>
-            <Rate v-model="review.rating.reward" :readonly="true" :max="3" />
+            <ReviewMetricScale :model-value="review.rating.reward" label="学习收获" :levels="['很少', '较少', '一般', '较多', '很多']" readonly />
           </span>
         </div>
         <div class="mt-2 flex justify-between items-center">
@@ -114,7 +114,7 @@
 import { api } from '@/lib/requests'
 import { APIUserActivitiesReview } from '@/types/api/user/profilePage'
 import { ref, watchEffect } from 'vue'
-import Rate from '@/components/tinyComponents/Rate.vue'
+import ReviewMetricScale from '@/components/courseReview/course/courseReviews/ReviewMetricScale.vue'
 import { NRate } from 'naive-ui'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
