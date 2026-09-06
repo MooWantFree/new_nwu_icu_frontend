@@ -5,9 +5,16 @@
     :detail="errorMsg.detail"
   />
   <CourseSkeleton v-else-if="courseLoading || !courseData" />
-  <main class="min-h-screen bg-gray-50" v-else>
-    <div class="container mx-auto pt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2">
+  <AppPageLayout
+    v-else
+    :title="courseData.name"
+    :description="'汇集同学们的真实课程体验，帮助你做出更适合自己的选课决定。'"
+  >
+    <template #meta>
+      {{ courseData.category }} · {{ courseData.school }}
+    </template>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="min-w-0 lg:col-span-2">
         <CourseMeta :course-data="courseData" :loading="courseLoading" />
         <CourseReviews
           :course-data="courseData"
@@ -22,12 +29,13 @@
     </div>
     <button
       @click="scrollToTop"
-      class="fixed bottom-8 right-8 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
+      class="fixed bottom-6 right-6 rounded-full bg-blue-600 p-3 text-white shadow-lg transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:bottom-8 sm:right-8"
+      aria-label="回到页面顶部"
       v-show="showTopButton"
     >
       <ArrowUp class="w-6 h-6" />
     </button>
-  </main>
+  </AppPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -40,6 +48,7 @@ import CourseReviews from '@/components/courseReview/course/courseReviews/Course
 import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
 import CourseAlike from '@/components/courseReview/course/CourseAlike.vue'
 import CourseSkeleton from '@/components/courseReview/course/CourseSkeleton.vue'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import Page404 from '@/components/infoNErrors/404.vue'
 import Page500 from '@/components/infoNErrors/500.vue'
 import { ArrowUp } from 'lucide-vue-next'

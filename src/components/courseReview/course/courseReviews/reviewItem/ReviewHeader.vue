@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between mb-4">
+  <div class="mb-5 flex items-center justify-between">
     <div>
       <div class="flex items-center relative">
         <div v-if="!review.author.anonymous" class="relative group">
@@ -20,24 +20,26 @@
           class="w-10 h-10 rounded-full mr-3 border-2 border-gray-200"
         />
         <div>
-          <h3 class="text-xl font-bold text-gray-900">
+          <div class="flex flex-wrap items-center gap-2">
+          <h3 class="text-lg font-bold text-slate-900">
             <router-link
               v-if="review.author.id > 0"
               :to="`/user/${review.author.id}`"
-              class="text-blue-700 hover:text-blue-800 transition-colors duration-300"
+              class="text-blue-700 transition-colors hover:text-blue-800"
             >
               {{ review.author.nickname }}
             </router-link>
-            <span v-else class="text-gray-600">匿名用户</span>
+            <span v-else class="text-slate-600">匿名用户</span>
           </h3>
-          <span v-if="isAuthor" class="text-sm text-green-600 ml-2">(我的评价)</span>
+          <span v-if="isAuthor" class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">我</span>
+          </div>
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <div class="flex items-center">
+              <n-rate readonly allow-half :default-value="review.rating" :size="16" />
+            </div>
+            <span class="text-sm text-slate-500">{{ review.semester }}</span>
+          </div>
         </div>
-      </div>
-      <div class="flex items-center space-x-2 mt-1">
-        <div class="flex items-center">
-          <n-rate readonly allow-half :default-value="review.rating" />
-        </div>
-        <div class="text-sm text-gray-600">{{ review.semester }}</div>
       </div>
     </div>
   </div>

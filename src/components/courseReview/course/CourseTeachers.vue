@@ -1,7 +1,9 @@
 <template>
-  <div class="surface-card p-6 text-gray-700">
-    <div v-for="(teacher, index) in courseData.teachers" :key="index">
-      <div class="flex">
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <h2 class="text-lg font-bold text-slate-900">授课教师</h2>
+    <div class="mt-4">
+    <div v-for="(teacher, index) in courseData.teachers" :key="index" class="py-1">
+      <div class="flex items-center">
         <router-link
           :to="`/review/teacher/${teacher.id}`"
           #="{ navigate, href }"
@@ -25,19 +27,20 @@
               </div>
             </template>
           </n-avatar>
-          <n-a :href="href" @click="navigate" class="flex">
-            <h2 class="mx-3.5 my-auto text-xl font-bold text-blue-700">{{ teacher.name }}</h2>
+          <n-a :href="href" @click="navigate" class="flex min-w-0">
+            <span class="mx-3 text-base font-semibold text-blue-700">{{ teacher.name }}</span>
           </n-a>
         </router-link>
-        <span class="mt-3 -mx-3">{{ teacher.school }}</span>
+        <span class="ml-auto text-sm text-slate-500">{{ teacher.school }}</span>
         <!--        TODO: 教师主页-->
       </div>
       <hr
         v-if="index !== courseData.teachers.length - 1"
-        class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"
+        class="my-5 h-px border-0 bg-slate-200"
       />
     </div>
-  </div>
+    </div>
+  </section>
 </template>
 
 <script lang="ts" setup>

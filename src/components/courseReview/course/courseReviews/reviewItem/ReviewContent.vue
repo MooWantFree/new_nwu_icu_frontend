@@ -1,14 +1,13 @@
 <template>
-  <div class="text-gray-700 mb-4">
-    <div class="space-x-4">
-      <div class="flex flex-wrap gap-4">
+  <div class="mb-5 rounded-xl bg-slate-50 p-4 text-slate-700">
+      <div class="grid gap-x-4 gap-y-3 sm:grid-cols-2">
         <span
           v-for="(value, key) in ratings"
           :key="key"
-          class="flex items-center"
+          class="flex items-center justify-between gap-2 text-sm"
           :title="ratingTooltip(review[key])"
         >
-          <span class="mr-2">{{ value }}：</span>
+          <span>{{ value }}</span>
           <div class="flex">
             <Star
               v-for="i in 3"
@@ -20,9 +19,8 @@
           </div>
         </span>
       </div>
-    </div>
   </div>
-  <div class="mb-4 text-gray-700">
+  <div class="mb-5 text-slate-700">
     <Viewer :value="review.content" />
   </div>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between text-sm text-gray-500">
+  <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-500">
     <div class="flex items-center space-x-4">
       <!-- Dropdown Menu -->
       <div
@@ -11,7 +11,7 @@
           @click="toggleDropdownMenu"
           id="dropdownButton"
           type="button"
-          class="inline-flex items-center rounded-lg bg-white p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          class="inline-flex items-center rounded-lg border border-slate-200 bg-white p-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-expanded="true"
           aria-haspopup="true"
         >
@@ -62,10 +62,10 @@
           "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
-            'flex items-center px-3 py-1 rounded transition-colors text-sm',
+            'flex min-h-9 items-center rounded-lg border px-3 py-1 transition-colors text-sm',
             review.like.user_option === 1
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white',
+              : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700',
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
@@ -82,10 +82,10 @@
           "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
-            'flex items-center px-3 py-1 rounded transition-colors text-sm',
+            'flex min-h-9 items-center rounded-lg border px-3 py-1 transition-colors text-sm',
             review.like.user_option === -1
               ? 'bg-red-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white',
+              : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700',
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >

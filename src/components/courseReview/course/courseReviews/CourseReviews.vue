@@ -1,15 +1,31 @@
 <template>
-  <div class="surface-card mt-6 p-6 text-gray-700">
-    <div
-      class="flex flex-col space-y-4 mt-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4"
-    >
-      <div
-        class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4"
+  <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <header class="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900">同学评价</h2>
+        <p class="mt-1 text-sm text-slate-500">{{ courseData.reviews.length }} 条评价</p>
+      </div>
+      <button
+        v-if="!userReviewed"
+        class="btn-primary w-full sm:w-auto"
+        @click="handleNewReviewButtonClicked"
       >
-        <div class="flex items-center space-x-2">
-          <p class="whitespace-nowrap">排序</p>
+        写下评价
+      </button>
+      <button
+        v-else
+        class="btn-primary w-full sm:w-auto"
+        @click="handleEditReviewButtonClicked"
+      >
+        编辑评价
+      </button>
+    </header>
+    <div class="px-5 py-5 sm:px-7">
+      <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
+          排序
           <select
-            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="sortSelectorValue"
           >
             <option
@@ -20,11 +36,11 @@
               {{ option.label }}
             </option>
           </select>
-        </div>
-        <div class="flex items-center space-x-2">
-          <p class="whitespace-nowrap">学期</p>
+        </label>
+        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
+          学期
           <select
-            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="semesterSelectorValue"
           >
             <option
@@ -35,11 +51,11 @@
               {{ option.label }}
             </option>
           </select>
-        </div>
-        <div class="flex items-center space-x-2">
-          <p class="whitespace-nowrap">评分</p>
+        </label>
+        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
+          评分
           <select
-            class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             v-model="rankSelectorValue"
           >
             <option
@@ -50,25 +66,10 @@
               {{ option.label }}
             </option>
           </select>
-        </div>
+        </label>
       </div>
-      <button
-        v-if="!userReviewed"
-        class="btn-primary mt-4 w-full sm:mt-0 sm:w-auto"
-        @click="handleNewReviewButtonClicked"
-      >
-        新建一个评价
-      </button>
-      <button
-        v-else
-        class="btn-primary mt-4 w-full sm:mt-0 sm:w-auto"
-        @click="handleEditReviewButtonClicked"
-      >
-        编辑我的评价
-      </button>
-    </div>
 
-    <div class="mt-6 space-y-4">
+    <div class="mt-5 space-y-4">
       <div v-for="(review, index) in reviewsDisplayed" :key="index">
         <CourseReviewItem
           :review="review"
@@ -77,16 +78,12 @@
           @review-edit="handleEditReviewButtonClicked"
         />
       </div>
-      <div v-if="reviewsDisplayed.length === 0">
-        <div class="text-center py-8">
-          <p class="text-xl font-semibold mb-4">暂时没有内容呢</p>
-        </div>
+      <div v-if="reviewsDisplayed.length === 0" class="rounded-xl border border-dashed border-slate-300 py-12 text-center text-slate-500">
+        暂时没有符合筛选条件的评价。
       </div>
     </div>
-
-    <!-- For dropdown menu -->
-    <div class="mt-8"></div>
-  </div>
+    </div>
+  </section>
   <ReviewEditorModal
     v-if="showEditor"
     v-model="showEditor"
@@ -221,8 +218,8 @@ const rankSelectorOptions = computed(() => [
 ])
 
 // - calculate result
-const reviewsDisplayed = computed(() =>
-  props.courseData.reviews.filter(
+const reviewsDisplayed = computed(() => {
+  const filtered = props.courseData.reviews.filter(
     (review) =>
       (semesterSelectorValue.value === 'all' ||
         review.semester === semesterSelectorValue.value) &&
@@ -230,7 +227,16 @@ const reviewsDisplayed = computed(() =>
         (rankSelectorValue.value + 0.5 > review.rating &&
           rankSelectorValue.value - 0.5 <= review.rating))
   )
-)
+  return [...filtered].sort((a, b) => {
+    switch (sortSelectorValue.value) {
+      case SortMethods.Newest: return new Date(b.created_time).getTime() - new Date(a.created_time).getTime()
+      case SortMethods.Oldest: return new Date(a.created_time).getTime() - new Date(b.created_time).getTime()
+      case SortMethods.HighestRated: return b.rating - a.rating
+      case SortMethods.LowestRated: return a.rating - b.rating
+      default: return b.like.like - a.like.like
+    }
+  })
+})
 
 const showEditor = ref(false)
 const isSubmittingReview = ref(false)

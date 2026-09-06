@@ -1,32 +1,33 @@
 <template>
-  <div class="surface-card p-6">
-    <h3 class="text-lg font-bold text-gray-900">其他老师的「{{ courseData.name }}」课</h3>
-    <ul class="mt-2 space-y-2 text-sm text-gray-600">
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <h2 class="text-lg font-bold text-slate-900">同名课程</h2>
+    <p class="mt-1 text-sm text-slate-500">其他老师的「{{ courseData.name }}」课</p>
+    <ul class="mt-4 space-y-2 text-sm text-slate-600">
       <li v-for="course in sortedSameNameCourses" :key="course.course_id">
         <router-link
           :to="{
             name: 'courseReviewItem',
             params: { id: course.course_id },
           }"
-          class="hover:underline text-blue-700"
+          class="font-medium text-blue-700 hover:underline"
         >
           {{ course.teacher_name }}
         </router-link>
         - {{ course.rating ? course.rating.toFixed(1) : '暂无评分' }}
       </li>
     </ul>
-  </div>
-  <div class="surface-card p-6">
+  </section>
+  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
     <div v-for="(teacher, index) in courseData.teachers" :key="index">
-      <h3 class="text-lg font-bold text-gray-900">{{ teacher.name }}老师的其他课</h3>
-      <ul class="mt-2 space-y-2 text-sm text-gray-600">
+      <h2 class="text-lg font-bold text-slate-900">{{ teacher.name }}老师的其他课</h2>
+      <ul class="mt-4 space-y-2 text-sm text-slate-600">
         <li v-for="course in teacher.course" :key="course.id">
           <router-link
             :to="{
               name: 'courseReviewItem',
               params: { id: course.id },
             }"
-            class="hover:underline text-blue-700"
+            class="font-medium text-blue-700 hover:underline"
           >
             「{{ course.name }}」
           </router-link>
@@ -34,10 +35,10 @@
       </ul>
       <hr
         v-if="index !== courseData.teachers.length - 1"
-        class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"
+        class="my-5 h-px border-0 bg-slate-200"
       />
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">

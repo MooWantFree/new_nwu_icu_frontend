@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-sm" ref="courseReviewItem">
+  <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6" ref="courseReviewItem">
     <ReviewHeader :review="review" :is-author="isAuthor" />
     <ReviewContent :review="review" />
     <ReviewBottom
@@ -9,7 +9,7 @@
       @review-delete="handleDeleteReview"
     />
     <ReviewReplies :review="review" @reply-deleted="handleReplyDeleted" />
-  </div>
+  </article>
 </template>
 
 <script lang="ts" setup>
