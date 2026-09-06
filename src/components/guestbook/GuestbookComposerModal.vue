@@ -6,6 +6,13 @@
         <button type="button" aria-label="关闭编辑窗口" :disabled="submitting" class="px-2 text-xl text-gray-500" @click="close">×</button>
       </div>
       <form @submit.prevent="submit">
+        <label v-if="!isReply && board === 'announcements'" class="mb-4 block">
+          <span class="mb-1.5 block text-sm font-medium text-gray-700">公告标题</span>
+          <input v-model="title" :disabled="submitting" maxlength="100" required type="text"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="请输入公告标题" />
+          <span class="mt-1 block text-right text-xs text-gray-400">{{ title.length }} / 100</span>
+        </label>
         <GuestbookEditor v-model="content" :disabled="submitting" :placeholder="isReply ? '写下你的回复…' : `写下你的${itemLabel}…`" />
         <div class="mt-3 flex flex-wrap justify-between gap-2 text-sm text-gray-500">
           <label v-if="!isReply && board === 'guestbook'" class="flex items-center gap-2"><input v-model="anonymous" :disabled="submitting" type="checkbox" />匿名发布</label>
@@ -18,7 +25,7 @@
         <div class="mt-5 flex flex-wrap justify-end gap-2">
           <button type="button" :disabled="submitting" class="mr-auto rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100" @click="clear">清空草稿</button>
           <button type="button" :disabled="submitting" class="rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-100" @click="close">取消</button>
-          <button type="submit" :disabled="submitting || !textLength || textLength > 500" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{{ submitting ? '发布中…' : '发布' }}</button>
+          <button type="submit" :disabled="submitting || !textLength || textLength > 500 || (!isReply && board === 'announcements' && !title.trim())" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{{ submitting ? '发布中…' : '发布' }}</button>
         </div>
       </form>
     </div>
@@ -42,7 +49,7 @@ const router = useRouter()
 const parentId = props.parentId ?? null
 const isReply = parentId !== null
 const itemLabel = props.board === 'announcements' ? '公告' : '留言'
-const { content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, parentId, props.board)
+const { title, content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, parentId, props.board)
 const submitting = ref(false)
 
 const canLeave = () => {
@@ -64,7 +71,8 @@ const handleBeforeLogout = (event: Event) => { if (!canLeave()) event.preventDef
 const unregisterGuard = router.beforeEach(canLeave)
 
 const submit = async () => {
-  if (submitting.value || !textLength.value || textLength.value > 500) return
+  if (submitting.value || !textLength.value || textLength.value > 500
+    || (!isReply && props.board === 'announcements' && !title.value.trim())) return
   persist()
   submitting.value = true
   try {
@@ -72,7 +80,7 @@ const submit = async () => {
     const response = props.board === 'announcements'
       ? (isReply
         ? await api.post({ url: '/api/announcements/:id/replies/', params: { id: parentId! }, query })
-        : await api.post({ url: '/api/announcements/', query: { ...query, anonymous: false } }))
+        : await api.post({ url: '/api/announcements/', query: { ...query, title: title.value.trim(), anonymous: false } }))
       : (isReply
         ? await api.post({ url: '/api/guestbook/:id/replies/', params: { id: parentId! }, query })
         : await api.post({ url: '/api/guestbook/', query: { ...query, anonymous: anonymous.value } }))

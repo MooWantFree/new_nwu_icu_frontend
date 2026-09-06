@@ -8,7 +8,7 @@
     </template>
 
     <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" :board="board" @close="composerOpen = false" @created="created" />
-    <div v-if="loading" class="py-16 text-center text-gray-500">加载{{ itemLabel }}中…</div>
+    <GuestbookListSkeleton v-if="loading" :board="board" />
     <div v-else-if="loadFailed" class="py-16 text-center text-gray-500">获取{{ itemLabel }}失败。<button class="ml-2 text-blue-700" @click="load">重试</button></div>
     <div v-else-if="entries.length" class="space-y-4">
       <GuestbookThreadNode v-for="entry in entries" :key="entry.id" :entry-id="entry.id" :thread="thread" :level="0"
@@ -25,6 +25,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GuestbookComposerModal from '@/components/guestbook/GuestbookComposerModal.vue'
+import GuestbookListSkeleton from '@/components/guestbook/GuestbookListSkeleton.vue'
 import GuestbookThreadNode from '@/components/guestbook/GuestbookThreadNode.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import { api } from '@/lib/requests'

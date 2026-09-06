@@ -13,7 +13,7 @@ export const guestbookPlainText = (value: string) => {
   return documentNode.body.textContent?.trim() || ''
 }
 
-export type GuestbookDraft = { content: string; anonymous: boolean; updatedAt: string; submissionId?: string }
+export type GuestbookDraft = { title?: string; content: string; anonymous: boolean; updatedAt: string; submissionId?: string }
 
 export const guestbookTextLength = (value: string) => Array.from(guestbookPlainText(value)).length
 
@@ -36,6 +36,7 @@ export const loadGuestbookDraft = (userId: number | string, targetId: number | n
       || !('anonymous' in value) || typeof value.anonymous !== 'boolean'
       || !('updatedAt' in value) || typeof value.updatedAt !== 'string') return null
     return {
+      title: 'title' in value && typeof value.title === 'string' ? value.title : '',
       content: value.content, anonymous: value.anonymous, updatedAt: value.updatedAt,
       submissionId: 'submissionId' in value && typeof value.submissionId === 'string'
         && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.submissionId)

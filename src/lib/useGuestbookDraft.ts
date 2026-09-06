@@ -3,6 +3,7 @@ import { clearGuestbookDraft, guestbookTextLength, loadGuestbookDraft, saveGuest
 
 export function useGuestbookDraft(userId: number, parentId: number | null, board = 'guestbook') {
   const saved = loadGuestbookDraft(userId, parentId, board)
+  const title = ref(saved?.title ?? '')
   const content = ref(saved?.content ?? '')
   const anonymous = ref(parentId === null && (saved?.anonymous ?? false))
   const submissionId = ref(saved?.submissionId ?? crypto.randomUUID())
@@ -16,14 +17,14 @@ export function useGuestbookDraft(userId: number, parentId: number | null, board
     if (completed) return true
     const ok = textLength.value
       ? saveGuestbookDraft(userId, parentId, {
-        content: content.value, anonymous: anonymous.value, submissionId: submissionId.value,
+        title: title.value, content: content.value, anonymous: anonymous.value, submissionId: submissionId.value,
         updatedAt: new Date().toISOString(),
       }, board)
       : clearGuestbookDraft(userId, parentId, board)
     saveState.value = ok ? (textLength.value ? 'saved' : 'empty') : 'failed'
     return ok
   }
-  watch([content, anonymous], () => {
+  watch([title, content, anonymous], () => {
     clearTimeout(timer)
     if (completed) return
     submissionId.value = crypto.randomUUID()
@@ -33,6 +34,7 @@ export function useGuestbookDraft(userId: number, parentId: number | null, board
 
   const clear = () => {
     content.value = ''
+    title.value = ''
     anonymous.value = false
     persist()
   }
@@ -40,6 +42,7 @@ export function useGuestbookDraft(userId: number, parentId: number | null, board
     completed = true
     clearTimeout(timer)
     content.value = ''
+    title.value = ''
     anonymous.value = false
     const cleared = clearGuestbookDraft(userId, parentId, board) || saveGuestbookDraft(userId, parentId, {
       content: '', anonymous: false, updatedAt: new Date().toISOString(),
@@ -48,5 +51,5 @@ export function useGuestbookDraft(userId: number, parentId: number | null, board
     return cleared
   }
   onScopeDispose(persist)
-  return { content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished }
+  return { title, content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished }
 }

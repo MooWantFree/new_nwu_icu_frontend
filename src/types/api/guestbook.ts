@@ -15,6 +15,7 @@ export type GuestbookEntry = {
   id: number
   root_id: number | null
   parent_id: number | null
+  title?: string
   content: string
   anonymous: boolean
   is_deleted: boolean
@@ -96,7 +97,10 @@ export type APIGuestbookContext = {
 }
 
 export type APIAnnouncementList = Omit<APIGuestbookList, 'endpoint'> & { endpoint: '/api/announcements/' }
-export type APICreateAnnouncement = Omit<APICreateGuestbook, 'endpoint'> & { endpoint: '/api/announcements/' }
+export type APICreateAnnouncement = Omit<APICreateGuestbook, 'endpoint' | 'query'> & {
+  endpoint: '/api/announcements/'
+  query: APICreateGuestbook['query'] & { title: string }
+}
 export type APIAnnouncementDetail = Omit<APIGuestbookDetail, 'endpoint'> & { endpoint: '/api/announcements/:id/' }
 export type APIDeleteAnnouncement = Omit<APIDeleteGuestbook, 'endpoint'> & { endpoint: '/api/announcements/:id/' }
 export type APIAnnouncementReplies = Omit<APIGuestbookReplies, 'endpoint'> & { endpoint: '/api/announcements/:id/replies/' }
