@@ -1,5 +1,8 @@
 <template>
-  <AppPageLayout title="课程列表">
+  <AppPageLayout
+    title="课程目录"
+    description="聚合课程评分、教师与开课学期，用更少的滚动完成选课比较。"
+  >
     <template #meta>
       <span v-if="totalCourses > 0">共 {{ totalCourses }} 门课程</span>
     </template>
@@ -15,103 +18,102 @@
 
     <AddCourseModal v-model="showAddCourseModal" />
 
-    <div class="mb-8 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start sm:justify-end gap-4">
-      <select
-        v-model="courseType"
-        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="" disabled selected>选择课程类型</option>
-        <option
-          v-for="option in courseTypeOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-      <select
-        v-model="orderBy"
-        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="" disabled selected>选择排序方式</option>
-        <option
-          v-for="option in orderByOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-      <button
-        @click="handlePageChange(1)"
-        :disabled="loading"
-        class="btn-primary w-full sm:w-auto"
-      >
-        {{ loading ? '加载中...' : '应用筛选' }}
-      </button>
-    </div>
+    <section class="surface-card mb-5 flex flex-col gap-3 p-2.5 sm:flex-row sm:items-center sm:justify-between">
+      <ReviewDirectoryNav active="course" />
+      <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center" aria-label="课程筛选">
+        <label class="relative min-w-0 sm:w-36">
+          <span class="sr-only">课程类型</span>
+          <Tags class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
+          <select
+            v-model="courseType"
+            class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            @change="handlePageChange(1)"
+          >
+            <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+        </label>
+        <label class="relative min-w-0 sm:w-36">
+          <span class="sr-only">排序方式</span>
+          <ArrowUpDown class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
+          <select
+            v-model="orderBy"
+            class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            @change="handlePageChange(1)"
+          >
+            <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+        </label>
+      </div>
+    </section>
 
-    <div v-if="loading" class="space-y-6">
+    <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <div
-        v-for="i in 3"
+        v-for="i in 12"
         :key="i"
-        class="bg-white rounded-xl shadow-md p-4 sm:p-6 animate-pulse"
+        class="surface-card h-[148px] animate-pulse p-4"
       >
-        <div class="h-7 bg-gray-200 rounded-full w-3/4 mb-4"></div>
-        <div class="h-5 bg-gray-200 rounded-full w-1/2 mb-3"></div>
-        <div class="h-5 bg-gray-200 rounded-full w-2/3 mb-3"></div>
-        <div class="flex justify-between items-center mt-5">
-          <div class="h-9 bg-gray-200 rounded-full w-28"></div>
-          <div class="h-5 bg-gray-200 rounded-full w-20"></div>
+        <div class="mb-3 h-5 w-2/3 rounded-full bg-gray-200"></div>
+        <div class="mb-2 h-3 w-1/2 rounded-full bg-gray-100"></div>
+        <div class="h-3 w-1/3 rounded-full bg-gray-100"></div>
+        <div class="mt-6 flex justify-between">
+          <div class="h-5 w-20 rounded-full bg-gray-200"></div>
+          <div class="h-5 w-16 rounded-full bg-gray-100"></div>
         </div>
       </div>
     </div>
 
     <div
       v-else-if="courses && courses.length === 0"
-      class="text-center text-xl text-gray-500 my-12"
+      class="surface-card py-16 text-center"
     >
-      暂无数据
+      <BookOpen class="mx-auto mb-3 h-8 w-8 text-gray-400" aria-hidden="true" />
+      <p class="font-medium text-gray-700">没有找到课程</p>
+      <p class="mt-1 text-sm text-gray-500">试试切换课程类型，或添加一门新课程。</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-      <div
+    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <RouterLink
         v-for="course in courses"
         :key="course.id"
-        class="bg-white rounded-xl shadow-md p-4 sm:p-6 transition duration-300 hover:shadow-xl hover:transform hover:-translate-y-1"
+        :to="`/review/course/${course.id}`"
+        class="group surface-card flex min-h-[148px] flex-col p-4 transition duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md"
       >
-        <h2 class="text-xl sm:text-2xl font-semibold mb-3">
-          <router-link
-            :to="`/review/course/${course.id}`"
-            class="text-blue-700 hover:text-blue-800 transition duration-300"
-          >
-            {{ course.name }}
-          </router-link>
-        </h2>
-        <p class="text-gray-700 mb-2">教师: {{ course.teacher }}</p>
-        <p class="text-gray-700 mb-3">学期: {{ course.semester }}</p>
-        <div class="flex flex-wrap items-center mb-3">
-          <n-rate
-            readonly
-            :value="course.average_rating"
-            :allow-half="true"
-            size="small"
-            class="sm:size-medium"
-          />
-          <span class="ml-3 text-gray-700 font-medium">
-            {{ course.average_rating.toFixed(1) }}
-            <span class="text-sm text-gray-500"
-              >({{ course.review_count }} 条评价)</span
-            >
+        <div class="flex min-w-0 items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="line-clamp-2 text-base font-semibold leading-6 text-gray-900 transition-colors group-hover:text-blue-700">
+              {{ course.name }}
+            </h2>
+            <p class="mt-1.5 truncate text-sm text-gray-600">{{ course.teacher || '教师待补充' }}</p>
+          </div>
+          <span class="shrink-0 rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600">
+            {{ courseTypeLabel(course.classification) }}
           </span>
         </div>
-        <div class="text-sm font-medium text-gray-600">
-          标准化评分: {{ course.normalized_rating.toFixed(2) }}
+
+        <div class="mt-auto flex items-end justify-between gap-3 border-t border-gray-100 pt-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 text-sm">
+              <Star class="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+              <strong class="font-semibold text-gray-900">{{ course.average_rating.toFixed(1) }}</strong>
+              <span class="text-xs text-gray-500">{{ course.review_count }} 条评价</span>
+            </div>
+            <p class="mt-1 truncate text-xs text-gray-500">{{ course.semester || '学期待补充' }}</p>
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-[11px] text-gray-400">标准化评分</p>
+            <p class="text-sm font-semibold tabular-nums text-gray-700">{{ course.normalized_rating.toFixed(2) }}</p>
+          </div>
         </div>
-      </div>
+      </RouterLink>
     </div>
 
-    <div class="flex justify-center mt-8 sm:mt-12 overflow-x-auto" v-if="totalPages > 1">
+    <div class="mt-6 flex justify-center overflow-x-auto" v-if="totalPages > 1">
       <n-pagination
         v-model:page="currentPage"
         :page-count="totalPages"
@@ -134,9 +136,10 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { z } from 'zod'
-import { PlusCircle } from 'lucide-vue-next'
+import { ArrowUpDown, BookOpen, ChevronDown, PlusCircle, Star, Tags } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 
 const message = useMessage()
 
@@ -155,6 +158,7 @@ const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
 const currentPage = ref(1)
 const showAddCourseModal = ref(false)
+const coursePageSize = 12
 
 const isMobile = ref(false)
 const handleResize = () => {
@@ -181,6 +185,12 @@ const orderByOptions = [
   { label: '热门排序', value: OrderBy.Popular },
 ]
 
+const courseTypeLabels: Record<string, string> = Object.fromEntries(
+  courseTypeOptions.map(option => [option.value, option.label.replace('全部课程', '课程')]),
+)
+
+const courseTypeLabel = (value: string) => courseTypeLabels[value] || value || '课程'
+
 const fetchCourses = async (page: number = 1) => {
   loading.value = true
   const requestParams = new URLSearchParams()
@@ -195,6 +205,7 @@ const fetchCourses = async (page: number = 1) => {
         order_by: orderBy.value,
         course_type: courseType.value,
         page,
+        pageSize: coursePageSize,
       },
     })
     courses.value = response.content.results

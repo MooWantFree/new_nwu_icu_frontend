@@ -64,7 +64,6 @@ export type APITeacherList = {
       id: number,
       name: string,
       school: string,
-      avatar: string,
     }[]
     page: number
     count: number

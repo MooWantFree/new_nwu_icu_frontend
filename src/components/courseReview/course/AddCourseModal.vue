@@ -26,13 +26,18 @@
             </div>
 
             <div>
-              <label for="courseSchool" class="block text-sm font-medium text-gray-700 mb-1">所属学院</label>
-              <select id="courseSchool" v-model="courseSchool"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                :disabled="loadingSubmit">
-                <option value="0" disabled>请选择学院</option>
-                <option v-for="school in schools" :key="school.id" :value="school.id">{{ school.name }}</option>
-              </select>
+              <label class="block text-sm font-medium text-gray-700 mb-1">所属学院</label>
+              <n-select
+                v-model:value="courseSchool"
+                :options="schools"
+                label-field="name"
+                value-field="id"
+                placeholder="请选择学院"
+                filterable
+                size="large"
+                aria-label="所属学院"
+                :disabled="loadingSubmit"
+              />
               <p v-if="errorMessage.courseSchool" class="mt-1 text-sm text-red-600">{{ errorMessage.courseSchool }}</p>
             </div>
 
@@ -170,7 +175,7 @@ const schools = ref<{
 }[]>([])
 
 const courseName = ref(props.initValue?.name || "")
-const courseSchool = ref(props.initValue?.school || 0)
+const courseSchool = ref<number | null>(props.initValue?.school ?? null)
 const courseClassification = ref<CourseClassification>(props.initValue?.classification || "")
 const selectedTeacher = ref<{
   id: number
@@ -252,7 +257,7 @@ const submitCourse = async () => {
   if (!courseName.value || courseName.value.trim() === '') {
     errorMessage.value.courseName = '课程名称不能为空'
   }
-  if (!courseSchool.value || courseSchool.value === 0) {
+  if (!courseSchool.value) {
     errorMessage.value.courseSchool = '请选择所属学院'
   }
   if (!courseClassification.value) {
@@ -278,7 +283,7 @@ const submitCourse = async () => {
       url: '/api/assessment/course/',
       query: {
         name: courseName.value,
-        school: courseSchool.value,
+        school: courseSchool.value!,
         classification: courseClassification.value,
         teacher_id: selectedTeacher.value.id
       }

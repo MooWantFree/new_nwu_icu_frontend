@@ -1,5 +1,8 @@
 <template>
-  <AppPageLayout title="教师列表">
+  <AppPageLayout
+    title="教师目录"
+    description="按学院浏览授课教师，快速进入教师主页查看课程与评价。"
+  >
     <template #meta>
       <span v-if="totalTeachers > 0">共 {{ totalTeachers }} 位教师</span>
     </template>
@@ -15,88 +18,72 @@
 
     <AddTeacherModal v-model="showAddTeacherModal" @add="handleTeacherAdded" />
 
-    <div class="mb-8 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start sm:justify-end gap-4">
-      <select v-model="schoolFilter"
-        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option value="" selected>全部学院</option>
-        <option v-if="schoolOptions.length === 0" value="" disabled>学院列表加载中...</option>
-        <option v-for="option in schoolOptions" :key="option.label" :value="option.label">
-          {{ option.label }}
-        </option>
-      </select>
-      <select v-model="orderBy"
-        class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option value="" disabled selected>选择排序方式</option>
-        <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <button @click="handlePageChange(1)" :disabled="loading"
-        class="btn-primary w-full sm:w-auto">
-        {{ loading ? '加载中...' : '应用筛选' }}
-      </button>
-    </div>
+    <section class="surface-card mb-5 flex flex-col gap-3 p-2.5 sm:flex-row sm:items-center sm:justify-between">
+      <ReviewDirectoryNav active="teacher" />
+      <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center" aria-label="教师筛选">
+        <label class="min-w-0 sm:w-60">
+          <span class="sr-only">选择学院</span>
+          <n-select
+            v-model:value="schoolFilter"
+            :options="schoolOptions"
+            :loading="schoolOptions.length === 1"
+            filterable
+            size="large"
+            aria-label="选择学院"
+            @update:value="handlePageChange(1)"
+          />
+        </label>
+        <label class="min-w-0 sm:w-36">
+          <span class="sr-only">排序方式</span>
+          <n-select
+            v-model:value="orderBy"
+            :options="orderByOptions"
+            size="large"
+            aria-label="排序方式"
+            @update:value="handlePageChange(1)"
+          />
+        </label>
+      </div>
+    </section>
 
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-      <div v-for="i in teacherSkeletonCount" :key="i" class="bg-white rounded-xl shadow-md p-4 sm:p-6 animate-pulse">
-        <div class="flex items-center mb-4">
-          <div class="h-12 sm:h-16 w-12 sm:w-16 bg-gray-200 rounded-full"></div>
-          <div class="ml-4">
-            <div class="h-5 sm:h-6 bg-gray-200 rounded-full w-24 sm:w-32 mb-2"></div>
-            <div class="h-3 sm:h-4 bg-gray-200 rounded-full w-20 sm:w-24"></div>
-          </div>
-        </div>
-        <div class="flex justify-end mt-4">
-          <div class="h-8 bg-gray-200 rounded-md w-20"></div>
+    <div v-if="loading" class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div v-for="i in teacherSkeletonCount" :key="i" class="surface-card flex h-[76px] animate-pulse items-center p-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 h-4 w-20 rounded-full bg-gray-200"></div>
+          <div class="h-3 w-full max-w-36 rounded-full bg-gray-100"></div>
         </div>
       </div>
     </div>
 
-    <div v-else-if="teachers && teachers.length === 0" class="text-center text-xl text-gray-500 my-8 sm:my-12">
-      暂无数据
+    <div v-else-if="teachers && teachers.length === 0" class="surface-card py-16 text-center">
+      <UsersRound class="mx-auto mb-3 h-8 w-8 text-gray-400" aria-hidden="true" />
+      <p class="font-medium text-gray-700">没有找到教师</p>
+      <p class="mt-1 text-sm text-gray-500">试试切换学院，或添加一位新教师。</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-      <div v-for="teacher in teachers" :key="teacher.id"
-        class="bg-white rounded-xl shadow-md p-4 sm:p-6 transition duration-300 hover:shadow-xl hover:transform hover:-translate-y-1">
-        <div class="flex items-center mb-4">
-          <n-avatar round :size="isMobile ? 48 : 60" :src="`/api/download/${teacher.avatar}`">
-            <template #fallback>
-              <div :class="[
-                'w-full h-full flex justify-center items-center text-white text-xl sm:text-2xl font-bold',
-                [
-                  'bg-red-500',
-                  'bg-blue-600',
-                  'bg-green-500',
-                  'bg-yellow-500',
-                  'bg-purple-500',
-                ][teacher.name.charCodeAt(0) % 5],
-              ]">
-                {{ teacher.name.charAt(0).toUpperCase() }}
-              </div>
-            </template>
-          </n-avatar>
-          <div class="ml-4">
-            <h2 class="text-lg sm:text-xl font-semibold">
-              <router-link :to="`/review/teacher/${teacher.id}`"
-                class="text-blue-700 hover:text-blue-800 transition duration-300">
-                {{ teacher.name }}
-              </router-link>
+    <div v-else class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <RouterLink
+        v-for="teacher in teachers"
+        :key="teacher.id"
+        :to="`/review/teacher/${teacher.id}`"
+        class="group surface-card flex min-h-[76px] items-center gap-3 overflow-hidden p-4 transition duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md"
+      >
+          <div class="min-w-0 flex-1">
+            <h2 class="truncate text-base font-semibold text-gray-900 transition-colors group-hover:text-blue-700">
+              {{ teacher.name }}
             </h2>
-            <p class="text-sm sm:text-base text-gray-600">{{ teacher.school }}</p>
+            <p class="mt-1 flex items-center gap-1.5 truncate text-xs leading-4 text-gray-500">
+              <Building2 class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span class="truncate">{{ teacher.school }}</span>
+            </p>
           </div>
-        </div>
-        <div class="flex justify-end">
-          <n-button size="small" type="primary" @click="router.push(`/review/teacher/${teacher.id}`)">
-            查看详情
-          </n-button>
-        </div>
-      </div>
+          <ChevronRight class="h-4 w-4 shrink-0 text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-blue-600" aria-hidden="true" />
+      </RouterLink>
     </div>
 
-    <div class="flex justify-center mt-8 sm:mt-12" v-if="totalPages > 1">
+    <div class="mt-6 flex justify-center" v-if="totalPages > 1">
       <n-pagination v-model:page="currentPage" :page-count="totalPages" :on-update:page="handlePageChange"
-        :page-slot="isMobile ? 3 : 5" show-quick-jumper size="small" :item-count="totalTeachers">
+        :page-slot="isMobile ? 3 : 5" show-quick-jumper size="small">
         <template #prefix>
           <span class="hidden sm:inline">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
         </template>
@@ -110,9 +97,10 @@ import { onMounted, computed, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
-import { PlusCircle } from 'lucide-vue-next'
+import { Building2, ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
 import AddTeacherModal from '@/components/courseReview/course/AddTeacherModal.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -126,7 +114,6 @@ interface Teacher {
   id: number
   name: string
   school: string
-  avatar: string
 }
 
 const teachers = ref<Teacher[]>([])
@@ -151,7 +138,9 @@ const handleTeacherAdded = ({ id }: { id: number, name: string, school: string }
 }
 
 // School options loaded from API
-const schoolOptions = ref<{ label: string; value: number }[]>([])
+const schoolOptions = ref<{ label: string; value: string }[]>([
+  { label: '全部学院', value: '' },
+])
 
 const orderByOptions = [
   { label: '评分排序', value: OrderBy.Rating },
@@ -203,10 +192,13 @@ const fetchSchoolOptions = async () => {
       url: '/api/assessment/school/'
     })
 
-    schoolOptions.value = response.content.schools.map((school: { id: number, name: string }) => ({
-      label: school.name,
-      value: school.id
-    }))
+    schoolOptions.value = [
+      { label: '全部学院', value: '' },
+      ...response.content.schools.map((school: { id: number, name: string }) => ({
+        label: school.name,
+        value: school.name,
+      })),
+    ]
   } catch (error) {
     console.error('Error fetching school options:', error)
     message.error('获取学院列表失败')

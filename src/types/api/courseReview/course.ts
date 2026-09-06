@@ -38,6 +38,7 @@ export const APICourseListQuery = z.object({
     'optional',
   ]),
   page: z.number(),
+  pageSize: z.number().int().min(1).max(100).optional(),
 })
 export type APICourseList = {
   endpoint: '/api/assessment/courselist/'

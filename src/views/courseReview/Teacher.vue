@@ -11,33 +11,8 @@
       </div>
       <div v-else-if="teacher">
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
-          <div class="flex items-center mb-4">
-            <n-avatar
-              round
-              :size="80"
-              :src="`/api/download/${
-              // @ts-expect-error TODO: No avatar_uuid now
-              teacher.teacher_info.avatar_uuid
-              }`"
-            >
-              <template #fallback>
-                <div
-                  :class="[
-                    'w-full h-full flex justify-center items-center text-white text-4xl font-bold',
-                    [
-                      'bg-red-500',
-                      'bg-blue-600',
-                      'bg-green-500',
-                      'bg-yellow-500',
-                      'bg-purple-500',
-                    ][teacher.teacher_info.name.charCodeAt(0) % 5],
-                  ]"
-                >
-                  {{ teacher.teacher_info.name.charAt(0).toUpperCase() }}
-                </div>
-              </template>
-            </n-avatar>
-            <div class="ml-4">
+          <div class="mb-4">
+            <div>
               <h1 class="text-2xl font-bold text-gray-900">
                 {{ teacher.teacher_info.name }}
               </h1>
