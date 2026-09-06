@@ -1,6 +1,6 @@
 <template>
-  <div class="mb-5 rounded-xl bg-slate-50 p-4 text-slate-700">
-      <div class="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+  <div class="mb-5 text-slate-700">
+      <div class="grid gap-x-8 gap-y-3 sm:grid-cols-2">
         <span
           v-for="(value, key) in ratings"
           :key="key"

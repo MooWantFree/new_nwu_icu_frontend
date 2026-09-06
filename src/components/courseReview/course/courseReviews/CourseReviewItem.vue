@@ -1,5 +1,5 @@
 <template>
-  <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6" ref="courseReviewItem">
+  <article class="min-w-0" ref="courseReviewItem">
     <ReviewHeader :review="review" :is-author="isAuthor" />
     <ReviewContent :review="review" />
     <ReviewBottom

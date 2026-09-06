@@ -21,7 +21,7 @@
       </button>
     </header>
     <div class="px-5 py-5 sm:px-7">
-      <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:flex-wrap sm:items-end">
+      <div class="-mx-5 -mt-5 flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:-mx-7 sm:flex-row sm:flex-wrap sm:items-end sm:px-7">
         <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
           排序
           <select
@@ -69,8 +69,8 @@
         </label>
       </div>
 
-    <div class="mt-5 space-y-4">
-      <div v-for="(review, index) in reviewsDisplayed" :key="index">
+    <div class="mt-5 divide-y divide-slate-200">
+      <div v-for="review in reviewsDisplayed" :key="review.id" class="py-6 first:pt-0 last:pb-0">
         <CourseReviewItem
           :review="review"
           @reviewDeleted="handleReviewDeleted"
