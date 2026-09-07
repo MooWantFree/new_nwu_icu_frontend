@@ -202,6 +202,7 @@ export type APIUserProfileFromId = {
         uuid: string
         has_avatar: boolean
         college_email?: string
+        verified: boolean
         is_me: true
       }
     | {

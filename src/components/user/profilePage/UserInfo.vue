@@ -86,7 +86,15 @@
           </dd>
         </div>
         <div class="sm:col-span-1">
-          <dt class="text-sm font-medium text-gray-500">西北大学邮箱</dt>
+          <dt class="flex items-center text-sm font-medium text-gray-500">
+            <span>西北大学邮箱</span>
+            <span
+              v-if="userInfo.is_me && userInfo.college_email && !userInfo.verified"
+              class="ml-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
+            >
+              未验证
+            </span>
+          </dt>
           <dd v-if="userInfo.is_me" class="mt-1 text-sm text-gray-900">
             {{ userInfo.college_email || '未提供' }}
           </dd>
