@@ -1,13 +1,16 @@
 <template>
   <div class="relative">
-    <!-- Login/Register button for logged out users -->
+    <!-- Compact account entry for logged out users -->
     <button
       v-if="!isLoggedIn"
+      type="button"
       @click="$emit('showLoginModal')"
       :disabled="isLoading"
-      class="btn-primary"
+      class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      aria-label="登录或注册"
+      title="登录或注册"
     >
-      登录/注册
+      <LogIn class="h-5 w-5" aria-hidden="true" />
     </button>
 
     <!-- User avatar and dropdown for logged in users -->
@@ -69,7 +72,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/lib/requests'
-import { User, Pencil, LogOut } from 'lucide-vue-next'
+import { User, Pencil, LogIn, LogOut } from 'lucide-vue-next'
 import { APILogin } from '@/types/api/user/user'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 
