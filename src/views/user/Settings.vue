@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-4xl min-h-svh">
     <h1 class="mb-8 text-3xl font-bold text-gray-900">用户设置</h1>
-    <div v-if="isLoading || !userInfo" class="flex justify-center items-center h-64">
+    <div v-if="!userInfo" class="flex justify-center items-center h-64">
       <LoaderCircle class="animate-spin h-16 w-16 text-blue-700" />
       <p class="text-gray-600">加载中，请稍候...</p>
     </div>
@@ -43,7 +43,7 @@ const tabs = [
   { name: 'privateSettings', label: '隐私设置' },
 ]
 
-const { isLoading, userInfo } = useUser()
+const { userInfo } = useUser()
 </script>
 
 <style scoped>
