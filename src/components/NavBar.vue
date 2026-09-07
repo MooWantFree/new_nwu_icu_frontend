@@ -132,6 +132,7 @@ const menuOptions = [
   {
     key: 'courseReview',
     text: '课程评价',
+    path: '/review/timeline',
     children: [
       {
         key: 'reviewTimeline',

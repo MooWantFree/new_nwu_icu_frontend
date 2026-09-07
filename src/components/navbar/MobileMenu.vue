@@ -19,10 +19,22 @@
           <!-- Menu item with children -->
           <template v-if="item.children">
             <div
-              class="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
-              @click="toggleSubmenu(item.key)"
+              class="flex items-stretch text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              <div class="flex items-center">
+              <router-link
+                v-if="item.path"
+                :to="item.path"
+                class="flex flex-1 items-center px-4 py-3"
+                @click="isMenuOpen = false"
+              >
+                <component
+                  :is="item.icon"
+                  class="h-5 w-5 mr-3"
+                  v-if="item.icon"
+                />
+                {{ item.text }}
+              </router-link>
+              <div v-else class="flex flex-1 items-center px-4 py-3">
                 <component
                   :is="item.icon"
                   class="h-5 w-5 mr-3"
@@ -30,7 +42,18 @@
                 />
                 {{ item.text }}
               </div>
-              <ChevronDown class="h-4 w-4" />
+              <button
+                type="button"
+                class="flex items-center px-4"
+                :aria-label="`展开${item.text}菜单`"
+                :aria-expanded="openSubmenus.includes(item.key)"
+                @click="toggleSubmenu(item.key)"
+              >
+                <ChevronDown
+                  class="h-4 w-4 transition-transform"
+                  :class="{ 'rotate-180': openSubmenus.includes(item.key) }"
+                />
+              </button>
             </div>
             <!-- Submenu items -->
             <div v-if="openSubmenus.includes(item.key)" class="bg-gray-50">

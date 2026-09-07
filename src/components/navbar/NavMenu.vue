@@ -4,16 +4,31 @@
       <li v-for="item in menuItems" :key="item.key" class="relative group">
         <!-- Menu item with children -->
         <template v-if="item.children">
-          <button 
-            class="flex items-center px-3 py-2 text-gray-700 hover:text-blue-700 hover:bg-gray-100 rounded-md transition-colors"
-            @click="toggleSubmenu(item.key)"
-          >
-            <span class="mr-2">{{ item.text }}</span>
-            <ChevronDown 
-              class="h-4 w-4 transition-transform" 
-              :class="{ 'rotate-180': openSubmenus.includes(item.key) }"
-            />
-          </button>
+          <div class="flex items-stretch text-gray-700 hover:text-blue-700 hover:bg-gray-100 rounded-md transition-colors">
+            <router-link
+              v-if="item.path"
+              :to="item.path"
+              class="flex items-center pl-3 pr-1 py-2 rounded-l-md"
+              @click="closeAllSubmenus"
+            >
+              {{ item.text }}
+            </router-link>
+            <span v-else class="flex items-center pl-3 pr-1 py-2">
+              {{ item.text }}
+            </span>
+            <button
+              type="button"
+              class="flex items-center px-2 py-2 rounded-r-md"
+              :aria-label="`展开${item.text}菜单`"
+              :aria-expanded="openSubmenus.includes(item.key)"
+              @click="toggleSubmenu(item.key)"
+            >
+              <ChevronDown
+                class="h-4 w-4 transition-transform"
+                :class="{ 'rotate-180': openSubmenus.includes(item.key) }"
+              />
+            </button>
+          </div>
           <!-- Dropdown menu -->
           <div 
             v-show="openSubmenus.includes(item.key)"
