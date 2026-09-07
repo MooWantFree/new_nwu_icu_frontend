@@ -1,6 +1,6 @@
 <template>
   <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo component -->  
         <Logo @showMessage="showMessage" />
