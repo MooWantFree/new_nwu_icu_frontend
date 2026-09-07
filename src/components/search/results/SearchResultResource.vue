@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ResourceSearchResult } from '@/types/api/search/search'
-import { toSafeExternalUrl } from '@/lib/security'
+import { resourceFileUrl, resourcePageUrl } from '@/lib/resourceBrowser'
 
 // Define props with TypeScript type
 const props = defineProps<{
@@ -58,9 +58,8 @@ const props = defineProps<{
 }>()
 
 const safeResourceUrl = computed(() => {
-  const baseUrl = props.resource.url.replace(/\/+$/, '')
-  const path = props.resource.name.split('/').map(encodeURIComponent).join('/')
-  return toSafeExternalUrl(`${baseUrl}/${path}`)
+  const path = `${props.resource.path.replace(/\/+$/, '')}/${props.resource.name}`
+  return props.resource.type === 'file' ? resourceFileUrl(path) : resourcePageUrl(path)
 })
 
 // Utility function to format file size

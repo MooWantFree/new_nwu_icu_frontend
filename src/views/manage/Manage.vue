@@ -69,9 +69,11 @@
           <button v-if="session.permissions.moderate_reports" :class="tabClass('reports')" @click="selectTab('reports')">举报处理</button>
           <button v-if="session.permissions.publish_announcements" :class="tabClass('announcements')" @click="selectTab('announcements')">发布公告</button>
           <button v-if="session.permissions.review_resource_uploads" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核</button>
+          <button v-if="session.permissions.manage_resource_files" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
         </nav>
 
-        <section v-if="!availableTabs.length" class="surface-card p-8 text-center text-gray-500">当前账号没有管理功能权限。</section>
+        <ResourceFileManager v-if="tab === 'files' && session.permissions.manage_resource_files" @session-expired="loadSession" />
+        <section v-else-if="!availableTabs.length" class="surface-card p-8 text-center text-gray-500">当前账号没有管理功能权限。</section>
 
         <section v-else-if="tab === 'reports'" class="space-y-4">
           <div class="flex flex-wrap gap-3">
@@ -122,7 +124,7 @@
             <button type="button" class="flex w-full items-center justify-between gap-3 text-left font-semibold" :aria-expanded="showUploadBlacklist" aria-controls="upload-blacklist" @click="showUploadBlacklist = !showUploadBlacklist">
               <span>投稿文件夹黑名单</span><span class="text-sm text-blue-700">{{ showUploadBlacklist ? '收起' : '设置' }}</span>
             </button>
-            <p class="mt-2 text-sm text-gray-600">黑名单文件夹及其所有子文件夹对投稿用户隐藏，并禁止投稿。</p>
+            <p class="mt-2 text-sm text-gray-600">此黑名单仅控制投稿，不影响公开浏览或下载。要隐藏资料，请在“资料管理”中进入目标目录，再设置“访问权限”。</p>
             <ResourceUploadBlacklist v-if="showUploadBlacklist" id="upload-blacklist" class="mt-5" @session-expired="loadSession" />
           </div>
           <select v-model="uploadStatus" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadUploads(1)">
@@ -163,11 +165,12 @@ import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
 import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
+import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 import type { ManagementReport, ManagementSession } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
-type Tab = 'reports' | 'announcements' | 'uploads'
+type Tab = 'reports' | 'announcements' | 'uploads' | 'files'
 
 const Pager = defineComponent({
   props: { page: { type: Number, required: true }, maxPage: { type: Number, required: true } },
@@ -191,7 +194,7 @@ const webAuthnSupported = browserSupportsWebAuthn()
 const enrollmentCode = ref('')
 const deviceName = ref('')
 const showEnrollmentForm = ref(false)
-const tab = ref<Tab>('reports')
+const tab = ref<Tab>(route.query.tab === 'files' ? 'files' : 'reports')
 const sectionLoading = ref(false)
 const sectionError = ref('')
 
@@ -206,6 +209,7 @@ const availableTabs = computed<Tab[]>(() => {
     permissions.moderate_reports && 'reports',
     permissions.publish_announcements && 'announcements',
     permissions.review_resource_uploads && 'uploads',
+    permissions.manage_resource_files && 'files',
   ].filter((value): value is Tab => Boolean(value))
 })
 

@@ -201,7 +201,7 @@ const diskRouters = [
     name: 'disk',
     component: () => import('@/views/disk/Disk.vue'),
     meta: {
-      pageTitle: '网盘',
+      pageTitle: '资料下载',
     },
   }
 ] satisfies RouteRecordRaw[]

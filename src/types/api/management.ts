@@ -8,6 +8,38 @@ import type { ErrorFactory } from './errors'
 import { MethodMap } from './base'
 import type { GuestbookEntry } from './guestbook'
 import type { APIResourceDirectories, ResourceUploadRequest } from './resourceUpload'
+import type { ResourceEntry } from '@/lib/resourceBrowser'
+
+export type ManagedResourceFile = ResourceEntry & { version: string }
+export type ResourceTrashEntry = { id: string; path: string; name: string; size: number; deleted_at: string; deleted_by: number }
+export type APIManagementResourceFiles = {
+  endpoint: '/api/management/resources/'
+  method: MethodMap.GET
+  query: { path: string }
+  response: { path: string; entries: ManagedResourceFile[]; max_file_size: number; max_files: number }
+  errors: ManagementErrors
+}
+export type APIManagementResourceTrash = {
+  endpoint: '/api/management/resources/trash/'
+  method: MethodMap.GET
+  response: { entries: ResourceTrashEntry[] }
+  errors: ManagementErrors
+}
+export type APIManagementResourceUpload = {
+  endpoint: '/api/management/resources/upload/'
+  method: MethodMap.POST
+  query: FormData
+  response: { uploaded: number }
+  errors: ManagementErrors
+}
+export type ResourceFileAction = { action: 'move' | 'delete' | 'rename'; path: string; version: string; destination?: string; name?: string } | { action: 'restore'; trash_id: string }
+export type APIManagementResourceAction = {
+  endpoint: '/api/management/resources/action/'
+  method: MethodMap.POST
+  query: ResourceFileAction
+  response: { action: string }
+  errors: ManagementErrors
+}
 
 export type APIManagementUploadBlacklist = {
   endpoint: '/api/management/uploads/blacklist/'
@@ -36,6 +68,7 @@ export type ManagementPermissions = {
   moderate_reports: boolean
   publish_announcements: boolean
   review_resource_uploads: boolean
+  manage_resource_files?: boolean
 }
 
 export type ManagementSession = {

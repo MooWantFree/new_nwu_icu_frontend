@@ -1,176 +1,194 @@
 <template>
-  <div class="flex flex-col h-full bg-gray-50 p-4 w-3/5 mx-auto">
-    <DiskHeader :rawHeader :path="diskPath" />
-
-    <div v-if="loading" class="flex-grow flex items-center justify-center">
-      <div class="flex flex-col items-center justify-center">
-        <div class="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-600 font-medium">加载中...</p>
+  <AppPageLayout title="资料下载" description="前人栽树，后人乘凉。把知识与经验留给后来者。">
+    <template #actions>
+      <RouterLink to="/upload" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+        <Upload class="h-4 w-4" />分享资料
+      </RouterLink>
+    </template>
+    <nav aria-label="资料目录" class="mb-5 flex items-start justify-between gap-3">
+      <ol class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+        <li><RouterLink to="/disk" class="inline-flex items-center gap-1.5 text-blue-700 hover:underline"><House class="h-4 w-4" />全部资料</RouterLink></li>
+        <li v-for="(crumb, index) in breadcrumbs" :key="crumb.path" class="flex min-w-0 items-center gap-2">
+          <ChevronRight class="h-4 w-4 shrink-0 text-gray-400" />
+          <span v-if="index === breadcrumbs.length - 1" aria-current="page" class="break-all text-gray-700">{{ crumb.name }}</span>
+          <RouterLink v-else :to="resourcePageUrl(crumb.path)" class="break-all text-blue-700 hover:underline">{{ crumb.name }}</RouterLink>
+        </li>
+      </ol>
+      <button type="button" class="shrink-0 rounded-lg p-2 text-gray-500 hover:bg-gray-200 disabled:opacity-50" aria-label="刷新目录" :disabled="loading" @click="loadContents">
+        <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
+      </button>
+    </nav>
+    <div v-if="loading" role="status" class="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-500">正在加载资料…</div>
+    <section v-else-if="error" role="alert" class="rounded-xl border border-red-100 bg-white p-10 text-center">
+      <p class="text-red-700">{{ error }}</p>
+      <div class="mt-5 flex justify-center gap-5 text-sm text-blue-700">
+        <RouterLink v-if="loginRequired" :to="{ path: '/login', query: { redirect: route.fullPath } }">登录后访问</RouterLink>
+        <button type="button" @click="loadContents">重新加载</button>
+        <RouterLink to="/disk">返回全部资料</RouterLink>
       </div>
-    </div>
-
-    <div v-else class="flex-grow">
-      <DiskFolder v-if="pathType === 'folder' && folderData" :data="folderData"
-        class="bg-white rounded-lg shadow p-4 mb-4" />
-      <DiskFile v-else-if="pathType === 'file' && metaData" :data="metaData" class="bg-white rounded-lg shadow p-4" />
-
-      <div v-if="pathType === 'folder' && folderData && folderData.total > perPage" class="mt-4 flex justify-center">
-        <n-pagination v-model:page="page" :page-count="Math.ceil(folderData.total / perPage)" :page-size="perPage"
-          @update:page="handlePageChange" />
-      </div>
-    </div>
-
-    <div v-if="hasReadme" class="mt-4 bg-white rounded-lg shadow p-6 prose max-w-none">
-      <div v-html="readme" />
-    </div>
-  </div>
+    </section>
+    <template v-else-if="contents">
+      <section v-if="readmeHtml" aria-label="目录说明" class="mb-6 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:px-7 sm:py-5">
+        <div class="resource-readme prose prose-slate max-w-none prose-a:text-blue-600" v-html="readmeHtml" @click="followReadmeLink" />
+      </section>
+      <p v-if="contents.readme_warning" role="status" class="mb-4 text-sm text-amber-700">{{ contents.readme_warning }}</p>
+      <section v-if="contents.type === 'directory'" aria-label="文件列表" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:px-5">
+          <span class="text-sm text-gray-500">{{ directoryCount }} 个文件夹 · {{ fileCount }} 个文件</span>
+          <div class="flex w-full items-center gap-2 sm:w-auto">
+            <div class="relative min-w-0 flex-1 sm:w-60">
+              <Search class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <input v-model="filter" type="search" aria-label="筛选当前目录" placeholder="筛选当前目录…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            </div>
+            <select v-model="sort" aria-label="排序方式" class="max-w-36 rounded-lg border border-gray-200 px-2 py-2 text-sm text-gray-600 focus:outline-blue-500">
+              <option value="name">名称排序</option><option value="modified">最近更新</option><option value="size">文件大小</option>
+            </select>
+          </div>
+        </div>
+        <div class="resource-row border-b border-gray-100 px-4 py-3 text-xs font-medium text-gray-500 sm:px-5" aria-hidden="true">
+          <span>名称</span><span class="hidden sm:block">修改时间</span><span class="text-right">大小</span><span />
+        </div>
+        <RouterLink v-if="currentPath !== '/'" :to="resourcePageUrl(parentPath)" class="flex items-center gap-3 border-b border-gray-50 px-4 py-3 text-sm text-gray-500 hover:bg-blue-50 sm:px-5">
+          <CornerLeftUp class="h-5 w-5" />返回上一级
+        </RouterLink>
+        <ul>
+          <li v-for="entry in pagedEntries" :key="entry.path" class="resource-row group border-b border-gray-50 px-4 py-3 hover:bg-blue-50/60 sm:px-5">
+            <RouterLink :to="resourcePageUrl(entry.path)" class="flex min-w-0 items-center gap-3 text-sm text-gray-800 group-hover:text-blue-700">
+              <component :is="entry.type === 'directory' ? Folder : FileText" class="h-6 w-6 shrink-0" :class="entry.type === 'directory' ? 'fill-blue-100 text-blue-500' : 'text-gray-400'" />
+              <span class="break-all">{{ entry.name }}</span>
+            </RouterLink>
+            <time :datetime="entry.modified_at" class="hidden text-xs text-gray-400 sm:block">{{ formatDate(entry.modified_at) }}</time>
+            <span class="text-right text-xs tabular-nums text-gray-500">{{ formatResourceSize(entry.size) }}</span>
+            <a v-if="entry.type === 'file'" :href="resourceFileUrl(entry.path)" :aria-label="`下载 ${entry.name}`" class="rounded-md p-1 text-gray-400 hover:bg-blue-100 hover:text-blue-700"><Download class="h-4 w-4" /></a>
+            <ChevronRight v-else class="h-4 w-4 text-gray-300" />
+          </li>
+        </ul>
+        <div v-if="!filteredEntries.length" role="status" class="px-5 py-12 text-center text-sm text-gray-500">
+          {{ filter ? '没有找到匹配的资料，试试其他关键词。' : '这个目录还没有资料。' }}
+        </div>
+        <div class="flex items-center justify-between gap-3 px-5 py-4 text-xs text-gray-400">
+          <span>{{ filter ? `找到 ${filteredEntries.length} 项` : '资料仅供学习交流，请勿用于商业用途。' }}</span>
+          <div v-if="pageCount > 1" class="flex shrink-0 items-center gap-3 text-gray-600">
+            <button :disabled="page === 1" class="disabled:opacity-30" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount" class="disabled:opacity-30" @click="page++">下一页</button>
+          </div>
+        </div>
+      </section>
+      <section v-else aria-label="文件详情" class="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-12">
+        <FileText class="mx-auto h-20 w-20 text-blue-500" />
+        <h2 class="mt-5 break-all text-xl font-semibold text-gray-900">{{ contents.name }}</h2>
+        <p class="mt-3 text-sm text-gray-500">{{ formatResourceSize(contents.size) }} · {{ formatDate(contents.modified_at) }}</p>
+        <div class="mt-7 flex flex-wrap justify-center gap-3">
+          <a :href="resourceFileUrl(contents.path)" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"><Download class="h-4 w-4" />下载文件</a>
+          <a v-if="canPreview" :href="resourceFileUrl(contents.path, true)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"><ExternalLink class="h-4 w-4" />打开预览</a>
+          <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50" @click="copyLink"><Link class="h-4 w-4" />复制链接</button>
+        </div>
+        <p role="status" class="mt-3 text-sm text-gray-500">{{ copyMessage }}</p>
+        <p v-if="!canPreview" class="mt-5 text-sm text-gray-400">此格式请下载后使用相应软件打开。</p>
+        <img v-if="isImage" :src="resourceFileUrl(contents.path, true)" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-lg object-contain" />
+      </section>
+    </template>
+  </AppPageLayout>
 </template>
 
-<script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import DiskHeader from '@/components/disk/DiskHeader.vue'
-import DiskFolder from '@/components/disk/diskFolder/DiskFolder.vue'
-import DiskFile from '@/components/disk/diskFile/DiskFile.vue'
-import { Public } from '@/types/api/disk/public'
-import { FsGet, DirList } from '@/types/api/disk/fs'
-import { Me } from '@/types/api/disk/auth'
-import { sanitizeMarkdown } from '@/lib/richText'
-
-const ALIST_URL = import.meta.env.VITE_RESOURCE_SERVICE_URL || window.location.origin
+<script setup lang="ts">
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
+import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, type ResourceContents } from '@/lib/resourceBrowser'
 
 const route = useRoute()
-const message = useMessage()
-const diskPath = computed(() => route.path.replace(/^\/disk/, ''))
-const judgePathType = (path: string): 'file' | 'folder' =>
-  path.split('/').at(-1)?.includes('.') ? 'file' : 'folder'
-
-const siteSettings = ref<Public['data'] | null>(null)
-const meSettings = ref<Me['data'] | null>(null)
-const pathType = ref<'file' | 'folder'>(judgePathType(route.path))
+const router = useRouter()
+const currentPath = computed(() => {
+  const parts = route.params.path
+  return '/' + (Array.isArray(parts) ? parts.join('/') : parts || '')
+})
+const parentPath = computed(() => currentPath.value.slice(0, currentPath.value.lastIndexOf('/')) || '/')
+const breadcrumbs = computed(() => {
+  const parts = currentPath.value.split('/').filter(Boolean)
+  return parts.map((name, index) => ({ name, path: '/' + parts.slice(0, index + 1).join('/') }))
+})
+const contents = ref<ResourceContents | null>(null)
+const readmeHtml = ref('')
+const error = ref('')
+const loginRequired = ref(false)
 const loading = ref(true)
+const filter = ref('')
+const sort = ref('name')
 const page = ref(1)
-const perPage = 100
-const metaData = ref<FsGet['data'] | null>(null)
-const folderData = ref<DirList['data'] | null>(null)
-const hasReadme = ref(false)
-const readme = ref('')
-const rawHeader = ref('')
+const copyMessage = ref('')
+let controller: AbortController | undefined
 let loadVersion = 0
 
-const decodeDiskPath = (): string => {
-  try {
-    return decodeURIComponent(diskPath.value)
-  } catch {
-    throw new Error('路径编码不合法')
-  }
-}
-
-const parseJsonResponse = async <T,>(response: Response): Promise<T> => {
-  if (!response.ok) throw new Error(`请求失败（HTTP ${response.status}）`)
-  return response.json() as Promise<T>
-}
-
-const settingsPromise = (async () => {
-  try {
-    const [meResp, settingsResp] = await Promise.all([
-      fetch('/api/disk/me'),
-      fetch('/api/disk/public/settings'),
-    ])
-    const [meData, settingsData] = await Promise.all([
-      parseJsonResponse<Me>(meResp),
-      parseJsonResponse<Public>(settingsResp),
-    ])
-    if (settingsData.code !== 200 || meData.code !== 200) {
-      throw new Error(settingsData.message || meData.message || '读取网盘设置失败')
-    }
-    siteSettings.value = settingsData.data
-    meSettings.value = meData.data
-  } catch (error) {
-    message.error(error instanceof Error ? error.message : '读取网盘设置失败')
-  }
-})()
-
-const loadFolderContents = async (version: number): Promise<boolean> => {
-  const dirResp = await fetch('/api/disk/fs/list', {
-    method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=UTF-8' },
-    body: JSON.stringify({ path: decodeDiskPath(), page: page.value, per_page: perPage }),
-  })
-  const dirData = await parseJsonResponse<DirList>(dirResp)
-  if (dirData.code !== 200) throw new Error(dirData.message)
-  if (version !== loadVersion) return false
-  folderData.value = dirData.data
-  return true
-}
-
-const loadPath = async (): Promise<void> => {
+async function loadContents() {
   const version = ++loadVersion
+  controller?.abort()
+  controller = new AbortController()
   loading.value = true
-  readme.value = ''
-  rawHeader.value = ''
-  hasReadme.value = false
-  folderData.value = null
-  metaData.value = null
-
+  error.value = ''
+  loginRequired.value = false
+  readmeHtml.value = ''
+  copyMessage.value = ''
+  contents.value = null
   try {
-    const fsResp = await fetch('/api/disk/fs/get', {
-      method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify({ path: decodeDiskPath() }),
-    })
-    const fsData = await parseJsonResponse<FsGet>(fsResp)
-    if (fsData.code !== 200) throw new Error(fsData.message)
-    if (version !== loadVersion) return
-
-    metaData.value = fsData.data
-    rawHeader.value = await sanitizeMarkdown(fsData.data.header)
-    readme.value = fsData.data.readme ? await sanitizeMarkdown(fsData.data.readme) : ''
-    hasReadme.value = Boolean(readme.value)
-    pathType.value = fsData.data.is_dir ? 'folder' : 'file'
-    if (pathType.value === 'file') return
-
-    const loaded = await loadFolderContents(version)
-    if (!loaded) return
-    await settingsPromise
-    if (version !== loadVersion) return
-
-    const loadedFolder = folderData.value as DirList['data'] | null
-    const hasReadmeFile = loadedFolder?.content.some(
-      (item) => item.name.toLowerCase() === 'readme.md',
-    )
-    if (hasReadmeFile && meSettings.value?.base_path) {
-      const readmePath = `/p${meSettings.value.base_path}/${diskPath.value.replace(/^\/+/, '')}/readme.md`
-      const readmeUrl = new URL(readmePath, ALIST_URL)
-      readmeUrl.searchParams.set('t', String(Date.now()))
-      const readmeResp = await fetch(readmeUrl)
-      if (!readmeResp.ok) throw new Error('读取 README.md 失败')
-      const readmeData = await readmeResp.text()
-      if (version !== loadVersion) return
-      readme.value = await sanitizeMarkdown(readmeData)
-      hasReadme.value = Boolean(readme.value)
+    const response = await fetch(`/api/resources/browse/?${new URLSearchParams({ path: currentPath.value })}`, { signal: controller.signal })
+    if (!response.ok) {
+      loginRequired.value = response.status === 401
+      throw new Error(response.status === 401 ? '此目录需要登录后访问。' : response.status === 404 ? '这个资料不存在、已移动或无权访问。' : response.status === 400 ? '资料路径不合法。' : '暂时无法读取资料，请稍后重试。')
     }
-  } catch (error) {
-    if (version === loadVersion) {
-      message.error(error instanceof Error ? error.message : '网盘内容加载失败')
-    }
+    const data = (await response.json()).contents as ResourceContents
+    const html = await renderResourceReadme(data.readme || '', data.type === 'directory' ? data.path : parentPath.value)
+    if (version !== loadVersion) return
+    contents.value = data
+    readmeHtml.value = html
+    page.value = 1
+  } catch (reason) {
+    if (version === loadVersion && !controller.signal.aborted) error.value = reason instanceof Error ? reason.message : '加载资料失败。'
   } finally {
     if (version === loadVersion) loading.value = false
   }
 }
 
-const handlePageChange = (newPage: number) => {
-  page.value = newPage
+const entries = computed(() => (contents.value?.entries || []).filter(entry => entry.name.toLowerCase() !== 'readme.md'))
+const directoryCount = computed(() => entries.value.filter(entry => entry.type === 'directory').length)
+const fileCount = computed(() => entries.value.length - directoryCount.value)
+const collator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
+const filteredEntries = computed(() => entries.value.filter(entry => entry.name.toLocaleLowerCase().includes(filter.value.toLocaleLowerCase().trim())).sort((a, b) => {
+  if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
+  if (sort.value === 'modified') return b.modified_at.localeCompare(a.modified_at) || collator.compare(a.name, b.name)
+  if (sort.value === 'size') return (b.size || 0) - (a.size || 0) || collator.compare(a.name, b.name)
+  return collator.compare(a.name, b.name)
+}))
+const pageCount = computed(() => Math.max(1, Math.ceil(filteredEntries.value.length / 100)))
+const pagedEntries = computed(() => filteredEntries.value.slice((page.value - 1) * 100, page.value * 100))
+const canPreview = computed(() => /\.(pdf|png|jpe?g|gif|webp|avif|txt)$/i.test(contents.value?.name || ''))
+const isImage = computed(() => /\.(png|jpe?g|gif|webp|avif)$/i.test(contents.value?.name || ''))
+const formatDate = (date: string) => new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copyMessage.value = '链接已复制'
+  } catch {
+    copyMessage.value = '复制失败，请复制浏览器地址栏中的链接。'
+  }
 }
-
-watch(diskPath, async () => {
-  pathType.value = judgePathType(diskPath.value)
-  page.value = 1
-  await loadPath()
-}, { immediate: true })
-
-watch(page, async (newPage, oldPage) => {
-  if (newPage !== oldPage && pathType.value === 'folder') await loadPath()
-})
+function followReadmeLink(event: MouseEvent) {
+  const anchor = (event.target as Element).closest('a')
+  if (!anchor || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+  const href = anchor.getAttribute('href') || ''
+  if (href.startsWith('/disk/')) { event.preventDefault(); void router.push(href) }
+}
+watch(currentPath, () => { filter.value = ''; void loadContents() }, { immediate: true })
+watch([filter, sort], () => { page.value = 1 })
+onBeforeUnmount(() => { loadVersion++; controller?.abort() })
 </script>
+
+<style scoped>
+.resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 70px 24px; align-items: center; gap: 12px; }
+@media (min-width: 640px) { .resource-row { grid-template-columns: minmax(0, 1fr) 110px 85px 24px; gap: 20px; } }
+.resource-readme { overflow-wrap: anywhere; }
+.resource-readme :deep(pre) { overflow-x: auto; }
+.resource-readme :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
+.resource-readme :deep(img) { max-width: 100%; height: auto; }
+</style>

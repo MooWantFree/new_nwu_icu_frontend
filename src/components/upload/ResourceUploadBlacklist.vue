@@ -3,7 +3,8 @@
     <p v-if="error" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
     <p v-if="message" role="status" class="text-sm text-emerald-700">{{ message }}</p>
     <div>
-      <h3 class="text-sm font-semibold text-gray-800">已拉黑的文件夹</h3>
+      <h3 class="text-sm font-semibold text-gray-800">禁止投稿的文件夹</h3>
+      <p class="mt-2 text-xs text-gray-500">仅限制投稿；公开浏览、搜索和下载由“资料管理 → 访问权限”单独控制。</p>
       <p v-if="loadingBlacklist" class="mt-3 text-sm text-gray-500">正在加载黑名单…</p>
       <ul v-else-if="paths.length" class="mt-3 divide-y divide-gray-200 rounded-lg border border-gray-200">
         <li v-for="path in paths" :key="path" class="flex items-center justify-between gap-3 px-3 py-2">
@@ -87,7 +88,7 @@ const updateBlacklist = async (path: string, action: 'add' | 'remove') => {
     const response = await api.post({ url: '/api/management/uploads/blacklist/', query: { path, action } })
     checkResponse(response, '黑名单保存失败，请重试。')
     paths.value = response.content.paths
-    message.value = action === 'add' ? '已拉黑，该文件夹及其子文件夹已对投稿用户隐藏。' : '已解除该条黑名单。'
+    message.value = action === 'add' ? '已禁止向该文件夹及其子文件夹投稿。公开访问权限保持不变。' : '已解除该条投稿黑名单。'
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '黑名单保存失败，请重试。'
   } finally { busy.value = false }

@@ -22,7 +22,12 @@ import type {
   APIResourceUploadUpdate,
 } from './resourceUpload'
 import { MethodMap } from './base'
+import type * as ResourceTools from './resourceTools'
 import type {
+  APIManagementResourceFiles,
+  APIManagementResourceTrash,
+  APIManagementResourceUpload,
+  APIManagementResourceAction,
   APIManagementAnnouncementCreate,
   APIManagementPasskeyAuthenticationOptions,
   APIManagementPasskeyAuthenticationVerify,
@@ -41,6 +46,13 @@ import type {
 
 export type RequestEndpoints = {
   [MethodMap.GET]: {
+    '/api/management/resources/readme/': ResourceTools.APIReadme
+    '/api/management/resources/access/': ResourceTools.APIAccess
+    '/api/management/resources/index/': ResourceTools.APIIndex
+    '/api/management/resources/audit/': ResourceTools.APIAudit
+    '/api/management/resources/statistics/': ResourceTools.APIStatistics
+    '/api/management/resources/': APIManagementResourceFiles
+    '/api/management/resources/trash/': APIManagementResourceTrash
     '/api/management/session/': APIManagementSession
     '/api/management/reports/': APIManagementReportList
     '/api/management/uploads/': APIManagementUploadList
@@ -106,6 +118,12 @@ export type RequestEndpoints = {
     // Since Alist's API format is not same as present, so another method is used for it.
   }
   [MethodMap.POST]: {
+    '/api/management/resources/operations/': ResourceTools.APIOperations
+    '/api/management/resources/readme/': ResourceTools.APISaveReadme
+    '/api/management/resources/access/': ResourceTools.APISaveAccess
+    '/api/management/resources/index/': ResourceTools.APIReindex
+    '/api/management/resources/upload/': APIManagementResourceUpload
+    '/api/management/resources/action/': APIManagementResourceAction
     '/api/management/passkeys/authentication/options/': APIManagementPasskeyAuthenticationOptions
     '/api/management/passkeys/authentication/verify/': APIManagementPasskeyAuthenticationVerify
     '/api/management/passkeys/registration/options/': APIManagementPasskeyRegistrationOptions
