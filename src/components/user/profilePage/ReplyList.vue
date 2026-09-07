@@ -8,7 +8,7 @@
       >
         <div class="flex justify-between items-center mb-2">
           <router-link
-            :to="`/review/course/${reply.course.id}`"
+            :to="getReplyRoute(reply.course.id, reply.reply.id)"
             class="text-lg font-bold text-blue-700 transition-colors duration-200 hover:text-blue-800"
           >
             {{ reply.course.name }}
@@ -37,7 +37,7 @@
           </div>
           <button
             class="btn-secondary min-h-8 px-3 py-1"
-            @click="$router.push(`/review/course/${reply.course.id}`)"
+            @click="$router.push(getReplyRoute(reply.course.id, reply.reply.id))"
           >
             查看原文
           </button>
@@ -93,6 +93,12 @@ const data = ref<DataType | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const errorDetail = ref<string | null>(null)
+
+const getReplyRoute = (courseId: number, replyId: number) => ({
+  name: 'courseReviewItem',
+  params: { id: courseId },
+  hash: `#reply-${replyId}`,
+})
 
 // Fetch data function
 const fetchData = async () => {

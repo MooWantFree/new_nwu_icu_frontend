@@ -186,13 +186,14 @@
 <script lang="ts" setup>
 import { useUser } from '@/lib/useUser'
 import { Review } from '@/types/courseReview'
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { Trash2, MoveLeft, MessageSquare } from 'lucide-vue-next'
 import ReviewReplyInput from './ReviewReplyInput.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import { useRoute } from 'vue-router'
+import { focusCourseReviewTarget } from '@/lib/focusCourseReviewTarget'
 
 const { review } = defineProps<{
   review: Review
@@ -279,42 +280,17 @@ onMounted(async () => {
 
 const repliesRefs = useTemplateRef('replies')
 const jumpHistory = ref<{ from: number; to: number }[]>([]) // Now stores reply IDs instead of floor numbers
+let stopFocusAnimation: (() => void) | undefined
 
-const handleJmp = async (targetElement: HTMLElement) => {
-  if (targetElement) {
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    await new Promise<void>((resolve) => {
-      const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          observer.disconnect()
-          resolve()
-        }
-      })
-      observer.observe(targetElement)
-    })
-    // await the element to be in the viewport
-    await new Promise((resolve) => setTimeout(resolve, 200))
-
-    await nextTick()
-
-    targetElement.classList.add(
-      'transition-transform',
-      'duration-300',
-      'scale-110',
-    )
-    setTimeout(() => {
-      targetElement.classList.remove('scale-110')
-      targetElement.classList.add('scale-100')
-    }, 300)
-    setTimeout(() => {
-      targetElement.classList.remove(
-        'transition-transform',
-        'duration-300',
-        'scale-100',
-      )
-    }, 600)
-  }
+const handleJmp = (targetElement: HTMLElement) => {
+  targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  stopFocusAnimation?.()
+  stopFocusAnimation = focusCourseReviewTarget(targetElement)
 }
+
+onUnmounted(() => {
+  stopFocusAnimation?.()
+})
 
 const handleJmpClick = async (
   targetReplyId: number,
