@@ -1,192 +1,178 @@
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none bg-gray-900 bg-opacity-50 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-3 backdrop-blur-sm sm:p-4"
   >
-    <div class="relative w-full max-w-4xl mx-auto my-4 px-4 sm:px-0">
+    <div class="my-auto w-full max-w-4xl">
       <div
-        class="relative flex flex-col w-full bg-white border-0 rounded-xl shadow-2xl outline-none focus:outline-none transition-all duration-300 ease-in-out"
-        style="max-height: 92vh; height: auto"
+        class="flex max-h-[calc(100dvh-1.5rem)] min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:max-h-[92vh]"
       >
-        <div
-          class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 rounded-t"
-        >
-          <h3 class="text-xl font-bold text-gray-900 sm:text-2xl">
-            {{ initContent?.content ? '编辑' : '新建' }}评价
-          </h3>
+        <header class="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
+          <div class="min-w-0">
+            <h3 class="text-lg font-bold text-slate-900 sm:text-xl">
+              {{ initContent?.content ? '编辑评价' : '写下评价' }}
+            </h3>
+            <div class="mt-2 flex items-center gap-2 text-xs font-medium sm:text-sm">
+              <span :class="step === 1 ? 'text-blue-700' : 'text-slate-500'" class="flex items-center gap-1.5">
+                <span :class="step === 1 ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-slate-500'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">1</span>
+                写评价
+              </span>
+              <span class="h-px w-5 bg-slate-300 sm:w-8" />
+              <span :class="step === 2 ? 'text-blue-700' : 'text-slate-400'" class="flex items-center gap-1.5">
+                <span :class="step === 2 ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-slate-400'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">2</span>
+                补充信息
+              </span>
+            </div>
+          </div>
           <button
-            class="p-2 ml-auto text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors duration-200 flex items-center justify-center"
+            type="button"
+            class="ml-4 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="关闭评价编辑器"
             @click="closeModal"
           >
-            <span class="text-2xl">&times;</span>
+            <X class="h-5 w-5" />
           </button>
-        </div>
-        
-        <div
-          v-if="!loading"
-          class="relative p-4 sm:p-6 flex-auto overflow-y-auto bg-gray-50"
-          style="height: calc(80vh - 140px); max-height: 60vh"
-        >
-          <Editor
-            v-model="content"
-            :allowEdit="true"
-            :withToolbar="true"
-            class="min-h-full bg-white rounded-lg shadow-sm"
-          />
-        </div>
-        
-        <div
-          v-else
-          class="relative p-4 sm:p-6 flex-auto overflow-y-auto bg-gray-50 flex items-center justify-center"
-          style="height: calc(80vh - 140px); max-height: 60vh"
-        >
-          <div class="flex flex-col items-center">
-            <div
-              class="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
-              role="status"
-            >
-              <span class="sr-only">加载中...</span>
-            </div>
-            <p class="mt-3 sm:mt-4 text-center font-medium text-gray-600">加载中...</p>
-          </div>
-        </div>
-        
-        <div
-          v-if="showRatingsSelector"
-          class="p-4 sm:p-6 border-t border-gray-200 bg-white rounded-b-lg transition-all duration-300"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <div class="md:col-span-2">
-              <h4 class="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">评分项</h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">课程难度：</span>
-                    <ReviewMetricScale v-model="difficulty" label="课程难度" :levels="['很简单', '较简单', '适中', '较难', '很难']" />
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">作业负担：</span>
-                    <ReviewMetricScale v-model="homework" label="作业负担" :levels="['很少', '较少', '适中', '较多', '很多']" />
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">给分情况：</span>
-                    <ReviewMetricScale v-model="grade" label="给分情况" :levels="['很严', '偏严', '一般', '偏宽', '很宽']" />
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">学习收获：</span>
-                    <ReviewMetricScale v-model="reward" label="学习收获" :levels="['很少', '较少', '一般', '较多', '很多']" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 class="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">学期信息</h4>
-              <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">学期：</span>
-                  <div class="w-3/4">
-                    <n-select
-                      v-model:value="selectedSemester"
-                      :options="semesterOptions"
-                      placeholder="选择学期"
-                      class="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="p-4 sm:p-6 border-t border-gray-200 bg-white">
-          <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center">
-              <div class="text-sm font-medium mr-3 text-gray-700">总体评分：</div>
-              <div class="flex items-center">
-                <Rate v-model="rating" />
-                <span class="ml-2 text-gray-600">{{ rating }}分</span>
-              </div>
-            </div>
-            
-            <button
-              class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
-              @click="showRatingsSelector = !showRatingsSelector"
-            >
-              <component
-                :is="showRatingsSelector ? ChevronDown : ChevronUp"
-                class="w-4 h-4 mr-2"
-              />
-              {{ showRatingsSelector ? '收起' : '展开' }}评分选项
-            </button>
+        </header>
 
-            <div class="flex flex-col sm:flex-row sm:items-center">
-              <div class="flex items-center mb-3 sm:mb-0 sm:mr-4">
-                <input
-                  type="checkbox"
-                  id="anonymous"
-                  v-model="isAnonymous"
-                  class="w-4 h-4 text-blue-700 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label for="anonymous" class="ml-2 text-sm font-medium text-gray-700">匿名发布</label>
-              </div>
-              
-              <div class="flex flex-col w-full sm:w-auto min-w-64">
-                <div v-if="!isFormValid" class="text-red-500 text-xs sm:text-sm mb-2">
-                  请填写内容，并选择评分及学期
-                </div>
-                <div class="flex w-full space-x-3">
-                  <button
-                    class="w-1/3 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-                    type="button"
-                    @click="closeModal"
-                    :disabled="submitting || loading"
-                  >
-                    取消
-                  </button>
-                  <button
-                    class="w-2/3 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
-                    type="button"
-                    @click="submitReview"
-                    :disabled="submitting || loading || !isFormValid"
-                  >
-                    <LoaderCircle
-                      v-if="submitting"
-                      class="mr-2 w-4 h-4 text-white animate-spin"
-                    />
-                    {{ submitting ? '提交中...' : '提交' }}
-                  </button>
-                </div>
-              </div>
-            </div>
+        <div v-if="loading" class="flex min-h-72 flex-1 items-center justify-center bg-slate-50 p-6">
+          <div class="flex flex-col items-center">
+            <LoaderCircle class="h-10 w-10 animate-spin text-blue-600" />
+            <p class="mt-3 text-sm font-medium text-slate-600">加载中...</p>
           </div>
         </div>
+
+        <main v-else class="min-h-0 flex-1 overflow-y-auto bg-slate-50">
+          <section v-if="step === 1" class="p-4 sm:p-6">
+            <p class="mb-4 text-sm leading-6 text-slate-500">
+              先写下你的真实学习体验；评分与发布信息将在下一步补充。
+            </p>
+            <Editor
+              v-model="content"
+              :allowEdit="true"
+              :withToolbar="true"
+              class="min-h-[22rem] rounded-lg bg-white shadow-sm sm:min-h-[28rem]"
+            />
+          </section>
+
+          <section v-else class="p-4 sm:p-6">
+            <div class="rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3">
+              <div class="flex items-center justify-between gap-3">
+                <h4 class="text-sm font-semibold text-slate-800">你的评价内容</h4>
+                <button
+                  type="button"
+                  class="shrink-0 text-sm font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  @click="step = 1"
+                >
+                  返回修改
+                </button>
+              </div>
+              <p class="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{{ contentPreview }}</p>
+            </div>
+
+            <div class="mt-5 flex items-center gap-2">
+              <h4 class="text-base font-semibold text-slate-900">补充课程信息</h4>
+              <span class="text-sm text-slate-500">不确定时，保留中间值即可</span>
+            </div>
+
+            <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div class="border-b border-slate-200 px-4 py-4 sm:px-5">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p class="font-medium text-slate-800">总体评分</p>
+                    <p class="mt-1 text-xs text-slate-500">你会愿意把这门课推荐给同学吗？</p>
+                  </div>
+                  <ReviewMetricScale
+                    v-model="rating"
+                    label="总体评分"
+                    :levels="['很不推荐', '不太推荐', '一般', '推荐', '强烈推荐']"
+                  />
+                </div>
+              </div>
+
+              <div class="divide-y divide-slate-100 px-4 sm:px-5">
+                <div v-for="metric in metrics" :key="metric.key" class="py-3.5">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-sm font-medium text-slate-700">{{ metric.label }}</p>
+                    <ReviewMetricScale v-model="metric.value.value" :label="metric.label" :levels="metric.levels" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 sm:p-5">
+                <label class="block text-sm font-medium text-slate-700">
+                  授课学期
+                  <n-select
+                    v-model:value="selectedSemester"
+                    :options="semesterOptions"
+                    placeholder="选择学期"
+                    class="mt-2"
+                  />
+                </label>
+                <label class="flex cursor-pointer items-start gap-3 rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                  <input
+                    id="anonymous"
+                    v-model="isAnonymous"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    <span class="block font-medium">匿名发布</span>
+                    <span class="mt-1 block text-xs leading-5 text-slate-500">开启后，不会在评价中展示你的名字和个人主页。</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer class="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6 sm:py-4">
+          <div class="flex items-center justify-between gap-3">
+            <button
+              class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              :disabled="submitting || loading"
+              @click="step === 1 ? closeModal() : (step = 1)"
+            >
+              {{ step === 1 ? '取消' : '上一步' }}
+            </button>
+            <div class="flex min-w-0 items-center gap-3">
+              <p
+                v-if="(step === 1 && !isContentValid) || (step === 2 && !isFormValid)"
+                class="whitespace-nowrap text-right text-xs text-red-600"
+                aria-live="polite"
+              >
+                {{ step === 1 ? '请先填写评价内容' : '请确认学期信息后再发布' }}
+              </p>
+              <button
+                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-300 sm:px-5"
+                type="button"
+                :disabled="submitting || loading || (step === 1 ? !isContentValid : !isFormValid)"
+                @click="step === 1 ? (step = 2) : submitReview()"
+              >
+                <LoaderCircle v-if="submitting" class="mr-2 h-4 w-4 animate-spin" />
+                {{ step === 1 ? '继续' : submitting ? '发布中...' : '发布评价' }}
+              </button>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { LoaderCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
-import Editor from '@/components/tiptap/editor/Editor.vue'
-import Rate from '@/components/tinyComponents/Rate.vue'
-import ReviewMetricScale from './ReviewMetricScale.vue'
-import { LoaderCircle, ChevronUp, ChevronDown } from 'lucide-vue-next'
 import { APISemesterList } from '@/types/api/courseReview/course'
+import Editor from '@/components/tiptap/editor/Editor.vue'
+import ReviewMetricScale from './ReviewMetricScale.vue'
 
 const props = defineProps<{
   courseData: CourseData
   modelValue: boolean
   submitting: boolean
-  initContent:
-    | ReviewDataBase
-    | null
+  initContent: ReviewDataBase | null
 }>()
 
 const emit = defineEmits<{
@@ -194,37 +180,49 @@ const emit = defineEmits<{
   (e: 'submit', content: ReviewDataBase): void
 }>()
 
+const step = ref<1 | 2>(1)
 const content = ref(props.initContent?.content || '')
-const isAnonymous = ref(props.initContent?.anonymous || false)
-const rating = ref(props.initContent?.rating || 0)
-const selectedSemester = ref<number | null>()
-const difficulty = ref(props.initContent?.difficulty || 0)
-const homework = ref(props.initContent?.homework || 0)
-const grade = ref(props.initContent?.grade || 0)
-const reward = ref(props.initContent?.reward || 0)
+const isAnonymous = ref(props.initContent?.anonymous ?? false)
+const rating = ref(props.initContent?.rating || 3)
+const selectedSemester = ref<number | null>(null)
+const difficulty = ref(props.initContent?.difficulty || 3)
+const homework = ref(props.initContent?.homework || 3)
+const grade = ref(props.initContent?.grade || 3)
+const reward = ref(props.initContent?.reward || 3)
 const semesterData = ref<APISemesterList['response'] | null>(null)
+
+const metrics = [
+  { key: 'difficulty', label: '课程难度', value: difficulty, levels: ['很简单', '较简单', '适中', '较难', '很难'] },
+  { key: 'homework', label: '作业负担', value: homework, levels: ['很少', '较少', '适中', '较多', '很多'] },
+  { key: 'grade', label: '给分情况', value: grade, levels: ['很严', '偏严', '一般', '偏宽', '很宽'] },
+  { key: 'reward', label: '学习收获', value: reward, levels: ['很少', '较少', '一般', '较多', '很多'] },
+] as const
+
 const semesterOptions = computed(() => {
   if (!semesterData.value) return []
   return Object.entries(semesterData.value)
     .reverse()
-    .map(([key, value]) => ({
-      label: value,
-      value: Number(key),
-    }))
+    .map(([key, value]) => ({ label: value, value: Number(key) }))
 })
-watch(
-  () => semesterOptions.value,
-  (options) => {
-    const initSelectedSemester =
-      options.find((it) => parseInt(it.label) === props.initContent?.semester)?.value ||
-      null
-    selectedSemester.value = initSelectedSemester
+
+watch(semesterOptions, (options) => {
+  if (props.initContent?.semester) {
+    selectedSemester.value = options.find((option) => parseInt(option.label) === props.initContent?.semester)?.value ?? null
+  } else {
+    selectedSemester.value = options[0]?.value ?? null
   }
-)
+})
+
+const isContentValid = computed(() => {
+  const plainText = content.value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+  return plainText.length > 0
+})
+const contentPreview = computed(() => content.value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim())
+const isFormValid = computed(() => isContentValid.value && rating.value > 0 && difficulty.value > 0 && homework.value > 0 && grade.value > 0 && reward.value > 0 && selectedSemester.value !== null)
 
 const semesterListRequest = api.get({ url: '/api/assessment/semester/' })
-
 const loading = ref(true)
+
 onMounted(async () => {
   const response = await semesterListRequest
   semesterData.value = response.content
@@ -232,8 +230,8 @@ onMounted(async () => {
   document.body.style.overflow = 'hidden'
 })
 
-const submitReview = async () => {
-  const reviewData: ReviewDataBase= {
+const submitReview = () => {
+  emit('submit', {
     course: props.courseData.id,
     content: content.value,
     rating: rating.value,
@@ -243,65 +241,29 @@ const submitReview = async () => {
     homework: homework.value,
     reward: reward.value,
     semester: selectedSemester.value!,
-  }
-  emit('submit', reviewData)
+  })
 }
 
 const closeModal = () => {
-  if (
-    content.value.trim() &&
-    content.value.trim() !== '<p></p>' &&
-    content.value !== props.initContent?.content
-  ) {
-    if (
-      confirm(
-        '你有未保存的内容。确定要关闭吗？\n\n！！！你的未保存内容将丢失！！！'
-      )
-    ) {
-      emit('update:modelValue', false)
-    }
+  if (isContentValid.value && content.value !== props.initContent?.content) {
+    if (confirm('你有未保存的内容。确定要关闭吗？\n\n未保存的内容将丢失。')) emit('update:modelValue', false)
   } else {
     emit('update:modelValue', false)
   }
 }
 
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (content.value.trim()) {
-    event.preventDefault()
-  }
+  if (isContentValid.value) event.preventDefault()
 }
 
-onMounted(() => {
-  window.addEventListener('beforeunload', handleBeforeUnload)
-})
-
+onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload))
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   document.body.style.overflow = 'auto'
 })
 
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue) {
-      window.addEventListener('beforeunload', handleBeforeUnload)
-    } else {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-    }
-  }
-)
-
-const showRatingsSelector = ref(false)
-
-// TODO: validate the form using zod
-const isFormValid = computed(
-  () =>
-    content.value.trim() &&
-    rating.value > 0 &&
-    difficulty.value > 0 &&
-    homework.value > 0 &&
-    grade.value > 0 &&
-    reward.value > 0 &&
-    selectedSemester.value !== null
-)
+watch(() => props.modelValue, (visible) => {
+  if (visible) window.addEventListener('beforeunload', handleBeforeUnload)
+  else window.removeEventListener('beforeunload', handleBeforeUnload)
+})
 </script>

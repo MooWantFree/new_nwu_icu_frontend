@@ -72,4 +72,13 @@ No actionable P0, P1, or P2 visual differences remain for the requested color an
 - Comparison history: the first pass found a P1 reactive-state defect for newly discovered branches. The branch factory now returns the reactive collection entry, a regression test covers it, and the post-fix browser pass verified collapse, expansion, descendant restoration, and zero console warnings or errors.
 - Result: no actionable P0, P1, or P2 differences remain for the requested collapsed-reply state.
 
+## Addendum — Course review submission flow
+
+- Source visual truth path: `C:\Users\ms\.codex\generated_images\01a078b9-a98b-7790-b885-3a578ad111d3\exec-a04f2647-986e-4a1d-92c1-b6dad2d498be.png` (1672 × 942 px).
+- Implementation: `http://localhost:5173/review/course/3447`, **编辑评价 → 补充信息** state, rendered in the Codex in-app browser at 674 × 909 px and 1× density; the inline browser capture has no filesystem path.
+- State and interaction evidence: writing first hides all score and privacy inputs; continuing shows a content preview, return-to-edit control, five-level overall and four metric scales, semester, and anonymity. Existing values—including `2017-秋`—were retained after correcting the semester label match to `parseInt`.
+- Responsive evidence: the browser capture confirmed a narrow, scroll-safe modal with persistent actions. At the `sm` breakpoint the score rows and the semester/anonymity grid are deliberately defined to stack into one column, preventing horizontal overflow for phone widths.
+- Fidelity surfaces: existing typography, blue/slate tokens, border/radius treatment, Lucide controls, and Chinese microcopy were preserved. The source's hierarchy is matched; its wider desktop composition intentionally adapts to the narrower implementation capture.
+- Result: no actionable P0, P1, or P2 differences remain. A dedicated 390 px visual regression capture is a P3 follow-up only.
+
 final result: passed

@@ -1,13 +1,15 @@
 <template>
-  <article class="min-w-0" ref="courseReviewItem">
-    <ReviewHeader
-      :review="review"
-      :is-author="isAuthor"
-      @review-edit="handleEdit"
-      @review-delete="handleDeleteReview"
-    />
-    <ReviewContent :review="review" />
-    <ReviewBottom :review="review" />
+  <article class="min-w-0">
+    <div ref="courseReviewItem">
+      <ReviewHeader
+        :review="review"
+        :is-author="isAuthor"
+        @review-edit="handleEdit"
+        @review-delete="handleDeleteReview"
+      />
+      <ReviewContent :review="review" />
+      <ReviewBottom :review="review" />
+    </div>
     <ReviewReplies :review="review" @reply-deleted="handleReplyDeleted" />
   </article>
 </template>
@@ -16,6 +18,7 @@
 import { Review } from '@/types/courseReview'
 import {
   onMounted,
+  onUnmounted,
   computed,
   useTemplateRef,
   nextTick,
@@ -44,6 +47,33 @@ const dialog = useDialog()
 const route = useRoute()
 const { userInfo } = useUser()
 const courseReviewItem = useTemplateRef('courseReviewItem')
+let clearFocusTimer: number | undefined
+let cleanupFocusTimer: number | undefined
+
+const focusReview = () => {
+  const element = courseReviewItem.value
+  if (!element) return
+
+  if (clearFocusTimer) window.clearTimeout(clearFocusTimer)
+  if (cleanupFocusTimer) window.clearTimeout(cleanupFocusTimer)
+
+  element.classList.add(
+    'rounded-lg',
+    'bg-blue-50/70',
+    'ring-2',
+    'ring-blue-200',
+    'ring-offset-2',
+    'transition-all',
+    'duration-500',
+    'ease-out'
+  )
+  clearFocusTimer = window.setTimeout(() => {
+    element.classList.remove('bg-blue-50/70', 'ring-2', 'ring-blue-200', 'ring-offset-2')
+  }, 1600)
+  cleanupFocusTimer = window.setTimeout(() => {
+    element.classList.remove('rounded-lg', 'transition-all', 'duration-500', 'ease-out')
+  }, 2200)
+}
 
 // Scroll if has hash
 onMounted(async () => {
@@ -51,33 +81,15 @@ onMounted(async () => {
   if (hash && hash.includes(`review-${review.id}`)) {
     await nextTick()
     if (courseReviewItem.value) {
-      const scrollPromise = new Promise((resolve) => {
-        const scrollEndHandler = () => {
-          window.removeEventListener('scrollend', scrollEndHandler)
-          resolve(null)
-        }
-        window.addEventListener('scrollend', scrollEndHandler)
-      })
-      courseReviewItem.value.scrollIntoView({ behavior: 'smooth' })
-      await scrollPromise
-      courseReviewItem.value.classList.add(
-        'transition-transform',
-        'duration-300',
-        'scale-110'
-      )
-      setTimeout(() => {
-        courseReviewItem.value?.classList.remove('scale-110')
-        courseReviewItem.value?.classList.add('scale-100')
-      }, 300)
-      setTimeout(() => {
-        courseReviewItem.value?.classList.remove(
-          'transition-transform',
-          'duration-300',
-          'scale-100'
-        )
-      }, 600)
+      courseReviewItem.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      focusReview()
     }
   }
+})
+
+onUnmounted(() => {
+  if (clearFocusTimer) window.clearTimeout(clearFocusTimer)
+  if (cleanupFocusTimer) window.clearTimeout(cleanupFocusTimer)
 })
 
 const handleEdit = () => {

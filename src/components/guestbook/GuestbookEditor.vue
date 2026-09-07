@@ -85,5 +85,19 @@ onBeforeUnmount(() => editor.value?.destroy())
 <style>
 .guestbook-editor .ProseMirror p { margin: 0 0 0.5rem; }
 .guestbook-editor .ProseMirror p:last-child { margin-bottom: 0; }
-.guestbook-editor .ProseMirror p.is-editor-empty:first-child::before { color: #8e8e93; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
+/* Keep the placeholder in the empty paragraph's line box, so it uses the
+   same baseline as the caret instead of the separate float layout. */
+.guestbook-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: #8e8e93;
+  content: attr(data-placeholder);
+  display: inline-block;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  overflow: visible;
+  pointer-events: none;
+  vertical-align: baseline;
+  white-space: nowrap;
+  width: 0;
+}
 </style>

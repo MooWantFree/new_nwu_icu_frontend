@@ -1,10 +1,10 @@
 <template>
-  <div ref="editorContainer">
+  <div ref="editorContainer" class="flex min-h-full flex-col">
     <editor-toolbar :editor="editor" v-if="editor && showToolbar" />
-    <div class="max-w-none p-4">
+    <div class="editor-input-area max-w-none flex flex-1 cursor-text p-4" @mousedown="focusEditorFromBlankArea">
       <editor-content
         :editor="editor"
-        class="prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl"
+        class="editor-content prose prose-sm sm:prose-base lg:prose-lg xl:prose-xl flex-1"
       />
     </div>
   </div>
@@ -150,16 +150,35 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
     }
   }
 }
+
+const focusEditorFromBlankArea = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (target.closest('.ProseMirror')) return
+
+  event.preventDefault()
+  editor.value?.commands.focus('end')
+}
 </script>
 
 <style>
-/* Styles for the placeholder */
+/* Share the text baseline with the empty paragraph's caret. Absolute positioning
+   and floats create a separate line box, whose font fallback metrics can differ. */
 .tiptap p.is-editor-empty:first-child::before {
   color: #8e8e93;
   content: attr(data-placeholder);
-  float: left;
-  height: 0;
+  display: inline-block;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  overflow: visible;
   pointer-events: none;
+  vertical-align: baseline;
+  white-space: nowrap;
+  width: 0;
+}
+
+.editor-content > .ProseMirror {
+  min-height: 100%;
 }
 
 /* Table styles */

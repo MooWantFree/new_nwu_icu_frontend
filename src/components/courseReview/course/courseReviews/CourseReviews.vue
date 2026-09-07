@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
@@ -123,6 +124,8 @@ enum SortMethods {
 
 const message = useMessage()
 const { isLoggedIn } = useUser()
+const route = useRoute()
+const router = useRouter()
 
 const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
 const sortSelectorOptions = [
@@ -261,6 +264,7 @@ const handleSubmitReview = async (content: ReviewDataBase) => {
   isSubmittingReview.value = true
   try {
     let status: number
+    let targetReviewId: number | null = props.courseData.request_user_review_id ?? null
     if (initContent.value) {
       const resp = await api.put({
         url: '/api/assessment/review/',
@@ -273,10 +277,19 @@ const handleSubmitReview = async (content: ReviewDataBase) => {
         query: content,
       })
       status = resp.status
+      targetReviewId = resp.content.review_id
     }
 
     if (status !== 200) {
       throw new Error('Failed to submit review')
+    }
+
+    if (targetReviewId !== null) {
+      await router.replace({
+        path: route.path,
+        query: route.query,
+        hash: `#review-${targetReviewId}`,
+      })
     }
     emit('reloadData')
 
