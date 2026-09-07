@@ -25,7 +25,7 @@
           </div>
           <Time :time="entry.created_at" class="shrink-0" />
         </div>
-        <div class="guestbook-content mt-3 break-words text-gray-700" v-html="sanitizeGuestbookHtml(entry.content)" />
+        <div class="guestbook-content mt-3 break-words text-gray-700" v-html="isAnnouncementRoot ? sanitizeAnnouncementHtml(entry.content) : sanitizeGuestbookHtml(entry.content)" />
         <div class="mt-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 text-sm text-gray-600">
           <div class="flex flex-wrap items-center gap-3">
             <button v-if="!entry.is_deleted" :disabled="likePending" :aria-pressed="entry.liked_by_me" aria-label="点赞" class="inline-flex items-center gap-1 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50" :class="{ 'text-blue-700': entry.liked_by_me }" @click="$emit('like', entry)">
@@ -36,7 +36,7 @@
           </div>
           <div class="ml-auto flex items-center gap-3">
             <button v-if="!entry.is_deleted && (board !== 'announcements' || entry.parent_id !== null)" :disabled="likePending" class="text-gray-400 hover:text-red-600" @click="showReport = !showReport">举报</button>
-            <button v-if="entry.is_me && !entry.is_deleted" :disabled="likePending" class="text-gray-400 hover:text-red-600" @click="remove">删除</button>
+            <button v-if="entry.is_me && !entry.is_deleted && !isAnnouncementRoot" :disabled="likePending" class="text-gray-400 hover:text-red-600" @click="remove">删除</button>
           </div>
         </div>
         <div v-if="showReport && !entry.is_deleted" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm">
@@ -53,7 +53,7 @@ import { computed, ref } from 'vue'
 import { MessageCircle, MessagesSquare, ThumbsUp } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import Time from '@/components/tinyComponents/Time.vue'
-import { sanitizeGuestbookHtml } from '@/lib/guestbook'
+import { sanitizeAnnouncementHtml, sanitizeGuestbookHtml } from '@/lib/guestbook'
 import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
 const props = withDefaults(defineProps<{ entry: GuestbookEntry; highlighted?: boolean; likePending?: boolean; board?: DiscussionBoard }>(), { board: 'guestbook' })
@@ -84,4 +84,5 @@ const report = (reason: 'spam' | 'abuse' | 'privacy' | 'other') => {
 <style>
 .guestbook-content p { margin: 0 0 0.5rem; }
 .guestbook-content p:last-child { margin-bottom: 0; }
+.guestbook-content img { display: block; height: auto; margin: 0.75rem auto; max-width: 100%; border-radius: 0.5rem; }
 </style>

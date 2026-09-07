@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { effectScope } from 'vue'
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
-import { guestbookPasteContent, guestbookTextLength, loadGuestbookDraft, saveGuestbookDraft } from './guestbook'
+import { guestbookPasteContent, guestbookTextLength, loadGuestbookDraft, sanitizeAnnouncementHtml, sanitizeGuestbookHtml, saveGuestbookDraft } from './guestbook'
 import { useGuestbookDraft } from './useGuestbookDraft'
 
 describe('guestbook drafts', () => {
@@ -78,5 +78,25 @@ describe('guestbook text', () => {
     expect(editor.getHTML()).not.toContain('<strong>')
     expect(editor.getJSON().content).toHaveLength(4)
     editor.destroy()
+  })
+})
+
+describe('announcement images', () => {
+  const imageUrl = '/api/download/123e4567-e89b-12d3-a456-426614174000/'
+
+  it('keeps uploaded images only for announcements', () => {
+    expect(sanitizeAnnouncementHtml(`<p>公告</p><img src="${imageUrl}" onerror="alert(1)">`))
+      .toContain(`src="${imageUrl}"`)
+    expect(sanitizeGuestbookHtml(`<p>留言</p><img src="${imageUrl}">`)).toBe('<p>留言</p>')
+  })
+
+  it('removes external, base64, and malformed image sources', () => {
+    const content = sanitizeAnnouncementHtml([
+      '<p>公告</p>',
+      '<img src="https://example.com/a.png">',
+      '<img src="data:image/png;base64,abc">',
+      '<img src="/api/download/not-a-uuid/">',
+    ].join(''))
+    expect(content).toBe('<p>公告</p>')
   })
 })

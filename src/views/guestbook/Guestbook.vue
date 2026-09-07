@@ -4,7 +4,7 @@
     :description="isAnnouncements ? '查看站内公告，也欢迎友善地参与讨论。' : '分享想法，也欢迎友善地参与讨论。'"
   >
     <template #actions>
-      <button v-if="!isAnnouncements || userInfo?.is_staff" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">{{ isAnnouncements ? '添加公告' : '添加留言' }}</button>
+      <button v-if="!isAnnouncements" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">添加留言</button>
     </template>
 
     <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" :board="board" @close="composerOpen = false" @created="created" />
@@ -80,7 +80,7 @@ const load = async () => {
 }
 const changePage = (value: number) => router.push({ query: { ...route.query, page: String(value) } })
 const openComposer = () => {
-  if (isAnnouncements.value && !userInfo.value?.is_staff) return
+  if (isAnnouncements.value) return
   if (requireLogin(`${isAnnouncements.value ? '/announcements' : '/guestbook'}?compose=1`)) composerOpen.value = true
 }
 const created = async () => {
@@ -102,7 +102,7 @@ const replyCreated = async (entry: GuestbookEntry) => {
 
 watch([page, board, () => userInfo.value?.id], () => { void load() }, { immediate: true })
 watch(() => [userInfo.value?.id, route.query.compose], async ([user, compose]) => {
-  if (user && compose === '1' && (!isAnnouncements.value || userInfo.value?.is_staff)) {
+  if (user && compose === '1' && !isAnnouncements.value) {
     await router.replace({ query: { ...route.query, compose: undefined } })
     composerOpen.value = true
   }

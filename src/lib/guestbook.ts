@@ -2,11 +2,35 @@ import createDOMPurify from 'dompurify'
 
 const purifier = createDOMPurify(window)
 const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 's', 'u']
+const ANNOUNCEMENT_IMAGE_PATH = /^\/api\/download\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/$/i
 
 export const sanitizeGuestbookHtml = (value: string) => purifier.sanitize(value || '', {
   ALLOWED_TAGS,
   ALLOWED_ATTR: [],
 })
+
+export const sanitizeAnnouncementHtml = (value: string) => {
+  const sanitized = purifier.sanitize(value || '', {
+    ALLOWED_TAGS: [...ALLOWED_TAGS, 'img'],
+    ALLOWED_ATTR: ['src', 'alt'],
+  })
+  const documentNode = new DOMParser().parseFromString(sanitized, 'text/html')
+
+  for (const image of documentNode.querySelectorAll('img')) {
+    try {
+      const source = new URL(image.getAttribute('src') || '', window.location.origin)
+      if (source.origin !== window.location.origin || !ANNOUNCEMENT_IMAGE_PATH.test(source.pathname)) {
+        image.remove()
+        continue
+      }
+      image.setAttribute('src', source.pathname)
+    } catch {
+      image.remove()
+    }
+  }
+
+  return documentNode.body.innerHTML
+}
 
 export const guestbookPlainText = (value: string) => {
   const documentNode = new DOMParser().parseFromString(sanitizeGuestbookHtml(value), 'text/html')

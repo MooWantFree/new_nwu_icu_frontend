@@ -7,6 +7,7 @@ import * as Sentry from '@sentry/vue'
 import '@/style/style.css'
 import { captureActionTokenFromUrl } from '@/lib/actionTokens'
 import { redactSensitiveUrl } from '@/lib/security'
+import { isManagementPath } from '@/lib/managementRoute'
 
 captureActionTokenFromUrl()
 const app = createApp(App)
@@ -28,7 +29,7 @@ const redactSentryEvent = (event) => {
   return event
 }
 
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && !isManagementPath(window.location.pathname)) {
   app.use(VueGtag, {
     config: { id: 'G-MYB5VKYR7S' },
   })

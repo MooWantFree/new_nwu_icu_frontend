@@ -68,9 +68,12 @@ async function request<T extends APIBase>({
     if (method === MethodMap.GET) {
       const searchParams = new URLSearchParams()
       Object.entries(query).forEach(([key, value]) => {
+        if (value === undefined || value === null) return
         searchParams.set(key, String(value))
       })
-      fullUrl += `${fullUrl.includes('?') ? '&' : '?'}${searchParams.toString()}`
+      if (searchParams.size > 0) {
+        fullUrl += `${fullUrl.includes('?') ? '&' : '?'}${searchParams.toString()}`
+      }
     }
     else if (query instanceof FormData || query instanceof File) {
       delete (mergedOptions.headers as Record<string, string>)['Content-Type']

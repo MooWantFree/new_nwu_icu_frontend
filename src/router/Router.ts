@@ -1,4 +1,5 @@
 import { nextTick } from 'vue'
+import { managementNavigationNeedsReload } from '@/lib/managementRoute'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { checkLoginStatus } from '@/lib/logins'
 
@@ -247,6 +248,12 @@ const guestbookRoutes = [
 ] satisfies RouteRecordRaw[]
 
 const routes = [
+  {
+    path: '/manage',
+    name: 'manage',
+    component: () => import('@/views/manage/Manage.vue'),
+    meta: { pageTitle: '管理员面板', isManagement: true },
+  },
   ...courseReviewRoutes,
   ...userRoutes,
   ...messageRoutes,
@@ -285,6 +292,12 @@ const Router = createRouter({
 })
 
 Router.beforeEach(async (to) => {
+  // Enter management through a clean document so analytics/error tracking
+  // initialized by the public application cannot observe the admin surface.
+  if (to.meta?.isManagement && managementNavigationNeedsReload(window.location.pathname, to.path)) {
+    window.location.assign(to.fullPath)
+    return false
+  }
   // Change title
   nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required

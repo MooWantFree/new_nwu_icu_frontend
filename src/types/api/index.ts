@@ -22,9 +22,26 @@ import type {
   APIResourceUploadUpdate,
 } from './resourceUpload'
 import { MethodMap } from './base'
+import type {
+  APIManagementAnnouncementCreate,
+  APIManagementPasskeyAuthenticationOptions,
+  APIManagementPasskeyAuthenticationVerify,
+  APIManagementPasskeyRegistrationOptions,
+  APIManagementPasskeyRegistrationVerify,
+  APIManagementReportList,
+  APIManagementReportResolve,
+  APIManagementSession,
+  APIManagementUploadDetail,
+  APIManagementUploadList,
+  APIManagementUploadReview,
+} from './management'
 
 export type RequestEndpoints = {
   [MethodMap.GET]: {
+    '/api/management/session/': APIManagementSession
+    '/api/management/reports/': APIManagementReportList
+    '/api/management/uploads/': APIManagementUploadList
+    '/api/management/uploads/:id/': APIManagementUploadDetail
     // User
     // - Profile
     '/api/assessment/user/activities/review/:id/': ProfilePage.APIUserActivitiesReview
@@ -84,6 +101,13 @@ export type RequestEndpoints = {
     // Since Alist's API format is not same as present, so another method is used for it.
   }
   [MethodMap.POST]: {
+    '/api/management/passkeys/authentication/options/': APIManagementPasskeyAuthenticationOptions
+    '/api/management/passkeys/authentication/verify/': APIManagementPasskeyAuthenticationVerify
+    '/api/management/passkeys/registration/options/': APIManagementPasskeyRegistrationOptions
+    '/api/management/passkeys/registration/verify/': APIManagementPasskeyRegistrationVerify
+    '/api/management/reports/:id/resolve/': APIManagementReportResolve
+    '/api/management/announcements/': APIManagementAnnouncementCreate
+    '/api/management/uploads/:id/': APIManagementUploadReview
     // User
     // - Profile
     '/api/user/bind-college-email/bind/': ProfilePage.APIBindScholarEmail

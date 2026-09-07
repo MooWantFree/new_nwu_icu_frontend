@@ -17,24 +17,31 @@
       </button>
     </div>
     <EditorContent :editor="editor" class="guestbook-editor p-3" />
+    <ImageUpload v-if="allowImages && showImageUpload" @close="showImageUpload = false" @upload="insertImage" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import ImageExtension from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, Strikethrough, Underline as UnderlineIcon } from 'lucide-vue-next'
+import { Bold, Image as ImageIcon, Italic, Strikethrough, Underline as UnderlineIcon } from 'lucide-vue-next'
 
-import { guestbookPasteContent, sanitizeGuestbookHtml } from '@/lib/guestbook'
+import ImageUpload from '@/components/tiptap/editor/ImageUpload.vue'
+import { guestbookPasteContent, sanitizeAnnouncementHtml, sanitizeGuestbookHtml } from '@/lib/guestbook'
 
-const props = defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean }>()
+const props = withDefaults(defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean; allowImages?: boolean }>(), {
+  allowImages: false,
+})
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
+const sanitize = (value: string) => props.allowImages ? sanitizeAnnouncementHtml(value) : sanitizeGuestbookHtml(value)
+const showImageUpload = ref(false)
 
 const editor = useEditor({
-  content: sanitizeGuestbookHtml(props.modelValue),
+  content: sanitize(props.modelValue),
   editable: !props.disabled,
   extensions: [
     StarterKit.configure({
@@ -47,6 +54,7 @@ const editor = useEditor({
       orderedList: false,
     }),
     Underline,
+    ...(props.allowImages ? [ImageExtension.configure({ allowBase64: false })] : []),
     Placeholder.configure({ placeholder: props.placeholder || '写下你的留言…' }),
   ],
   editorProps: {
@@ -59,12 +67,12 @@ const editor = useEditor({
       return true
     },
   },
-  onUpdate: ({ editor: currentEditor }) => emit('update:modelValue', sanitizeGuestbookHtml(currentEditor.getHTML())),
+  onUpdate: ({ editor: currentEditor }) => emit('update:modelValue', sanitize(currentEditor.getHTML())),
 })
 
 watch(() => props.modelValue, (value) => {
   if (editor.value && value !== editor.value.getHTML()) {
-    editor.value.commands.setContent(sanitizeGuestbookHtml(value), false)
+    editor.value.commands.setContent(sanitize(value), false)
   }
 })
 watch(() => props.disabled, disabled => editor.value?.setEditable(!disabled))
@@ -74,7 +82,13 @@ const buttons = computed(() => [
   { name: 'italic', title: '斜体', icon: Italic, toggle: () => editor.value?.chain().focus().toggleItalic().run() },
   { name: 'strike', title: '删除线', icon: Strikethrough, toggle: () => editor.value?.chain().focus().toggleStrike().run() },
   { name: 'underline', title: '下划线', icon: UnderlineIcon, toggle: () => editor.value?.chain().focus().toggleUnderline().run() },
+  ...(props.allowImages ? [{ name: 'image', title: '上传图片', icon: ImageIcon, toggle: () => { showImageUpload.value = true } }] : []),
 ])
+
+const insertImage = (url: string) => {
+  editor.value?.chain().focus().setImage({ src: url }).run()
+  showImageUpload.value = false
+}
 
 const focus = () => editor.value?.commands.focus()
 defineExpose({ focus })
@@ -85,6 +99,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 <style>
 .guestbook-editor .ProseMirror p { margin: 0 0 0.5rem; }
 .guestbook-editor .ProseMirror p:last-child { margin-bottom: 0; }
+.guestbook-editor .ProseMirror img { display: block; height: auto; margin: 0.75rem auto; max-width: 100%; border-radius: 0.5rem; }
 /* Keep the placeholder in the empty paragraph's line box, so it uses the
    same baseline as the caret instead of the separate float layout. */
 .guestbook-editor .ProseMirror p.is-editor-empty:first-child::before {
