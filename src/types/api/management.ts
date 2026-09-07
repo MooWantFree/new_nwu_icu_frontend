@@ -7,7 +7,30 @@ import type {
 import type { ErrorFactory } from './errors'
 import { MethodMap } from './base'
 import type { GuestbookEntry } from './guestbook'
-import type { ResourceUploadRequest } from './resourceUpload'
+import type { APIResourceDirectories, ResourceUploadRequest } from './resourceUpload'
+
+export type APIManagementUploadBlacklist = {
+  endpoint: '/api/management/uploads/blacklist/'
+  method: MethodMap.GET
+  response: { paths: string[] }
+  errors: ManagementErrors
+}
+
+export type APIManagementUploadBlacklistUpdate = {
+  endpoint: '/api/management/uploads/blacklist/'
+  method: MethodMap.POST
+  query: { action: 'add' | 'remove'; path: string }
+  response: { paths: string[] }
+  errors: ManagementErrors
+}
+
+export type APIManagementUploadDirectories = {
+  endpoint: '/api/management/uploads/directories/'
+  method: MethodMap.GET
+  query: { path: string }
+  response: APIResourceDirectories['response']
+  errors: ManagementErrors
+}
 
 export type ManagementPermissions = {
   moderate_reports: boolean
@@ -140,4 +163,3 @@ export type APIManagementUploadReview = {
   response: { upload_request: ResourceUploadRequest }
   errors: ManagementErrors
 }
-

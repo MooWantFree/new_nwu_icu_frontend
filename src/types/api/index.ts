@@ -34,6 +34,9 @@ import type {
   APIManagementUploadDetail,
   APIManagementUploadList,
   APIManagementUploadReview,
+  APIManagementUploadBlacklist,
+  APIManagementUploadBlacklistUpdate,
+  APIManagementUploadDirectories,
 } from './management'
 
 export type RequestEndpoints = {
@@ -41,6 +44,8 @@ export type RequestEndpoints = {
     '/api/management/session/': APIManagementSession
     '/api/management/reports/': APIManagementReportList
     '/api/management/uploads/': APIManagementUploadList
+    '/api/management/uploads/blacklist/': APIManagementUploadBlacklist
+    '/api/management/uploads/directories/': APIManagementUploadDirectories
     '/api/management/uploads/:id/': APIManagementUploadDetail
     // User
     // - Profile
@@ -108,6 +113,7 @@ export type RequestEndpoints = {
     '/api/management/reports/:id/resolve/': APIManagementReportResolve
     '/api/management/announcements/': APIManagementAnnouncementCreate
     '/api/management/uploads/:id/': APIManagementUploadReview
+    '/api/management/uploads/blacklist/': APIManagementUploadBlacklistUpdate
     // User
     // - Profile
     '/api/user/bind-college-email/bind/': ProfilePage.APIBindScholarEmail

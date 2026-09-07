@@ -118,6 +118,13 @@
         </section>
 
         <section v-else-if="tab === 'uploads'" class="space-y-4">
+          <div class="surface-card p-5">
+            <button type="button" class="flex w-full items-center justify-between gap-3 text-left font-semibold" :aria-expanded="showUploadBlacklist" aria-controls="upload-blacklist" @click="showUploadBlacklist = !showUploadBlacklist">
+              <span>投稿文件夹黑名单</span><span class="text-sm text-blue-700">{{ showUploadBlacklist ? '收起' : '设置' }}</span>
+            </button>
+            <p class="mt-2 text-sm text-gray-600">黑名单文件夹及其所有子文件夹对投稿用户隐藏，并禁止投稿。</p>
+            <ResourceUploadBlacklist v-if="showUploadBlacklist" id="upload-blacklist" class="mt-5" @session-expired="loadSession" />
+          </div>
           <select v-model="uploadStatus" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadUploads(1)">
             <option value="pending">待审核</option><option value="publish_failed">发布失败</option><option value="publishing">发布中</option><option value="rejected">已拒绝</option><option value="approved">已通过</option><option value="">全部</option>
           </select>
@@ -155,6 +162,7 @@ import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'v
 import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
+import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
 import { api } from '@/lib/requests'
 import type { ManagementReport, ManagementSession } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
@@ -353,6 +361,7 @@ const publishAnnouncement = async () => {
 }
 
 const uploads = ref<ResourceUploadRequest[]>([])
+const showUploadBlacklist = ref(false)
 const uploadStatus = ref<ResourceUploadRequest['status'] | ''>('pending')
 const uploadPage = ref(1)
 const uploadMaxPage = ref(1)
