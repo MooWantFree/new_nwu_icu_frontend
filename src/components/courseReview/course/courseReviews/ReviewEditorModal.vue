@@ -92,7 +92,7 @@
                 <div v-for="metric in metrics" :key="metric.key" class="py-3.5">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-sm font-medium text-slate-700">{{ metric.label }}</p>
-                    <ReviewMetricScale v-model="metric.value.value" :label="metric.label" :levels="metric.levels" />
+                    <ReviewMetricScale v-model="metric.value.value" :label="metric.label" :levels="metric.levels" :preference="metric.preference" />
                   </div>
                 </div>
               </div>
@@ -167,6 +167,7 @@ import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import { APISemesterList } from '@/types/api/courseReview/course'
 import Editor from '@/components/tiptap/editor/Editor.vue'
 import ReviewMetricScale from './ReviewMetricScale.vue'
+import { reviewMetrics } from '@/lib/reviewMetrics'
 
 const props = defineProps<{
   courseData: CourseData
@@ -192,10 +193,10 @@ const reward = ref(props.initContent?.reward || 3)
 const semesterData = ref<APISemesterList['response'] | null>(null)
 
 const metrics = [
-  { key: 'difficulty', label: '课程难度', value: difficulty, levels: ['很简单', '较简单', '适中', '较难', '很难'] },
-  { key: 'homework', label: '作业负担', value: homework, levels: ['很少', '较少', '适中', '较多', '很多'] },
-  { key: 'grade', label: '给分情况', value: grade, levels: ['很严', '偏严', '一般', '偏宽', '很宽'] },
-  { key: 'reward', label: '学习收获', value: reward, levels: ['很少', '较少', '一般', '较多', '很多'] },
+  { ...reviewMetrics.difficulty, value: difficulty },
+  { ...reviewMetrics.homework, value: homework },
+  { ...reviewMetrics.grade, value: grade },
+  { ...reviewMetrics.reward, value: reward },
 ] as const
 
 const semesterOptions = computed(() => {
