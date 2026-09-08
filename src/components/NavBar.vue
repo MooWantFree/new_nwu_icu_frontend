@@ -161,11 +161,6 @@ const menuOptions = [
     path: '/disk',
   },
   {
-    key: 'resourceUpload',
-    text: '资料投稿',
-    path: '/upload',
-  },
-  {
     key: 'announcements',
     text: '公告栏',
     path: '/announcements',
