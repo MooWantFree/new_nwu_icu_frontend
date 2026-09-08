@@ -29,7 +29,7 @@
       <section v-else-if="session && !session.elevated" class="surface-card mx-auto max-w-lg p-6">
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">管理员验证</p>
         <h1 class="mt-2 text-2xl font-semibold">使用 Passkey 继续</h1>
-        <p class="mt-3 text-sm leading-6 text-gray-600">验证成功后将获得十分钟管理权限。系统不会向普通用户提供此功能。</p>
+        <p class="mt-3 text-sm leading-6 text-gray-600">验证成功后将获得十分钟管理权限，每次管理操作会刷新有效期。系统不会向普通用户提供此功能。</p>
         <button :disabled="passkeyBusy || !webAuthnSupported" class="btn-primary mt-6 w-full py-2.5" @click="authenticatePasskey">
           {{ passkeyBusy ? '正在验证…' : webAuthnSupported ? '验证 Passkey' : '当前浏览器不支持 Passkey' }}
         </button>
@@ -42,7 +42,7 @@
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">NWU.ICU</p>
             <h1 class="mt-2 text-3xl font-semibold">管理员面板</h1>
-            <p class="mt-2 text-sm text-gray-600">Passkey 提权将在十分钟后自动失效。</p>
+            <p class="mt-2 text-sm text-gray-600">Passkey 有效期为十分钟，每次管理操作后重新计时，连续十分钟无操作将自动失效。</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <button class="btn-secondary" @click="showEnrollmentForm = !showEnrollmentForm">
