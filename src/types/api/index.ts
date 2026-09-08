@@ -46,6 +46,7 @@ import type {
 
 export type RequestEndpoints = {
   [MethodMap.GET]: {
+    '/api/resources/search/': import('./search/search').APIResourceSearch
     '/api/management/resources/readme/': ResourceTools.APIReadme
     '/api/management/resources/access/': ResourceTools.APIAccess
     '/api/management/resources/index/': ResourceTools.APIIndex

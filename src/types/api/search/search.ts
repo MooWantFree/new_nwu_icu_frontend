@@ -1,6 +1,15 @@
 import { z } from 'zod'
 import type { ErrorFactory } from '../errors'
 import { MethodMap } from '../base'
+import type { ResourceEntry } from '@/lib/resourceBrowser'
+
+export type APIResourceSearch = {
+  endpoint: '/api/resources/search/'
+  method: MethodMap.GET
+  query: { q: string; path: string; page?: number; sort?: 'name' | 'modified' | 'size'; type?: 'all' | 'file' | 'directory' }
+  response: { entries: ResourceEntry[]; total_count: number; page: number; page_size: number }
+  errors: ErrorFactory<'keyword'>[]
+}
 
 // POST
 // 搜索
@@ -58,7 +67,7 @@ export type TeacherSearchResult = {
   avatar_uuid?: string
 }
 export type ResourceSearchResult = {
-  id: number
+  id?: number
   name: string
   size: number
   path: string

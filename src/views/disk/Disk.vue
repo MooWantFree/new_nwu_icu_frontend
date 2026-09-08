@@ -29,7 +29,14 @@
     </section>
     <template v-else-if="contents">
       <section v-if="readmeHtml" aria-label="目录说明" class="mb-6 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:px-7 sm:py-5">
-        <div class="resource-readme prose prose-slate max-w-none prose-a:text-blue-600" v-html="readmeHtml" @click="followReadmeLink" />
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-sm font-medium text-gray-700">目录说明</h2>
+          <button type="button" :aria-expanded="!readmeCollapsed" aria-controls="resource-readme-content" class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500" @click="toggleReadme">
+            {{ readmeCollapsed ? '展开' : '收起' }}
+            <ChevronDown aria-hidden="true" class="h-4 w-4 transition-transform" :class="{ 'rotate-180': !readmeCollapsed }" />
+          </button>
+        </div>
+        <div v-show="!readmeCollapsed" id="resource-readme-content" class="resource-readme prose prose-slate mt-4 max-w-none prose-a:text-blue-600" v-html="readmeHtml" @click="followReadmeLink" />
       </section>
       <p v-if="contents.readme_warning" role="status" class="mb-4 text-sm text-amber-700">{{ contents.readme_warning }}</p>
       <section v-if="contents.type === 'directory'" aria-label="文件列表" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -38,7 +45,7 @@
           <div class="flex w-full items-center gap-2 sm:w-auto">
             <div class="relative min-w-0 flex-1 sm:w-60">
               <Search class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <input v-model="filter" type="search" aria-label="筛选当前目录" placeholder="筛选当前目录…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <input v-model="filter" type="search" maxlength="200" aria-label="全局搜索资料" placeholder="全局搜索资料…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" @keydown.enter.prevent="queueSearch(0)" />
             </div>
             <select v-model="sort" aria-label="排序方式" class="max-w-36 rounded-lg border border-gray-200 px-2 py-2 text-sm text-gray-600 focus:outline-blue-500">
               <option value="name">名称排序</option><option value="modified">最近更新</option><option value="size">文件大小</option>
@@ -51,11 +58,14 @@
         <RouterLink v-if="currentPath !== '/'" :to="resourcePageUrl(parentPath)" class="flex items-center gap-3 border-b border-gray-50 px-4 py-3 text-sm text-gray-500 hover:bg-blue-50 sm:px-5">
           <CornerLeftUp class="h-5 w-5" />返回上一级
         </RouterLink>
-        <ul>
+        <p v-if="searching" class="border-b border-gray-100 px-5 py-3 text-xs text-gray-500">搜索全部可访问资料，当前目录下的文件和文件夹优先。</p>
+        <p v-if="searching && searchLoading" role="status" class="px-5 py-8 text-center text-sm text-gray-500">正在搜索全部资料…</p>
+        <div v-else-if="searching && searchError" role="alert" class="px-5 py-8 text-center text-sm text-red-700">{{ searchError }} <button class="ml-2 text-blue-700 hover:underline" @click="queueSearch(0)">重试搜索</button></div>
+        <ul v-else>
           <li v-for="entry in pagedEntries" :key="entry.path" class="resource-row group border-b border-gray-50 px-4 py-3 hover:bg-blue-50/60 sm:px-5">
             <RouterLink :to="resourcePageUrl(entry.path)" class="flex min-w-0 items-center gap-3 text-sm text-gray-800 group-hover:text-blue-700">
               <component :is="entry.type === 'directory' ? Folder : FileText" class="h-6 w-6 shrink-0" :class="entry.type === 'directory' ? 'fill-blue-100 text-blue-500' : 'text-gray-400'" />
-              <span class="break-all">{{ entry.name }}</span>
+              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-gray-500">{{ entryParent(entry.path) === currentPath ? '当前目录' : entryParent(entry.path) }}</span></span>
             </RouterLink>
             <time :datetime="entry.modified_at" class="hidden text-xs text-gray-400 sm:block">{{ formatDate(entry.modified_at) }}</time>
             <span class="text-right text-xs tabular-nums text-gray-500">{{ formatResourceSize(entry.size) }}</span>
@@ -63,11 +73,11 @@
             <ChevronRight v-else class="h-4 w-4 text-gray-300" />
           </li>
         </ul>
-        <div v-if="!filteredEntries.length" role="status" class="px-5 py-12 text-center text-sm text-gray-500">
+        <div v-if="!totalEntries && !searchLoading && !searchError" role="status" class="px-5 py-12 text-center text-sm text-gray-500">
           {{ filter ? '没有找到匹配的资料，试试其他关键词。' : '这个目录还没有资料。' }}
         </div>
         <div class="flex items-center justify-between gap-3 px-5 py-4 text-xs text-gray-400">
-          <span>{{ filter ? `找到 ${filteredEntries.length} 项` : '资料仅供学习交流，请勿用于商业用途。' }}</span>
+          <span>{{ searching ? (searchLoading ? '搜索中…' : searchError ? '搜索未完成' : `全局找到 ${totalEntries} 项`) : '资料仅供学习交流，请勿用于商业用途。' }}</span>
           <div v-if="pageCount > 1" class="flex shrink-0 items-center gap-3 text-gray-600">
             <button :disabled="page === 1" class="disabled:opacity-30" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount" class="disabled:opacity-30" @click="page++">下一页</button>
           </div>
@@ -93,9 +103,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
+import { ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
-import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, type ResourceContents } from '@/lib/resourceBrowser'
+import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,6 +120,17 @@ const breadcrumbs = computed(() => {
 })
 const contents = ref<ResourceContents | null>(null)
 const readmeHtml = ref('')
+const readmePreferenceKey = 'nwuicu:resource-readme-collapsed'
+function readReadmePreference() {
+  try { return localStorage.getItem(readmePreferenceKey) === 'true' } catch { return false }
+}
+const readmeCollapsed = ref(readReadmePreference())
+function toggleReadme() {
+  readmeCollapsed.value = !readmeCollapsed.value
+  try { localStorage.setItem(readmePreferenceKey, String(readmeCollapsed.value)) } catch {
+    // Keep the toggle usable when the browser blocks persistent storage.
+  }
+}
 const error = ref('')
 const loginRequired = ref(false)
 const loading = ref(true)
@@ -119,6 +140,37 @@ const page = ref(1)
 const copyMessage = ref('')
 let controller: AbortController | undefined
 let loadVersion = 0
+const searching = computed(() => !!filter.value.trim())
+const searchEntries = ref<ResourceEntry[]>([])
+const searchTotal = ref(0)
+const searchLoading = ref(false)
+const searchError = ref('')
+let searchController: AbortController | undefined
+let searchVersion = 0
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+const entryParent = (path: string) => path.slice(0, path.lastIndexOf('/')) || '/'
+
+function queueSearch(delay = 250) {
+  clearTimeout(searchTimer)
+  searchController?.abort()
+  const version = ++searchVersion
+  searchEntries.value = []; searchTotal.value = 0; searchError.value = ''
+  searchLoading.value = searching.value
+  if (!searching.value) return
+  searchTimer = setTimeout(async () => {
+    const active = new AbortController(); searchController = active
+    try {
+      const params = new URLSearchParams({ q: filter.value.trim(), path: currentPath.value, page: String(page.value), sort: sort.value })
+      const response = await fetch(`/api/resources/search/?${params}`, { signal: active.signal })
+      if (!response.ok) throw new Error(response.status === 401 ? '请登录后重新搜索。' : response.status === 404 ? '当前目录不存在或无权访问，请刷新目录。' : '搜索暂时不可用，请稍后重试。')
+      const data = (await response.json()).contents as { entries: ResourceEntry[]; total_count: number }
+      if (version !== searchVersion) return
+      searchEntries.value = data.entries; searchTotal.value = data.total_count
+    } catch (cause) {
+      if (version === searchVersion && !active.signal.aborted) searchError.value = cause instanceof Error ? cause.message : '搜索失败。'
+    } finally { if (version === searchVersion) searchLoading.value = false }
+  }, delay)
+}
 
 async function loadContents() {
   const version = ++loadVersion
@@ -142,6 +194,7 @@ async function loadContents() {
     contents.value = data
     readmeHtml.value = html
     page.value = 1
+    if (searching.value) queueSearch(0)
   } catch (reason) {
     if (version === loadVersion && !controller.signal.aborted) error.value = reason instanceof Error ? reason.message : '加载资料失败。'
   } finally {
@@ -153,14 +206,15 @@ const entries = computed(() => (contents.value?.entries || []).filter(entry => e
 const directoryCount = computed(() => entries.value.filter(entry => entry.type === 'directory').length)
 const fileCount = computed(() => entries.value.length - directoryCount.value)
 const collator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
-const filteredEntries = computed(() => entries.value.filter(entry => entry.name.toLocaleLowerCase().includes(filter.value.toLocaleLowerCase().trim())).sort((a, b) => {
+const filteredEntries = computed(() => [...entries.value].sort((a, b) => {
   if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
   if (sort.value === 'modified') return b.modified_at.localeCompare(a.modified_at) || collator.compare(a.name, b.name)
   if (sort.value === 'size') return (b.size || 0) - (a.size || 0) || collator.compare(a.name, b.name)
   return collator.compare(a.name, b.name)
 }))
-const pageCount = computed(() => Math.max(1, Math.ceil(filteredEntries.value.length / 100)))
-const pagedEntries = computed(() => filteredEntries.value.slice((page.value - 1) * 100, page.value * 100))
+const totalEntries = computed(() => searching.value ? searchTotal.value : filteredEntries.value.length)
+const pageCount = computed(() => Math.max(1, Math.ceil(totalEntries.value / 100)))
+const pagedEntries = computed(() => searching.value ? searchEntries.value : filteredEntries.value.slice((page.value - 1) * 100, page.value * 100))
 const canPreview = computed(() => /\.(pdf|png|jpe?g|gif|webp|avif|txt)$/i.test(contents.value?.name || ''))
 const isImage = computed(() => /\.(png|jpe?g|gif|webp|avif)$/i.test(contents.value?.name || ''))
 const formatDate = (date: string) => new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -179,9 +233,10 @@ function followReadmeLink(event: MouseEvent) {
   const href = anchor.getAttribute('href') || ''
   if (href.startsWith('/disk/')) { event.preventDefault(); void router.push(href) }
 }
-watch(currentPath, () => { filter.value = ''; void loadContents() }, { immediate: true })
-watch([filter, sort], () => { page.value = 1 })
-onBeforeUnmount(() => { loadVersion++; controller?.abort() })
+watch(currentPath, () => { filter.value = ''; queueSearch(); void loadContents() }, { immediate: true })
+watch([filter, sort], () => { page.value = 1; queueSearch() })
+watch(page, () => { if (searching.value) queueSearch(0) })
+onBeforeUnmount(() => { loadVersion++; controller?.abort(); searchVersion++; searchController?.abort(); clearTimeout(searchTimer) })
 </script>
 
 <style scoped>

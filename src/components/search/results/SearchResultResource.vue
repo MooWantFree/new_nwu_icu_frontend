@@ -1,12 +1,10 @@
 <template>
   <!-- Resource card with hover effect and shadow -->
-  <div
-    class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
-  >
+  <div class="bg-white rounded-lg shadow-md p-4">
     <!-- Resource name and type section -->
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-semibold text-blue-700 truncate mr-2">
-        {{ resource.name }}
+        <RouterLink :to="safeResourceUrl" class="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500" @click="handleClick">{{ resource.name }}</RouterLink>
       </h3>
       <!-- File type badge -->
       <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
@@ -14,60 +12,27 @@
       </span>
     </div>
 
-    <!-- Resource details -->
-    <div class="text-sm text-gray-600 flex justify-between items-center">
-      <div class="space-y-2">
-        <!-- File size with formatted display -->
-        <p class="flex items-center">
-          <span class="mr-2">{{ resource.type === 'file' ? '📄' : '📁' }}</span>
-          {{
-            resource.type === 'file' ? formatFileSize(resource.size) : '文件夹'
-          }}
-        </p>
-      </div>
-
-      <!-- Download button -->
-      <a
-        v-if="safeResourceUrl"
-        :href="safeResourceUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors"
-        :class="{
-          'text-white bg-blue-600 hover:bg-blue-700': resource.type === 'file',
-          'text-blue-700 bg-blue-100 hover:bg-blue-200':
-            resource.type !== 'file',
-        }"
-      >
-        <span class="mr-2">{{ resource.type === 'file' ? '⬇️' : '👁️' }}</span>
-        {{ resource.type === 'file' ? '下载' : '查看' }}
-      </a>
-      <span v-else class="text-sm text-red-600">链接不可用</span>
-    </div>
+    <p class="break-all text-xs text-gray-500">所在目录：{{ resource.path || '/' }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ResourceSearchResult } from '@/types/api/search/search'
-import { resourceFileUrl, resourcePageUrl } from '@/lib/resourceBrowser'
+import { resourcePageUrl } from '@/lib/resourceBrowser'
 
 // Define props with TypeScript type
 const props = defineProps<{
   resource: ResourceSearchResult
 }>()
+const emit = defineEmits<{ (event: 'close'): void }>()
+function handleClick(event: MouseEvent) {
+  if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) emit('close')
+}
 
 const safeResourceUrl = computed(() => {
   const path = `${props.resource.path.replace(/\/+$/, '')}/${props.resource.name}`
-  return props.resource.type === 'file' ? resourceFileUrl(path) : resourcePageUrl(path)
+  return resourcePageUrl(path)
 })
 
-// Utility function to format file size
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
-}
 </script>

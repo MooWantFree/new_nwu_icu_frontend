@@ -48,6 +48,18 @@
           {{ searchTypeTooltip[tab] }}
         </button>
       </nav>
+      <div v-if="activeTab === searchEnums.resource" role="group" aria-label="资源类型" class="mb-3 flex gap-1 rounded-lg bg-gray-100 p-1">
+        <button
+          v-for="kind in resourceKinds"
+          :key="kind.value"
+          type="button"
+          :aria-pressed="resourceKind === kind.value"
+          :class="['flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500', resourceKind === kind.value ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700']"
+          @click="handleResourceKindClick(kind.value)"
+        >{{ kind.label }}</button>
+      </div>
+      <p v-if="activeTab === searchEnums.resource" class="mb-3 text-xs text-gray-500">全局搜索资料，当前资料目录的匹配项优先；点击结果在本页打开。</p>
+      <p v-if="searchError" role="alert" class="mb-3 text-sm text-red-700">{{ searchError }}</p>
       <div
         v-if="!searchLoading && searchResults?.search_result.length"
         :class="[
@@ -87,7 +99,7 @@
         <template v-if="activeTab === searchEnums.resource">
           <SearchResultResource
             v-for="result in searchResults.search_result"
-            :key="result.id"
+            :key="`${(result as ResourceSearchResult).path}/${(result as ResourceSearchResult).name}`"
             @close="$emit('close')"
             :resource="result as ResourceSearchResult"
             class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
@@ -136,7 +148,8 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { LoaderCircle, Search, PlusCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { searchEnums, SearchType, searchTypeTooltip } from './enums'
@@ -155,18 +168,28 @@ import AddCourseModal from '../courseReview/course/AddCourseModal.vue'
 
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
-const activeTab = ref<SearchType>(searchEnums.review)
+const route = useRoute()
+const resourceContextPath = computed(() => {
+  if (route.name !== 'disk') return '/'
+  const parts = route.params.path
+  return '/' + (Array.isArray(parts) ? parts.join('/') : parts || '')
+})
+const activeTab = ref<SearchType>(route.name === 'disk' ? searchEnums.resource : searchEnums.review)
+const resourceKinds = [{ value: 'file', label: '文件' }, { value: 'directory', label: '文件夹' }] as const
+const resourceKind = ref<'file' | 'directory'>('file')
 
 const searchResults = ref<APISearch['response'] | null>(null)
 const searchLoading = ref(false)
 const searchPending = ref(false)
 const scrollLoading = ref(false)
+const searchError = ref('')
 
 const showAddCourseModal = ref(false)
 let searchRequestId = 0
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const handleSearch = async (loadMore = false) => {
+  searchError.value = ''
   if (!searchQuery.value.trim() && !loadMore) {
     searchRequestId++
     searchPending.value = false
@@ -179,6 +202,7 @@ const handleSearch = async (loadMore = false) => {
 
   if (!loadMore) {
     searchLoading.value = true
+    scrollLoading.value = false
     searchResults.value = null
     currentPage.value = 1
   } else {
@@ -192,24 +216,36 @@ const handleSearch = async (loadMore = false) => {
     page_size: pageSize.value,
   }
   try {
-    const response = await api.post({
-      url: '/api/search/',
-      query: requestQueryData,
-    })
+    let content: APISearch['response']
+    if (activeTab.value === searchEnums.resource) {
+      const response = await api.get({ url: '/api/resources/search/', query: { q: searchQuery.value.trim(), path: resourceContextPath.value, page: currentPage.value, type: resourceKind.value } })
+      if (response.status !== 200) throw new Error(response.errors?.[0]?.err_msg || '资料搜索暂时不可用，请重试。')
+      const data = response.content
+      const pages = Math.ceil(data.total_count / data.page_size)
+      content = {
+        search_result: data.entries.map(entry => ({ name: entry.name, path: entry.path.slice(0, entry.path.lastIndexOf('/')) || '/', size: entry.size || 0, type: entry.type === 'directory' ? 'dir' : 'file', url: '/disk' })),
+        total_pages: pages, current_page: data.page, has_next: data.page < pages, has_previous: data.page > 1, total_count: data.total_count,
+      }
+    } else {
+      const response = await api.post({ url: '/api/search/', query: requestQueryData })
+      if (response.status !== 200) throw new Error(response.errors?.[0]?.err_msg || '搜索暂时不可用，请重试。')
+      content = response.content
+    }
     if (requestId !== searchRequestId) return
 
     if (loadMore && searchResults.value) {
       searchResults.value.search_result = [
         ...searchResults.value.search_result,
-        ...response.content.search_result,
+        ...content.search_result,
       ]
     } else {
-      searchResults.value = response.content
+      searchResults.value = content
     }
-    totalPage.value = response.content.total_pages
+    totalPage.value = content.total_pages
   } catch (error) {
     if (requestId === searchRequestId) {
-      console.error('Search failed:', error)
+      searchError.value = error instanceof Error ? error.message : '搜索失败，请重试。'
+      if (loadMore) currentPage.value = Math.max(1, currentPage.value - 1)
     }
   } finally {
     if (requestId === searchRequestId) {
@@ -230,6 +266,8 @@ const scheduleSearch = () => {
   searchRequestId++
   searchLoading.value = false
   scrollLoading.value = false
+  searchResults.value = null
+  searchError.value = ''
   cancelScheduledSearch()
 
   if (!searchQuery.value.trim()) {
@@ -242,7 +280,7 @@ const scheduleSearch = () => {
   searchDebounceTimer = setTimeout(() => {
     searchDebounceTimer = undefined
     void handleSearch()
-  }, 1300)
+  }, activeTab.value === searchEnums.resource ? 250 : 1300)
 }
 
 const handleSearchKeydown = (event: KeyboardEvent) => {
@@ -260,6 +298,14 @@ const submitSearch = () => {
 const handleTabClick = (tab: SearchType) => {
   if (activeTab.value === tab) return
   activeTab.value = tab
+  currentPage.value = 1
+  cancelScheduledSearch()
+  handleSearch()
+}
+
+const handleResourceKindClick = (kind: 'file' | 'directory') => {
+  if (resourceKind.value === kind) return
+  resourceKind.value = kind
   currentPage.value = 1
   cancelScheduledSearch()
   handleSearch()
@@ -286,6 +332,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  searchRequestId++
   cancelScheduledSearch()
 })
 </script>
