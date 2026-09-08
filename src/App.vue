@@ -18,6 +18,7 @@
                   </div>
                 </div>
               </n-layout>
+              <CaptchaChallenge />
             </n-dialog-provider>
           </n-modal-provider>
         </n-notification-provider>
@@ -31,6 +32,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { zhCN, dateZhCN } from 'naive-ui'
 import NavBar from '@/components/NavBar.vue'
+import CaptchaChallenge from '@/components/common/CaptchaChallenge.vue'
 import { themeOverrides } from '@/theme'
 
 const route = useRoute()

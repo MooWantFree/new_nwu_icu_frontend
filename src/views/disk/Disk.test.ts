@@ -80,6 +80,34 @@ describe('resource browser page', () => {
     expect(host.querySelector('[aria-label="文件详情"]')?.textContent).toContain('下载文件')
     expect(host.querySelector('[aria-label="文件详情"]')?.textContent).toContain('打开预览')
   })
+  it('authorizes a gated preview before opening the signed URL', async () => {
+    document.cookie = 'csrftoken=test-token; path=/'
+    const path = '/试卷 #1%.pdf'
+    fetchMock
+      .mockResolvedValueOnce(response({
+        ...folder(path), name: '试卷 #1%.pdf', type: 'file', size: 20, download_gate_enabled: true,
+      }))
+      .mockResolvedValueOnce({
+        status: 200,
+        statusText: 'OK',
+        text: async () => JSON.stringify({
+          message: '', errors: [], contents: { url: '/api/resources/file/?access=signed', expires_in: 600, gate_enabled: true },
+        }),
+      })
+    const preview = { opener: window, location: { href: '' }, close: vi.fn() }
+    vi.spyOn(window, 'open').mockReturnValue(preview as unknown as Window)
+    await mount(resourcePageUrl(path))
+
+    const previewButton = [...host.querySelectorAll<HTMLButtonElement>('button')]
+      .find(button => button.textContent?.includes('打开预览'))!
+    previewButton.click()
+    await flush()
+
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/resources/file/authorize/')
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ path, inline: true })
+    expect(preview.opener).toBeNull()
+    expect(preview.location.href).toBe('/api/resources/file/?access=signed')
+  })
   it('displays a recoverable missing-path error', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 })
     await mount()

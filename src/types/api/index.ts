@@ -23,6 +23,7 @@ import type {
 } from './resourceUpload'
 import { MethodMap } from './base'
 import type * as ResourceTools from './resourceTools'
+import type { APIResourceFileAuthorize } from './resourceAccess'
 import type {
   APIManagementResourceFiles,
   APIManagementResourceTrash,
@@ -119,6 +120,7 @@ export type RequestEndpoints = {
     // Since Alist's API format is not same as present, so another method is used for it.
   }
   [MethodMap.POST]: {
+    '/api/resources/file/authorize/': APIResourceFileAuthorize
     '/api/management/resources/operations/': ResourceTools.APIOperations
     '/api/management/resources/readme/': ResourceTools.APISaveReadme
     '/api/management/resources/access/': ResourceTools.APISaveAccess
@@ -168,7 +170,7 @@ export type RequestEndpoints = {
     '/api/search/': Search.APISearch
 
     // Captcha
-    '/api/captcha/': Captcha.APICaptcha
+    '/api/captcha/': Captcha.APICaptchaVerify
 
     // File
     '/api/upload/': FileAPI.APIUploadFile

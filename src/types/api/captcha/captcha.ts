@@ -18,11 +18,12 @@ export type APICaptcha = {
 const APICaptchaVerifyQuery = z.object({
   captcha_key: z.string(),
   captcha_value: z.string(),
+  scope: z.enum(['login', 'review_write', 'guestbook_write', 'reply_write', 'catalog_write', 'resource_download']).optional(),
 })
 export type APICaptchaVerify = {
   endpoint: '/api/captcha/'
   method: MethodMap.POST
   query: z.infer<typeof APICaptchaVerifyQuery>
-  response: {}
+  response: { captcha_proof?: string; expires_in?: number }
   errors: ErrorFactory<'captcha'>[]
 }

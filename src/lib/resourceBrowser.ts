@@ -12,6 +12,7 @@ export type ResourceContents = ResourceEntry & {
   entries?: ResourceEntry[]
   readme: string
   readme_warning: string
+  download_gate_enabled?: boolean
 }
 export const resourcePageUrl = (path: string) => '/disk' + path.split('/').map(encodeURIComponent).join('/')
 export const resourceFileUrl = (path: string, inline = false) =>

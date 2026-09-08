@@ -69,7 +69,7 @@
             </RouterLink>
             <time :datetime="entry.modified_at" class="hidden text-xs text-gray-400 sm:block">{{ formatDate(entry.modified_at) }}</time>
             <span class="text-right text-xs tabular-nums text-gray-500">{{ formatResourceSize(entry.size) }}</span>
-            <a v-if="entry.type === 'file'" :href="resourceFileUrl(entry.path)" :aria-label="`下载 ${entry.name}`" class="rounded-md p-1 text-gray-400 hover:bg-blue-100 hover:text-blue-700"><Download class="h-4 w-4" /></a>
+            <button v-if="entry.type === 'file'" type="button" :aria-label="`下载 ${entry.name}`" class="rounded-md p-1 text-gray-400 hover:bg-blue-100 hover:text-blue-700" @click="openResource(entry.path, false)"><Download class="h-4 w-4" /></button>
             <ChevronRight v-else class="h-4 w-4 text-gray-300" />
           </li>
         </ul>
@@ -88,13 +88,13 @@
         <h2 class="mt-5 break-all text-xl font-semibold text-gray-900">{{ contents.name }}</h2>
         <p class="mt-3 text-sm text-gray-500">{{ formatResourceSize(contents.size) }} · {{ formatDate(contents.modified_at) }}</p>
         <div class="mt-7 flex flex-wrap justify-center gap-3">
-          <a :href="resourceFileUrl(contents.path)" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"><Download class="h-4 w-4" />下载文件</a>
-          <a v-if="canPreview" :href="resourceFileUrl(contents.path, true)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"><ExternalLink class="h-4 w-4" />打开预览</a>
+          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700" @click="openResource(contents.path, false)"><Download class="h-4 w-4" />下载文件</button>
+          <button v-if="canPreview" type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50" @click="openResource(contents.path, true)"><ExternalLink class="h-4 w-4" />打开预览</button>
           <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50" @click="copyLink"><Link class="h-4 w-4" />复制链接</button>
         </div>
         <p role="status" class="mt-3 text-sm text-gray-500">{{ copyMessage }}</p>
         <p v-if="!canPreview" class="mt-5 text-sm text-gray-400">此格式请下载后使用相应软件打开。</p>
-        <img v-if="isImage" :src="resourceFileUrl(contents.path, true)" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-lg object-contain" />
+        <img v-if="isImage && imagePreviewUrl" :src="imagePreviewUrl" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-lg object-contain" />
       </section>
     </template>
   </AppPageLayout>
@@ -106,6 +106,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
+import { api } from '@/lib/requests'
 
 const route = useRoute()
 const router = useRouter()
@@ -138,6 +139,7 @@ const filter = ref('')
 const sort = ref('name')
 const page = ref(1)
 const copyMessage = ref('')
+const imagePreviewUrl = ref('')
 let controller: AbortController | undefined
 let loadVersion = 0
 const searching = computed(() => !!filter.value.trim())
@@ -181,6 +183,7 @@ async function loadContents() {
   loginRequired.value = false
   readmeHtml.value = ''
   copyMessage.value = ''
+  imagePreviewUrl.value = ''
   contents.value = null
   try {
     const response = await fetch(`/api/resources/browse/?${new URLSearchParams({ path: currentPath.value })}`, { signal: controller.signal })
@@ -189,10 +192,16 @@ async function loadContents() {
       throw new Error(response.status === 401 ? '此目录需要登录后访问。' : response.status === 404 ? '这个资料不存在、已移动或无权访问。' : response.status === 400 ? '资料路径不合法。' : '暂时无法读取资料，请稍后重试。')
     }
     const data = (await response.json()).contents as ResourceContents
-    const html = await renderResourceReadme(data.readme || '', data.type === 'directory' ? data.path : parentPath.value)
+    let html = await renderResourceReadme(data.readme || '', data.type === 'directory' ? data.path : parentPath.value)
+    if (data.download_gate_enabled) html = await authorizeReadmeImages(html)
     if (version !== loadVersion) return
     contents.value = data
     readmeHtml.value = html
+    if (data.type === 'file' && /\.(png|jpe?g|gif|webp|avif)$/i.test(data.name)) {
+      imagePreviewUrl.value = data.download_gate_enabled
+        ? await authorizedResourceUrl(data.path, true)
+        : resourceFileUrl(data.path, true)
+    }
     page.value = 1
     if (searching.value) queueSearch(0)
   } catch (reason) {
@@ -218,6 +227,39 @@ const pagedEntries = computed(() => searching.value ? searchEntries.value : filt
 const canPreview = computed(() => /\.(pdf|png|jpe?g|gif|webp|avif|txt)$/i.test(contents.value?.name || ''))
 const isImage = computed(() => /\.(png|jpe?g|gif|webp|avif)$/i.test(contents.value?.name || ''))
 const formatDate = (date: string) => new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+async function authorizedResourceUrl(path: string, inline: boolean) {
+  const response = await api.post({ url: '/api/resources/file/authorize/', query: { path, inline } })
+  if (response.status !== 200) throw new Error(response.errors?.[0]?.err_msg || '资料授权失败，请稍后重试')
+  return response.content.url
+}
+
+async function authorizeReadmeImages(html: string) {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  for (const image of doc.querySelectorAll('img')) {
+    const source = image.getAttribute('src') || ''
+    const url = new URL(source, window.location.origin)
+    if (url.pathname !== '/api/resources/file/') continue
+    const path = url.searchParams.get('path')
+    if (path) image.setAttribute('src', await authorizedResourceUrl(path, true))
+  }
+  return doc.body.innerHTML
+}
+
+async function openResource(path: string, inline: boolean) {
+  const previewWindow = inline ? window.open('', '_blank') : null
+  if (previewWindow) previewWindow.opener = null
+  try {
+    const url = contents.value?.download_gate_enabled
+      ? await authorizedResourceUrl(path, inline)
+      : resourceFileUrl(path, inline)
+    if (previewWindow) previewWindow.location.href = url
+    else window.location.assign(url)
+  } catch (cause) {
+    previewWindow?.close()
+    error.value = cause instanceof Error ? cause.message : '资料访问失败，请稍后重试'
+  }
+}
 
 async function copyLink() {
   try {

@@ -1,5 +1,6 @@
 import { APIBase, MethodMap } from '@/types/api/base'
 import { RequestEndpoints } from '@/types/api'
+import { requestCaptchaProof } from '@/lib/captchaChallenge'
 
 type APIResponse<T extends APIBase> = {
   message: T['message'] extends string ? T['message'] : string
@@ -27,6 +28,7 @@ async function request<T extends APIBase>({
   query,
   options,
   onUploadProgress,
+  captchaRetry = true,
 }: {
   method: MethodMap
   url: string
@@ -34,6 +36,7 @@ async function request<T extends APIBase>({
   options?: RequestInit
   // Callback function to track upload progress
   onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+  captchaRetry?: boolean
 }): Promise<{
   status: number
   data: APIResponse<T>
@@ -125,6 +128,26 @@ async function request<T extends APIBase>({
   try {
     const response = await fetch(fullUrl, mergedOptions)
     const result = parseResponseBody<T>(await response.text(), response.statusText)
+
+    const captchaScope = response.status === 429
+      ? (result.contents as { captcha_scope?: string } | undefined)?.captcha_scope
+      : undefined
+    if (captchaRetry && captchaScope) {
+      const proof = await requestCaptchaProof(captchaScope)
+      if (proof) {
+        return request<T>({
+          method,
+          url,
+          query,
+          options: {
+            ...options,
+            headers: { ...options?.headers, 'X-Captcha-Proof': proof },
+          },
+          onUploadProgress,
+          captchaRetry: false,
+        })
+      }
+    }
 
     return {
       status: response.status,
