@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-5 text-slate-700">
+  <div class="mb-1 text-slate-700">
       <div class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-5 gap-y-3">
         <div
           v-for="metric in metrics"
@@ -18,7 +18,7 @@
       </div>
   </div>
   <div class="mb-5 text-slate-700">
-    <Viewer :value="review.content" />
+    <Viewer :value="review.content" expand-color="from-white" />
   </div>
 </template>
 

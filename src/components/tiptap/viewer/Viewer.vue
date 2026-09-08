@@ -1,7 +1,7 @@
 <!-- TODO: Remove tiptap dependency for viewer -->
 <template>
   <div class="relative">
-    <div :class="{ 'max-h-60 overflow-hidden': !expanded && needExpand }">
+    <div class="flow-root" :class="{ 'max-h-60 overflow-hidden': !expanded && needExpand }">
       <div ref="editorContainer">
         <div class="max-w-none viewer">
           <editor-content :editor="editor" />
@@ -12,26 +12,25 @@
       v-if="!expanded && isContentOverflowing && needExpand"
       :class="[
         `${expandColor}`,
-        'absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t to-transparent flex items-end justify-center',
+        'pointer-events-none absolute bottom-0 left-0 right-0 flex h-24 items-end justify-center bg-gradient-to-t from-20% to-transparent pb-1',
       ]"
     >
       <ExpandButton
+        class="pointer-events-auto"
         :expandButtonText="expandButtonText"
         :expanded="expanded"
         @toggle="handleToggleExpand"
       />
-      <div class="mt-3"></div>
     </div>
     <div
       v-if="expanded && isContentOverflowing && needExpand"
-      class="flex justify-center w-full mt-4 mb-6"
+      class="flex w-full justify-center mt-3 mb-2"
     >
       <ExpandButton
         :expandButtonText="expandButtonText"
         :expanded="expanded"
         @toggle="handleToggleExpand"
       />
-      <div class="mt-3"></div>
     </div>
     <LinkConfirmModal
       :show="showModal"
