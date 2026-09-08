@@ -70,7 +70,12 @@ let container: HTMLDivElement
 const mockApi = (history: ResourceUploadRequest[] = []) => {
   vi.mocked(api.get).mockImplementation(async ({ url, query }: any) => {
     if (url === '/api/upload/config/') {
-      return { status: 200, content: { max_file_count: 20, max_file_size: 100 * 1024 * 1024, allowed_extensions: ['.pdf'] } } as any
+      return { status: 200, content: {
+        max_file_count: 20,
+        max_file_size: 100 * 1024 * 1024,
+        allowed_extensions: ['.pdf'],
+        quota: { limit: 1024 ** 3, used: 0, remaining: 1024 ** 3 },
+      } } as any
     }
     if (url === '/api/upload/request/') {
       return { status: 200, content: { upload_requests: history } } as any

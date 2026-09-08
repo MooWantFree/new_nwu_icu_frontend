@@ -6,7 +6,7 @@ import { MethodMap } from '../base'
 // 新建回复
 const APIPostReplyQuery = z.object({
   review_id: z.number(),
-  content: z.string(),
+  content: z.string().max(2_000),
   parent_id: z.number().optional(),
 })
 export type APIPostReply = {
@@ -36,24 +36,16 @@ export type APIDeleteReply = {
 // GET
 // 获取指定课程评价的评论
 const APIGetReplyParams = z.object({
-  review_id: z.number(),
+  id: z.number(),
 })
 export type APIGetReply = {
   endpoint: `/api/assessment/reply/${number}/`
   method: MethodMap.GET
   params: z.infer<typeof APIGetReplyParams>
+  query: { after?: number; target?: number }
   response: {
-    id: number
-    create_time: string
-    content: string
-    author: {
-      id: number
-      nickname: string
-    }
-    like: {
-      like: number
-      dislike: number
-    }
-    parent_id: number
-  }[]
+    count: number
+    next_cursor: number | null
+    results: import('@/types/courseReview').Review['reply']
+  }
 }

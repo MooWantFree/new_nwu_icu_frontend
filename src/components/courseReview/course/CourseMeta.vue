@@ -11,7 +11,7 @@
             :default-value="Number(courseData.rating_avg)"
           />
             <span class="text-2xl font-semibold tracking-tight text-slate-900">{{ courseData.rating_avg }}</span>
-            <span class="text-sm text-slate-500">{{ courseData.reviews.length }} 人评价</span>
+            <span class="text-sm text-slate-500">{{ courseData.total_review_count }} 人评价</span>
           </div>
         </div>
         <div class="flex flex-wrap gap-2 text-sm text-slate-600">

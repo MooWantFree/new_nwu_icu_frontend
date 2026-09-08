@@ -58,6 +58,9 @@
               <span class="hidden text-slate-300 sm:inline">·</span>
               <span>支持常见资料与压缩格式</span>
             </div>
+            <p class="mt-2 text-xs" :class="totalSize > quotaRemaining ? 'text-red-600' : 'text-slate-500'">
+              个人上传额度：已用 {{ formatBytes(quotaUsed) }} / {{ formatBytes(quotaLimit) }}，剩余 {{ formatBytes(quotaRemaining) }}
+            </p>
             <div class="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
@@ -715,6 +718,9 @@ const editSubmitError = ref('')
 const maxFileCount = ref(DEFAULT_MAX_FILE_COUNT)
 const maxFileSize = ref(DEFAULT_MAX_FILE_SIZE)
 const allowedExtensions = ref(DEFAULT_ALLOWED_EXTENSIONS)
+const quotaLimit = ref(1024 ** 3)
+const quotaUsed = ref(0)
+const quotaRemaining = ref(1024 ** 3)
 let uploadHistoryRefreshTimer: ReturnType<typeof setInterval> | undefined
 let highlightTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -750,7 +756,8 @@ const canSubmit = computed(
   () => !isSubmitting.value
     && selectedFiles.value.length > 0
     && targetConfirmed.value
-    && !rootUploadBlocked.value,
+    && !rootUploadBlocked.value
+    && totalSize.value <= quotaRemaining.value,
 )
 const submitButtonText = computed(() => {
   if (!isSubmitting.value) return '提交审核'
@@ -1135,6 +1142,9 @@ const loadUploadConfig = async () => {
     maxFileCount.value = response.content.max_file_count
     maxFileSize.value = response.content.max_file_size
     allowedExtensions.value = new Set(response.content.allowed_extensions)
+    quotaLimit.value = response.content.quota.limit
+    quotaUsed.value = response.content.quota.used
+    quotaRemaining.value = response.content.quota.remaining
   } catch {
     // Keep the safe bundled defaults when the configuration endpoint is temporarily unavailable.
   }
@@ -1240,6 +1250,7 @@ const submitUpload = async () => {
     createNewFolder.value = false
     newFolderName.value = ''
     await completeSubmission(response.content.upload_request)
+    await loadUploadConfig()
     message.success(`投稿 #${response.content.upload_request.id} 已提交，请等待管理员审核`)
   } catch (error) {
     await loadUploadHistory()
@@ -1334,6 +1345,7 @@ const saveEdit = async () => {
     uploadHistory.value = uploadHistory.value.map((record) =>
       record.id === requestId ? response.content.upload_request : record,
     )
+    await loadUploadConfig()
     editSubmitting.value = false
     resetEditDialog()
     message.success(`投稿 #${requestId} 已更新${response.content.upload_request.status === 'pending' ? '，当前为待审核状态' : ''}`)

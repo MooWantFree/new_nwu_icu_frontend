@@ -9,6 +9,7 @@
         <textarea
           ref="textarea"
           v-model="replyContent"
+          maxlength="2000"
           placeholder="写下你的回复..."
           :aria-label="replyTo ? `回复 ${replyTargetName || '这条回复'}` : '回复评价'"
           class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 focus:outline-none"
@@ -20,6 +21,7 @@
           rows="2"
         ></textarea>
         <div class="mt-2 flex justify-end items-center gap-3">
+          <span class="mr-auto text-xs text-gray-500">{{ replyContent.length }} / 2,000</span>
           <button type="button" class="text-sm text-gray-500 hover:text-gray-700" :disabled="loadingRef" @click="emit('close')">取消</button>
           <button
             type="button"

@@ -74,6 +74,11 @@ export type APIResourceUploadConfig = {
     max_file_size: number
     max_file_count: number
     allowed_extensions: string[]
+    quota: {
+      limit: number
+      used: number
+      remaining: number
+    }
   }
   errors: ErrorFactory<ResourceUploadErrors>[]
 }

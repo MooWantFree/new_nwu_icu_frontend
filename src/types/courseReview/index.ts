@@ -3,7 +3,7 @@ import { APIPostReviewQuery } from '@/types/api/courseReview/review'
 import type { APILatestReviews } from '@/types/api/courseReview/review'
 import { z } from 'zod'
 
-export type Review = APICourseInfo['response']['reviews'][0]
+export type Review = APICourseInfo['response']['reviews']['results'][0]
 export type CourseData = APICourseInfo['response']
 
 export type ReviewTimeline = APILatestReviews['response']['results'][0]

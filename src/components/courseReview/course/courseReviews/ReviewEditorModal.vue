@@ -51,6 +51,9 @@
               :withToolbar="true"
               class="min-h-[22rem] rounded-lg bg-white shadow-sm sm:min-h-[28rem]"
             />
+            <p class="mt-2 text-right text-xs" :class="content.length > 10000 ? 'text-red-600' : 'text-slate-500'">
+              {{ content.length.toLocaleString() }} / 10,000
+            </p>
           </section>
 
           <section v-else class="p-4 sm:p-6">
@@ -216,7 +219,7 @@ watch(semesterOptions, (options) => {
 
 const isContentValid = computed(() => {
   const plainText = content.value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
-  return plainText.length > 0
+  return plainText.length > 0 && content.value.length <= 10_000
 })
 const contentPreview = computed(() => content.value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim())
 const isFormValid = computed(() => isContentValid.value && rating.value > 0 && difficulty.value > 0 && homework.value > 0 && grade.value > 0 && reward.value > 0 && selectedSemester.value !== null)

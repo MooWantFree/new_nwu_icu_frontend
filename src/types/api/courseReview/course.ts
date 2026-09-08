@@ -83,6 +83,15 @@ export type APICourseInfo = {
   endpoint: `/api/assessment/course/${string}/`
   method: MethodMap.GET
   params: z.infer<typeof APICourseInfoParams>
+  query: {
+    page?: number
+    pageSize?: number
+    sort?: 'liked' | 'newest' | 'oldest' | 'highest' | 'lowest'
+    semester?: number
+    rating?: number
+    focus_review_id?: number
+    focus_reply_id?: number
+  }
   response: {
     id: number
     code: string
@@ -108,53 +117,76 @@ export type APICourseInfo = {
     rating_avg: string
     normalized_rating_avg: string
     request_user_review_id: number | null
-    reviews: {
+    request_user_review: {
       id: number
-      is_deleted: boolean
       content: string
       rating: number
-      modified_time: string
-      created_time: string
-      edited: boolean
-      like: {
-        like: number
-        dislike: number
-        user_option: number
-      }
+      anonymous: boolean
       difficulty: number
       grade: number
       homework: number
       reward: number
-      semester: string
-      author: {
-        id: number
-        nickname: string
-        avatar: string
-        uuid?: string
-        has_avatar?: boolean
-        anonymous: boolean
+      semester: number
+    } | null
+    total_review_count: number
+    reviews: {
+      page: number
+      max_page: number
+      count: number
+      facets: {
+        semesters: { semester_id: number; semester__name: string; count: number }[]
+        ratings: { rating: number; count: number }[]
       }
-      reply: {
+      results: {
         id: number
+        is_deleted: boolean
         content: string
-        floor_number: number
+        rating: number
+        modified_time: string
         created_time: string
-        parent: number
-        created_by: {
-          id: number
-          name: string
-          avatar: string
-          uuid?: string
-          has_avatar?: boolean
-        }
+        edited: boolean
         like: {
           like: number
           dislike: number
           user_option: number
         }
-        is_deleted: boolean
+        difficulty: number
+        grade: number
+        homework: number
+        reward: number
+        semester: string
+        author: {
+          id: number
+          nickname: string
+          avatar: string
+          uuid?: string
+          has_avatar?: boolean
+          anonymous: boolean
+        }
+        reply_count: number
+        reply_next_cursor: number | null
+        reply: {
+          id: number
+          content: string
+          floor_number: number
+          created_time: string
+          parent: number
+          created_by: {
+            id: number
+            name: string
+            avatar: string
+            uuid?: string
+            has_avatar?: boolean
+          }
+          like: {
+            like: number
+            dislike: number
+            user_option: number
+          }
+          is_deleted: boolean
+        }[]
       }[]
-    }[]
+    }
     other_dup_name_course: {
       course_id: number
       teacher_name: string

@@ -6,7 +6,7 @@ import { MethodMap } from '../base'
 // 发表课程评价
 export const APIPostReviewQuery = z.object({
   course: z.number(),
-  content: z.string(),
+  content: z.string().max(10_000),
   rating: z.number().min(1).max(5),
   anonymous: z.boolean(),
   difficulty: z.number().min(1).max(5),
@@ -44,7 +44,7 @@ export type APIDeleteReview = {
 // 更新课程评价
 export const APIUpdateReviewQuery = z.object({
   course: z.number(),
-  content: z.string(),
+  content: z.string().max(10_000),
   rating: z.number().min(1).max(5),
   anonymous: z.boolean(),
   difficulty: z.number().min(1).max(5),

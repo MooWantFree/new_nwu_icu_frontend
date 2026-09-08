@@ -2,12 +2,12 @@
   <section ref="replySection" class="mt-4 min-w-0" aria-label="评价回复">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
-        <h3 class="text-base font-semibold text-gray-900">回复 <span class="text-sm font-normal text-gray-500">{{ review.reply.length }}</span></h3>
+        <h3 class="text-base font-semibold text-gray-900">回复 <span class="text-sm font-normal text-gray-500">{{ review.reply_count }}</span></h3>
         <button v-if="isLoggedIn && !review.is_deleted" type="button" class="text-sm text-blue-700 hover:text-blue-800" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
           {{ replyTarget === 0 ? '取消回复' : '回复评价' }}
         </button>
       </div>
-      <button v-if="thread.roots.length > 1" type="button" class="text-xs text-gray-500 hover:text-blue-700" @click="reverseReplies = !reverseReplies">
+      <button v-if="thread.roots.length > 1 && nextCursor === null" type="button" class="text-xs text-gray-500 hover:text-blue-700" @click="reverseReplies = !reverseReplies">
         {{ reverseReplies ? '最新回复' : '最早回复' }}
       </button>
     </div>
@@ -19,6 +19,9 @@
         :deleting-ids="deletingIds" @toggle-collapse="toggleCollapse" @reply="toggleReply" @delete="handleDeleteReply"
         @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     </div>
+    <button v-if="nextCursor !== null" type="button" class="mt-4 text-sm text-blue-700 hover:text-blue-800 disabled:opacity-50" :disabled="loadingMore" @click="loadMoreReplies">
+      {{ loadingMore ? '加载中…' : `加载更多（已显示 ${review.reply.length}/${review.reply_count}）` }}
+    </button>
     <p v-if="!isLoggedIn" class="mt-3 text-sm text-gray-500">登录以后才能回复</p>
   </section>
 </template>
@@ -45,7 +48,36 @@ const replyTarget = ref<number | null>(null)
 const collapsedIds = ref(new Set<number>())
 const deletingIds = ref(new Set<number>())
 const reverseReplies = ref(false)
+const nextCursor = ref<number | null>(review.reply_next_cursor)
+const loadingMore = ref(false)
 const thread = computed(() => buildReviewReplyThread(review.reply, reverseReplies.value))
+
+const appendReplies = (replies: Review['reply']) => {
+  const existingIds = new Set(review.reply.map((item) => item.id))
+  review.reply.push(...replies.filter((item) => !existingIds.has(item.id)))
+}
+const loadReplies = async (query: { after?: number; target?: number }) => {
+  const response = await api.get({
+    url: '/api/assessment/reply/:id/',
+    params: { id: review.id },
+    query,
+  })
+  if (response.status !== 200) throw new Error('加载回复失败')
+  appendReplies(response.content.results)
+  return response.content
+}
+const loadMoreReplies = async () => {
+  if (nextCursor.value === null || loadingMore.value) return
+  loadingMore.value = true
+  try {
+    const content = await loadReplies({ after: nextCursor.value })
+    nextCursor.value = content.next_cursor
+  } catch {
+    message.error('加载更多回复失败，请稍后重试')
+  } finally {
+    loadingMore.value = false
+  }
+}
 
 const toggleReply = (id: number) => { replyTarget.value = replyTarget.value === id ? null : id }
 const toggleCollapse = (id: number) => {
@@ -97,7 +129,14 @@ const onReplySubmitted = (content: string, parent: number, id: number) => {
 const linkedReplyId = computed(() => Number(/^#reply-(\d+)$/.exec(route.hash)?.[1]) || null)
 let stopFocusAnimation: (() => void) | undefined
 watch([linkedReplyId, () => thread.value.byId.has(linkedReplyId.value ?? -1)], async ([id, exists]) => {
-  if (!id || !exists) return
+  if (!id) return
+  if (!exists) {
+    try {
+      await loadReplies({ target: id })
+    } catch {
+      return
+    }
+  }
   let ancestor: number | undefined = id
   while (ancestor !== undefined) {
     collapsedIds.value.delete(ancestor)

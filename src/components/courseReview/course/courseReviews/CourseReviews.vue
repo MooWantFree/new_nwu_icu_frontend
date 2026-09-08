@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
       <div>
         <h2 class="text-xl font-bold text-slate-900">同学评价</h2>
-        <p class="mt-1 text-sm text-slate-500">{{ courseData.reviews.length }} 条评价</p>
+        <p class="mt-1 text-sm text-slate-500">{{ courseData.total_review_count }} 条评价</p>
       </div>
       <button
         v-if="!userReviewed"
@@ -82,6 +82,13 @@
         暂时没有符合筛选条件的评价。
       </div>
     </div>
+    <div v-if="courseData.reviews.max_page > 1" class="mt-6 flex justify-center">
+      <n-pagination
+        :page="courseData.reviews.page"
+        :page-count="courseData.reviews.max_page"
+        @update:page="handlePageChange"
+      />
+    </div>
     </div>
   </section>
   <ReviewEditorModal
@@ -95,17 +102,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
+import type { APICourseInfo } from '@/types/api/courseReview/course'
 import CourseReviewItem from '@/components/courseReview/course/courseReviews/CourseReviewItem.vue'
 import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
 
 const emit = defineEmits<{
-  (e: 'reloadData'): void
+  (e: 'reloadData', query?: APICourseInfo['query']): void
 }>()
 
 const props = defineProps<{
@@ -115,11 +123,11 @@ const props = defineProps<{
 // Reviews Toolbar
 // - sort
 enum SortMethods {
-  MostlyLiked,
-  Newest,
-  Oldest,
-  HighestRated,
-  LowestRated,
+  MostlyLiked = 'liked',
+  Newest = 'newest',
+  Oldest = 'oldest',
+  HighestRated = 'highest',
+  LowestRated = 'lowest',
 }
 
 const message = useMessage()
@@ -155,14 +163,12 @@ const sortSelectorOptions = [
 const semesterSelectorValue = ref('all')
 const semesterSelectorOptions = computed(() => [
   {
-    label: `全部 (${props.courseData.reviews.length})`,
+    label: `全部 (${props.courseData.total_review_count})`,
     value: 'all',
   },
-  ...props.courseData.semester.map((it) => ({
-    label: `${it} (${
-      props.courseData.reviews.filter((review) => review.semester === it).length
-    })`,
-    value: it,
+  ...props.courseData.reviews.facets.semesters.map((it) => ({
+    label: `${it.semester__name} (${it.count})`,
+    value: String(it.semester_id),
   })),
 ])
 
@@ -179,67 +185,47 @@ enum Rank {
 const rankSelectorValue = ref(Rank.All)
 const rankSelectorOptions = computed(() => [
   {
-    label: `全部 (${props.courseData.reviews.length})`,
+    label: `全部 (${props.courseData.total_review_count})`,
     value: Rank.All,
   },
   {
-    label: `★★★★★ (${
-      props.courseData.reviews.filter((review) => review.rating >= 4.5).length
-    })`,
+    label: `★★★★★ (${ratingFacetCount(5)})`,
     value: Rank.Five,
   },
   {
-    label: `★★★★ (${
-      props.courseData.reviews.filter(
-        (review) => review.rating >= 3.5 && review.rating < 4.5
-      ).length
-    })`,
+    label: `★★★★ (${ratingFacetCount(4)})`,
     value: Rank.Four,
   },
   {
-    label: `★★★ (${
-      props.courseData.reviews.filter(
-        (review) => review.rating >= 2.5 && review.rating < 3.5
-      ).length
-    })`,
+    label: `★★★ (${ratingFacetCount(3)})`,
     value: Rank.Three,
   },
   {
-    label: `★★ (${
-      props.courseData.reviews.filter(
-        (review) => review.rating >= 1.5 && review.rating < 2.5
-      ).length
-    })`,
+    label: `★★ (${ratingFacetCount(2)})`,
     value: Rank.Two,
   },
   {
-    label: `★ (${
-      props.courseData.reviews.filter((review) => review.rating < 1.5).length
-    })`,
+    label: `★ (${ratingFacetCount(1)})`,
     value: Rank.One,
   },
 ])
 
 // - calculate result
-const reviewsDisplayed = computed(() => {
-  const filtered = props.courseData.reviews.filter(
-    (review) =>
-      (semesterSelectorValue.value === 'all' ||
-        review.semester === semesterSelectorValue.value) &&
-      (rankSelectorValue.value === Rank.All ||
-        (rankSelectorValue.value + 0.5 > review.rating &&
-          rankSelectorValue.value - 0.5 <= review.rating))
-  )
-  return [...filtered].sort((a, b) => {
-    switch (sortSelectorValue.value) {
-      case SortMethods.Newest: return new Date(b.created_time).getTime() - new Date(a.created_time).getTime()
-      case SortMethods.Oldest: return new Date(a.created_time).getTime() - new Date(b.created_time).getTime()
-      case SortMethods.HighestRated: return b.rating - a.rating
-      case SortMethods.LowestRated: return a.rating - b.rating
-      default: return b.like.like - a.like.like
-    }
-  })
+const ratingFacetCount = (rating: number) =>
+  props.courseData.reviews.facets.ratings.find((item) => item.rating === rating)?.count ?? 0
+const reviewsDisplayed = computed(() => props.courseData.reviews.results)
+
+const currentQuery = (page = 1): APICourseInfo['query'] => ({
+  page,
+  pageSize: 10,
+  sort: sortSelectorValue.value,
+  ...(semesterSelectorValue.value === 'all' ? {} : { semester: Number(semesterSelectorValue.value) }),
+  ...(rankSelectorValue.value === Rank.All ? {} : { rating: rankSelectorValue.value }),
 })
+watch([sortSelectorValue, semesterSelectorValue, rankSelectorValue], () => {
+  emit('reloadData', currentQuery())
+})
+const handlePageChange = (page: number) => emit('reloadData', currentQuery(page))
 
 const showEditor = ref(false)
 const isSubmittingReview = ref(false)
@@ -280,7 +266,7 @@ const handleSubmitReview = async (content: ReviewDataBase) => {
       targetReviewId = resp.content.review_id
     }
 
-    if (status !== 200) {
+    if (status !== 200 && status !== 201) {
       throw new Error('Failed to submit review')
     }
 
@@ -309,24 +295,21 @@ const userReviewed = computed(() => {
 type InitContent = ReviewDataBase | null
 
 const initContent = computed<InitContent>(() => {
-  const userReview = props.courseData.reviews.find(
-    (review) => review.id === props.courseData.request_user_review_id
-  )
+  const userReview = props.courseData.request_user_review
   if (userReview) {
     return {
       course: props.courseData.id,
       content: userReview.content,
       rating: userReview.rating,
-      anonymous: userReview.author.anonymous,
+      anonymous: userReview.anonymous,
       difficulty: Number(userReview.difficulty),
       grade: Number(userReview.grade),
       homework: Number(userReview.homework),
       reward: Number(userReview.reward),
-      semester: parseInt(userReview.semester),
+      semester: userReview.semester,
     }
   }
   return null
-  // TODO: What if we use pagination?
 })
 
 const handleEditReviewButtonClicked = () => {

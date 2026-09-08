@@ -43,6 +43,7 @@ import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/lib/requests'
 import { CourseData } from '@/types/courseReview'
+import type { APICourseInfo } from '@/types/api/courseReview/course'
 import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'
 import CourseReviews from '@/components/courseReview/course/courseReviews/CourseReviews.vue'
 import CourseTeachers from '@/components/courseReview/course/CourseTeachers.vue'
@@ -65,16 +66,25 @@ const errorMsg = ref<{
 const courseLoading = ref(true)
 const courseData = ref<CourseData | null>(null)
 const showTopButton = ref(false)
+const reviewQuery = ref<APICourseInfo['query']>({ page: 1, pageSize: 10, sort: 'liked' })
 
-const loadData = async () => {
+const loadData = async (query?: APICourseInfo['query']) => {
+  if (query) reviewQuery.value = query
   courseLoading.value = true
   try {
     const id = parseInt(route.params.id instanceof Object ? route.params.id[0] : route.params.id)
+    const focusReviewId = Number(/^#review-(\d+)$/.exec(route.hash)?.[1]) || undefined
+    const focusReplyId = Number(/^#reply-(\d+)$/.exec(route.hash)?.[1]) || undefined
     const { status, content } = await api.get({
       url: '/api/assessment/course/:id/',
       params: {
         id,
-      }
+      },
+      query: {
+        ...reviewQuery.value,
+        focus_review_id: focusReviewId,
+        focus_reply_id: focusReplyId,
+      },
     })
 
     if (status === 404) {
@@ -111,7 +121,7 @@ const handleScroll = () => {
   showTopButton.value = window.scrollY > 500
 }
 
-watch(() => route.params.id, async (newId) => {
+watch([() => route.params.id, () => route.hash], async ([newId]) => {
   if (newId) {
     await loadData()
   }
