@@ -53,7 +53,7 @@ beforeEach(() => {
   container = document.createElement('div')
   document.body.append(container)
   review = reactive({
-    id: 119, content: '主评价正文', rating: 4, created_time: '', modified_time: '', edited: false,
+    id: 119, is_deleted: false, content: '主评价正文', rating: 4, created_time: '', modified_time: '', edited: false,
     difficulty: 3, homework: 3, grade: 3, reward: 3, semester: '2026-秋',
     author: { id: 2, nickname: '同学', avatar: '', anonymous: false },
     like: { like: 0, dislike: 0, user_option: 0 }, reply: [makeReply(3, 2), makeReply(1), makeReply(2, 1), makeReply(4)],
@@ -69,6 +69,21 @@ afterEach(() => {
 })
 
 describe('course review reply conversations', () => {
+  it('shows a deleted-review tombstone while preserving the reply tree', async () => {
+    review.is_deleted = true
+    review.content = '内容已被删除'
+    await mount()
+
+    expect(container.textContent).toContain('内容已被删除')
+    expect(container.textContent).not.toContain('主评价作者')
+    expect(container.querySelector('[data-main-review]')).toBeNull()
+    expect(branch(1)).toBeTruthy()
+    expect(branch(3)).toBeTruthy()
+    expect([...container.querySelectorAll('button')].some(
+      (item) => item.textContent?.trim() === '回复评价'
+    )).toBe(false)
+  })
+
   it('collapses only the selected reply branch while keeping the review and other conversations visible', async () => {
     await mount()
     expect(branch(1).contains(branch(2))).toBe(true)

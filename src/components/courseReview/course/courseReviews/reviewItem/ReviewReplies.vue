@@ -3,7 +3,7 @@
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
         <h3 class="text-base font-semibold text-gray-900">回复 <span class="text-sm font-normal text-gray-500">{{ review.reply.length }}</span></h3>
-        <button v-if="isLoggedIn" type="button" class="text-sm text-blue-700 hover:text-blue-800" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
+        <button v-if="isLoggedIn && !review.is_deleted" type="button" class="text-sm text-blue-700 hover:text-blue-800" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
           {{ replyTarget === 0 ? '取消回复' : '回复评价' }}
         </button>
       </div>
@@ -11,7 +11,7 @@
         {{ reverseReplies ? '最新回复' : '最早回复' }}
       </button>
     </div>
-    <ReviewReplyInput v-if="isLoggedIn && replyTarget === 0" :review="review" :reply-to="0" class="mb-4"
+    <ReviewReplyInput v-if="isLoggedIn && !review.is_deleted && replyTarget === 0" :review="review" :reply-to="0" class="mb-4"
       @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     <div class="space-y-3">
       <ReviewReplyThreadNode v-for="node in thread.roots" :key="node.reply.id" :node="node" :review="review"

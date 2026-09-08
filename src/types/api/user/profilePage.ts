@@ -81,6 +81,7 @@ type APIUserActivityReplyBase = {
       is_student: boolean
     }
     content: string
+    is_deleted: boolean
   }
   datetime: string
   course: {

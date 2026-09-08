@@ -110,6 +110,7 @@ export type APICourseInfo = {
     request_user_review_id: number | null
     reviews: {
       id: number
+      is_deleted: boolean
       content: string
       rating: number
       modified_time: string

@@ -1,14 +1,19 @@
 <template>
   <article class="min-w-0">
     <div ref="courseReviewItem">
+      <div v-if="review.is_deleted" class="mb-5 flex items-center gap-3 text-slate-500">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100" aria-hidden="true">×</div>
+        <span class="font-medium">内容已被删除</span>
+      </div>
       <ReviewHeader
+        v-else
         :review="review"
         :is-author="isAuthor"
         @review-edit="handleEdit"
         @review-delete="handleDeleteReview"
       />
-      <ReviewContent :review="review" />
-      <ReviewBottom :review="review" />
+      <ReviewContent v-if="!review.is_deleted" :review="review" />
+      <ReviewBottom v-if="!review.is_deleted" :review="review" />
     </div>
     <ReviewReplies :review="review" @reply-deleted="handleReplyDeleted" />
   </article>
