@@ -1,378 +1,79 @@
 <template>
-  <div class="mt-4">
-    <div
-      class="flex justify-between items-center mb-2"
-      v-if="review.reply && review.reply.length > 0"
-    >
-      <div class="flex items-center space-x-2">
-        <h3 class="font-semibold text-gray-900 text-lg">评论</h3>
-        <button
-          v-if="isLoggedIn"
-          @click="toggleReply(0)"
-          class="text-blue-700 hover:text-blue-800 bg-transparent border-none cursor-pointer"
-        >
-          {{ showReply && replyTarget === 0 ? '取消回复' : '添加回复' }}
+  <section ref="replySection" class="mt-4 min-w-0" aria-label="评价回复">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <h3 class="text-base font-semibold text-gray-900">回复 <span class="text-sm font-normal text-gray-500">{{ review.reply.length }}</span></h3>
+        <button v-if="isLoggedIn" type="button" class="text-sm text-blue-700 hover:text-blue-800" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
+          {{ replyTarget === 0 ? '取消回复' : '回复评价' }}
         </button>
       </div>
-
-      <div>
-        <span>排序：</span>
-        <button
-          @click="toggleReplyOrder"
-          class="text-blue-700 hover:text-blue-800 bg-transparent border-none cursor-pointer"
-        >
-          {{ reverseReplies ? '最新回复' : '最早回复' }}
-        </button>
-      </div>
+      <button v-if="thread.roots.length > 1" type="button" class="text-xs text-gray-500 hover:text-blue-700" @click="reverseReplies = !reverseReplies">
+        {{ reverseReplies ? '最新回复' : '最早回复' }}
+      </button>
     </div>
-    <div class="space-y-2">
-      <div v-for="reply in orderedReplies" ref="replies" :key="reply.id">
-        <div
-          class="bg-gray-50 p-3 rounded-md flex justify-between items-start relative group"
-          :data-reply-id="reply.id"
-        >
-          <div class="flex flex-1">
-            <div class="flex flex-col flex-1">
-              <div class="flex">
-                <p class="text-sm text-gray-700 flex-1">
-                  <span>
-                    <router-link
-                      v-if="reply.created_by.id > 0"
-                      :to="`/user/${reply.created_by.id}`"
-                      class="text-blue-700 hover:underline"
-                    >
-                      {{ reply.created_by.name }}
-                    </router-link>
-                    <span v-else>
-                      {{ reply.created_by.name }}
-                    </span>
-                  </span>
-                  <span v-if="reply.parent > 0">
-                    回复了
-                    <router-link
-                      v-if="
-                  orderedReplies.find((it) => it.id === reply.parent)
-                    ?.created_by.id! > 0
-                "
-                      :to="`/user/${
-                        orderedReplies.find((it) => it.id === reply.parent)
-                          ?.created_by.id
-                      }`"
-                      class="text-blue-700 hover:underline"
-                    >
-                      {{
-                        orderedReplies.find((it) => it.id === reply.parent)
-                          ?.created_by.name
-                      }}
-                    </router-link>
-                    (
-                    <button
-                      class="text-blue-700 hover:underline"
-                      @click="handleJmpClick(reply.parent, reply.id)"
-                    >
-                      #{{
-                        orderedReplies.find((it) => it.id === reply.parent)
-                          ?.floorNumber
-                      }}
-                    </button>
-                    )
-                  </span>
-                  <span class="break-all text-gray-700">
-                    : {{ reply.content }}
-                  </span>
-                </p>
-                <span class="text-sm text-gray-500 ml-4"
-                >#{{ reply.floor_number }}</span
-                >
-              </div>
-              <div>
-                <div class="flex text-xs text-gray-500 mt-3">
-                  <Time :time="new Date(reply.created_time)" />
-                  <div class="flex-grow"></div>
-                  <button
-                    v-if="isLoggedIn && reply.created_by.id === userInfo?.id  && !reply.is_deleted"
-                    @click="() => handleDeleteReply(reply.id)"
-                    class=""
-                  >
-                    <Trash2 class="inline-block w-4 h-4" />
-                    <span>删除</span>
-                  </button>
-                  <p>&nbsp;&nbsp;</p>
-                  <button
-                    v-if="isLoggedIn && !reply.is_deleted"
-                    @click="() => toggleReply(reply.id)"
-                    class=""
-                  >
-                    <MessageSquare class="inline-block w-4 h-4" />
-                    <span
-                      v-if="
-                        replyTarget === reply.id &&
-                        showReply &&
-                        formerReplyTarget != 0
-                      "
-                      class="font-black underline underline-offset-1"
-                    >取消</span
-                    >
-                    <span v-else>回复</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Jump Back Button -->
-          <div
-            class="absolute -right-12 sm:-right-36 top-0 w-12 sm:w-36 h-12 bg-gray-50 overflow-hidden rounded-r-lg border border-gray-200"
-            v-if="
-              jumpHistory.length > 0 &&
-              jumpHistory[jumpHistory.length - 1].to === reply.id
-            "
-            @click="handleJmpBackClick"
-          >
-            <button
-              class="absolute inset-0 flex items-center justify-center w-full h-full text-sm font-medium text-blue-700 bg-white bg-opacity-90 hover:bg-opacity-100 hover:text-blue-800 transition-all duration-300 rounded-r-lg shadow-md group-hover:shadow-lg"
-            >
-              <MoveLeft class="inline-block w-4 h-4 sm:mr-1" />
-              <span class="hidden sm:inline">
-                (#{{
-                  orderedReplies.find(
-                    (it) => it.id === jumpHistory[jumpHistory.length - 1].from,
-                  )?.floorNumber
-                }})
-              </span>
-            </button>
-          </div>
-        </div>
-        <ReviewReplyInput
-          ref="replyTextArea"
-          v-if="isLoggedIn && showReply && replyTarget === reply.id"
-          :review="review"
-          :reply-to="replyTarget"
-          :reply-target-floor="
-            orderedReplies.find((it) => it.id === replyTarget)?.floorNumber
-          "
-          @close="toggleReply"
-          class="mt-4"
-          @replySubmitted="onReplySubmitted"
-        />
-      </div>
+    <ReviewReplyInput v-if="isLoggedIn && replyTarget === 0" :review="review" :reply-to="0" class="mb-4"
+      @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
+    <div class="space-y-3">
+      <ReviewReplyThreadNode v-for="node in thread.roots" :key="node.reply.id" :node="node" :review="review"
+        :depth="0" :collapsed-ids="collapsedIds" :reply-target="replyTarget" :user-id="isLoggedIn ? userInfo?.id : undefined"
+        :deleting-ids="deletingIds" @toggle-collapse="toggleCollapse" @reply="toggleReply" @delete="handleDeleteReply"
+        @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     </div>
-  </div>
-  <div class="flex justify-end mt-2 mx-2">
-    <n-button
-      v-if="isLoggedIn"
-      text
-      @click="() => toggleReply()"
-      class="text-blue-700 hover:text-blue-800"
-    >
-      {{ showReply && formerReplyTarget == 0 ? '取消回复' : '回复' }}
-    </n-button>
-    <span v-else> 登录以后才能回复 </span>
-  </div>
-  <ReviewReplyInput
-    ref="replyTextArea"
-    v-if="isLoggedIn && showReply && replyTarget === 0"
-    :review="review"
-    :reply-to="replyTarget"
-    :reply-target-floor="
-      orderedReplies.find((it) => it.id === replyTarget)?.floorNumber
-    "
-    @close="toggleReply"
-    class="mt-4"
-    @replySubmitted="onReplySubmitted"
-  />
-  <template></template>
+    <p v-if="!isLoggedIn" class="mt-3 text-sm text-gray-500">登录以后才能回复</p>
+  </section>
 </template>
 
-<script lang="ts" setup>
-import { useUser } from '@/lib/useUser'
-import { Review } from '@/types/courseReview'
-import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
-import { useMessage } from 'naive-ui'
-import { api } from '@/lib/requests'
-import { Trash2, MoveLeft, MessageSquare } from 'lucide-vue-next'
-import ReviewReplyInput from './ReviewReplyInput.vue'
-import Time from '@/components/tinyComponents/Time.vue'
+<script setup lang="ts">
+import { computed, nextTick, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { useUser } from '@/lib/useUser'
+import { api } from '@/lib/requests'
+import { buildReviewReplyThread } from '@/lib/reviewReplyThread'
 import { focusCourseReviewTarget } from '@/lib/focusCourseReviewTarget'
+import type { Review } from '@/types/courseReview'
+import ReviewReplyInput from './ReviewReplyInput.vue'
+import ReviewReplyThreadNode from './ReviewReplyThreadNode.vue'
 
-const { review } = defineProps<{
-  review: Review
-}>()
-
-const emit = defineEmits<{
-  (e: 'replyDeleted', reviewId: number, replyId: number): void
-}>()
-
-const message = useMessage()
-// Display the reply box or not
-const showReply = ref(false)
-const replyTarget = ref(0)
-const formerReplyTarget = ref(0)
-const replyTextArea = useTemplateRef('replyTextArea')
-const toggleReply = (replyTo: number = 0) => {
-  replyTarget.value = replyTo
-  if (replyTo !== 0) {
-    if (!showReply.value) {
-      showReply.value = !showReply.value
-    } else {
-      if (replyTo === formerReplyTarget.value) {
-        showReply.value = !showReply.value
-      }
-    }
-  } else {
-    if (formerReplyTarget.value !== 0) {
-      showReply.value = true
-    } else {
-      showReply.value = !showReply.value
-    }
-  }
-  if (showReply.value) {
-    nextTick(() => {
-      if (replyTextArea.value && 'focus' in replyTextArea.value) {
-        replyTextArea.value.focus()
-      }
-    })
-  }
-  formerReplyTarget.value = replyTo
-}
-
-const reverseReplies = ref(false)
-
-const handleDeleteReply = async (repyId: number) => {
-  if (confirm(`你确定要删掉这条回复吗？！`)) {
-    try {
-      const resp = await api.delete({
-        url: '/api/assessment/reply/',
-        query: {
-          reply_id: repyId,
-          review_id: review.id,
-        },
-      })
-      if (resp.status === 200) {
-        message.success('回复已成功删除')
-        emit('replyDeleted', review.id, repyId)
-      } else {
-        throw new Error(
-          resp.errors?.reduce(
-            (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
-            '',
-          ),
-        )
-      }
-    } catch (error) {
-      console.error('Error deleting reply:', error)
-      message.error('删除回复失败，请稍后重试\n' + error)
-    }
-  }
-}
-
-const route = useRoute()
-
-
-onMounted(async () => {
-  await nextTick()
-  const hash = route.hash
-  if (hash && hash.includes('reply-')) {
-    const replyId = parseInt(hash.split('-')[1])
-    handleJmpClick(replyId)
-  }
-})
-
-const repliesRefs = useTemplateRef('replies')
-const jumpHistory = ref<{ from: number; to: number }[]>([]) // Now stores reply IDs instead of floor numbers
-let stopFocusAnimation: (() => void) | undefined
-
-const handleJmp = (targetElement: HTMLElement) => {
-  targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  stopFocusAnimation?.()
-  stopFocusAnimation = focusCourseReviewTarget(targetElement)
-}
-
-onUnmounted(() => {
-  stopFocusAnimation?.()
-})
-
-const handleJmpClick = async (
-  targetReplyId: number,
-  currentReplyId?: number,
-) => {
-  if (repliesRefs.value) {
-    const domElements = Array.from(repliesRefs.value)
-    const targetElement = domElements.find(el =>
-      el.querySelector(`[data-reply-id="${targetReplyId}"]`),
-    )
-
-    if (targetElement) {
-      if (currentReplyId != null) {
-        if (jumpHistory.value.length > 0 && currentReplyId != jumpHistory.value[jumpHistory.value.length - 1].to) {
-          jumpHistory.value = []
-        }
-        jumpHistory.value.push({ from: currentReplyId, to: targetReplyId })
-      }
-      const replyElement = targetElement.querySelector<HTMLElement>(`[data-reply-id="${targetReplyId}"]`)
-      if (replyElement) await handleJmp(replyElement)
-    }
-  }
-}
-
-const handleJmpBackClick = () => {
-  if (jumpHistory.value.length > 0) {
-    const previousReplyInfo = jumpHistory.value.pop()
-    if (previousReplyInfo !== undefined) {
-      const domElements = Array.from(repliesRefs.value ?? [])
-      const targetElement = domElements.find(el =>
-        el.querySelector(`[data-reply-id="${previousReplyInfo.from}"]`),
-      )
-
-      if (targetElement) {
-        const replyElement = targetElement.querySelector<HTMLElement>(`[data-reply-id="${previousReplyInfo.from}"]`)
-        if (replyElement) void handleJmp(replyElement)
-      }
-    }
-  }
-}
-
-const toggleReplyOrder = () => {
-  reverseReplies.value = !reverseReplies.value
-}
-
-const orderedReplies = computed(() => {
-  const replies = [...review.reply].map((it) => {
-    return {
-      ...it,
-      floorNumber: it.floor_number,
-    }
-  })
-
-  replies.sort((a, b) => {
-    const timeA = new Date(a.created_time).getTime()
-    const timeB = new Date(b.created_time).getTime()
-    return reverseReplies.value ? timeB - timeA : timeA - timeB
-  })
-
-  return replies
-})
-
+const { review } = defineProps<{ review: Review }>()
+const emit = defineEmits<{ (e: 'replyDeleted', reviewId: number, replyId: number): void }>()
 const { userInfo, isLoggedIn } = useUser()
-const onReplySubmitted = async (
-  content: string,
-  parent: number,
-  replyId: number,
-) => {
-  showReply.value = false
-  replyTarget.value = 0
-  formerReplyTarget.value = 0
-  if (!userInfo.value) return
+const message = useMessage()
+const route = useRoute()
+const replySection = useTemplateRef('replySection')
+const replyTarget = ref<number | null>(null)
+const collapsedIds = ref(new Set<number>())
+const deletingIds = ref(new Set<number>())
+const reverseReplies = ref(false)
+const thread = computed(() => buildReviewReplyThread(review.reply, reverseReplies.value))
 
-  const maxFloorNumber = review.reply.reduce((max, reply) =>
-    Math.max(max, reply.floor_number || 0), 0)
-  const newFloorNumber = maxFloorNumber + 1
+const toggleReply = (id: number) => { replyTarget.value = replyTarget.value === id ? null : id }
+const toggleCollapse = (id: number) => {
+  if (collapsedIds.value.has(id)) collapsedIds.value.delete(id)
+  else collapsedIds.value.add(id)
+}
 
-  // Push the new reply to the review's replies array
-  review.reply.unshift({
-    id: replyId,
-    parent,
-    content,
+const handleDeleteReply = async (id: number) => {
+  if (deletingIds.value.has(id) || !confirm('删除后将保留“回复已删除”的占位，下级回复不会被删除。确定删除吗？')) return
+  deletingIds.value.add(id)
+  try {
+    const response = await api.delete({ url: '/api/assessment/reply/', query: { reply_id: id, review_id: review.id } })
+    if (response.status !== 200) throw new Error('删除回复失败')
+    const reply = review.reply.find((item) => item.id === id)
+    if (reply) { reply.is_deleted = true; reply.content = '回复已删除' }
+    if (replyTarget.value === id) replyTarget.value = null
+    message.success('回复已成功删除')
+    emit('replyDeleted', review.id, id)
+  } catch {
+    message.error('删除回复失败，请稍后重试')
+  } finally { deletingIds.value.delete(id) }
+}
+
+const onReplySubmitted = (content: string, parent: number, id: number) => {
+  replyTarget.value = null
+  if (!userInfo.value || thread.value.byId.has(id)) return
+  review.reply.push({
+    id, parent, content,
     created_time: new Date().toISOString(),
     created_by: {
       id: userInfo.value.id,
@@ -381,15 +82,34 @@ const onReplySubmitted = async (
       uuid: userInfo.value.uuid,
       has_avatar: userInfo.value.has_avatar,
     },
-    floor_number: newFloorNumber,
-    like: {
-      like: 0,
-      dislike: 0,
-      user_option: 0,
-    },
+    floor_number: Math.max(0, ...review.reply.map((reply) => reply.floor_number || 0)) + 1,
+    like: { like: 0, dislike: 0, user_option: 0 },
     is_deleted: false,
   })
-  await nextTick()
-  await handleJmpClick(replyId, parent)
+  let ancestor: number | undefined = parent
+  while (ancestor !== undefined) {
+    collapsedIds.value.delete(ancestor)
+    ancestor = thread.value.parents.get(ancestor)
+  }
 }
+
+// Keep incoming notification/profile links usable; replies have no in-thread jump controls.
+const linkedReplyId = computed(() => Number(/^#reply-(\d+)$/.exec(route.hash)?.[1]) || null)
+let stopFocusAnimation: (() => void) | undefined
+watch([linkedReplyId, () => thread.value.byId.has(linkedReplyId.value ?? -1)], async ([id, exists]) => {
+  if (!id || !exists) return
+  let ancestor: number | undefined = id
+  while (ancestor !== undefined) {
+    collapsedIds.value.delete(ancestor)
+    ancestor = thread.value.parents.get(ancestor)
+  }
+  await nextTick()
+  const element = replySection.value?.querySelector<HTMLElement>(`[data-reply-card="${id}"]`)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    stopFocusAnimation?.()
+    stopFocusAnimation = focusCourseReviewTarget(element)
+  }
+}, { immediate: true, flush: 'post' })
+onUnmounted(() => stopFocusAnimation?.())
 </script>
