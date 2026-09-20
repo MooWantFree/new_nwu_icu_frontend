@@ -34,6 +34,23 @@ describe('API request query serialization', () => {
       '/api/management/reports/?status=pending&page=1&pageSize=10',
     )
   })
+
+  it('exposes the server Retry-After delay', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 429,
+      statusText: 'Too Many Requests',
+      headers: new Headers({ 'Retry-After': '23' }),
+      text: async () => JSON.stringify({ message: '', errors: [], contents: {} }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const response = await api.get({
+      url: '/api/management/reports/',
+      query: { page: 1, pageSize: 10 },
+    })
+
+    expect(response.retryAfter).toBe(23)
+  })
 })
 
 describe('CAPTCHA step-up retry', () => {

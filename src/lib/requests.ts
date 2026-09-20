@@ -8,6 +8,15 @@ type APIResponse<T extends APIBase> = {
   contents: T['response']
 }
 
+const parseRetryAfter = (value: string | null): number | undefined => {
+  if (!value) return undefined
+  const seconds = Number(value)
+  if (Number.isFinite(seconds)) return Math.max(1, Math.ceil(seconds))
+  const retryAt = Date.parse(value)
+  if (Number.isNaN(retryAt)) return undefined
+  return Math.max(1, Math.ceil((retryAt - Date.now()) / 1000))
+}
+
 const parseResponseBody = <T extends APIBase>(body: string, statusText = ''): APIResponse<T> => {
   if (!body.trim()) {
     return { message: statusText, contents: {} as T['response'] }
@@ -42,6 +51,7 @@ async function request<T extends APIBase>({
   data: APIResponse<T>
   content: T['response']
   errors: T['errors']
+  retryAfter?: number
 }> {
   let fullUrl = `${url}`
 
@@ -109,6 +119,7 @@ async function request<T extends APIBase>({
               data: result,
               content: result.contents,
               errors: result.errors as T['errors'],
+              retryAfter: parseRetryAfter(xhr.getResponseHeader('Retry-After')),
             })
           }
           
@@ -154,6 +165,7 @@ async function request<T extends APIBase>({
       data: result,
       content: result.contents,
       errors: result.errors as T['errors'],
+      retryAfter: parseRetryAfter(response.headers?.get('Retry-After') ?? null),
     }
   } catch (error) {
     console.error('Request failed:', error)
