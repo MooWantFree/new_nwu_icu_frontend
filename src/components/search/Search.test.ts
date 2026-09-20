@@ -60,7 +60,7 @@ describe('navbar resource search', () => {
   it('keeps other search categories and uses root context outside resource pages', async () => {
     await mount('/'); await submit('高数')
     expect(host.querySelector('[aria-label="资源类型"]')).toBeNull()
-    expect(api.post).toHaveBeenCalledWith({ url: '/api/search/', query: { keyword: '高数', type: 'review', current_page: 1, page_size: 10 } })
+    expect(api.post).toHaveBeenCalledWith({ url: '/api/search/', query: { keyword: '高数', type: 'course', current_page: 1, page_size: 10 } })
     vi.mocked(api.get).mockResolvedValue({ status: 200, content: { entries: [], page: 1, page_size: 100, total_count: 0 } } as never)
     const resourceTab = [...host.querySelectorAll('button')].find(button => button.textContent?.trim() === '资源')!
     resourceTab.click(); await flush()
