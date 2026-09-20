@@ -163,6 +163,7 @@
 import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
+import { useMessage } from 'naive-ui'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
 import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
@@ -185,6 +186,7 @@ const Pager = defineComponent({
 })
 
 const route = useRoute()
+const message = useMessage()
 const loading = ref(true)
 const notFound = ref(false)
 const session = ref<ManagementSession | null>(null)
@@ -392,6 +394,7 @@ const reviewUpload = async (upload: ResourceUploadRequest, action: 'approve' | '
   })
   if (response.status === 403) { await loadSession(); return }
   if (response.status !== 200) { sectionError.value = errorMessage(response.errors, '审核投稿失败。'); return }
+  if (action === 'approve') message.success('审核已通过，资料正在发布。')
   await loadUploads(uploadPage.value)
 }
 

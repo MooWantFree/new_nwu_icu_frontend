@@ -10,12 +10,15 @@ import {
   startRegistration,
 } from '@simplewebauthn/browser'
 
+const messageSuccess = vi.fn()
+
 vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn() } }))
 vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: vi.fn(),
   startAuthentication: vi.fn(),
   startRegistration: vi.fn(),
 }))
+vi.mock('naive-ui', () => ({ useMessage: () => ({ success: messageSuccess }) }))
 vi.mock('@/components/guestbook/GuestbookEditor.vue', () => ({
   default: { render: () => h('textarea') },
 }))
@@ -208,5 +211,36 @@ describe('management Passkey flow', () => {
 
     expect(container.textContent).toContain('添加管理员 Passkey')
     expect(container.querySelectorAll('input')).toHaveLength(2)
+  })
+
+  it('shows a toast after accepting a resource approval', async () => {
+    const upload = {
+      id: 42,
+      revision: 1,
+      status: 'pending',
+      target_path: '/courses',
+      total_size_display: '1 KB',
+      uploaded_by: { nickname: '投稿人', username: 'student' },
+      files: [],
+      publish_error: '',
+    }
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') {
+        return { status: 200, content: { ...baseSession, elevated: true } } as never
+      }
+      if (url === '/api/management/reports/') {
+        return { status: 200, content: { results: [], page: 1, max_page: 1, count: 0 } } as never
+      }
+      return { status: 200, content: { results: [upload], page: 1, max_page: 1, count: 1 } } as never
+    })
+    vi.mocked(api.post).mockResolvedValue({ status: 200, content: { upload_request: upload } } as never)
+    await mountManage()
+
+    findButton('文件审核').click()
+    await flush()
+    findButton('通过并发布').click()
+    await flush()
+
+    expect(messageSuccess).toHaveBeenCalledWith('审核已通过，资料正在发布。')
   })
 })
