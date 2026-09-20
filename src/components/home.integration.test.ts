@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, type App, type Component } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import HomeReviewPreview from '@/components/courseReview/HomeReviewPreview.vue'
+import AnnouncementPreview from '@/components/guestbook/AnnouncementPreview.vue'
 import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
 import { api } from '@/lib/requests'
 import type { GuestbookEntry } from '@/types/api/guestbook'
@@ -57,6 +58,16 @@ const guestbookEntry: GuestbookEntry = {
   liked_by_me: false,
 }
 
+const announcementEntry: GuestbookEntry = {
+  ...guestbookEntry,
+  id: 21,
+  title: '校园网维护通知',
+  content: '<p>本周六凌晨将进行校园网维护。</p>',
+  anonymous: false,
+  created_at: '2026-09-05T09:00:00Z',
+  author: { id: 1, nickname: '站务组', avatar: null },
+}
+
 let app: App | undefined
 let container: HTMLDivElement
 
@@ -70,6 +81,7 @@ const mount = async (component: Component) => {
       { path: '/review/teacher/:id', component: { render: () => null } },
       { path: '/user/:id', component: { render: () => null } },
       { path: '/guestbook/:id', component: { render: () => null } },
+      { path: '/announcements/:id', component: { render: () => null } },
     ],
   })
   await router.push('/')
@@ -172,5 +184,39 @@ describe('homepage previews', () => {
 
     expect(api.get).toHaveBeenCalledTimes(2)
     expect(container.textContent).toContain('还没有留言')
+  })
+
+  it('renders only the latest announcement with its detail link', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      status: 200,
+      content: { results: [announcementEntry] },
+    } as never)
+
+    await mount(AnnouncementPreview)
+
+    expect(api.get).toHaveBeenCalledWith({
+      url: '/api/announcements/',
+      query: { page: 1, pageSize: 1 },
+    })
+    expect(container.textContent).toContain('校园网维护通知')
+    expect(container.textContent).toContain('本周六凌晨将进行校园网维护。')
+    expect(container.textContent).not.toContain('站务组')
+    expect(container.textContent).not.toContain('查看公告与回复')
+    expect(container.querySelector('a[href="/announcements/21"]')).not.toBeNull()
+  })
+
+  it('shows announcement error and empty states without hiding retry', async () => {
+    vi.mocked(api.get)
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce({ status: 200, content: { results: [] } } as never)
+
+    await mount(AnnouncementPreview)
+    expect(container.textContent).toContain('公告加载失败')
+
+    ;(container.querySelector('button') as HTMLButtonElement).click()
+    await flush()
+
+    expect(api.get).toHaveBeenCalledTimes(2)
+    expect(container.textContent).toContain('暂无公告')
   })
 })

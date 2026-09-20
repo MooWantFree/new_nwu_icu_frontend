@@ -56,6 +56,27 @@
         </section>
       </div>
 
+      <section
+        aria-labelledby="announcement-title"
+        class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      >
+        <header class="flex items-center gap-3 border-b border-slate-200 px-5 py-5 sm:px-7">
+          <Megaphone class="h-6 w-6 shrink-0 text-blue-700" aria-hidden="true" />
+          <div class="flex min-w-0 items-center gap-3">
+            <h2 id="announcement-title" class="text-xl font-bold text-slate-900 sm:text-2xl">
+              <RouterLink
+                to="/announcements"
+                class="rounded transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                公告栏
+              </RouterLink>
+            </h2>
+          </div>
+        </header>
+
+        <AnnouncementPreview />
+      </section>
+
       <details open class="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary
           class="flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl px-5 text-base font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:px-7 [&::-webkit-details-marker]:hidden"
@@ -91,11 +112,13 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  Megaphone,
   MessagesSquare,
   MessageSquareText,
   School,
 } from 'lucide-vue-next'
 import HomeReviewPreview from '@/components/courseReview/HomeReviewPreview.vue'
+import AnnouncementPreview from '@/components/guestbook/AnnouncementPreview.vue'
 import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 
