@@ -69,6 +69,8 @@ const userRoutes = [
     meta: {
       pageTitle: '设置',
       requiresAuth: true,
+      loginReason: '请先登录或注册，再管理账户设置',
+      loginSuccessMessage: '登录成功，正在打开账户设置',
     },
     component: () => import('@/views/user/Settings.vue'),
     children: [
@@ -118,6 +120,8 @@ const userRoutes = [
     meta: {
       pageTitle: '绑定学院邮箱',
       requiresAuth: true,
+      loginReason: '请先登录或注册，再绑定学院邮箱',
+      loginSuccessMessage: '登录成功，正在继续绑定学院邮箱',
     },
   },
 ] satisfies RouteRecordRaw[]
@@ -130,6 +134,8 @@ const messageRoutes = [
     meta: {
       pageTitle: '消息',
       requiresAuth: true,
+      loginReason: '请先登录或注册，再查看消息',
+      loginSuccessMessage: '登录成功，正在打开消息',
     },
     children: [
       {
@@ -214,6 +220,8 @@ const resourceUploadRoutes = [
     meta: {
       pageTitle: '资料投稿',
       requiresAuth: true,
+      loginReason: '请先登录或注册，再继续投稿资料',
+      loginSuccessMessage: '登录成功，正在继续投稿',
     },
   },
 ] satisfies RouteRecordRaw[]
@@ -306,7 +314,6 @@ Router.beforeEach(async (to) => {
       name: 'login',
       query: {
         redirect: to.fullPath,
-        reason: '请先登录或注册，再继续投稿资料',
       },
     }
   }

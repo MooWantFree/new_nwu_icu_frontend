@@ -106,6 +106,8 @@ describe('guestbook rendered flows', () => {
     await flush()
     expect(router.currentRoute.value.name).toBe('login')
     expect(router.currentRoute.value.query.redirect).toBe('/guestbook/1?reply=13')
+    expect(router.currentRoute.value.query.intent).toBe('guestbook')
+    expect(router.currentRoute.value.query.reason).toBeUndefined()
     expect(api.post).not.toHaveBeenCalled()
   })
 

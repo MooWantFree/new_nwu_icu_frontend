@@ -14,7 +14,13 @@ export function useGuestbookActions(board: MaybeRefOrGetter<DiscussionBoard> = '
 
   const requireLogin = (redirect = route.fullPath) => {
     if (isLoggedIn.value) return true
-    void router.push({ name: 'login', query: { redirect, reason: `请先登录，再参与${toValue(board) === 'announcements' ? '公告栏' : '留言板'}讨论` } })
+    void router.push({
+      name: 'login',
+      query: {
+        redirect,
+        intent: toValue(board) === 'announcements' ? 'announcements' : 'guestbook',
+      },
+    })
     return false
   }
   const perform = async (entry: GuestbookEntry, action: () => Promise<void>, error: string) => {

@@ -9,6 +9,8 @@ export {}
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
+    loginReason?: string
+    loginSuccessMessage?: string
     pageTitle: string
   }
 }

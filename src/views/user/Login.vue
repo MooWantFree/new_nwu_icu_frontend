@@ -15,35 +15,34 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount } from 'vue'
+import { computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import LoginForm from '@/components/user/loginNRegister/LoginForm.vue'
 import { checkLoginStatus } from '@/lib/logins'
+import { resolveLoginContext } from '@/lib/loginRedirect'
 import { useUser } from '@/lib/useUser'
 
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
 const { fetchUserInfo } = useUser(false)
-const reason = typeof route.query.reason === 'string' ? route.query.reason : ''
-
-const getSafeRedirect = () => {
-  const redirect = route.query.redirect
-  return typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
-    ? redirect
-    : '/'
-}
+const loginContext = computed(() => resolveLoginContext(
+  router,
+  route.query.redirect,
+  route.query.intent,
+))
+const reason = computed(() => loginContext.value.reason)
 
 onBeforeMount(async () => {
   if (await checkLoginStatus()) {
-    await router.replace(getSafeRedirect())
+    await router.replace(loginContext.value.redirect)
   }
 })
 
 const handleLoginSuccess = async () => {
   await fetchUserInfo()
-  message.success('登录成功，正在继续投稿')
-  await router.replace(getSafeRedirect())
+  message.success(loginContext.value.successMessage)
+  await router.replace(loginContext.value.redirect)
 }
 </script>
