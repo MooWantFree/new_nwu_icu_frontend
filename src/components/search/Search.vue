@@ -35,7 +35,7 @@
         aria-label="Tabs"
       >
         <button
-          v-for="tab in searchEnums"
+          v-for="tab in searchTabs"
           :key="tab"
           @click="handleTabClick(tab)"
           :class="[
@@ -152,7 +152,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { LoaderCircle, Search, PlusCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
-import { searchEnums, SearchType, searchTypeTooltip } from './enums'
+import { searchEnums, searchTabs, SearchType, searchTypeTooltip } from './enums'
 import {
   APISearch,
   CourseSearchResult,
@@ -174,7 +174,7 @@ const resourceContextPath = computed(() => {
   const parts = route.params.path
   return '/' + (Array.isArray(parts) ? parts.join('/') : parts || '')
 })
-const activeTab = ref<SearchType>(route.name === 'disk' ? searchEnums.resource : searchEnums.review)
+const activeTab = ref<SearchType>(route.name === 'disk' ? searchEnums.resource : searchEnums.course)
 const resourceKinds = [{ value: 'file', label: '文件' }, { value: 'directory', label: '文件夹' }] as const
 const resourceKind = ref<'file' | 'directory'>('file')
 

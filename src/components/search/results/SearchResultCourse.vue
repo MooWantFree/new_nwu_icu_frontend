@@ -17,7 +17,7 @@
     </div>
 
     <!-- Rating and review statistics section -->
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center mb-3">
       <div class="flex items-center">
         <span class="text-yellow-500 mr-1">★</span>
         <span class="font-medium">{{
@@ -27,12 +27,6 @@
           (标准化: {{ course.rating.normalized_rating.toFixed(2) }})
         </span>
       </div>
-      <button
-        @click="handleCourseClick"
-        class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-      >
-        查看详情
-      </button>
     </div>
 
     <!-- Like/Dislike and review count section -->
