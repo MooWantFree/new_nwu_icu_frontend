@@ -4,7 +4,7 @@
     :is="errorMsg.component"
     :detail="errorMsg.detail"
   />
-  <CourseSkeleton v-else-if="courseLoading || !courseData" />
+  <CourseSkeleton v-else-if="!courseData" />
   <AppPageLayout
     v-else
     :title="courseData.name"
@@ -19,6 +19,7 @@
         <CourseReviews
           :course-data="courseData"
           :loading="courseLoading"
+          :review-query="reviewQuery"
           @reloadData="loadData"
         />
       </div>
@@ -67,10 +68,13 @@ const courseLoading = ref(true)
 const courseData = ref<CourseData | null>(null)
 const showTopButton = ref(false)
 const reviewQuery = ref<APICourseInfo['query']>({ page: 1, pageSize: 10, sort: 'liked' })
+let requestGeneration = 0
 
 const loadData = async (query?: APICourseInfo['query']) => {
-  if (query) reviewQuery.value = query
+  const generation = ++requestGeneration
+  if (query) reviewQuery.value = { ...query }
   courseLoading.value = true
+  errorMsg.value = { component: null, detail: '' }
   try {
     const id = parseInt(route.params.id instanceof Object ? route.params.id[0] : route.params.id)
     const focusReviewId = Number(/^#review-(\d+)$/.exec(route.hash)?.[1]) || undefined
@@ -87,6 +91,7 @@ const loadData = async (query?: APICourseInfo['query']) => {
       },
     })
 
+    if (generation !== requestGeneration) return
     if (status === 404) {
       errorMsg.value = {
         component: Page404,
@@ -100,9 +105,10 @@ const loadData = async (query?: APICourseInfo['query']) => {
     }
 
     courseData.value = content
+    reviewQuery.value = { ...reviewQuery.value, page: content.reviews.page }
     document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
-    courseLoading.value = false
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('Failed to fetch course data:', error)
     if (error instanceof Error) {
       errorMsg.value = {
@@ -110,6 +116,8 @@ const loadData = async (query?: APICourseInfo['query']) => {
         detail: error.toString(),
       }
     }
+  } finally {
+    if (generation === requestGeneration) courseLoading.value = false
   }
 }
 
@@ -121,18 +129,23 @@ const handleScroll = () => {
   showTopButton.value = window.scrollY > 500
 }
 
-watch([() => route.params.id, () => route.hash], async ([newId]) => {
+watch([() => route.params.id, () => route.hash], async ([newId], [oldId]) => {
   if (newId) {
+    if (newId !== oldId) {
+      courseData.value = null
+      reviewQuery.value = { page: 1, pageSize: 10, sort: 'liked' }
+    }
     await loadData()
   }
 })
 
-onMounted(async () => {
-  await loadData()
+onMounted(() => {
+  void loadData()
   window.addEventListener('scroll', handleScroll)
 })
 
 onUnmounted(() => {
+  requestGeneration += 1
   window.removeEventListener('scroll', handleScroll)
 })
 </script>

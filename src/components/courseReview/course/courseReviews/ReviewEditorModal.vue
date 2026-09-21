@@ -211,7 +211,7 @@ const semesterOptions = computed(() => {
 
 watch(semesterOptions, (options) => {
   if (props.initContent?.semester) {
-    selectedSemester.value = options.find((option) => parseInt(option.label) === props.initContent?.semester)?.value ?? null
+    selectedSemester.value = options.find((option) => option.value === props.initContent?.semester)?.value ?? null
   } else {
     selectedSemester.value = options[0]?.value ?? null
   }

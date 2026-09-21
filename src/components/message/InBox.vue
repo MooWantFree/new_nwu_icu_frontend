@@ -108,7 +108,6 @@ const fetchMessages = async (page: number = 1) => {
   if (isFetchingMessages.value) return
   try {
     isFetchingMessages.value = true
-    const selectedId = selectedMessage.value?.chatter.id
     const resp = await api.get({
       url: '/api/message/user/',
       query: { page },
@@ -117,6 +116,7 @@ const fetchMessages = async (page: number = 1) => {
       messages.value = resp.data.contents.results
       totalPages.value = resp.data.contents.max_page
       currentPage.value = page
+      const selectedId = selectedMessage.value?.chatter.id
       if (selectedId) {
         selectedMessage.value = messages.value.find(item => item.chatter.id === selectedId) || selectedMessage.value
       }
@@ -137,10 +137,9 @@ const selectMessage = (msg: APIUserMessageList['response']['results'][0]) => {
   selectedMessage.value = msg
 }
 
-const handleConversationRead = () => {
-  if (!selectedMessage.value) return
-  selectedMessage.value.unread_count = 0
-  const listed = messages.value?.find(item => item.chatter.id === selectedMessage.value?.chatter.id)
+const handleConversationRead = (chatterId: number) => {
+  if (selectedMessage.value?.chatter.id === chatterId) selectedMessage.value.unread_count = 0
+  const listed = messages.value?.find(item => item.chatter.id === chatterId)
   if (listed) listed.unread_count = 0
 }
 

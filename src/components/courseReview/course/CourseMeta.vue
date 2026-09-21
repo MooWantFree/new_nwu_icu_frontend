@@ -8,7 +8,7 @@
           <n-rate
             readonly
             :allow-half="true"
-            :default-value="Number(courseData.rating_avg)"
+            :value="Number(courseData.rating_avg)"
           />
             <span class="text-2xl font-semibold tracking-tight text-slate-900">{{ courseData.rating_avg }}</span>
             <span class="text-sm text-slate-500">{{ courseData.total_review_count }} 人评价</span>
@@ -45,7 +45,7 @@
           <n-rate
             readonly
             :allow-half="true"
-            :default-value="Number(courseData.normalized_rating_avg)"
+            :value="Number(courseData.normalized_rating_avg)"
             :size="12"
           />
           {{ courseData.normalized_rating_avg }}

@@ -1,5 +1,5 @@
 <template>
-  <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" :aria-busy="loading">
     <header class="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
       <div>
         <h2 class="text-xl font-bold text-slate-900">同学评价</h2>
@@ -69,7 +69,7 @@
         </label>
       </div>
 
-    <div class="mt-5 divide-y divide-slate-200">
+    <div :key="reviewResultsGeneration" class="mt-5 divide-y divide-slate-200">
       <div v-for="review in reviewsDisplayed" :key="review.id" class="py-6 first:pt-0 last:pb-0">
         <CourseReviewItem
           :review="review"
@@ -119,6 +119,7 @@ const emit = defineEmits<{
 const props = defineProps<{
   courseData: CourseData
   loading: boolean
+  reviewQuery: APICourseInfo['query']
 }>()
 // Reviews Toolbar
 // - sort
@@ -135,7 +136,10 @@ const { isLoggedIn } = useUser()
 const route = useRoute()
 const router = useRouter()
 
-const sortSelectorValue = ref<SortMethods>(SortMethods.MostlyLiked)
+const sortSelectorValue = computed({
+  get: () => props.reviewQuery.sort ?? SortMethods.MostlyLiked,
+  set: (sort: NonNullable<APICourseInfo['query']['sort']>) => updateFilter({ sort }),
+})
 const sortSelectorOptions = [
   {
     label: '最多点赞',
@@ -160,7 +164,10 @@ const sortSelectorOptions = [
 ]
 
 // - semester
-const semesterSelectorValue = ref('all')
+const semesterSelectorValue = computed({
+  get: () => props.reviewQuery.semester === undefined ? 'all' : String(props.reviewQuery.semester),
+  set: (semester: string) => updateFilter({ semester: semester === 'all' ? undefined : Number(semester) }),
+})
 const semesterSelectorOptions = computed(() => [
   {
     label: `全部 (${props.courseData.total_review_count})`,
@@ -182,7 +189,10 @@ enum Rank {
   One = 1,
 }
 
-const rankSelectorValue = ref(Rank.All)
+const rankSelectorValue = computed({
+  get: () => props.reviewQuery.rating ?? Rank.All,
+  set: (rating: number) => updateFilter({ rating: rating === Rank.All ? undefined : rating }),
+})
 const rankSelectorOptions = computed(() => [
   {
     label: `全部 (${props.courseData.total_review_count})`,
@@ -214,18 +224,14 @@ const rankSelectorOptions = computed(() => [
 const ratingFacetCount = (rating: number) =>
   props.courseData.reviews.facets.ratings.find((item) => item.rating === rating)?.count ?? 0
 const reviewsDisplayed = computed(() => props.courseData.reviews.results)
+const reviewResultsGeneration = ref(0)
+// Reply cursors and notification targets belong to the server's current result snapshot.
+watch(() => props.courseData.reviews, () => { reviewResultsGeneration.value += 1 })
 
-const currentQuery = (page = 1): APICourseInfo['query'] => ({
-  page,
-  pageSize: 10,
-  sort: sortSelectorValue.value,
-  ...(semesterSelectorValue.value === 'all' ? {} : { semester: Number(semesterSelectorValue.value) }),
-  ...(rankSelectorValue.value === Rank.All ? {} : { rating: rankSelectorValue.value }),
-})
-watch([sortSelectorValue, semesterSelectorValue, rankSelectorValue], () => {
-  emit('reloadData', currentQuery())
-})
-const handlePageChange = (page: number) => emit('reloadData', currentQuery(page))
+const updateFilter = (filter: Partial<APICourseInfo['query']>) => {
+  emit('reloadData', { ...props.reviewQuery, ...filter, page: 1 })
+}
+const handlePageChange = (page: number) => emit('reloadData', { ...props.reviewQuery, page })
 
 const showEditor = ref(false)
 const isSubmittingReview = ref(false)
