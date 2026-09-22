@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-100">
-    <div v-if="isLoading" class="flex items-center justify-center h-screen">
+    <div v-if="isLoading && !isLoggedIn" class="flex items-center justify-center h-screen">
       <LoaderCircle class="w-16 h-16 text-blue-700 animate-spin" />
     </div>
     <div v-else-if="isLoggedIn" class="flex h-screen overflow-hidden">
