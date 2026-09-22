@@ -243,4 +243,53 @@ describe('management Passkey flow', () => {
 
     expect(messageSuccess).toHaveBeenCalledWith('审核已通过，资料正在发布。')
   })
+
+  it('links approved uploads to a decoded main-site directory while retaining encoded hrefs', async () => {
+    const encodedResourceUrl = 'https://nwu.icu/disk/%E3%80%901%E3%80%91%E4%B8%AD%E5%9B%BD%E7%89%B9%E8%89%B2%E8%AF%BE%E7%A8%8B%28%E6%AF%9B%E6%A6%82%E9%A9%AC%E5%8E%9F%29/%E9%A9%AC%E5%8E%9F'
+    const uploads = [
+      {
+        id: 43,
+        revision: 1,
+        status: 'approved',
+        target_path: '/【1】中国特色课程(毛概马原)/马原',
+        total_size_display: '1 KB',
+        uploaded_by: { nickname: '投稿人', username: 'student' },
+        files: [{ id: 101, relative_path: '讲义.pdf', size_display: '1 KB' }],
+        publish_error: '',
+        resource_url: encodedResourceUrl,
+      },
+      {
+        id: 44,
+        revision: 1,
+        status: 'pending',
+        target_path: '/待审核',
+        total_size_display: '2 KB',
+        uploaded_by: { nickname: '投稿人', username: 'student' },
+        files: [{ id: 102, relative_path: '待审核.pdf', size_display: '2 KB' }],
+        publish_error: '',
+        resource_url: null,
+      },
+    ]
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') {
+        return { status: 200, content: { ...baseSession, elevated: true } } as never
+      }
+      if (url === '/api/management/reports/') {
+        return { status: 200, content: { results: [], page: 1, max_page: 1, count: 0 } } as never
+      }
+      return { status: 200, content: { results: uploads, page: 1, max_page: 1, count: 2 } } as never
+    })
+    await mountManage()
+
+    findButton('文件审核').click()
+    await flush()
+
+    const resourceLink = container.querySelector(`a[href="${encodedResourceUrl}"]`) as HTMLAnchorElement
+    expect(resourceLink.textContent).toBe('https://nwu.icu/disk/【1】中国特色课程(毛概马原)/马原')
+    expect(resourceLink.target).toBe('_blank')
+    expect(resourceLink.rel).toBe('noopener noreferrer')
+    expect(container.querySelector('a[href="/api/management/uploads/files/101/download/"]')).toBeNull()
+    expect(container.textContent).toContain('讲义.pdf · 1 KB')
+    expect(container.querySelector('a[href="/api/management/uploads/files/102/download/"]')).not.toBeNull()
+  })
 })

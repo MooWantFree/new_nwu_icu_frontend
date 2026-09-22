@@ -137,7 +137,19 @@
               <span class="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">{{ uploadStatusLabel(upload.status) }}</span>
             </div>
             <div class="mt-4 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
-              <a v-for="file in upload.files" :key="file.id" :href="`/api/management/uploads/files/${file.id}/download/`" class="text-link block">{{ file.relative_path }} · {{ file.size_display }}</a>
+              <template v-for="file in upload.files" :key="file.id">
+                <span v-if="upload.status === 'approved'" class="block">{{ file.relative_path }} · {{ file.size_display }}</span>
+                <a v-else :href="`/api/management/uploads/files/${file.id}/download/`" class="text-link block">{{ file.relative_path }} · {{ file.size_display }}</a>
+              </template>
+            </div>
+            <div v-if="upload.status === 'approved' && toSafeExternalUrl(upload.resource_url)" class="mt-4">
+              <p class="text-xs font-medium text-gray-500">主站目录</p>
+              <a
+                :href="toSafeExternalUrl(upload.resource_url) ?? undefined"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-link mt-1 block break-all text-sm"
+              >{{ displayResourceUrl(upload.resource_url) }}</a>
             </div>
             <div v-if="upload.status === 'pending' || upload.status === 'publish_failed'" class="mt-4 grid gap-3">
               <label class="text-sm font-medium text-gray-700">最终目录<input v-model.trim="uploadPaths[upload.id]" maxlength="2048" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>
@@ -168,6 +180,7 @@ import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
 import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
+import { toSafeExternalUrl } from '@/lib/security'
 import type { ManagementReport, ManagementSession } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
@@ -216,6 +229,16 @@ const availableTabs = computed<Tab[]>(() => {
 })
 
 const errorMessage = (errors: Array<{ err_msg: string }> | undefined, fallback: string) => errors?.[0]?.err_msg || fallback
+
+const displayResourceUrl = (rawUrl: unknown) => {
+  const safeUrl = toSafeExternalUrl(rawUrl)
+  if (!safeUrl) return ''
+  try {
+    return decodeURIComponent(safeUrl)
+  } catch {
+    return safeUrl
+  }
+}
 
 type KeePassXCError = { code?: number; message?: string }
 
