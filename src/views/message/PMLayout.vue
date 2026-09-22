@@ -1,33 +1,33 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <div v-if="isLoading && !isLoggedIn" class="flex items-center justify-center h-screen">
+  <div class="h-screen overflow-hidden bg-slate-50">
+    <div v-if="isLoading && !isLoggedIn" class="flex h-screen items-center justify-center">
       <LoaderCircle class="w-16 h-16 text-blue-700 animate-spin" />
     </div>
-    <div v-else-if="isLoggedIn" class="flex h-screen overflow-hidden">
+    <div v-else-if="isLoggedIn" class="flex h-screen min-w-0 overflow-hidden">
       <aside :class="[
-        'bg-white shadow-lg transition-all duration-300 ease-in-out',
+        'shrink-0 border-r border-slate-200 bg-white transition-all duration-300 ease-in-out',
         isSidebarOpen ? 'w-64' : 'w-20'
       ]">
-        <div class="p-5 flex items-center justify-between">
-          <h2 v-if="isSidebarOpen" class="text-xl font-semibold text-gray-900">消息中心</h2>
-          <button @click="toggleSidebar" class="p-2 rounded-full hover:bg-gray-200">
-            <ChevronLeft v-if="isSidebarOpen" class="w-6 h-6 text-gray-600" />
-            <ChevronRight v-else class="w-6 h-6 text-gray-600" />
+        <div class="flex h-20 items-center justify-between px-4">
+          <h2 v-if="isSidebarOpen" class="text-xl font-bold tracking-tight text-slate-900">消息中心</h2>
+          <button type="button" :aria-label="isSidebarOpen ? '收起消息导航' : '展开消息导航'" @click="toggleSidebar" class="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <ChevronLeft v-if="isSidebarOpen" class="h-5 w-5" />
+            <ChevronRight v-else class="h-5 w-5" />
           </button>
         </div>
-        <nav class="mt-5 px-2">
+        <nav class="space-y-1 px-3" aria-label="消息中心导航">
           <router-link
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            class="group flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors duration-200 relative"
-            active-class="bg-blue-100 text-blue-700"
+            class="group relative flex min-h-11 items-center rounded-xl px-3 text-slate-600 transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            active-class="bg-blue-50 text-blue-700"
           >
-            <component :is="link.icon" class="w-5 h-5 mr-3" />
+            <component :is="link.icon" class="mr-3 h-5 w-5 shrink-0" />
             <span v-if="isSidebarOpen" class="text-sm font-medium">{{ link.text }}</span>
             <span 
               v-if="isSidebarOpen && unreadCount[link.name as keyof typeof unreadCount] > 0"
-              class="absolute right-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1 min-w-[20px] text-center"
+              class="absolute right-3 top-2.5 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-xs font-bold text-white"
             >
               {{ unreadCount[link.name as keyof typeof unreadCount] }}
             </span>
@@ -38,13 +38,13 @@
           </router-link>
         </nav>
       </aside>
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-        <div class="container mx-auto">
+      <main class="min-w-0 flex-1 overflow-hidden bg-slate-50">
+        <div class="h-full min-w-0">
           <router-view />
         </div>
       </main>
     </div>
-    <div v-else class="flex items-center justify-center h-screen bg-gray-100">
+    <div v-else class="flex h-screen items-center justify-center bg-gray-100">
       <div class="text-center bg-white p-8 rounded-xl shadow-2xl max-w-md w-full">
         <AlertCircle class="w-20 h-20 mx-auto text-yellow-500 mb-6" />
         <h2 class="mb-3 text-3xl font-bold text-gray-900">需要登录</h2>

@@ -71,7 +71,17 @@ describe('inbox conversation refresh', () => {
     await flush()
     container.querySelector<HTMLButtonElement>('[data-read-a]')!.click()
     await flush()
-    expect(rows()[0].querySelector('.bg-red-500')).toBeNull()
-    expect(rows()[1].querySelector('.bg-red-500')?.textContent).toBe('3')
+    expect(rows()[0].querySelector('[data-unread-badge]')).toBeNull()
+    expect(rows()[1].querySelector('[data-unread-badge]')?.textContent).toBe('3')
+  })
+
+  it('clips the two-pane layout instead of creating a page-level horizontal scrollbar', async () => {
+    await mount()
+    const root = container.firstElementChild
+    const panes = root?.querySelector('.rounded-2xl')
+    expect(root?.classList.contains('min-w-0')).toBe(true)
+    expect(root?.classList.contains('overflow-hidden')).toBe(true)
+    expect(panes?.classList.contains('min-w-0')).toBe(true)
+    expect(panes?.classList.contains('overflow-hidden')).toBe(true)
   })
 })

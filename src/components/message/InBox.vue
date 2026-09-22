@@ -1,28 +1,35 @@
 <template>
-  <div class="min-h-[calc(100vh-4rem)] bg-gray-100">
-    <div v-if="loading" class="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-      <div class="p-8 bg-white rounded-lg shadow-md">
-        <div class="w-16 h-16 mx-auto mb-4 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
-        <p class="text-center text-gray-600">加载中...</p>
+  <div class="h-full min-w-0 overflow-hidden bg-slate-50 p-3 sm:p-4">
+    <div v-if="loading" class="flex h-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="text-center">
+        <LoaderCircle class="mx-auto h-9 w-9 animate-spin text-blue-700" />
+        <p class="mt-3 text-sm text-slate-500">正在加载会话…</p>
       </div>
     </div>
-    <div v-else class="flex min-h-[calc(100vh-4rem)]">
-      <div class="w-80 bg-white border-r border-l flex flex-col shadow-sm">
-        <div class="p-4 border-b flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-gray-900">我的消息</h2>
-          <button @click="fetchMessages(currentPage)" class="p-2 text-blue-700 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors">
-            <RefreshCw class="h-5 w-5" />
+    <div v-else class="flex h-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section
+        class="h-full w-full shrink-0 flex-col border-r border-slate-200 bg-white sm:w-72 lg:w-80"
+        :class="selectedMessage ? 'hidden sm:flex' : 'flex'"
+        aria-label="会话列表"
+      >
+        <header class="flex min-h-20 items-center justify-between border-b border-slate-200 px-5">
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900">我的消息</h1>
+            <p class="mt-1 text-xs text-slate-500">与同学的站内私信</p>
+          </div>
+          <button type="button" aria-label="刷新会话" @click="fetchMessages(currentPage)" class="rounded-xl p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <RefreshCw class="h-5 w-5" :class="{ 'animate-spin': isFetchingMessages }" />
           </button>
-        </div>
-        <div class="overflow-y-auto min-h-[calc(100vh-12rem-8px)]">
+        </header>
+        <div class="min-h-0 flex-1 overflow-y-auto">
           <div v-for="(message) in finalMessages" :key="message.chatter.id" @click="selectMessage(message)"
-            class="p-4 border-b cursor-pointer transition duration-150 ease-in-out" :class="{
+            class="cursor-pointer border-b border-slate-100 px-4 py-4 transition-colors" :class="{
               'bg-blue-50': selectedMessage?.chatter.id === message.chatter.id,
-              'hover:bg-gray-100': selectedMessage?.chatter.id !== message.chatter.id,
-              'hover:bg-blue-100': selectedMessage?.chatter.id === message.chatter.id
+              'hover:bg-slate-50': selectedMessage?.chatter.id !== message.chatter.id,
+              'hover:bg-blue-100/70': selectedMessage?.chatter.id === message.chatter.id
             }">
-            <div class="flex items-start space-x-3">
-              <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 flex items-center justify-center">
+            <div class="flex min-w-0 items-start gap-3">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
                 <UserAvatar
                   :avatar="message.chatter.avatar"
                   :uuid="message.chatter.uuid"
@@ -32,51 +39,55 @@
                 />
               </div>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-medium text-gray-900">{{ message.chatter.nickname }}</span>
-                  <span v-if="message.unread_count > 0" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="truncate text-sm font-semibold text-slate-900">{{ message.chatter.nickname }}</span>
+                  <span v-if="message.unread_count > 0" data-unread-badge class="min-w-5 shrink-0 rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold text-white">
                     {{ message.unread_count }}
                   </span>
                 </div>
-                <p class="text-sm text-gray-500 truncate">
+                <p class="truncate text-sm text-slate-500">
                   {{ message.last_message.content || '开始新对话' }}
                 </p>
-                <p class="mt-1">
+                <p class="mt-1.5">
                   <Time v-if="message.last_message.datetime" :time="message.last_message.datetime" />
                 </p>
               </div>
             </div>
           </div>
-          <div v-if="finalMessages.length === 0" class="p-8 text-center text-gray-500">
-            暂无消息
+          <div v-if="finalMessages.length === 0" class="flex h-full flex-col items-center justify-center px-6 text-center">
+            <MessageSquare class="h-10 w-10 text-slate-300" />
+            <p class="mt-3 font-medium text-slate-600">暂无消息</p>
+            <p class="mt-1 text-sm text-slate-400">从同学主页发起一段对话吧</p>
           </div>
         </div>
-        <div class="p-4 border-t flex justify-between items-center bg-gray-50">
+        <footer class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3">
           <button @click="prevPage" :disabled="currentPage === 1"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition duration-150 ease-in-out flex items-center">
+            class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40">
             <ChevronLeft class="w-4 h-4 mr-1" />
             上一页
           </button>
-          <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages || 1 }}</span>
+          <span class="text-xs font-medium text-slate-500">{{ currentPage }} / {{ totalPages || 1 }}</span>
           <button @click="nextPage" :disabled="currentPage === totalPages"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition duration-150 ease-in-out flex items-center">
+            class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40">
             下一页
             <ChevronRight class="w-4 h-4 ml-1" />
           </button>
-        </div>
-      </div>
-      <div class="flex-1 bg-white shadow-sm">
-        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" @read="handleConversationRead" />
-        <div v-else class="h-full flex flex-col items-center justify-center bg-gray-50">
-          <MessageSquare class="h-16 w-16 text-gray-300 mb-4" />
-          <p class="text-gray-500 text-lg">
+        </footer>
+      </section>
+      <section class="min-w-0 flex-1 overflow-hidden bg-white" :class="selectedMessage ? 'flex' : 'hidden sm:flex'" aria-label="当前对话">
+        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" @read="handleConversationRead" @close="selectedMessage = null" />
+        <div v-else class="flex h-full flex-1 flex-col items-center justify-center bg-slate-50/70 px-6 text-center">
+          <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <MessageSquare class="h-9 w-9 text-blue-600" />
+          </div>
+          <p class="mt-5 text-lg font-semibold text-slate-700">
             {{ messages?.length === 0 ? '暂时还没有消息' : '请选择一个对话' }}
           </p>
-          <p class="text-gray-400 text-sm mt-2">
+          <p class="mt-2 text-sm text-slate-400">
             {{ messages?.length === 0 ? '开始与他人交流吧' : '点击左侧列表开始聊天' }}
           </p>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -88,7 +99,7 @@ import { api } from '@/lib/requests'
 import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
-import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 

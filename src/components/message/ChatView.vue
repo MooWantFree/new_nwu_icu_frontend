@@ -1,18 +1,21 @@
 <template>
-  <div class="flex-1 flex flex-col bg-white">
-    <div class="p-4 border-b flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="font-medium">{{ chatTarget.chatter.nickname }}</span>
+  <div class="flex h-full min-w-0 flex-1 flex-col bg-white">
+    <div class="flex min-h-20 items-center justify-between border-b border-slate-200 px-4 sm:px-5">
+      <div class="flex min-w-0 items-center gap-3">
+        <button type="button" aria-label="返回会话列表" class="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 sm:hidden" @click="emit('close')">
+          <ArrowLeft class="h-5 w-5" />
+        </button>
+        <div class="min-w-0">
+          <span class="block truncate font-semibold text-slate-900">{{ chatTarget.chatter.nickname }}</span>
+          <span class="mt-0.5 block text-xs text-slate-400">站内私信</span>
+        </div>
       </div>
-      <button class="p-1 rounded-full hover:bg-gray-100">
-        <MoreVertical class="w-5 h-5 text-gray-500" />
-      </button>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 min-h-[calc(100vh-12rem)] max-h-[calc(100vh-12rem)]" ref="messageContainer" @scroll="handleScroll">
+    <div class="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-4 sm:p-5" ref="messageContainer" @scroll="handleScroll">
       <div v-if="isLoading" class="flex justify-center items-center h-full">
         <Loader2 class="w-8 h-8 text-blue-700 animate-spin" />
       </div>
-      <div v-else class="max-w-screen-md mx-auto space-y-4">
+      <div v-else class="mx-auto max-w-screen-md space-y-4">
         <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">
           <InboxIcon class="w-12 h-12 mx-auto mb-2 text-gray-400" />
           没有更多消息了～
@@ -55,7 +58,7 @@
                   </span>
                 </div>
                 <div :class="[
-                  'rounded-lg p-3 shadow-sm max-w-xs',
+                  'max-w-xs rounded-2xl px-3.5 py-2.5 shadow-sm',
                   msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-600 text-white'
                 ]">
                   <p class="whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere]">{{ msg.content }}</p>
@@ -67,22 +70,22 @@
       </div>
     </div>
 
-    <div class="p-4 border-t">
+    <div class="border-t border-slate-200 bg-white p-3 sm:p-4">
       <div class="max-w-2xl mx-auto">
         <div class="flex items-center gap-2">
           <input type="text" placeholder="发送消息..." maxlength="500"
             :disabled="isSending"
-            class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="min-w-0 flex-1 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             v-model="newMessage" @keyup.enter="sendMessage" />
           <button @click="sendMessage"
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            class="flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
             :disabled="!newMessage.trim() || isSending">
             <span v-if="!isSending">发送</span>
             <Loader2 v-else class="w-4 h-4 animate-spin" />
             <Send class="w-4 h-4" />
           </button>
         </div>
-        <div class="flex items-center justify-end mt-2 text-sm text-gray-500">
+        <div class="mt-2 flex items-center justify-end text-xs text-slate-400">
           <span :class="{ 'text-red-500': newMessage.length >= 500 }">{{ newMessage.length }}/500</span>
         </div>
       </div>
@@ -97,7 +100,7 @@ import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
-import { MoreVertical, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
+import { ArrowLeft, Send, Loader2, Clock, CalendarIcon, InboxIcon } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import { drainAfterCursor, mergeByMessageId } from '@/lib/messageCursor'
@@ -109,7 +112,7 @@ const { userInfo } = useUser()
 const props = defineProps<{
   chatTarget: APIUserMessageList['response']['results'][0]
 }>()
-const emit = defineEmits<{ read: [chatterId: number] }>()
+const emit = defineEmits<{ read: [chatterId: number]; close: [] }>()
 
 const messageList = ref<APIUserMessageDetail['response']['results']>([])
 const isLoading = ref(true)
