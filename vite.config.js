@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
+import { execFileSync } from 'node:child_process'
 
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -11,12 +12,36 @@ const isManagementRequest = (url = '') => {
   return pathname === '/manage' || pathname.startsWith('/manage/')
 }
 
+const readGitCommit = (directory) => {
+  try {
+    return execFileSync('git', ['-c', `safe.directory=${directory}`, 'rev-parse', 'HEAD'], {
+      cwd: directory,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+  } catch {
+    return ''
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const backendApiUrl = env.VITE_BACKEND_API_URL || 'https://nwu.icu'
+  const frontendCommit = process.env.VITE_FRONTEND_COMMIT
+    || env.VITE_FRONTEND_COMMIT
+    || readGitCommit(process.cwd())
+    || 'unknown'
+  const backendCommit = process.env.VITE_BACKEND_COMMIT
+    || env.VITE_BACKEND_COMMIT
+    || readGitCommit(fileURLToPath(new URL('../NWU.ICU', import.meta.url)))
+    || 'unknown'
 
   return {
+    define: {
+      'import.meta.env.VITE_FRONTEND_COMMIT': JSON.stringify(frontendCommit),
+      'import.meta.env.VITE_BACKEND_COMMIT': JSON.stringify(backendCommit),
+    },
     plugins: [
       {
         name: 'management-passkey-csp',

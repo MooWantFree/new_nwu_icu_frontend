@@ -12,8 +12,12 @@
                     <div class="flex-1">
                       <RouterView />
                     </div>
-                    <footer v-if="!isManagement" class="py-5 text-center text-xs text-gray-500">
-                      2019-{{ new Date().getFullYear() }} NWU.ICU
+                    <footer v-if="!isManagement" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs text-gray-500">
+                      <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
+                      <span aria-hidden="true">·</span>
+                      <span :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
+                      <span aria-hidden="true">·</span>
+                      <span :title="`后端完整提交：${backendCommit}`">后端 {{ shortCommit(backendCommit) }}</span>
                     </footer>
                   </div>
                 </div>
@@ -37,4 +41,7 @@ import { themeOverrides } from '@/theme'
 
 const route = useRoute()
 const isManagement = computed(() => Boolean(route.meta.isManagement))
+const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
+const backendCommit = import.meta.env.VITE_BACKEND_COMMIT
+const shortCommit = (commit: string) => commit === 'unknown' ? 'unknown' : commit.slice(0, 8)
 </script>

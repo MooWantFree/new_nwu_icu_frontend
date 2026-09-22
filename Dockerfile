@@ -8,6 +8,10 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+ARG FRONTEND_COMMIT=unknown
+ARG BACKEND_COMMIT=unknown
+ENV VITE_FRONTEND_COMMIT=$FRONTEND_COMMIT \
+    VITE_BACKEND_COMMIT=$BACKEND_COMMIT
 RUN pnpm build
 
 FROM nginx:1.27-alpine
