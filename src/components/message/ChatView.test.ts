@@ -96,6 +96,17 @@ describe('conversation identity and asynchronous requests', () => {
     expect(scroller().scrollTop).toBe(175)
   })
 
+  it('wraps long unbroken message content inside its bubble', async () => {
+    const longContent = `https://nwu.icu/disk/${'%E3%80%91'.repeat(40)}`
+    mocks.get.mockResolvedValueOnce(detail([item(10, 2, longContent)]))
+    await mount()
+
+    const content = Array.from(container.querySelectorAll('p'))
+      .find(element => element.textContent === longContent)
+    expect(content?.classList.contains('break-words')).toBe(true)
+    expect(content?.classList.contains('[overflow-wrap:anywhere]')).toBe(true)
+  })
+
   it('ignores an obsolete initialization even after switching back to its conversation', async () => {
     const first = deferred<ReturnType<typeof detail>>()
     mocks.get.mockReturnValueOnce(first.promise)

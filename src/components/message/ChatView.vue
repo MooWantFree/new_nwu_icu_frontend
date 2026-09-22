@@ -43,7 +43,7 @@
                 />
               </div>
               <div :class="[
-                'flex flex-col',
+                'min-w-0 flex flex-col',
                 { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
               ]">
                 <div class="flex items-center gap-2 mb-1"
@@ -58,7 +58,7 @@
                   'rounded-lg p-3 shadow-sm max-w-xs',
                   msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-600 text-white'
                 ]">
-                  <p class="text-sm">{{ msg.content }}</p>
+                  <p class="whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere]">{{ msg.content }}</p>
                 </div>
               </div>
             </div>
