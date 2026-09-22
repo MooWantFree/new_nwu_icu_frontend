@@ -36,7 +36,7 @@
                   <RouterLink v-if="notice.source === 'guestbook' || notice.source === 'announcement'" :to="`/${notice.source === 'announcement' ? 'announcements' : 'guestbook'}/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`" class="truncate font-semibold text-slate-900 transition-colors group-hover:text-blue-700">
                     你的{{ notice.source === 'announcement' ? '公告' : '留言' }}收到了赞
                   </RouterLink>
-                  <RouterLink v-else :to="`/review/course/${notice.raw_info.course.id}`" class="truncate font-semibold text-slate-900 transition-colors group-hover:text-blue-700">
+                  <RouterLink v-else :to="`/review/course/${notice.raw_info.course.id}#${notice.raw_info.raw_post.classify === 'reply' ? 'reply' : 'review'}-${notice.raw_info.raw_post.id}`" class="truncate font-semibold text-slate-900 transition-colors group-hover:text-blue-700">
                     {{ notice.raw_info.course.name }}
                   </RouterLink>
                   <Time class="shrink-0" :time="new Date(notice.datetime)" />
@@ -59,7 +59,7 @@
               <RouterLink v-if="notice.source === 'guestbook' || notice.source === 'announcement'" :to="`/${notice.source === 'announcement' ? 'announcements' : 'guestbook'}/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`" class="ml-auto inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900">
                 查看详情<ChevronRight class="h-4 w-4" />
               </RouterLink>
-              <RouterLink v-else :to="`/review/course/${notice.raw_info.course.id}`" class="ml-auto inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900">
+              <RouterLink v-else :to="`/review/course/${notice.raw_info.course.id}#${notice.raw_info.raw_post.classify === 'reply' ? 'reply' : 'review'}-${notice.raw_info.raw_post.id}`" class="ml-auto inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900">
                 查看详情<ChevronRight class="h-4 w-4" />
               </RouterLink>
             </div>
