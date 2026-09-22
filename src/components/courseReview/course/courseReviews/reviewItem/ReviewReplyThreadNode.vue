@@ -26,7 +26,7 @@
             </div>
           </div>
         </article>
-        <ReviewReplyInput v-if="userId && replyTarget === node.reply.id && !node.reply.is_deleted" :review="review" :reply-to="node.reply.id" :reply-target-name="node.reply.created_by.name"
+        <ReviewReplyInput v-if="userId && replyTarget === node.reply.id && !node.reply.is_deleted" :review="review" :reply-to="node.reply.id" :reply-target-name="node.reply.created_by.name" :user-id="userId"
           @close="emit('close')" @reply-submitted="(content, parent, id) => emit('replySubmitted', content, parent, id)" />
         <div v-if="node.children.length" class="space-y-3" :class="depth >= 2 ? '-ml-5' : ''">
           <ReviewReplyThreadNode v-for="child in node.children" :key="child.reply.id" :node="child" :review="review" :depth="depth + 1" :parent-name="node.reply.created_by.name"

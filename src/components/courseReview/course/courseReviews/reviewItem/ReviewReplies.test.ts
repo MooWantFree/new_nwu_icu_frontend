@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import CourseReviewItem from '../CourseReviewItem.vue'
 import { api } from '@/lib/requests'
 import type { Review } from '@/types/courseReview'
+import { loadCourseReviewReplyDraft, saveCourseReviewReplyDraft } from '@/lib/courseReviewDraft'
 
 vi.mock('@/lib/requests', () => ({ api: { post: vi.fn(), delete: vi.fn() } }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({
@@ -48,6 +49,7 @@ const branch = (id: number) => container.querySelector<HTMLElement>(`[data-reply
 
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
   Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scroll })
   vi.spyOn(window, 'confirm').mockReturnValue(true)
   container = document.createElement('div')
@@ -139,6 +141,24 @@ describe('course review reply conversations', () => {
     expect(container.querySelector('[data-reply-card="1"]')?.textContent).toContain('回复已删除')
     expect(branch(1).contains(branch(3))).toBe(true)
     expect(container.querySelector('[data-main-review]')).not.toBeNull()
+  })
+
+  it('restores an automatic reply draft and requires confirmation before clearing it', async () => {
+    saveCourseReviewReplyDraft(2, 119, 2, { content: '自动保存的回复', updatedAt: '' })
+    await mount()
+    button('[data-reply-card="2"] button', '回复').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('自动保存的回复')
+
+    button('button', '清空草稿').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('自动保存的回复')
+    expect(loadCourseReviewReplyDraft(2, 119, 2)).not.toBeNull()
+
+    button('button', '确认清空').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('')
+    expect(loadCourseReviewReplyDraft(2, 119, 2)).toBeNull()
   })
 
   it('reopens ancestors for incoming notification links without introducing reply-to-reply jump controls', async () => {

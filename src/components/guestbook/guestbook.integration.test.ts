@@ -158,6 +158,27 @@ describe('guestbook rendered flows', () => {
     expect(loadGuestbookDraft(1, null)).toBeNull()
   })
 
+  it('requires a second explicit click before clearing a saved guestbook draft', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/edit', component: { render: () => null } }] })
+    await router.push('/edit')
+    saveGuestbookDraft(1, null, { content: '<p>不要误删</p>', anonymous: false, updatedAt: '' })
+    app = createApp({ render: () => h(GuestbookComposerModal, { userId: 1 }) }).use(router)
+    app.mount(container)
+    await flush()
+
+    const findButton = (text: string) => [...container.querySelectorAll<HTMLButtonElement>('button')]
+      .find(item => item.textContent?.trim() === text)!
+    findButton('清空草稿').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('<p>不要误删</p>')
+    expect(loadGuestbookDraft(1, null)).not.toBeNull()
+
+    findButton('确认清空').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('')
+    expect(loadGuestbookDraft(1, null)).toBeNull()
+  })
+
   it('submits a reply from the inline floor composer', async () => {
     const parent = entry(9, null)
     const reply = entry(10, 9)

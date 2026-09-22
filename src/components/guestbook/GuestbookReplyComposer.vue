@@ -17,6 +17,11 @@
         </span>
       </div>
       <div class="mt-3 flex flex-wrap justify-end gap-2">
+        <button v-if="!clearConfirmation" type="button" :disabled="submitting" class="mr-auto rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" @click="clearConfirmation = true">清空草稿</button>
+        <div v-else class="mr-auto flex items-center gap-2">
+          <button type="button" :disabled="submitting" class="rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" @click="clearConfirmation = false">取消清空</button>
+          <button type="button" :disabled="submitting" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700" @click="clearDraft">确认清空</button>
+        </div>
         <button type="button" :disabled="submitting" class="rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" @click="close">取消</button>
         <button type="submit" :disabled="submitting || !textLength || textLength > 500"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
@@ -28,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import GuestbookEditor from './GuestbookEditor.vue'
@@ -45,8 +50,16 @@ const message = useMessage()
 const router = useRouter()
 const editor = useTemplateRef<InstanceType<typeof GuestbookEditor>>('editor')
 const titleId = `guestbook-reply-title-${props.parent.id}`
-const { content, submissionId, textLength, saveState, persist, markPublished } = useGuestbookDraft(props.userId, props.parent.id, props.board)
+const { content, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, props.parent.id, props.board)
 const submitting = ref(false)
+const clearConfirmation = ref(false)
+
+watch(content, () => { clearConfirmation.value = false })
+
+const clearDraft = () => {
+  clear()
+  clearConfirmation.value = false
+}
 
 const canLeave = () => {
   const saved = persist()

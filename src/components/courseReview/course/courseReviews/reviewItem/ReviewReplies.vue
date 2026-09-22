@@ -11,7 +11,7 @@
         {{ reverseReplies ? '最新回复' : '最早回复' }}
       </button>
     </div>
-    <ReviewReplyInput v-if="isLoggedIn && !review.is_deleted && replyTarget === 0" :review="review" :reply-to="0" class="mb-4"
+    <ReviewReplyInput v-if="isLoggedIn && userInfo && !review.is_deleted && replyTarget === 0" :review="review" :reply-to="0" :user-id="userInfo.id" class="mb-4"
       @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     <div class="space-y-3">
       <ReviewReplyThreadNode v-for="node in thread.roots" :key="node.reply.id" :node="node" :review="review"

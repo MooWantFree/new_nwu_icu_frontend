@@ -7,7 +7,9 @@ import type { CourseData } from '@/types/courseReview'
 const mocks = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
 vi.mock('naive-ui', () => ({ useMessage: () => ({ error: vi.fn() }) }))
-vi.mock('@/lib/useUser', () => ({ useUser: () => ({ isLoggedIn: ref(true) }) }))
+vi.mock('@/lib/useUser', () => ({ useUser: () => ({
+  isLoggedIn: ref(true), userInfo: ref({ id: 2 }),
+}) }))
 vi.mock('@/components/courseReview/course/CourseMeta.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/course/CourseTeachers.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/course/CourseAlike.vue', () => ({ default: { render: () => null } }))

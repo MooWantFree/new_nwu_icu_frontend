@@ -92,9 +92,12 @@
     </div>
   </section>
   <ReviewEditorModal
-    v-if="showEditor"
+    v-if="showEditor && userInfo"
+    ref="reviewEditor"
     v-model="showEditor"
     :course-data="props.courseData"
+    :user-id="userInfo.id"
+    :review-id="props.courseData.request_user_review_id ?? null"
     @submit="handleSubmitReview"
     :submitting="isSubmittingReview"
     :init-content="initContent"
@@ -132,7 +135,7 @@ enum SortMethods {
 }
 
 const message = useMessage()
-const { isLoggedIn } = useUser()
+const { isLoggedIn, userInfo } = useUser()
 const route = useRoute()
 const router = useRouter()
 
@@ -235,6 +238,7 @@ const handlePageChange = (page: number) => emit('reloadData', { ...props.reviewQ
 
 const showEditor = ref(false)
 const isSubmittingReview = ref(false)
+const reviewEditor = ref<InstanceType<typeof ReviewEditorModal> | null>(null)
 // New review
 const handleNewReviewButtonClicked = () => {
   if (!isLoggedIn.value) {
@@ -282,6 +286,9 @@ const handleSubmitReview = async (content: ReviewDataBase) => {
         query: route.query,
         hash: `#review-${targetReviewId}`,
       })
+    }
+    if (!reviewEditor.value?.markPublished()) {
+      message.warning('评价已发布，但浏览器未能清除旧草稿。再次打开时请核对内容。')
     }
     emit('reloadData')
 

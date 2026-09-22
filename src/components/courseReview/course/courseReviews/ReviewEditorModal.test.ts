@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, type App } from 'vue'
 import ReviewEditorModal from './ReviewEditorModal.vue'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
+import { loadCourseReviewDraft, saveCourseReviewDraft } from '@/lib/courseReviewDraft'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
@@ -35,7 +36,8 @@ const button = (text: string) => [...container.querySelectorAll<HTMLButtonElemen
   .find(item => item.textContent?.trim() === text)!
 const mount = async (initContent: ReviewDataBase | null) => {
   app = createApp({ render: () => h(ReviewEditorModal, {
-    courseData: { id: 42 } as CourseData, initContent, modelValue: true, submitting: false, onSubmit: submit,
+    courseData: { id: 42 } as CourseData, initContent, modelValue: true, submitting: false, userId: 1,
+    reviewId: initContent ? 9 : null, onSubmit: submit,
   }) })
   app.component('NSelect', SelectStub)
   app.mount(container)
@@ -44,6 +46,7 @@ const mount = async (initContent: ReviewDataBase | null) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
   mocks.get.mockResolvedValue({ status: 200, content: { 7: '2026-2027 秋', 9: '2026-2027 春' } })
   container = document.createElement('div')
   document.body.append(container)
@@ -83,5 +86,25 @@ describe('review semester initialization', () => {
     expect(container.querySelector('select')?.value).toBe('9')
     button('发布评价').click()
     expect(submit).toHaveBeenCalledWith(expect.objectContaining({ semester: 9 }))
+  })
+
+  it('restores an automatic draft and only clears it after explicit confirmation', async () => {
+    saveCourseReviewDraft(1, 42, null, {
+      content: '<p>自动保存的评价</p>', anonymous: true, rating: 5, semester: 7,
+      difficulty: 4, grade: 4, homework: 2, reward: 5, updatedAt: '',
+    })
+    await mount(null)
+    expect(container.querySelector('textarea')?.value).toBe('<p>自动保存的评价</p>')
+    expect(container.textContent).toContain('草稿已自动保存在当前浏览器')
+
+    button('清空草稿').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('<p>自动保存的评价</p>')
+    expect(loadCourseReviewDraft(1, 42, null)).not.toBeNull()
+
+    button('确认清空').click()
+    await flush()
+    expect(container.querySelector('textarea')?.value).toBe('')
+    expect(loadCourseReviewDraft(1, 42, null)).toBeNull()
   })
 })

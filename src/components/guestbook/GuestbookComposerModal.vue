@@ -23,7 +23,11 @@
           {{ saveState === 'failed' ? '草稿保存失败，请复制内容后再离开。' : saveState === 'saved' ? '草稿已自动保存在当前浏览器。' : saveState === 'pending' ? '正在保存草稿…' : '草稿会自动保存在当前浏览器。' }}
         </p>
         <div class="mt-5 flex flex-wrap justify-end gap-2">
-          <button type="button" :disabled="submitting" class="mr-auto rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100" @click="clear">清空草稿</button>
+          <button v-if="!clearConfirmation" type="button" :disabled="submitting" class="mr-auto rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100" @click="clearConfirmation = true">清空草稿</button>
+          <div v-else class="mr-auto flex items-center gap-2">
+            <button type="button" :disabled="submitting" class="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100" @click="clearConfirmation = false">取消清空</button>
+            <button type="button" :disabled="submitting" class="rounded-lg bg-red-600 px-3 py-2 font-medium text-white hover:bg-red-700" @click="clearDraft">确认清空</button>
+          </div>
           <button type="button" :disabled="submitting" class="rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-100" @click="close">取消</button>
           <button type="submit" :disabled="submitting || !textLength || textLength > 500 || (!isReply && board === 'announcements' && !title.trim())" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{{ submitting ? '发布中…' : '发布' }}</button>
         </div>
@@ -33,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NModal, useMessage } from 'naive-ui'
 import GuestbookEditor from './GuestbookEditor.vue'
@@ -51,6 +55,14 @@ const isReply = parentId !== null
 const itemLabel = props.board === 'announcements' ? '公告' : '留言'
 const { title, content, anonymous, submissionId, textLength, saveState, persist, clear, markPublished } = useGuestbookDraft(props.userId, parentId, props.board)
 const submitting = ref(false)
+const clearConfirmation = ref(false)
+
+watch([title, content, anonymous], () => { clearConfirmation.value = false })
+
+const clearDraft = () => {
+  clear()
+  clearConfirmation.value = false
+}
 
 const canLeave = () => {
   const saved = persist()

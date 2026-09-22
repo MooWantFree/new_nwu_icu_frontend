@@ -128,15 +128,27 @@
         </main>
 
         <footer class="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6 sm:py-4">
+          <p class="mb-2 text-xs" :class="saveState === 'failed' ? 'text-red-600' : 'text-slate-500'" role="status">
+            {{ saveState === 'failed' ? '草稿保存失败，请复制内容后再离开。' : saveState === 'saved' ? '草稿已自动保存在当前浏览器。' : saveState === 'pending' ? '正在保存草稿…' : '草稿会自动保存在当前浏览器。' }}
+          </p>
           <div class="flex items-center justify-between gap-3">
-            <button
-              class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-              type="button"
-              :disabled="submitting || loading"
-              @click="step === 1 ? closeModal() : (step = 1)"
-            >
-              {{ step === 1 ? '取消' : '上一步' }}
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button v-if="!clearConfirmation" type="button" :disabled="submitting || loading"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+                @click="clearConfirmation = true">清空草稿</button>
+              <template v-else>
+                <button type="button" :disabled="submitting || loading" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60" @click="clearConfirmation = false">取消清空</button>
+                <button type="button" :disabled="submitting || loading" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60" @click="clearDraft">确认清空</button>
+              </template>
+              <button
+                class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                :disabled="submitting || loading"
+                @click="step === 1 ? closeModal() : (step = 1)"
+              >
+                {{ step === 1 ? '取消' : '上一步' }}
+              </button>
+            </div>
             <div class="flex min-w-0 items-center gap-3">
               <p
                 v-if="(step === 1 && !isContentValid) || (step === 2 && !isFormValid)"
@@ -171,12 +183,15 @@ import { APISemesterList } from '@/types/api/courseReview/course'
 import Editor from '@/components/tiptap/editor/Editor.vue'
 import ReviewMetricScale from './ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
+import { useCourseReviewDraft } from '@/lib/useCourseReviewDraft'
 
 const props = defineProps<{
   courseData: CourseData
   modelValue: boolean
   submitting: boolean
   initContent: ReviewDataBase | null
+  userId: number
+  reviewId: number | null
 }>()
 
 const emit = defineEmits<{
@@ -185,15 +200,36 @@ const emit = defineEmits<{
 }>()
 
 const step = ref<1 | 2>(1)
-const content = ref(props.initContent?.content || '')
-const isAnonymous = ref(props.initContent?.anonymous ?? false)
-const rating = ref(props.initContent?.rating || 3)
-const selectedSemester = ref<number | null>(null)
-const difficulty = ref(props.initContent?.difficulty || 3)
-const homework = ref(props.initContent?.homework || 3)
-const grade = ref(props.initContent?.grade || 3)
-const reward = ref(props.initContent?.reward || 3)
+const initialDraft = {
+  content: props.initContent?.content || '',
+  anonymous: props.initContent?.anonymous ?? false,
+  rating: props.initContent?.rating || 3,
+  semester: props.initContent?.semester ?? null,
+  difficulty: props.initContent?.difficulty || 3,
+  homework: props.initContent?.homework || 3,
+  grade: props.initContent?.grade || 3,
+  reward: props.initContent?.reward || 3,
+}
+const {
+  content,
+  anonymous: isAnonymous,
+  rating,
+  semester: selectedSemester,
+  difficulty,
+  homework,
+  grade,
+  reward,
+  saveState,
+  persist,
+  clear,
+  markPublished,
+} = useCourseReviewDraft(props.userId, props.courseData.id, props.reviewId, initialDraft)
+const clearConfirmation = ref(false)
 const semesterData = ref<APISemesterList['response'] | null>(null)
+
+watch([content, isAnonymous, rating, selectedSemester, difficulty, homework, grade, reward], () => {
+  clearConfirmation.value = false
+})
 
 const metrics = [
   { ...reviewMetrics.difficulty, value: difficulty },
@@ -210,9 +246,9 @@ const semesterOptions = computed(() => {
 })
 
 watch(semesterOptions, (options) => {
-  if (props.initContent?.semester) {
-    selectedSemester.value = options.find((option) => option.value === props.initContent?.semester)?.value ?? null
-  } else {
+  if (selectedSemester.value !== null) {
+    selectedSemester.value = options.find((option) => option.value === selectedSemester.value)?.value ?? null
+  } else if (!props.initContent) {
     selectedSemester.value = options[0]?.value ?? null
   }
 })
@@ -249,16 +285,36 @@ const submitReview = () => {
 }
 
 const closeModal = () => {
-  if (isContentValid.value && content.value !== props.initContent?.content) {
-    if (confirm('你有未保存的内容。确定要关闭吗？\n\n未保存的内容将丢失。')) emit('update:modelValue', false)
+  const saved = persist()
+  if (isContentValid.value && isDirty.value) {
+    if (confirm(saved ? '草稿已自动保存。确定要关闭评价编辑器吗？' : '草稿保存失败，关闭可能丢失内容。确定关闭吗？')) emit('update:modelValue', false)
   } else {
     emit('update:modelValue', false)
   }
 }
 
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  persist()
   if (isContentValid.value) event.preventDefault()
 }
+
+const isDirty = computed(() => content.value !== initialDraft.content
+  || isAnonymous.value !== initialDraft.anonymous
+  || rating.value !== initialDraft.rating
+  || selectedSemester.value !== initialDraft.semester
+  || difficulty.value !== initialDraft.difficulty
+  || homework.value !== initialDraft.homework
+  || grade.value !== initialDraft.grade
+  || reward.value !== initialDraft.reward)
+
+const clearDraft = () => {
+  clear()
+  if (!props.initContent) selectedSemester.value = semesterOptions.value[0]?.value ?? null
+  step.value = 1
+  clearConfirmation.value = false
+}
+
+defineExpose({ markPublished })
 
 onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload))
 onUnmounted(() => {
