@@ -1,9 +1,9 @@
 <template>
-  <div class="h-screen overflow-hidden bg-slate-50">
-    <div v-if="isLoading && !isLoggedIn" class="flex h-screen items-center justify-center">
+  <div data-message-layout class="h-[calc(100vh-4rem)] overflow-hidden bg-slate-50">
+    <div v-if="isLoading && !isLoggedIn" class="flex h-full items-center justify-center">
       <LoaderCircle class="w-16 h-16 text-blue-700 animate-spin" />
     </div>
-    <div v-else-if="isLoggedIn" class="flex h-screen min-w-0 overflow-hidden">
+    <div v-else-if="isLoggedIn" data-message-shell class="flex h-full min-w-0 overflow-hidden">
       <aside :class="[
         'shrink-0 border-r border-slate-200 bg-white transition-all duration-300 ease-in-out',
         isSidebarOpen ? 'w-64' : 'w-20'
@@ -44,7 +44,7 @@
         </div>
       </main>
     </div>
-    <div v-else class="flex h-screen items-center justify-center bg-gray-100">
+    <div v-else class="flex h-full items-center justify-center bg-gray-100">
       <div class="text-center bg-white p-8 rounded-xl shadow-2xl max-w-md w-full">
         <AlertCircle class="w-20 h-20 mx-auto text-yellow-500 mb-6" />
         <h2 class="mb-3 text-3xl font-bold text-gray-900">需要登录</h2>

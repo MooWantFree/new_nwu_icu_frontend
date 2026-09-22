@@ -66,6 +66,8 @@ describe('message layout authentication refresh', () => {
     expect(container.querySelector('[data-inbox]')).not.toBeNull()
     expect(mounts).toBe(1)
     expect(unmounts).toBe(0)
+    expect(container.querySelector('[data-message-layout]')?.classList.contains('h-[calc(100vh-4rem)]')).toBe(true)
+    expect(container.querySelector('[data-message-shell]')?.classList.contains('h-full')).toBe(true)
   })
 
   it('still shows the blocking loader during the initial authentication check', async () => {
