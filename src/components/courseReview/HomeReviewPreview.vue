@@ -1,17 +1,24 @@
 <template>
-  <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载最近评价">
-    <div v-for="index in pageSize" :key="index" class="animate-pulse px-5 py-6 sm:px-7">
-      <div class="flex items-center gap-3">
-        <div class="h-4 w-4 rounded-full bg-slate-200" />
-        <div class="h-5 w-2/5 rounded bg-slate-200" />
-        <div class="ml-auto h-4 w-20 rounded bg-slate-100" />
+  <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载最近评价" role="status">
+    <span class="sr-only">正在加载最近评价</span>
+    <article v-for="index in pageSize" :key="index" class="px-5 py-6 sm:px-7">
+      <div class="flex gap-3 motion-safe:animate-pulse" aria-hidden="true">
+        <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-slate-200" />
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <div class="h-5 w-1/2 max-w-56 rounded-md bg-slate-200" />
+              <div class="h-4 w-16 shrink-0 rounded-md bg-slate-100" />
+            </div>
+            <div class="flex items-center gap-3 sm:justify-end">
+              <div class="h-4 w-16 rounded-md bg-slate-200" />
+              <div class="h-4 w-12 rounded-md bg-slate-100" />
+            </div>
+          </div>
+          <div class="mt-3 h-4 w-4/5 rounded-md bg-slate-100" />
+        </div>
       </div>
-      <div class="mt-4 space-y-2 sm:pl-7">
-        <div class="h-4 rounded bg-slate-100" />
-        <div class="h-4 w-5/6 rounded bg-slate-100" />
-        <div class="h-4 w-2/3 rounded bg-slate-100" />
-      </div>
-    </div>
+    </article>
   </div>
 
   <div v-else-if="failed" class="px-5 py-16 text-center sm:px-7" role="alert">

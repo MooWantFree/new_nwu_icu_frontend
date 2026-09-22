@@ -1,10 +1,13 @@
 <template>
-  <div v-if="loading" class="animate-pulse px-5 py-6 sm:px-7" aria-label="正在加载最新公告">
-    <div class="h-5 w-2/5 rounded bg-slate-200 sm:w-1/4" />
-    <div class="mt-3 h-4 w-40 rounded bg-slate-100" />
-    <div class="mt-6 space-y-3">
-      <div class="h-4 rounded bg-slate-100" />
-      <div class="h-4 w-5/6 rounded bg-slate-100" />
+  <div v-if="loading" class="px-5 py-6 sm:px-7" aria-label="正在加载最新公告" role="status">
+    <span class="sr-only">正在加载最新公告</span>
+    <div class="motion-safe:animate-pulse" aria-hidden="true">
+      <div class="relative min-h-7">
+        <div class="mx-auto h-5 w-2/5 max-w-64 rounded-md bg-slate-200 sm:w-1/4" />
+        <div class="absolute right-0 top-0 h-4 w-12 rounded-md bg-slate-100" />
+      </div>
+      <div class="mx-auto mt-5 h-4 w-5/6 rounded-md bg-slate-100" />
+      <div class="mx-auto mt-3 h-4 w-2/3 rounded-md bg-slate-100" />
     </div>
   </div>
 

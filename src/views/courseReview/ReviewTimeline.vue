@@ -5,11 +5,13 @@
     :show-header="showHeader"
   >
     <template #meta>
-      <span>({{ totalReviewCount }})</span>
+      <span v-if="loading" class="block h-4 w-8 rounded-md bg-slate-200 motion-safe:animate-pulse" aria-hidden="true" />
+      <span v-else>({{ totalReviewCount }})</span>
     </template>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载课程评价">
+      <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载课程评价" role="status">
+        <span class="sr-only">正在加载课程评价</span>
         <review-item-skeleton v-for="index in pageSize" :key="index" />
       </div>
       <div v-else-if="reviews.length" class="divide-y divide-slate-200">

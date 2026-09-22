@@ -1,15 +1,19 @@
 <template>
-  <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载留言">
-    <div v-for="index in 3" :key="index" class="animate-pulse px-5 py-5 sm:px-6">
-      <div class="flex gap-3">
+  <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载留言" role="status">
+    <span class="sr-only">正在加载留言</span>
+    <div v-for="index in 3" :key="index" class="px-5 py-5 sm:px-6">
+      <div class="flex gap-3 motion-safe:animate-pulse" aria-hidden="true">
         <div class="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
-        <div class="min-w-0 flex-1 space-y-3">
-          <div class="flex justify-between gap-3">
-            <div class="h-4 w-24 rounded bg-slate-200" />
-            <div class="h-4 w-14 rounded bg-slate-100" />
+        <div class="min-w-0 flex-1">
+          <div class="flex items-start justify-between gap-3">
+            <div class="h-4 w-24 rounded-md bg-slate-200" />
+            <div class="h-4 w-12 rounded-md bg-slate-100" />
           </div>
-          <div class="h-4 rounded bg-slate-100" />
-          <div class="h-4 w-4/5 rounded bg-slate-100" />
+          <div class="mt-2 h-4 w-4/5 rounded-md bg-slate-100" />
+          <div class="mt-3 flex items-center gap-4">
+            <div class="h-4 w-8 rounded-md bg-slate-100" />
+            <div class="h-4 w-8 rounded-md bg-slate-100" />
+          </div>
         </div>
       </div>
     </div>
