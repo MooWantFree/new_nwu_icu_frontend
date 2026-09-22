@@ -50,10 +50,10 @@
             </p>
 
             <div class="mt-4 flex items-center gap-2 text-sm">
-              <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">
                 <ThumbsUp class="h-3.5 w-3.5" />{{ notice.like.like }}
               </span>
-              <span v-if="notice.source !== 'guestbook' && notice.source !== 'announcement'" class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 font-medium text-rose-600">
+              <span v-if="notice.source !== 'guestbook' && notice.source !== 'announcement'" class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 font-medium text-red-700">
                 <ThumbsDown class="h-3.5 w-3.5" />{{ notice.like.dislike }}
               </span>
               <RouterLink v-if="notice.source === 'guestbook' || notice.source === 'announcement'" :to="`/${notice.source === 'announcement' ? 'announcements' : 'guestbook'}/${notice.guestbook.root_id}?focus=${notice.guestbook.entry_id}`" class="ml-auto inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900">
