@@ -69,6 +69,14 @@ export type ManagementPermissions = {
   publish_announcements: boolean
   review_resource_uploads: boolean
   manage_resource_files?: boolean
+  manage_telegram_notifications: boolean
+}
+
+export type TelegramNotificationSettings = {
+  user_registration_enabled: boolean
+  guestbook_entry_enabled: boolean
+  course_review_enabled: boolean
+  reply_enabled: boolean
 }
 
 export type ManagementSession = {
@@ -108,6 +116,21 @@ export type APIManagementSession = {
   endpoint: '/api/management/session/'
   method: MethodMap.GET
   response: ManagementSession
+  errors: ManagementErrors
+}
+
+export type APIManagementTelegramNotificationSettings = {
+  endpoint: '/api/management/notifications/telegram/'
+  method: MethodMap.GET
+  response: TelegramNotificationSettings
+  errors: ManagementErrors
+}
+
+export type APIManagementTelegramNotificationSettingsUpdate = {
+  endpoint: '/api/management/notifications/telegram/'
+  method: MethodMap.POST
+  query: TelegramNotificationSettings
+  response: TelegramNotificationSettings
   errors: ManagementErrors
 }
 

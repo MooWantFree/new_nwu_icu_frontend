@@ -70,6 +70,7 @@
           <button v-if="session.permissions.publish_announcements" :class="tabClass('announcements')" @click="selectTab('announcements')">发布公告</button>
           <button v-if="session.permissions.review_resource_uploads" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核</button>
           <button v-if="session.permissions.manage_resource_files" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
+          <button v-if="session.permissions.manage_telegram_notifications" :class="tabClass('notifications')" @click="selectTab('notifications')">Telegram 通知</button>
         </nav>
 
         <ResourceFileManager v-if="tab === 'files' && session.permissions.manage_resource_files" @session-expired="loadSession" />
@@ -116,6 +117,26 @@
           <div class="mt-5 flex items-center justify-end gap-3">
             <span v-if="announcementMessage" class="text-sm" :class="announcementSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ announcementMessage }}</span>
             <button :disabled="announcementBusy" class="btn-primary px-5" @click="publishAnnouncement">{{ announcementBusy ? '正在发布…' : '发布公告' }}</button>
+          </div>
+        </section>
+
+        <section v-else-if="tab === 'notifications'" class="surface-card p-5">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="font-semibold">Telegram 通知</h2>
+              <p class="mt-2 text-sm text-gray-600">分别控制网站事件是否发送到已配置的 Telegram 管理群组。关闭开关不会影响站内通知。</p>
+            </div>
+            <span v-if="telegramMessage" class="text-sm" :class="telegramSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ telegramMessage }}</span>
+          </div>
+          <div v-if="sectionLoading" class="py-12 text-center text-gray-500">加载中…</div>
+          <div v-else class="mt-5 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            <label v-for="item in telegramSwitches" :key="item.key" class="flex cursor-pointer items-center justify-between gap-4 p-4">
+              <span><span class="block text-sm font-medium text-gray-900">{{ item.label }}</span><span class="mt-1 block text-xs text-gray-500">{{ item.description }}</span></span>
+              <input v-model="telegramSettings[item.key]" type="checkbox" class="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            </label>
+          </div>
+          <div class="mt-5 flex justify-end">
+            <button :disabled="telegramBusy || sectionLoading" class="btn-primary px-5" @click="saveTelegramSettings">{{ telegramBusy ? '正在保存…' : '保存设置' }}</button>
           </div>
         </section>
 
@@ -181,10 +202,10 @@ import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 import { toSafeExternalUrl } from '@/lib/security'
-import type { ManagementReport, ManagementSession } from '@/types/api/management'
+import type { ManagementReport, ManagementSession, TelegramNotificationSettings } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
-type Tab = 'reports' | 'announcements' | 'uploads' | 'files'
+type Tab = 'reports' | 'announcements' | 'uploads' | 'files' | 'notifications'
 
 const Pager = defineComponent({
   props: { page: { type: Number, required: true }, maxPage: { type: Number, required: true } },
@@ -209,7 +230,8 @@ const webAuthnSupported = browserSupportsWebAuthn()
 const enrollmentCode = ref('')
 const deviceName = ref('')
 const showEnrollmentForm = ref(false)
-const tab = ref<Tab>(route.query.tab === 'files' ? 'files' : 'reports')
+const requestedTab = typeof route.query.tab === 'string' ? route.query.tab : ''
+const tab = ref<Tab>((['reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'reports')
 const sectionLoading = ref(false)
 const sectionError = ref('')
 
@@ -225,6 +247,7 @@ const availableTabs = computed<Tab[]>(() => {
     permissions.publish_announcements && 'announcements',
     permissions.review_resource_uploads && 'uploads',
     permissions.manage_resource_files && 'files',
+    permissions.manage_telegram_notifications && 'notifications',
   ].filter((value): value is Tab => Boolean(value))
 })
 
@@ -389,6 +412,43 @@ const publishAnnouncement = async () => {
   } catch (error) { announcementSucceeded.value = false; announcementMessage.value = error instanceof Error ? error.message : '公告发布失败。' } finally { announcementBusy.value = false }
 }
 
+const telegramSettings = reactive<TelegramNotificationSettings>({
+  user_registration_enabled: true,
+  guestbook_entry_enabled: true,
+  course_review_enabled: true,
+  reply_enabled: true,
+})
+const telegramSwitches: Array<{ key: keyof TelegramNotificationSettings; label: string; description: string }> = [
+  { key: 'user_registration_enabled', label: '用户注册', description: '新用户提交注册并创建账号时通知。' },
+  { key: 'guestbook_entry_enabled', label: '发表留言', description: '用户在留言板发布新的顶层留言时通知。' },
+  { key: 'course_review_enabled', label: '发表课程评价', description: '用户发布新的课程评价时通知；编辑评价不重复通知。' },
+  { key: 'reply_enabled', label: '发表回复', description: '留言、公告或课程评价出现新回复时通知。' },
+]
+const telegramBusy = ref(false)
+const telegramMessage = ref('')
+const telegramSucceeded = ref(false)
+
+const loadTelegramSettings = async () => {
+  sectionLoading.value = true; sectionError.value = ''; telegramMessage.value = ''
+  try {
+    const response = await api.get({ url: '/api/management/notifications/telegram/' })
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, 'Telegram 通知设置加载失败。'))
+    Object.assign(telegramSettings, response.content)
+  } catch (error) { sectionError.value = error instanceof Error ? error.message : 'Telegram 通知设置加载失败。' } finally { sectionLoading.value = false }
+}
+
+const saveTelegramSettings = async () => {
+  telegramBusy.value = true; telegramMessage.value = ''
+  try {
+    const response = await api.post({ url: '/api/management/notifications/telegram/', query: { ...telegramSettings } })
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, 'Telegram 通知设置保存失败。'))
+    Object.assign(telegramSettings, response.content)
+    telegramSucceeded.value = true; telegramMessage.value = '设置已保存。'
+  } catch (error) { telegramSucceeded.value = false; telegramMessage.value = error instanceof Error ? error.message : 'Telegram 通知设置保存失败。' } finally { telegramBusy.value = false }
+}
+
 const uploads = ref<ResourceUploadRequest[]>([])
 const showUploadBlacklist = ref(false)
 const uploadStatus = ref<ResourceUploadRequest['status'] | ''>('pending')
@@ -432,7 +492,7 @@ const reasonLabel = (value: ManagementReport['reason']) => ({ spam: '垃圾广�
 const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending: '待审核', publishing: '发布中', approved: '已通过', rejected: '已拒绝', publish_failed: '发布失败' })[value]
 const formatDate = (value: string) => new Date(value).toLocaleString('zh-CN')
 
-watch(tab, value => { if (value === 'reports') void loadReports(); if (value === 'uploads') void loadUploads() })
-watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'uploads') void loadUploads() })
+watch(tab, value => { if (value === 'reports') void loadReports(); if (value === 'uploads') void loadUploads(); if (value === 'notifications') void loadTelegramSettings() })
+watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
 onMounted(loadSession)
 </script>

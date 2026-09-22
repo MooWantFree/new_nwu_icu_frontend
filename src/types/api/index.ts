@@ -43,6 +43,8 @@ import type {
   APIManagementUploadBlacklist,
   APIManagementUploadBlacklistUpdate,
   APIManagementUploadDirectories,
+  APIManagementTelegramNotificationSettings,
+  APIManagementTelegramNotificationSettingsUpdate,
 } from './management'
 
 export type RequestEndpoints = {
@@ -56,6 +58,7 @@ export type RequestEndpoints = {
     '/api/management/resources/': APIManagementResourceFiles
     '/api/management/resources/trash/': APIManagementResourceTrash
     '/api/management/session/': APIManagementSession
+    '/api/management/notifications/telegram/': APIManagementTelegramNotificationSettings
     '/api/management/reports/': APIManagementReportList
     '/api/management/uploads/': APIManagementUploadList
     '/api/management/uploads/blacklist/': APIManagementUploadBlacklist
@@ -135,6 +138,7 @@ export type RequestEndpoints = {
     '/api/management/announcements/': APIManagementAnnouncementCreate
     '/api/management/uploads/:id/': APIManagementUploadReview
     '/api/management/uploads/blacklist/': APIManagementUploadBlacklistUpdate
+    '/api/management/notifications/telegram/': APIManagementTelegramNotificationSettingsUpdate
     // User
     // - Profile
     '/api/user/bind-college-email/bind/': ProfilePage.APIBindScholarEmail

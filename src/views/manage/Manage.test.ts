@@ -32,6 +32,7 @@ const baseSession = {
     moderate_reports: true,
     publish_announcements: true,
     review_resource_uploads: true,
+    manage_telegram_notifications: true,
   },
 }
 
@@ -242,6 +243,43 @@ describe('management Passkey flow', () => {
     await flush()
 
     expect(messageSuccess).toHaveBeenCalledWith('审核已通过，资料正在发布。')
+  })
+
+  it('loads and saves four independent Telegram notification switches', async () => {
+    const settings = {
+      user_registration_enabled: true,
+      guestbook_entry_enabled: true,
+      course_review_enabled: false,
+      reply_enabled: true,
+    }
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') {
+        return { status: 200, content: { ...baseSession, elevated: true } } as never
+      }
+      if (url === '/api/management/notifications/telegram/') {
+        return { status: 200, content: settings } as never
+      }
+      return { status: 200, content: { results: [], page: 1, max_page: 1, count: 0 } } as never
+    })
+    vi.mocked(api.post).mockResolvedValue({
+      status: 200,
+      content: { ...settings, user_registration_enabled: false },
+    } as never)
+    await mountManage()
+
+    findButton('Telegram 通知').click()
+    await flush()
+    const switches = container.querySelectorAll('input[type="checkbox"]')
+    expect(switches).toHaveLength(4)
+    ;(switches[0] as HTMLInputElement).click()
+    findButton('保存设置').click()
+    await flush()
+
+    expect(api.post).toHaveBeenCalledWith({
+      url: '/api/management/notifications/telegram/',
+      query: { ...settings, user_registration_enabled: false },
+    })
+    expect(container.textContent).toContain('设置已保存。')
   })
 
   it('links approved uploads to a decoded main-site directory while retaining encoded hrefs', async () => {
