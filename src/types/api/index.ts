@@ -34,6 +34,8 @@ import type {
   APIManagementAnnouncementList,
   APIManagementAnnouncementUpdate,
   APIManagementAnnouncementVisibility,
+  APIManagementAbout,
+  APIManagementAboutUpdate,
   APIManagementPasskeyAuthenticationOptions,
   APIManagementPasskeyAuthenticationVerify,
   APIManagementPasskeyRegistrationOptions,
@@ -65,6 +67,7 @@ export type RequestEndpoints = {
     '/api/management/notifications/telegram/': APIManagementTelegramNotificationSettings
     '/api/management/reports/': APIManagementReportList
     '/api/management/announcements/': APIManagementAnnouncementList
+    '/api/management/about/': APIManagementAbout
     '/api/management/uploads/': APIManagementUploadList
     '/api/management/uploads/blacklist/': APIManagementUploadBlacklist
     '/api/management/uploads/directories/': APIManagementUploadDirectories
@@ -218,5 +221,6 @@ export type RequestEndpoints = {
     '/api/guestbook/:id/like/': import('./guestbook').APISetGuestbookLike
     '/api/announcements/:id/like/': import('./guestbook').APISetAnnouncementLike
     '/api/management/announcements/:id/': APIManagementAnnouncementUpdate
+    '/api/management/about/': APIManagementAboutUpdate
   }
 }

@@ -123,7 +123,7 @@ const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') 
 
 // Menu Options
 const menuOptions = [
-    {
+  {
     key: 'home',
     text: '主页',
     path: '/',
@@ -164,6 +164,11 @@ const menuOptions = [
     key: 'announcements',
     text: '公告栏',
     path: '/announcements',
+  },
+  {
+    key: 'about',
+    text: '关于本站',
+    path: '/about',
   },
 ]
 

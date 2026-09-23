@@ -71,10 +71,29 @@
           <button v-if="session.permissions.review_resource_uploads" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核</button>
           <button v-if="session.permissions.manage_resource_files" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
           <button v-if="session.permissions.manage_telegram_notifications" :class="tabClass('notifications')" @click="selectTab('notifications')">Telegram 通知</button>
+          <button v-if="session.permissions.publish_announcements" :class="tabClass('about')" @click="selectTab('about')">关于本站</button>
         </nav>
 
         <ResourceFileManager v-if="tab === 'files' && session.permissions.manage_resource_files" @session-expired="loadSession" />
         <section v-else-if="!availableTabs.length" class="surface-card p-8 text-center text-gray-500">当前账号没有管理功能权限。</section>
+
+        <section v-else-if="tab === 'about'" class="surface-card p-5">
+          <h2 class="font-semibold">编辑关于本站</h2>
+          <p class="mt-1 text-sm text-gray-500">正文使用与公告相同的格式，可插入链接和图片。</p>
+          <div v-if="aboutLoading" class="py-12 text-center text-gray-500">加载中…</div>
+          <template v-else>
+            <div v-if="aboutError" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+              {{ aboutError }}
+              <button type="button" class="ml-2 font-medium underline" @click="loadAbout">重试</button>
+            </div>
+            <label class="mt-5 block text-sm font-medium text-gray-700">正文</label>
+            <div class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900"><GuestbookEditor v-model="aboutContent" :disabled="aboutBusy || Boolean(aboutError)" allow-images placeholder="输入关于本站的内容…" /></div>
+            <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
+              <span v-if="aboutMessage" class="mr-auto text-sm" :class="aboutSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ aboutMessage }}</span>
+              <button :disabled="aboutBusy || Boolean(aboutError)" class="btn-primary px-5" @click="saveAbout">{{ aboutBusy ? '正在保存…' : '保存内容' }}</button>
+            </div>
+          </template>
+        </section>
 
         <section v-else-if="tab === 'reports'" class="space-y-4">
           <div class="flex flex-wrap gap-3">
@@ -251,7 +270,7 @@ import type { GuestbookEntry } from '@/types/api/guestbook'
 import type { ManagementReport, ManagementSession, TelegramNotificationSettings } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
-type Tab = 'reports' | 'announcements' | 'uploads' | 'files' | 'notifications'
+type Tab = 'about' | 'reports' | 'announcements' | 'uploads' | 'files' | 'notifications'
 
 const Pager = defineComponent({
   props: { page: { type: Number, required: true }, maxPage: { type: Number, required: true } },
@@ -277,7 +296,7 @@ const enrollmentCode = ref('')
 const deviceName = ref('')
 const showEnrollmentForm = ref(false)
 const requestedTab = typeof route.query.tab === 'string' ? route.query.tab : ''
-const tab = ref<Tab>((['reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'reports')
+const tab = ref<Tab>((['about', 'reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'reports')
 const sectionLoading = ref(false)
 const sectionError = ref('')
 
@@ -294,6 +313,7 @@ const availableTabs = computed<Tab[]>(() => {
     permissions.review_resource_uploads && 'uploads',
     permissions.manage_resource_files && 'files',
     permissions.manage_telegram_notifications && 'notifications',
+    permissions.publish_announcements && 'about',
   ].filter((value): value is Tab => Boolean(value))
 })
 
@@ -407,6 +427,50 @@ const authenticatePasskey = async () => {
   } catch (error) {
     authError.value = error instanceof Error ? error.message : 'Passkey 验证失败。'
   } finally { passkeyBusy.value = false }
+}
+
+const aboutContent = ref('')
+const aboutLoading = ref(false)
+const aboutBusy = ref(false)
+const aboutError = ref('')
+const aboutMessage = ref('')
+const aboutSucceeded = ref(false)
+let aboutRequestVersion = 0
+
+const loadAbout = async () => {
+  const requestVersion = ++aboutRequestVersion
+  aboutLoading.value = true
+  aboutError.value = ''
+  sectionError.value = ''
+  try {
+    const response = await api.get({ url: '/api/management/about/' })
+    if (requestVersion !== aboutRequestVersion) return
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, '关于本站加载失败。'))
+    aboutContent.value = response.content.about.content
+  } catch (error) {
+    if (requestVersion !== aboutRequestVersion) return
+    aboutError.value = error instanceof Error ? error.message : '关于本站加载失败。'
+  } finally {
+    if (requestVersion === aboutRequestVersion) aboutLoading.value = false
+  }
+}
+
+const saveAbout = async () => {
+  if (aboutBusy.value || aboutError.value) return
+  aboutBusy.value = true
+  aboutMessage.value = ''
+  aboutSucceeded.value = false
+  try {
+    const response = await api.put({ url: '/api/management/about/', query: { content: aboutContent.value } })
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, '关于本站保存失败。'))
+    aboutSucceeded.value = true
+    aboutMessage.value = '内容已保存。'
+    if (tab.value === 'about') await loadAbout()
+  } catch (error) {
+    aboutMessage.value = error instanceof Error ? error.message : '关于本站保存失败。'
+  } finally { aboutBusy.value = false }
 }
 
 const reports = ref<ManagementReport[]>([])
@@ -654,12 +718,14 @@ const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending
 const formatDate = (value: string) => new Date(value).toLocaleString('zh-CN')
 
 watch(tab, value => {
+  if (value !== 'about') aboutRequestVersion += 1
   if (value !== 'announcements') announcementRequestVersion += 1
+  if (value === 'about') void loadAbout()
   if (value === 'reports') void loadReports()
   if (value === 'announcements') void loadAnnouncements()
   if (value === 'uploads') void loadUploads()
   if (value === 'notifications') void loadTelegramSettings()
 })
-watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
+watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'about') void loadAbout(); if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
 onMounted(loadSession)
 </script>

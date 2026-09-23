@@ -224,6 +224,23 @@ export type APIManagementAnnouncementDelete = {
   errors: ManagementErrors
 }
 
+export type ManagementAbout = { title: string; content: string; update_time: string | null }
+
+export type APIManagementAbout = {
+  endpoint: '/api/management/about/'
+  method: MethodMap.GET
+  response: { about: ManagementAbout }
+  errors: ManagementErrors
+}
+
+export type APIManagementAboutUpdate = {
+  endpoint: '/api/management/about/'
+  method: MethodMap.PUT
+  query: { content: string }
+  response: { about: ManagementAbout }
+  errors: ManagementErrors
+}
+
 export type APIManagementUploadList = {
   endpoint: '/api/management/uploads/'
   method: MethodMap.GET

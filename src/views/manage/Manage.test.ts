@@ -367,6 +367,47 @@ describe('management Passkey flow', () => {
     expect(container.querySelector('a[href="/api/management/uploads/files/102/download/"]')).not.toBeNull()
   })
 
+  it('loads and saves the about page with the announcement rich text editor', async () => {
+    let content = '<p>原介绍</p>'
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      if (url === '/api/management/about/') return { status: 200, content: { about: { title: '关于本站', content, update_time: '2026-09-23T00:00:00Z' } } } as never
+      return { status: 200, content: { results: [], page: 1, max_page: 1, count: 0 } } as never
+    })
+    vi.mocked(api.put).mockImplementation(async ({ query }: any) => {
+      content = query.content
+      return { status: 200, content: { about: { title: '关于本站', content, update_time: '2026-09-23T00:00:00Z' } } } as never
+    })
+    await mountManage('?tab=about')
+
+    expect(findExactButton('关于本站')).not.toBeUndefined()
+    const editor = container.querySelector('textarea[aria-label="公告正文"]') as HTMLTextAreaElement
+    expect(editor.value).toBe('<p>原介绍</p>')
+    editor.value = '<p>新介绍</p><a href="/announcements">公告</a>'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    findExactButton('保存内容').click()
+    await flush()
+
+    expect(api.put).toHaveBeenCalledWith({
+      url: '/api/management/about/',
+      query: { content: '<p>新介绍</p><a href="/announcements">公告</a>' },
+    })
+    expect(container.textContent).toContain('内容已保存。')
+    expect(editor.value).toBe(content)
+  })
+
+  it('keeps the about editor unavailable when its content cannot be loaded', async () => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      return { status: 500, errors: [] } as never
+    })
+    await mountManage('?tab=about')
+
+    expect(container.textContent).toContain('关于本站加载失败。')
+    expect(findExactButton('保存内容').disabled).toBe(true)
+    expect(api.put).not.toHaveBeenCalled()
+  })
+
   it('publishes announcements with the default priority and reloads the published list', async () => {
     vi.mocked(api.get).mockImplementation(async ({ url }) => {
       if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never

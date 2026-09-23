@@ -262,6 +262,12 @@ const routes = [
     component: () => import('@/views/manage/Manage.vue'),
     meta: { pageTitle: '管理员面板', isManagement: true },
   },
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/About.vue'),
+    meta: { pageTitle: '关于本站' },
+  },
   ...courseReviewRoutes,
   ...userRoutes,
   ...messageRoutes,
