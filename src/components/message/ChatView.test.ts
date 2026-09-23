@@ -81,6 +81,27 @@ afterEach(() => {
 })
 
 describe('conversation identity and asynchronous requests', () => {
+  it('opens a first conversation without an error and allows the first message', async () => {
+    const missingConversation = { status: 404, errors: [{ field: 'chat', err_code: 'chat_not_exist', err_msg: '站内信不存在' }] }
+    mocks.get.mockResolvedValueOnce(missingConversation).mockResolvedValueOnce(missingConversation)
+      .mockResolvedValueOnce(detail([item(1, 1, 'hello')]))
+    mocks.post.mockResolvedValueOnce({ status: 201, content: { message: 1, datetime: '2026-09-21T00:00:01Z' } })
+
+    await mount()
+    expect(container.textContent).toContain('没有更多消息了')
+    expect(mocks.error).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(mocks.error).not.toHaveBeenCalled()
+
+    await draft('hello')
+    await send()
+    expect(mocks.post).toHaveBeenCalledWith({ url: '/api/message/', query: { receiver: 2, content: 'hello' } })
+    expect(container.textContent).toContain('hello')
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(container.textContent?.match(/hello/g)).toHaveLength(1)
+    expect(mocks.error).not.toHaveBeenCalled()
+  })
+
   it('preserves loaded history, draft and scroll when the same conversation object refreshes', async () => {
     mocks.get.mockResolvedValueOnce(detail([item(10)], true)).mockResolvedValueOnce(detail([item(5)]))
     await mount()

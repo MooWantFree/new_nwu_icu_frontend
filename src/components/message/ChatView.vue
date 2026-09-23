@@ -144,6 +144,9 @@ const mergeMessages = (items: APIUserMessageDetail['response']['results']) => {
   messageList.value = mergeByMessageId(messageList.value, items)
 }
 
+const isMissingConversation = (response: { status: number; errors?: { err_code: string }[] }) =>
+  response.status === 404 && response.errors?.some(error => error.err_code === 'chat_not_exist')
+
 const markRead = async (context: ConversationContext, throughMessageId: number) => {
   if (!throughMessageId || !isCurrent(context)) return
   const response = await api.post({
@@ -164,6 +167,11 @@ const loadInitMessages = async (context: ConversationContext) => {
       query: {},
     })
     if (!isCurrent(context)) return
+    if (isMissingConversation(resp)) {
+      // Opening a profile's message link before either user has sent a message is an empty chat.
+      hasMoreMessages.value = false
+      return
+    }
     if (resp.status.toString().startsWith('2')) {
       mergeMessages(resp.content.results)
       hasMoreMessages.value = resp.content.has_more
@@ -253,6 +261,7 @@ const fetchNewMessages = async () => {
         query: {},
       })
       if (!isCurrent(context)) return
+      if (isMissingConversation(response)) return
       if (!response.status.toString().startsWith('2')) throw new Error('Failed to fetch new messages')
       incoming = response.content.results
       cursor = response.content.snapshot_latest_message_id

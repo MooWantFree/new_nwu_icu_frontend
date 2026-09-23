@@ -72,7 +72,7 @@ export type APIUserMessageDetail = {
       datetime: string
     }[]
   }
-  errors: ErrorFactory<'auth'>[]
+  errors: ErrorFactory<'auth' | 'chat' | 'user'>[]
 }
 
 // POST
