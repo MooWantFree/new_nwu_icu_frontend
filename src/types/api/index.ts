@@ -30,6 +30,10 @@ import type {
   APIManagementResourceUpload,
   APIManagementResourceAction,
   APIManagementAnnouncementCreate,
+  APIManagementAnnouncementDelete,
+  APIManagementAnnouncementList,
+  APIManagementAnnouncementUpdate,
+  APIManagementAnnouncementVisibility,
   APIManagementPasskeyAuthenticationOptions,
   APIManagementPasskeyAuthenticationVerify,
   APIManagementPasskeyRegistrationOptions,
@@ -60,6 +64,7 @@ export type RequestEndpoints = {
     '/api/management/session/': APIManagementSession
     '/api/management/notifications/telegram/': APIManagementTelegramNotificationSettings
     '/api/management/reports/': APIManagementReportList
+    '/api/management/announcements/': APIManagementAnnouncementList
     '/api/management/uploads/': APIManagementUploadList
     '/api/management/uploads/blacklist/': APIManagementUploadBlacklist
     '/api/management/uploads/directories/': APIManagementUploadDirectories
@@ -136,6 +141,7 @@ export type RequestEndpoints = {
     '/api/management/passkeys/registration/verify/': APIManagementPasskeyRegistrationVerify
     '/api/management/reports/:id/resolve/': APIManagementReportResolve
     '/api/management/announcements/': APIManagementAnnouncementCreate
+    '/api/management/announcements/:id/visibility/': APIManagementAnnouncementVisibility
     '/api/management/uploads/:id/': APIManagementUploadReview
     '/api/management/uploads/blacklist/': APIManagementUploadBlacklistUpdate
     '/api/management/notifications/telegram/': APIManagementTelegramNotificationSettingsUpdate
@@ -202,6 +208,7 @@ export type RequestEndpoints = {
     '/api/delete/:uuid/': FileAPI.APIFileDelete
     '/api/guestbook/:id/': import('./guestbook').APIDeleteGuestbook
     '/api/announcements/:id/': import('./guestbook').APIDeleteAnnouncement
+    '/api/management/announcements/:id/': APIManagementAnnouncementDelete
   }
   [MethodMap.PUT]: {
     // CourseReview
@@ -210,5 +217,6 @@ export type RequestEndpoints = {
     '/api/upload/request/:requestId/': APIResourceUploadUpdate
     '/api/guestbook/:id/like/': import('./guestbook').APISetGuestbookLike
     '/api/announcements/:id/like/': import('./guestbook').APISetAnnouncementLike
+    '/api/management/announcements/:id/': APIManagementAnnouncementUpdate
   }
 }

@@ -67,7 +67,7 @@
 
         <nav class="mb-6 flex flex-wrap gap-2" aria-label="管理功能">
           <button v-if="session.permissions.moderate_reports" :class="tabClass('reports')" @click="selectTab('reports')">举报处理</button>
-          <button v-if="session.permissions.publish_announcements" :class="tabClass('announcements')" @click="selectTab('announcements')">发布公告</button>
+          <button v-if="session.permissions.publish_announcements" :class="tabClass('announcements')" @click="selectTab('announcements')">公告管理</button>
           <button v-if="session.permissions.review_resource_uploads" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核</button>
           <button v-if="session.permissions.manage_resource_files" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
           <button v-if="session.permissions.manage_telegram_notifications" :class="tabClass('notifications')" @click="selectTab('notifications')">Telegram 通知</button>
@@ -109,14 +109,59 @@
           <Pager :page="reportPage" :max-page="reportMaxPage" @change="loadReports" />
         </section>
 
-        <section v-else-if="tab === 'announcements'" class="surface-card p-5">
-          <label class="block text-sm font-medium text-gray-700">标题</label>
-          <input v-model.trim="announcementTitle" maxlength="100" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
-          <label class="mt-5 block text-sm font-medium text-gray-700">正文</label>
-          <div class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900"><GuestbookEditor v-model="announcementContent" allow-images placeholder="输入公告内容…" /></div>
-          <div class="mt-5 flex items-center justify-end gap-3">
-            <span v-if="announcementMessage" class="text-sm" :class="announcementSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ announcementMessage }}</span>
-            <button :disabled="announcementBusy" class="btn-primary px-5" @click="publishAnnouncement">{{ announcementBusy ? '正在发布…' : '发布公告' }}</button>
+        <section v-else-if="tab === 'announcements'" class="space-y-4">
+          <div class="surface-card p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 class="font-semibold">{{ editingAnnouncementId === null ? '发布公告' : '编辑公告' }}</h2>
+                <p class="mt-1 text-sm text-gray-500">优先级越高越靠前；相同优先级按更新时间倒序。</p>
+              </div>
+              <button v-if="editingAnnouncementId !== null" type="button" :disabled="announcementBusy" class="btn-secondary" @click="resetAnnouncementEditor">取消编辑</button>
+            </div>
+            <div class="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
+              <label class="block text-sm font-medium text-gray-700">标题
+                <input v-model.trim="announcementTitle" :disabled="announcementBusy" maxlength="100" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100" />
+              </label>
+              <label class="block text-sm font-medium text-gray-700">优先级
+                <input v-model.number="announcementPriority" :disabled="announcementBusy" type="number" min="-100" max="100" step="1" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100" />
+              </label>
+            </div>
+            <label class="mt-5 block text-sm font-medium text-gray-700">正文</label>
+            <div class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900"><GuestbookEditor v-model="announcementContent" :disabled="announcementBusy" allow-images placeholder="输入公告内容…" /></div>
+            <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
+              <span v-if="announcementMessage" class="mr-auto text-sm" :class="announcementSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ announcementMessage }}</span>
+              <button :disabled="announcementBusy" class="btn-primary px-5" @click="saveAnnouncement">
+                {{ announcementBusy ? '正在保存…' : editingAnnouncementId === null ? '发布公告' : '保存修改' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="surface-card p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="font-semibold">公告列表</h2>
+              <select v-model="announcementVisibility" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadAnnouncements(1)">
+                <option value="published">已发布</option>
+                <option value="hidden">已隐藏</option>
+              </select>
+            </div>
+            <div v-if="sectionLoading" class="py-12 text-center text-gray-500">加载中…</div>
+            <div v-else-if="announcements.length" class="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+              <article v-for="announcement in announcements" :key="announcement.id" class="p-4">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <h3 class="truncate font-medium text-gray-900">{{ announcement.title || '公告' }}</h3>
+                    <p class="mt-1 text-xs text-gray-500">优先级 {{ announcement.priority }} · 更新于 {{ formatDate(announcement.updated_at) }}</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button type="button" class="btn-secondary min-h-9 px-3 py-1" :disabled="announcementBusy || announcementActionId !== null" @click="editAnnouncement(announcement)">编辑</button>
+                    <button type="button" class="btn-secondary min-h-9 px-3 py-1" :disabled="announcementBusy || announcementActionId !== null" @click="toggleAnnouncementVisibility(announcement)">{{ announcement.is_visible ? '隐藏' : '发布' }}</button>
+                    <button v-if="!announcement.is_visible" type="button" class="btn-danger min-h-9 px-3 py-1" :disabled="announcementBusy || announcementActionId !== null" @click="deleteAnnouncement(announcement)">删除</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <p v-else class="py-12 text-center text-gray-500">没有{{ announcementVisibility === 'published' ? '已发布' : '已隐藏' }}的公告。</p>
+            <Pager :page="announcementPage" :max-page="announcementMaxPage" @change="loadAnnouncements" />
           </div>
         </section>
 
@@ -202,6 +247,7 @@ import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 import { toSafeExternalUrl } from '@/lib/security'
+import type { GuestbookEntry } from '@/types/api/guestbook'
 import type { ManagementReport, ManagementSession, TelegramNotificationSettings } from '@/types/api/management'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
@@ -394,22 +440,137 @@ const resolveReport = async (id: number, decision: 'dismiss' | 'remove') => {
 
 const announcementTitle = ref('')
 const announcementContent = ref('')
+const announcementPriority = ref(0)
+const editingAnnouncementId = ref<number | null>(null)
 const announcementBusy = ref(false)
 const announcementMessage = ref('')
 const announcementSucceeded = ref(false)
+const announcements = ref<GuestbookEntry[]>([])
+const announcementVisibility = ref<'published' | 'hidden'>('published')
+const announcementPage = ref(1)
+const announcementMaxPage = ref(1)
+const announcementActionId = ref<number | null>(null)
 let announcementSubmissionId = crypto.randomUUID()
+let announcementRequestVersion = 0
 
-const publishAnnouncement = async () => {
-  if (!announcementTitle.value || !announcementContent.value) { announcementMessage.value = '标题和正文不能为空。'; return }
+const resetAnnouncementEditor = () => {
+  editingAnnouncementId.value = null
+  announcementTitle.value = ''
+  announcementContent.value = ''
+  announcementPriority.value = 0
+  announcementSubmissionId = crypto.randomUUID()
+}
+
+const loadAnnouncements = async (page = 1) => {
+  const requestVersion = ++announcementRequestVersion
+  const visibility = announcementVisibility.value
+  sectionLoading.value = true; sectionError.value = ''
+  try {
+    const response = await api.get({
+      url: '/api/management/announcements/',
+      query: { visibility, page, pageSize: 10 },
+    })
+    if (requestVersion !== announcementRequestVersion) return
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, '公告加载失败。'))
+    announcements.value = response.content.results
+    announcementPage.value = response.content.page
+    announcementMaxPage.value = response.content.max_page
+  } catch (error) {
+    if (requestVersion !== announcementRequestVersion) return
+    sectionError.value = error instanceof Error ? error.message : '公告加载失败。'
+  } finally {
+    if (requestVersion === announcementRequestVersion) sectionLoading.value = false
+  }
+}
+
+const editAnnouncement = (announcement: GuestbookEntry) => {
+  editingAnnouncementId.value = announcement.id
+  announcementTitle.value = announcement.title || ''
+  announcementContent.value = announcement.content
+  announcementPriority.value = announcement.priority
+  announcementMessage.value = ''
+}
+
+const saveAnnouncement = async () => {
+  announcementSucceeded.value = false
+  const operation = {
+    editingId: editingAnnouncementId.value,
+    title: announcementTitle.value,
+    content: announcementContent.value,
+    priority: announcementPriority.value,
+    submissionId: announcementSubmissionId,
+  }
+  if (!operation.title || !operation.content) { announcementMessage.value = '标题和正文不能为空。'; return }
+  if (!Number.isInteger(operation.priority) || operation.priority < -100 || operation.priority > 100) {
+    announcementSucceeded.value = false
+    announcementMessage.value = '优先级必须是 -100 到 100 之间的整数。'
+    return
+  }
   announcementBusy.value = true; announcementMessage.value = ''
   try {
-    const response = await api.post({ url: '/api/management/announcements/', query: { title: announcementTitle.value, content: announcementContent.value, submission_id: announcementSubmissionId } })
+    const response = operation.editingId === null
+      ? await api.post({
+          url: '/api/management/announcements/',
+          query: { title: operation.title, content: operation.content, priority: operation.priority, submission_id: operation.submissionId },
+        })
+      : await api.put({
+          url: '/api/management/announcements/:id/',
+          params: { id: operation.editingId },
+          query: { title: operation.title, content: operation.content, priority: operation.priority },
+        })
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200 && response.status !== 201) throw new Error(errorMessage(response.errors, '公告发布失败。'))
     announcementSucceeded.value = true
-    announcementMessage.value = response.content.created ? '公告已发布。' : '该公告已经发布。'
-    announcementTitle.value = ''; announcementContent.value = ''; announcementSubmissionId = crypto.randomUUID()
+    announcementMessage.value = operation.editingId === null
+      ? ('created' in response.content && response.content.created ? '公告已发布。' : '该公告已经发布。')
+      : '公告已更新。'
+    resetAnnouncementEditor()
+    if (tab.value === 'announcements') await loadAnnouncements(announcementPage.value)
   } catch (error) { announcementSucceeded.value = false; announcementMessage.value = error instanceof Error ? error.message : '公告发布失败。' } finally { announcementBusy.value = false }
+}
+
+const toggleAnnouncementVisibility = async (announcement: GuestbookEntry) => {
+  announcementActionId.value = announcement.id
+  announcementMessage.value = ''
+  announcementSucceeded.value = false
+  const nextPage = announcements.value.length === 1 && announcementPage.value > 1 ? announcementPage.value - 1 : announcementPage.value
+  try {
+    const response = await api.post({
+      url: '/api/management/announcements/:id/visibility/',
+      params: { id: announcement.id },
+      query: { visible: !announcement.is_visible },
+    })
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, '公告状态更新失败。'))
+    announcementSucceeded.value = true
+    announcementMessage.value = response.content.entry.is_visible ? '公告已发布。' : '公告已隐藏。'
+    if (editingAnnouncementId.value === announcement.id) resetAnnouncementEditor()
+    if (tab.value === 'announcements') await loadAnnouncements(nextPage)
+  } catch (error) {
+    announcementSucceeded.value = false
+    announcementMessage.value = error instanceof Error ? error.message : '公告状态更新失败。'
+  } finally { announcementActionId.value = null }
+}
+
+const deleteAnnouncement = async (announcement: GuestbookEntry) => {
+  if (announcement.is_visible || !confirm('确定从公告管理中移除这条已隐藏的公告吗？移除后无法在管理界面恢复。')) return
+  announcementActionId.value = announcement.id
+  announcementMessage.value = ''
+  announcementSucceeded.value = false
+  const nextPage = announcements.value.length === 1 && announcementPage.value > 1 ? announcementPage.value - 1 : announcementPage.value
+  try {
+    const response = await api.delete({ url: '/api/management/announcements/:id/', params: { id: announcement.id } })
+    if (response.status === 403) { await loadSession(); return }
+    if (response.status !== 200) throw new Error(errorMessage(response.errors, '公告删除失败。'))
+    announcementSucceeded.value = true
+    announcementMessage.value = '公告已删除。'
+    if (editingAnnouncementId.value === announcement.id) resetAnnouncementEditor()
+    if (tab.value === 'announcements') await loadAnnouncements(nextPage)
+  } catch (error) {
+    announcementSucceeded.value = false
+    announcementMessage.value = error instanceof Error ? error.message : '公告删除失败。'
+  } finally { announcementActionId.value = null }
 }
 
 const telegramSettings = reactive<TelegramNotificationSettings>({
@@ -492,7 +653,13 @@ const reasonLabel = (value: ManagementReport['reason']) => ({ spam: '垃圾广�
 const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending: '待审核', publishing: '发布中', approved: '已通过', rejected: '已拒绝', publish_failed: '发布失败' })[value]
 const formatDate = (value: string) => new Date(value).toLocaleString('zh-CN')
 
-watch(tab, value => { if (value === 'reports') void loadReports(); if (value === 'uploads') void loadUploads(); if (value === 'notifications') void loadTelegramSettings() })
-watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
+watch(tab, value => {
+  if (value !== 'announcements') announcementRequestVersion += 1
+  if (value === 'reports') void loadReports()
+  if (value === 'announcements') void loadAnnouncements()
+  if (value === 'uploads') void loadUploads()
+  if (value === 'notifications') void loadTelegramSettings()
+})
+watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
 onMounted(loadSession)
 </script>

@@ -1,8 +1,18 @@
 import createDOMPurify from 'dompurify'
 
+import { hasUnsafeUrlCharacters } from '@/lib/security'
+
 const purifier = createDOMPurify(window)
 const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 's', 'u']
 const ANNOUNCEMENT_IMAGE_PATH = /^\/api\/download\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/$/i
+export const ANNOUNCEMENT_IMAGE_SIZES = ['25', '50', '75', '100'] as const
+export type AnnouncementImageSize = typeof ANNOUNCEMENT_IMAGE_SIZES[number]
+
+const isAnnouncementImageSize = (value: string | null): value is AnnouncementImageSize => (
+  value !== null && ANNOUNCEMENT_IMAGE_SIZES.some(size => size === value)
+)
+
+const unwrap = (element: Element) => element.replaceWith(...Array.from(element.childNodes))
 
 export const sanitizeGuestbookHtml = (value: string) => purifier.sanitize(value || '', {
   ALLOWED_TAGS,
@@ -11,8 +21,8 @@ export const sanitizeGuestbookHtml = (value: string) => purifier.sanitize(value 
 
 export const sanitizeAnnouncementHtml = (value: string) => {
   const sanitized = purifier.sanitize(value || '', {
-    ALLOWED_TAGS: [...ALLOWED_TAGS, 'img'],
-    ALLOWED_ATTR: ['src', 'alt'],
+    ALLOWED_TAGS: [...ALLOWED_TAGS, 'a', 'img'],
+    ALLOWED_ATTR: ['src', 'alt', 'href', 'data-size'],
   })
   const documentNode = new DOMParser().parseFromString(sanitized, 'text/html')
 
@@ -24,8 +34,53 @@ export const sanitizeAnnouncementHtml = (value: string) => {
         continue
       }
       image.setAttribute('src', source.pathname)
+      const size = image.getAttribute('data-size')
+      if (!isAnnouncementImageSize(size)) image.removeAttribute('data-size')
     } catch {
       image.remove()
+    }
+  }
+
+  for (const link of documentNode.querySelectorAll('a')) {
+    try {
+      const hrefAttribute = link.getAttribute('href')
+      const rawHref = hrefAttribute?.trim()
+      if (!rawHref || rawHref.length > 2048 || hasUnsafeUrlCharacters(rawHref)) {
+        unwrap(link)
+        continue
+      }
+      const isRootRelative = rawHref.startsWith('/') && !rawHref.startsWith('//')
+      const isExplicitHttp = /^https?:\/\//i.test(rawHref)
+      if (!isRootRelative && !isExplicitHttp) {
+        unwrap(link)
+        continue
+      }
+      const target = new URL(rawHref, window.location.origin)
+      if (!['https:', 'http:'].includes(target.protocol)) {
+        unwrap(link)
+        continue
+      }
+      if (target.origin === window.location.origin) {
+        const normalizedHref = `${target.pathname}${target.search}${target.hash}`
+        if (normalizedHref.length > 2048) {
+          unwrap(link)
+          continue
+        }
+        link.setAttribute('href', normalizedHref)
+        link.removeAttribute('target')
+        link.removeAttribute('rel')
+      } else {
+        const normalizedHref = target.toString()
+        if (normalizedHref.length > 2048) {
+          unwrap(link)
+          continue
+        }
+        link.setAttribute('href', normalizedHref)
+        link.setAttribute('target', '_blank')
+        link.setAttribute('rel', 'noopener noreferrer')
+      }
+    } catch {
+      unwrap(link)
     }
   }
 

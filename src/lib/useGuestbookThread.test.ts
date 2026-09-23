@@ -5,7 +5,8 @@ import type { GuestbookEntry } from '../types/api/guestbook'
 
 const entry = (id: number, parent: number | null = 1): GuestbookEntry => ({
   id, root_id: parent === null ? null : 1, parent_id: parent, content: `entry ${id}`, anonymous: false,
-  is_deleted: false, created_at: '2026-09-01T00:00:00Z', like_count: 0, reply_count: 0, children_count: 0,
+  is_deleted: false, created_at: '2026-09-01T00:00:00Z', updated_at: '2026-09-01T00:00:00Z', priority: 0, is_visible: true,
+  like_count: 0, reply_count: 0, children_count: 0,
   author: { id: 1, nickname: 'author', avatar: null }, is_me: false, liked_by_me: false,
 })
 

@@ -99,4 +99,49 @@ describe('announcement images', () => {
     ].join(''))
     expect(content).toBe('<p>公告</p>')
   })
+
+  it('keeps only the supported responsive image sizes', () => {
+    const content = sanitizeAnnouncementHtml([
+      `<img src="${imageUrl}" data-size="25">`,
+      `<img src="${imageUrl}" data-size="75">`,
+      `<img src="${imageUrl}" data-size="33">`,
+    ].join(''))
+    const images = new DOMParser().parseFromString(content, 'text/html').querySelectorAll('img')
+    expect([...images].map(image => image.getAttribute('data-size'))).toEqual(['25', '75', null])
+  })
+})
+
+describe('announcement links', () => {
+  it('keeps root-relative links in the same tab and opens external HTTP links safely', () => {
+    const content = sanitizeAnnouncementHtml([
+      '<a href="/announcements/1?from=home#reply">站内</a>',
+      '<a href="https://example.com/path">站外</a>',
+      '<a href="  /announcements/2  ">去除首尾空格</a>',
+    ].join(''))
+    const links = new DOMParser().parseFromString(content, 'text/html').querySelectorAll('a')
+    expect(links[0].getAttribute('href')).toBe('/announcements/1?from=home#reply')
+    expect(links[0].hasAttribute('target')).toBe(false)
+    expect(links[1].getAttribute('href')).toBe('https://example.com/path')
+    expect(links[1].getAttribute('target')).toBe('_blank')
+    expect(links[1].getAttribute('rel')).toBe('noopener noreferrer')
+    expect(links[2].getAttribute('href')).toBe('/announcements/2')
+    expect(links[2].hasAttribute('target')).toBe(false)
+  })
+
+  it('unwraps malformed, oversized, and unsafe-protocol links while retaining their text', () => {
+    const content = sanitizeAnnouncementHtml([
+      '<a href="//example.com/path">协议相对</a>',
+      '<a href="relative/path">普通相对</a>',
+      '<a href="/\\evil.example/path">反斜杠</a>',
+      '<a href="/path&#10;evil">控制符</a>',
+      '<a href="/path with-space">空格</a>',
+      '<a href="/path&#160;with-nbsp">不换行空格</a>',
+      `<a href="/path?value=${'a'.repeat(2049)}">过长</a>`,
+      '<a href="javascript:alert(1)">危险</a>',
+      '<a href="mailto:test@example.com">邮件</a>',
+    ].join(''))
+    const documentNode = new DOMParser().parseFromString(content, 'text/html')
+    expect(documentNode.querySelectorAll('a')).toHaveLength(0)
+    expect(documentNode.body.textContent).toBe('协议相对普通相对反斜杠控制符空格不换行空格过长危险邮件')
+  })
 })

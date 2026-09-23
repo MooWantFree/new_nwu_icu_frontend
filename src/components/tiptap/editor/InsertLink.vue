@@ -34,12 +34,14 @@
           <input
             id="linkUrl"
             v-model="url"
-            type="url"
-            placeholder="https://example.com"
+            type="text"
+            inputmode="url"
+            placeholder="https://example.com 或 /announcements"
             class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             required
             autocomplete="url"
           />
+          <p v-if="urlError" class="mt-1.5 text-sm text-red-700">{{ urlError }}</p>
         </div>
 
         <div>
@@ -80,6 +82,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import { hasUnsafeUrlCharacters } from '@/lib/security'
+
 const props = defineProps<{
   modelValue: boolean
   initialText?: string
@@ -92,11 +96,14 @@ const emit = defineEmits<{
 
 const url = ref('')
 const text = ref('')
+const urlError = ref('')
 
 watch(
   () => props.modelValue,
   (newValue) => {
     if (newValue) {
+      text.value = props.initialText || ''
+      urlError.value = ''
       // Focus the url input when modal opens
       setTimeout(() => {
         document.getElementById('linkUrl')?.focus()
@@ -118,16 +125,42 @@ watch(
 const handleClose = () => {
   url.value = ''
   text.value = ''
+  urlError.value = ''
   emit('update:modelValue', false)
 }
 
 const handleSubmit = () => {
-  // Ensure URL has protocol
   let formattedUrl = url.value.trim()
-  if (formattedUrl && !formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-    formattedUrl = 'https://' + formattedUrl
+  if (!formattedUrl || formattedUrl.length > 2048 || hasUnsafeUrlCharacters(formattedUrl)) {
+    urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
+    return
   }
-  
+  if (formattedUrl.startsWith('/') && !formattedUrl.startsWith('//')) {
+    try {
+      const target = new URL(formattedUrl, window.location.origin)
+      formattedUrl = `${target.pathname}${target.search}${target.hash}`
+    } catch {
+      urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
+      return
+    }
+  } else {
+    if (formattedUrl && !/^[a-z][a-z\d+.-]*:/i.test(formattedUrl)) formattedUrl = `https://${formattedUrl}`
+    try {
+      const target = new URL(formattedUrl)
+      if (!['http:', 'https:'].includes(target.protocol)) throw new Error('unsupported protocol')
+      formattedUrl = target.toString()
+    } catch {
+      urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
+      return
+    }
+  }
+
+  if (formattedUrl.length > 2048) {
+    urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
+    return
+  }
+
+  urlError.value = ''
   emit('submit', {
     url: formattedUrl,
     text: text.value.trim() || formattedUrl,

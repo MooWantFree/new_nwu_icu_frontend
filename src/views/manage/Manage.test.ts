@@ -12,7 +12,7 @@ import {
 
 const messageSuccess = vi.fn()
 
-vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn() } }))
+vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }))
 vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: vi.fn(),
   startAuthentication: vi.fn(),
@@ -20,7 +20,15 @@ vi.mock('@simplewebauthn/browser', () => ({
 }))
 vi.mock('naive-ui', () => ({ useMessage: () => ({ success: messageSuccess }) }))
 vi.mock('@/components/guestbook/GuestbookEditor.vue', () => ({
-  default: { render: () => h('textarea') },
+  default: {
+    props: ['modelValue'],
+    emits: ['update:modelValue'],
+    setup: (props: { modelValue: string }, { emit }: { emit: (event: string, value: string) => void }) => () => h('textarea', {
+      'aria-label': '公告正文',
+      value: props.modelValue,
+      onInput: (event: Event) => emit('update:modelValue', (event.target as HTMLTextAreaElement).value),
+    }),
+  },
 }))
 
 const baseSession = {
@@ -34,6 +42,26 @@ const baseSession = {
     review_resource_uploads: true,
     manage_telegram_notifications: true,
   },
+}
+
+const announcementEntry = {
+  id: 91,
+  root_id: null,
+  parent_id: null,
+  title: '原公告',
+  content: '<p>原正文</p>',
+  anonymous: false,
+  is_deleted: false,
+  created_at: '2026-09-20T00:00:00Z',
+  updated_at: '2026-09-21T00:00:00Z',
+  priority: 20,
+  is_visible: true,
+  like_count: 0,
+  reply_count: 0,
+  children_count: 0,
+  author: { id: 1, nickname: '管理员', avatar: null },
+  is_me: false,
+  liked_by_me: false,
 }
 
 const flush = async () => {
@@ -60,6 +88,14 @@ const mountManage = async (query = '') => {
 
 const findButton = (text: string) => [...container.querySelectorAll('button')]
   .find(button => button.textContent?.includes(text)) as HTMLButtonElement
+const findExactButton = (text: string) => [...container.querySelectorAll('button')]
+  .find(button => button.textContent?.trim() === text) as HTMLButtonElement
+
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => { resolve = promiseResolve })
+  return { promise, resolve }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -329,5 +365,151 @@ describe('management Passkey flow', () => {
     expect(container.querySelector('a[href="/api/management/uploads/files/101/download/"]')).toBeNull()
     expect(container.textContent).toContain('讲义.pdf · 1 KB')
     expect(container.querySelector('a[href="/api/management/uploads/files/102/download/"]')).not.toBeNull()
+  })
+
+  it('publishes announcements with the default priority and reloads the published list', async () => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      return { status: 200, content: { results: [], page: 1, max_page: 1, count: 0 } } as never
+    })
+    vi.mocked(api.post).mockResolvedValue({ status: 201, content: { entry: announcementEntry, created: true } } as never)
+    await mountManage('?tab=announcements')
+
+    const title = container.querySelector('input[maxlength="100"]') as HTMLInputElement
+    title.value = '新公告'
+    title.dispatchEvent(new Event('input', { bubbles: true }))
+    const content = container.querySelector('textarea[aria-label="公告正文"]') as HTMLTextAreaElement
+    content.value = '<p>新正文</p>'
+    content.dispatchEvent(new Event('input', { bubbles: true }))
+    findButton('发布公告').click()
+    await flush()
+
+    expect(api.post).toHaveBeenCalledWith({
+      url: '/api/management/announcements/',
+      query: {
+        title: '新公告', content: '<p>新正文</p>', priority: 0, submission_id: expect.any(String),
+      },
+    })
+    expect(container.textContent).toContain('公告已发布。')
+  })
+
+  it('prefills an announcement and saves title, content, and bounded priority through PUT', async () => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      return { status: 200, content: { results: [announcementEntry], page: 1, max_page: 1, count: 1 } } as never
+    })
+    vi.mocked(api.put).mockResolvedValue({
+      status: 200,
+      content: { entry: { ...announcementEntry, title: '更新公告', priority: 100, updated_at: '2026-09-22T00:00:00Z' } },
+    } as never)
+    await mountManage('?tab=announcements')
+
+    findButton('编辑').click()
+    await nextTick()
+    const title = container.querySelector('input[maxlength="100"]') as HTMLInputElement
+    const priority = container.querySelector('input[type="number"]') as HTMLInputElement
+    expect(title.value).toBe('原公告')
+    expect(priority.value).toBe('20')
+    title.value = '更新公告'
+    title.dispatchEvent(new Event('input', { bubbles: true }))
+    priority.value = '100'
+    priority.dispatchEvent(new Event('input', { bubbles: true }))
+    findButton('保存修改').click()
+    await flush()
+
+    expect(api.put).toHaveBeenCalledWith({
+      url: '/api/management/announcements/:id/',
+      params: { id: 91 },
+      query: { title: '更新公告', content: '<p>原正文</p>', priority: 100 },
+    })
+    expect(container.textContent).toContain('公告已更新。')
+  })
+
+  it('freezes editor switching while an announcement update is in flight', async () => {
+    const update = deferred<any>()
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      return { status: 200, content: { results: [announcementEntry], page: 1, max_page: 1, count: 1 } } as never
+    })
+    vi.mocked(api.put).mockReturnValue(update.promise as never)
+    await mountManage('?tab=announcements')
+
+    findExactButton('编辑').click()
+    await nextTick()
+    findExactButton('保存修改').click()
+    await nextTick()
+
+    expect(findExactButton('取消编辑').disabled).toBe(true)
+    expect(findExactButton('编辑').disabled).toBe(true)
+    expect(findExactButton('隐藏').disabled).toBe(true)
+
+    update.resolve({ status: 200, content: { entry: { ...announcementEntry, updated_at: '2026-09-22T00:00:00Z' } } })
+    await flush()
+    expect(container.textContent).toContain('公告已更新。')
+  })
+
+  it('ignores an older announcement response after the visibility filter changes', async () => {
+    const publishedRequest = deferred<any>()
+    const hiddenRequest = deferred<any>()
+    const hidden = { ...announcementEntry, id: 92, title: '隐藏的新公告', is_visible: false }
+    vi.mocked(api.get).mockImplementation(({ url, query }: any) => {
+      if (url === '/api/management/session/') {
+        return Promise.resolve({ status: 200, content: { ...baseSession, elevated: true } }) as never
+      }
+      return (query?.visibility === 'hidden' ? hiddenRequest.promise : publishedRequest.promise) as never
+    })
+    await mountManage('?tab=announcements')
+
+    const filter = container.querySelector('select') as HTMLSelectElement
+    filter.value = 'hidden'
+    filter.dispatchEvent(new Event('change', { bubbles: true }))
+    hiddenRequest.resolve({ status: 200, content: { results: [hidden], page: 1, max_page: 1, count: 1 } })
+    await flush()
+    expect(container.textContent).toContain('隐藏的新公告')
+
+    publishedRequest.resolve({ status: 200, content: { results: [announcementEntry], page: 1, max_page: 1, count: 1 } })
+    await flush()
+    expect(container.textContent).toContain('隐藏的新公告')
+    expect(container.textContent).not.toContain('原公告')
+  })
+
+  it('toggles visibility and only offers deletion for hidden announcements', async () => {
+    const hidden = { ...announcementEntry, is_visible: false }
+    vi.mocked(api.get).mockImplementation(async ({ url, query }: any) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated: true } } as never
+      return {
+        status: 200,
+        content: { results: query?.visibility === 'hidden' ? [hidden] : [announcementEntry], page: 1, max_page: 1, count: 1 },
+      } as never
+    })
+    vi.mocked(api.post).mockImplementation(async ({ query }: any) => ({
+      status: 200,
+      content: { entry: { ...announcementEntry, is_visible: query.visible } },
+    }) as never)
+    vi.mocked(api.delete).mockResolvedValue({ status: 200, content: { entry_id: hidden.id } } as never)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    await mountManage('?tab=announcements')
+
+    expect(findButton('删除')).toBeUndefined()
+    findButton('隐藏').click()
+    await flush()
+    expect(api.post).toHaveBeenCalledWith({
+      url: '/api/management/announcements/:id/visibility/', params: { id: 91 }, query: { visible: false },
+    })
+
+    const filter = container.querySelector('select') as HTMLSelectElement
+    filter.value = 'hidden'
+    filter.dispatchEvent(new Event('change', { bubbles: true }))
+    await flush()
+    expect(findExactButton('发布')).not.toBeUndefined()
+    findExactButton('发布').click()
+    await flush()
+    expect(api.post).toHaveBeenCalledWith({
+      url: '/api/management/announcements/:id/visibility/', params: { id: 91 }, query: { visible: true },
+    })
+    findButton('删除').click()
+    await flush()
+    expect(window.confirm).toHaveBeenCalledWith('确定从公告管理中移除这条已隐藏的公告吗？移除后无法在管理界面恢复。')
+    expect(api.delete).toHaveBeenCalledWith({ url: '/api/management/announcements/:id/', params: { id: 91 } })
   })
 })

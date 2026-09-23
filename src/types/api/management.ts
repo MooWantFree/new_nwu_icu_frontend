@@ -185,8 +185,42 @@ export type APIManagementReportResolve = {
 export type APIManagementAnnouncementCreate = {
   endpoint: '/api/management/announcements/'
   method: MethodMap.POST
-  query: { title: string; content: string; submission_id: string }
+  query: { title: string; content: string; priority: number; submission_id: string }
   response: { entry: GuestbookEntry; created: boolean }
+  errors: ManagementErrors
+}
+
+export type APIManagementAnnouncementList = {
+  endpoint: '/api/management/announcements/'
+  method: MethodMap.GET
+  query: { visibility: 'published' | 'hidden'; page?: number; pageSize?: number }
+  response: Page<GuestbookEntry>
+  errors: ManagementErrors
+}
+
+export type APIManagementAnnouncementUpdate = {
+  endpoint: '/api/management/announcements/:id/'
+  method: MethodMap.PUT
+  params: { id: number }
+  query: { title: string; content: string; priority: number }
+  response: { entry: GuestbookEntry }
+  errors: ManagementErrors
+}
+
+export type APIManagementAnnouncementVisibility = {
+  endpoint: '/api/management/announcements/:id/visibility/'
+  method: MethodMap.POST
+  params: { id: number }
+  query: { visible: boolean }
+  response: { entry: GuestbookEntry }
+  errors: ManagementErrors
+}
+
+export type APIManagementAnnouncementDelete = {
+  endpoint: '/api/management/announcements/:id/'
+  method: MethodMap.DELETE
+  params: { id: number }
+  response: { entry_id: number }
   errors: ManagementErrors
 }
 

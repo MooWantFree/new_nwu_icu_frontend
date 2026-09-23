@@ -37,6 +37,7 @@ const entry = (id: number, parent: number | null, children = 0): GuestbookEntry 
   id, parent_id: parent, root_id: parent === null ? null : 1, content: `<p>content ${id}</p>`,
   author: { id: 1, nickname: 'author', avatar: null }, anonymous: false, is_deleted: false,
   children_count: children, reply_count: children, like_count: 0, created_at: '2026-09-01T00:00:00Z',
+  updated_at: '2026-09-01T00:00:00Z', priority: 0, is_visible: true,
   is_me: false, liked_by_me: false,
 })
 const flush = async () => { for (let i = 0; i < 15; i += 1) { await Promise.resolve(); await nextTick() } }

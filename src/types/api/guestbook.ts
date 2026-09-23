@@ -20,6 +20,9 @@ export type GuestbookEntry = {
   anonymous: boolean
   is_deleted: boolean
   created_at: string
+  updated_at: string
+  priority: number
+  is_visible: boolean
   like_count: number
   reply_count?: number
   children_count: number

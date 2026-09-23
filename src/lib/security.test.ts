@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { openSafeExternalUrl, redactSensitiveUrl, toSafeExternalUrl } from './security'
+import { hasUnsafeUrlCharacters, openSafeExternalUrl, redactSensitiveUrl, toSafeExternalUrl } from './security'
 
 describe('security URL helpers', () => {
   beforeEach(() => {
@@ -26,6 +26,14 @@ describe('security URL helpers', () => {
     expect(toSafeExternalUrl('https://example.com/file')).toBe('https://example.com/file')
     expect(toSafeExternalUrl('javascript:alert(1)')).toBeNull()
     expect(toSafeExternalUrl('data:text/html,hello')).toBeNull()
+  })
+
+  it('matches the server URL guard for whitespace, controls, and backslashes', () => {
+    expect(hasUnsafeUrlCharacters('/announcements/1')).toBe(false)
+    expect(hasUnsafeUrlCharacters('https://example.com/a b')).toBe(true)
+    expect(hasUnsafeUrlCharacters('https://example.com/a\u00a0b')).toBe(true)
+    expect(hasUnsafeUrlCharacters('/path\nnext')).toBe(true)
+    expect(hasUnsafeUrlCharacters('/\\evil.example')).toBe(true)
   })
 
   it('opens safe URLs without giving the new page an opener', () => {

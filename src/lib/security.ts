@@ -3,6 +3,13 @@ const SENSITIVE_PATH_PATTERNS = [
   /(\/api\/user\/mail-reset\/)[^/?#]+/gi,
 ]
 
+export const hasUnsafeUrlCharacters = (value: string): boolean => (
+  value.includes('\\') || Array.from(value).some(character => {
+    const codePoint = character.codePointAt(0) ?? 0
+    return codePoint < 32 || codePoint === 127 || /\p{White_Space}/u.test(character)
+  })
+)
+
 export const redactSensitiveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl
 

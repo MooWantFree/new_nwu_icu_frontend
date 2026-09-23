@@ -50,6 +50,9 @@ const guestbookEntry: GuestbookEntry = {
   anonymous: false,
   is_deleted: false,
   created_at: '2026-09-04T09:00:00Z',
+  updated_at: '2026-09-04T09:00:00Z',
+  priority: 0,
+  is_visible: true,
   like_count: 12,
   reply_count: 3,
   children_count: 3,
@@ -65,6 +68,7 @@ const announcementEntry: GuestbookEntry = {
   content: '<p>本周六凌晨将进行校园网维护。</p>',
   anonymous: false,
   created_at: '2026-09-05T09:00:00Z',
+  updated_at: '2026-09-05T10:00:00Z',
   author: { id: 1, nickname: '站务组', avatar: null },
 }
 
@@ -203,6 +207,25 @@ describe('homepage previews', () => {
     expect(container.textContent).not.toContain('站务组')
     expect(container.textContent).not.toContain('查看公告与回复')
     expect(container.querySelector('a[href="/announcements/21"]')).not.toBeNull()
+    expect(container.querySelector('time')?.textContent).toBe(announcementEntry.updated_at)
+  })
+
+  it('keeps announcement body links separate from the detail link', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      status: 200,
+      content: {
+        results: [{ ...announcementEntry, content: '<p><a href="https://example.com/notice">查看说明</a></p>' }],
+      },
+    } as never)
+
+    await mount(AnnouncementPreview)
+
+    const detailLink = container.querySelector('h3 a[href="/announcements/21"]') as HTMLAnchorElement
+    const contentLink = container.querySelector('.announcement-preview-content a') as HTMLAnchorElement
+    expect(detailLink).not.toBeNull()
+    expect(contentLink.href).toBe('https://example.com/notice')
+    expect(contentLink.target).toBe('_blank')
+    expect(detailLink.contains(contentLink)).toBe(false)
   })
 
   it('shows announcement error and empty states without hiding retry', async () => {

@@ -36,7 +36,7 @@
       </RouterLink>
       <span v-else class="truncate font-semibold text-gray-700">{{ entry.author.nickname }}</span>
       <span aria-hidden="true" class="text-gray-400">·</span>
-      <Time :time="entry.created_at" />
+      <Time :time="board === 'announcements' && entry.parent_id === null ? entry.updated_at : entry.created_at" />
     </div>
   </div>
 </template>

@@ -7,7 +7,7 @@
       </template>
       <div class="min-w-0 flex-1">
         <div v-if="isAnnouncementRoot" class="relative">
-          <Time :time="entry.created_at" class="absolute right-0 top-0" />
+          <Time :time="entry.updated_at" class="absolute right-0 top-0" />
           <h2 class="px-16 text-center text-xl font-semibold leading-snug text-gray-900 sm:px-24 sm:text-2xl">
             {{ entry.title || '公告' }}
           </h2>
@@ -84,5 +84,10 @@ const report = (reason: 'spam' | 'abuse' | 'privacy' | 'other') => {
 <style>
 .guestbook-content p { margin: 0 0 0.5rem; }
 .guestbook-content p:last-child { margin-bottom: 0; }
+.guestbook-content a { color: #1d4ed8; text-decoration: underline; text-underline-offset: 0.2em; }
 .guestbook-content img { display: block; height: auto; margin: 0.75rem auto; max-width: 100%; border-radius: 0.5rem; }
+.guestbook-content img[data-size="25"] { width: 25%; }
+.guestbook-content img[data-size="50"] { width: 50%; }
+.guestbook-content img[data-size="75"] { width: 75%; }
+.guestbook-content img[data-size="100"] { width: 100%; }
 </style>
