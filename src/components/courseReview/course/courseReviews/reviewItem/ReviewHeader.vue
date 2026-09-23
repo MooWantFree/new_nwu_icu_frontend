@@ -3,7 +3,7 @@
     <div class="min-w-0">
       <div class="flex items-center relative">
         <div v-if="!review.author.anonymous" class="relative group">
-          <router-link :to="`/user//${review.author.id}`">
+          <router-link :to="`/user/${review.author.id}`">
             <UserAvatar
               :avatar="review.author.avatar"
               :uuid="review.author.uuid"
