@@ -15,9 +15,11 @@
                     <footer v-if="!isManagement" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs text-gray-500">
                       <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
                       <span aria-hidden="true">·</span>
-                      <span :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
+                      <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
+                      <span v-else :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
                       <span aria-hidden="true">·</span>
-                      <span :title="`后端完整提交：${backendCommit}`">后端 {{ shortCommit(backendCommit) }}</span>
+                      <a v-if="backendCommitUrl" :href="backendCommitUrl" :title="`后端完整提交：${backendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">后端 {{ shortCommit(backendCommit) }}</a>
+                      <span v-else :title="`后端完整提交：${backendCommit}`">后端 {{ shortCommit(backendCommit) }}</span>
                     </footer>
                   </div>
                 </div>
@@ -43,5 +45,17 @@ const route = useRoute()
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
 const backendCommit = import.meta.env.VITE_BACKEND_COMMIT
+const commitUrl = (repositoryUrl: string, commit: string) => {
+  if (!/^[a-f\d]{7,40}$/i.test(commit)) return ''
+  try {
+    const url = new URL(repositoryUrl)
+    if (url.protocol !== 'https:') return ''
+    return `${url.href.replace(/\/$/, '').replace(/\.git$/, '')}/commit/${commit}`
+  } catch {
+    return ''
+  }
+}
+const frontendCommitUrl = commitUrl(import.meta.env.VITE_FRONTEND_GITHUB_URL, frontendCommit)
+const backendCommitUrl = commitUrl(import.meta.env.VITE_BACKEND_GITHUB_URL, backendCommit)
 const shortCommit = (commit: string) => commit === 'unknown' ? 'unknown' : commit.slice(0, 8)
 </script>
