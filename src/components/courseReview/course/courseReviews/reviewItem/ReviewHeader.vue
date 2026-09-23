@@ -9,7 +9,8 @@
               :uuid="review.author.uuid"
               :has-avatar="review.author.has_avatar"
               alt="Avatar"
-              class="w-10 h-10 rounded-full mr-3 border-2 border-transparent group-hover:border-blue-500 transition-all duration-300"
+              class="w-10 h-10 rounded-full mr-3 border-2 transition-all duration-300"
+              :class="review.author.is_student ? 'border-blue-500' : 'border-transparent group-hover:border-blue-500'"
             />
           </router-link>
         </div>

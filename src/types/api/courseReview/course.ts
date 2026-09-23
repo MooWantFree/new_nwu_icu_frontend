@@ -162,6 +162,7 @@ export type APICourseInfo = {
           uuid?: string
           has_avatar?: boolean
           anonymous: boolean
+          is_student: boolean
         }
         reply_count: number
         reply_next_cursor: number | null

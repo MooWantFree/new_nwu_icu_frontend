@@ -32,7 +32,7 @@ const response = (id = 42, page = 1, name = `Course ${id}`) => {
     reviews: { page, max_page: 2, count: 20, results: [{
       id: 9, is_deleted: false, content: 'existing review', rating: 4, modified_time: '', created_time: '', edited: false,
       like: { like: 0, dislike: 0, user_option: 0 }, difficulty: 3, grade: 3, homework: 3, reward: 3, semester: '2026 秋',
-      author: { id: 2, nickname: 'Author', avatar: '', anonymous: false }, reply_count: 0, reply_next_cursor: null, reply: [],
+      author: { id: 2, nickname: 'Author', avatar: '', anonymous: false, is_student: false }, reply_count: 0, reply_next_cursor: null, reply: [],
     }], facets: {
       semesters: [{ semester_id: 7, semester__name: '2026 秋', count: 10 }], ratings: [{ rating: 5, count: 10 }],
     } },

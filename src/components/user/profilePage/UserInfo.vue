@@ -39,10 +39,13 @@
           :alt="userInfo.nickname"
           class="h-24 w-24 rounded-full object-cover"
         />
-        <div class="ml-6">
-          <h1 class="text-2xl font-bold text-gray-900">
-            {{ userInfo.nickname }}
-          </h1>
+        <div class="ml-6 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="break-all text-2xl font-bold text-gray-900">
+              {{ userInfo.nickname }}
+            </h1>
+            <VerifiedUniversityEmailBadge v-if="userInfo.verified" />
+          </div>
           <p v-if="userInfo.is_me" class="text-sm text-gray-500">
             @{{ userInfo.username }}
           </p>
@@ -110,6 +113,7 @@
 <script setup lang="ts">
 import Time from '@/components/tinyComponents/Time.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import VerifiedUniversityEmailBadge from '@/components/common/VerifiedUniversityEmailBadge.vue'
 import type { APIUserProfileFromId } from '@/types/api/user/profilePage'
 import { useRouter } from 'vue-router';
 

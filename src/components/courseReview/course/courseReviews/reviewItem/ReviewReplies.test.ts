@@ -57,7 +57,7 @@ beforeEach(() => {
   review = reactive({
     id: 119, is_deleted: false, content: '主评价正文', rating: 4, created_time: '', modified_time: '', edited: false,
     difficulty: 3, homework: 3, grade: 3, reward: 3, semester: '2026-秋',
-    author: { id: 2, nickname: '同学', avatar: '', anonymous: false },
+    author: { id: 2, nickname: '同学', avatar: '', anonymous: false, is_student: false },
     like: { like: 0, dislike: 0, user_option: 0 },
     reply_count: 4,
     reply_next_cursor: null,

@@ -3,7 +3,10 @@
     <div class="flex items-start gap-3 sm:gap-4">
       <n-tooltip trigger="hover">
         <template #trigger>
-          <div class="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+          <div
+            class="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-100"
+            :class="review.author.id > 0 && review.author.is_student ? 'ring-2 ring-blue-500' : 'ring-1 ring-slate-200'"
+          >
             <UserAvatar
               v-if="review.author.id > 0"
               :avatar="review.author.avatar_uuid"
@@ -20,7 +23,7 @@
             />
           </div>
         </template>
-        <span>{{ review.author.is_student ? '西大邮箱认证用户' : '普通用户' }}</span>
+        <span>{{ review.author.id <= 0 ? '匿名用户' : review.author.is_student ? '认证用户' : '普通用户' }}</span>
       </n-tooltip>
 
       <div class="min-w-0 flex-1">
