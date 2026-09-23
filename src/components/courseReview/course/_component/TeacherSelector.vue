@@ -37,7 +37,7 @@
             @click="selectTeacher(teacher)">
             <div class="flex items-center">
               <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img v-if="teacher.avatar_uuid" :src="`/api/download/${teacher.avatar_uuid}`"
+                <img v-if="teacher.avatar_uuid" :src="`/api/download/${teacher.avatar_uuid}/`"
                   class="w-full h-full object-cover" @error="handleAvatarError($event, teacher)" />
                 <div v-else :class="[
                   'w-full h-full flex justify-center items-center text-white text-sm font-bold',

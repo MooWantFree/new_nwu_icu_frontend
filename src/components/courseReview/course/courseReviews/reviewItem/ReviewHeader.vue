@@ -15,7 +15,7 @@
         </div>
         <img
           v-else
-          :src="`/api/download/${review.author.avatar}`"
+          :src="`/api/download/${review.author.avatar}/`"
           alt="Anonymous Avatar"
           class="w-10 h-10 rounded-full mr-3 border-2 border-gray-200"
         />

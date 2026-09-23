@@ -9,7 +9,7 @@
           #="{ navigate, href }"
           custom
         >
-          <n-avatar round :src="`/api/download/${teacher.avatar_uuid}`">
+          <n-avatar round :src="`/api/download/${teacher.avatar_uuid}/`">
             <template #fallback>
               <div
                 :class="[

@@ -16,7 +16,7 @@
               v-else
               round
               :size="40"
-              :src="`/api/download/${review.author.avatar_uuid}`"
+              :src="`/api/download/${review.author.avatar_uuid}/`"
             />
           </div>
         </template>
