@@ -1,4 +1,4 @@
-import { nextTick } from 'vue'
+import { setPageMetadata } from '@/lib/pageMetadata'
 import { managementNavigationNeedsReload } from '@/lib/managementRoute'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { checkLoginStatus } from '@/lib/logins'
@@ -8,7 +8,7 @@ const courseReviewRoutes = [
     path: '/review/timeline',
     component: () => import('@/views/courseReview/ReviewTimeline.vue'),
     meta: {
-      pageTitle: '课程评价|首页 - 时间线',
+      pageTitle: '时间线',
     },
   },
   {
@@ -306,14 +306,15 @@ const Router = createRouter({
 })
 
 Router.beforeEach(async (to) => {
+  if (to.name === 'disk' && to.path.endsWith('/')) {
+    return { path: to.path.replace(/\/+$/, ''), query: to.query, hash: to.hash, replace: true }
+  }
   // Enter management through a clean document so analytics/error tracking
   // initialized by the public application cannot observe the admin surface.
   if (to.meta?.isManagement && managementNavigationNeedsReload(window.location.pathname, to.path)) {
     window.location.assign(to.fullPath)
     return false
   }
-  // Change title
-  nextTick(() => (document.title = (to.meta?.pageTitle as string) ?? 'NWU.ICU'))
   // Check for login required
   if (to.meta?.requiresAuth && !(await checkLoginStatus())) {
     return {
@@ -324,6 +325,13 @@ Router.beforeEach(async (to) => {
     }
   }
   return
+})
+
+Router.afterEach((to, from, failure) => {
+  if (failure) return
+  // Query/hash changes retain metadata loaded by the current detail page.
+  if (to.path === from.path && from.matched.length) return
+  setPageMetadata({ title: (to.meta?.pageTitle as string) || '主页', noindex: !!to.meta.requiresAuth || to.name === 'manage' || ['404', '403', '500'].includes(String(to.name)) })
 })
 
 export default Router

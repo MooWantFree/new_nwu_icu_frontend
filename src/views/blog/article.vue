@@ -62,6 +62,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { XCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
+import { setPageTitle } from '@/lib/pageMetadata'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 
@@ -81,7 +82,7 @@ const fetchContent = async () => {
       params: { id: Number(route.params.id) },
     })
     content.value = res.content.results.blogs[0]
-    document.title = `${content.value.title} | NWU.ICU`
+    setPageTitle(content.value.title)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '未知错误'
   } finally {

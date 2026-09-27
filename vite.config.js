@@ -44,6 +44,18 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       {
+        name: 'resource-document-dev-entry',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            const path = req.url?.split('?')[0]
+            if (path !== '/resource-entry.js' && path !== '/resource-entry.css') return next()
+            res.setHeader('Content-Type', path.endsWith('.js') ? 'text/javascript' : 'text/css')
+            res.setHeader('Cache-Control', 'no-store')
+            res.end(path.endsWith('.js') ? 'import "/@vite/client"; import "/src/main.js";' : '')
+          })
+        },
+      },
+      {
         name: 'management-passkey-csp',
         transformIndexHtml: {
           order: 'pre',
@@ -69,6 +81,11 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       proxy: {
+        '^/(disk(?:/|\\?|$)|robots\\.txt(?:\\?|$)|sitemap\\.xml(?:\\?|$))': {
+          target: backendApiUrl,
+          changeOrigin: true,
+          xfwd: true,
+        },
         '/api': {
           target: backendApiUrl,
           changeOrigin: true,

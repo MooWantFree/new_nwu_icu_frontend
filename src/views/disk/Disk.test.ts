@@ -40,6 +40,61 @@ async function mount(path = '/disk') {
 }
 
 describe('resource browser page', () => {
+  it('sets distinct file metadata and replaces it when navigating between resources', async () => {
+    const path = '/课程/试卷 #1%.pdf'
+    fetchMock.mockResolvedValue(response({ ...folder(path), name: '试卷 #1%.pdf', type: 'file', size: 20 }))
+    await mount(resourcePageUrl(path))
+    expect(document.title).toBe('试卷 #1%.pdf - 课程 - NWU.ICU')
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://nwu.icu' + resourcePageUrl(path))
+    fetchMock.mockResolvedValue(response(folder('/课程')))
+    await router.push(resourcePageUrl('/课程')); await flush()
+    expect(document.title).toBe('资料 - 资料下载 - NWU.ICU')
+    expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content')).not.toContain('试卷')
+  })
+  it('uses the server bootstrap once and still refreshes through the API', async () => {
+    const script = document.createElement('script')
+    script.id = 'resource-bootstrap'; script.type = 'application/json'; script.textContent = JSON.stringify(folder())
+    document.body.appendChild(script)
+    await mount()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(document.getElementById('resource-bootstrap')).toBeNull()
+    host.querySelector<HTMLButtonElement>('[aria-label="刷新目录"]')!.click(); await flush()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+  it('does not index errors and clears that instruction after a successful retry', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 })
+    await mount('/disk/missing')
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, follow')
+    fetchMock.mockResolvedValue(response(folder('/missing')))
+    host.querySelector<HTMLButtonElement>('[aria-label="刷新目录"]')!.click(); await flush()
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull()
+  })
+  it.each(['network', '503'])('does not mark a temporary %s failure as noindex', async (failure) => {
+    if (failure === 'network') fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    else fetchMock.mockResolvedValue({ ok: false, status: 503 })
+    await mount('/disk/课程')
+    expect(host.querySelector('[role="alert"]')).not.toBeNull()
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull()
+  })
+  it.each([true, false])('keeps file content and indexable=%s when an optional image preview fails', async (indexable) => {
+    const path = '/课程/图片.png'
+    fetchMock.mockResolvedValueOnce(response({ ...folder(path, ''), name: '图片.png', type: 'file', download_gate_enabled: true, indexable }))
+      .mockRejectedValue(new TypeError('Failed to fetch'))
+    await mount(resourcePageUrl(path))
+    expect(host.querySelector('[aria-label="文件详情"]')).not.toBeNull()
+    expect(host.querySelector('[role="alert"]')).toBeNull()
+    expect(document.title).toBe('图片.png - 课程 - NWU.ICU')
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content') || null).toBe(indexable ? null : 'noindex, follow')
+  })
+  it('keeps the directory and README text when a README image cannot be authorized', async () => {
+    fetchMock.mockResolvedValueOnce(response({ ...folder('/课程', '说明文字\n\n![插图](image.png)'), download_gate_enabled: true }))
+      .mockRejectedValue(new TypeError('Failed to fetch'))
+    await mount(resourcePageUrl('/课程'))
+    expect(host.querySelector('[aria-label="文件列表"]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="目录说明"]')?.textContent).toContain('说明文字')
+    expect(host.querySelector('[aria-label="目录说明"] img')?.hasAttribute('src')).toBe(false)
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull()
+  })
   it('remembers both collapsed and expanded README preferences across visits', async () => {
     const toggle = () => host.querySelector<HTMLButtonElement>('[aria-controls="resource-readme-content"]')!
     const content = () => host.querySelector<HTMLElement>('#resource-readme-content')!

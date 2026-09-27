@@ -42,4 +42,5 @@ if (import.meta.env.PROD && !isManagementPath(window.location.pathname)) {
   })
 }
 
-app.mount('#app')
+// Keep server-rendered resource content visible until its Vue route is ready.
+Router.isReady().then(() => app.mount('#app'))

@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
+import { siteOrigin } from './pageMetadata'
 
 export type ResourceEntry = {
   name: string
@@ -13,8 +14,27 @@ export type ResourceContents = ResourceEntry & {
   readme: string
   readme_warning: string
   download_gate_enabled?: boolean
+  indexable?: boolean
 }
-export const resourcePageUrl = (path: string) => '/disk' + path.split('/').map(encodeURIComponent).join('/')
+export const resourcePageUrl = (path: string) => '/disk' + path.replace(/\/+$/, '').split('/').map(encodeURIComponent).join('/')
+export function resourceMetadata(data: ResourceContents) {
+  const parent = data.path.split('/').slice(0, -1).filter(Boolean).at(-1)
+  const title = data.path === '/' ? '资料下载' : data.type === 'file'
+    ? `${data.name} - ${parent || '资料下载'}` : `${data.name} - 资料下载`
+  const description = data.path === '/' ? '浏览和下载 NWU.ICU 公开学习资料。'
+    : `${data.name}，${data.type === 'file' ? `所属目录：${parent || '全部资料'}。查看文件信息与下载入口。` : '浏览目录中的学习资料和文件。'}`
+  return { title, description, canonical: siteOrigin + resourcePageUrl(data.path), noindex: data.indexable === false }
+}
+
+export function takeResourceBootstrap(path: string): ResourceContents | undefined {
+  const element = document.getElementById('resource-bootstrap')
+  if (!element) return
+  element.remove()
+  try {
+    const data = JSON.parse(element.textContent || '') as ResourceContents
+    if (data.path === path && ['file', 'directory'].includes(data.type)) return data
+  } catch { /* Fetch fresh data if the initial document is incomplete. */ }
+}
 export const resourceFileUrl = (path: string, inline = false) =>
   `/api/resources/file/?${new URLSearchParams({ path, ...(inline ? { inline: '1' } : {}) })}`
 export const formatResourceSize = (size: number | null) => {

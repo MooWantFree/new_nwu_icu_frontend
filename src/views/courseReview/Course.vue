@@ -43,6 +43,7 @@
 import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/lib/requests'
+import { setPageTitle } from '@/lib/pageMetadata'
 import { CourseData } from '@/types/courseReview'
 import type { APICourseInfo } from '@/types/api/courseReview/course'
 import CourseMeta from '@/components/courseReview/course/CourseMeta.vue'
@@ -106,7 +107,7 @@ const loadData = async (query?: APICourseInfo['query']) => {
 
     courseData.value = content
     reviewQuery.value = { ...reviewQuery.value, page: content.reviews.page }
-    document.title = `课程评价 - ${courseData.value.name} | NWU.ICU`
+    setPageTitle(`课程评价 - ${courseData.value.name}`)
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('Failed to fetch course data:', error)

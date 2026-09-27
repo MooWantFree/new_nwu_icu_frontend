@@ -105,7 +105,8 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
-import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
+import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, resourceMetadata, takeResourceBootstrap, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
+import { setPageMetadata } from '@/lib/pageMetadata'
 import { api } from '@/lib/requests'
 
 const route = useRoute()
@@ -176,6 +177,7 @@ function queueSearch(delay = 250) {
 
 async function loadContents() {
   const version = ++loadVersion
+  let noindex = false
   controller?.abort()
   controller = new AbortController()
   loading.value = true
@@ -185,27 +187,43 @@ async function loadContents() {
   copyMessage.value = ''
   imagePreviewUrl.value = ''
   contents.value = null
+  setPageMetadata({ title: '资料下载' })
   try {
-    const response = await fetch(`/api/resources/browse/?${new URLSearchParams({ path: currentPath.value })}`, { signal: controller.signal })
-    if (!response.ok) {
-      loginRequired.value = response.status === 401
-      throw new Error(response.status === 401 ? '此目录需要登录后访问。' : response.status === 404 ? '这个资料不存在、已移动或无权访问。' : response.status === 400 ? '资料路径不合法。' : '暂时无法读取资料，请稍后重试。')
+    let data = takeResourceBootstrap(currentPath.value)
+    if (!data) {
+      const response = await fetch(`/api/resources/browse/?${new URLSearchParams({ path: currentPath.value })}`, { signal: controller.signal })
+      if (!response.ok) {
+        noindex = [400, 401, 403, 404, 410].includes(response.status)
+        loginRequired.value = response.status === 401
+        throw new Error(response.status === 401 ? '此目录需要登录后访问。' : response.status === 404 ? '这个资料不存在、已移动或无权访问。' : response.status === 400 ? '资料路径不合法。' : '暂时无法读取资料，请稍后重试。')
+      }
+      data = (await response.json()).contents as ResourceContents
     }
-    const data = (await response.json()).contents as ResourceContents
     let html = await renderResourceReadme(data.readme || '', data.type === 'directory' ? data.path : parentPath.value)
     if (data.download_gate_enabled) html = await authorizeReadmeImages(html)
     if (version !== loadVersion) return
     contents.value = data
+    setPageMetadata(resourceMetadata(data))
     readmeHtml.value = html
     if (data.type === 'file' && /\.(png|jpe?g|gif|webp|avif)$/i.test(data.name)) {
-      imagePreviewUrl.value = data.download_gate_enabled
-        ? await authorizedResourceUrl(data.path, true)
-        : resourceFileUrl(data.path, true)
+      try {
+        const previewUrl = data.download_gate_enabled
+          ? await authorizedResourceUrl(data.path, true)
+          : resourceFileUrl(data.path, true)
+        if (version !== loadVersion) return
+        imagePreviewUrl.value = previewUrl
+      } catch {
+        if (version !== loadVersion) return
+        copyMessage.value = '图片预览暂不可用，可点击打开预览重试。'
+      }
     }
     page.value = 1
     if (searching.value) queueSearch(0)
   } catch (reason) {
-    if (version === loadVersion && !controller.signal.aborted) error.value = reason instanceof Error ? reason.message : '加载资料失败。'
+    if (version === loadVersion && !controller.signal.aborted) {
+      error.value = reason instanceof Error ? reason.message : '加载资料失败。'
+      setPageMetadata({ title: loginRequired.value ? '资料需要登录' : '资料暂不可用', noindex })
+    }
   } finally {
     if (version === loadVersion) loading.value = false
   }
@@ -241,7 +259,12 @@ async function authorizeReadmeImages(html: string) {
     const url = new URL(source, window.location.origin)
     if (url.pathname !== '/api/resources/file/') continue
     const path = url.searchParams.get('path')
-    if (path) image.setAttribute('src', await authorizedResourceUrl(path, true))
+    if (path) {
+      try { image.setAttribute('src', await authorizedResourceUrl(path, true)) } catch {
+        // Optional images must not hide the directory or change its indexing status.
+        image.removeAttribute('src')
+      }
+    }
   }
   return doc.body.innerHTML
 }
