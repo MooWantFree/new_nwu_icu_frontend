@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-const publicScriptPolicy = "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com;"
+const publicScriptPolicy = "script-src 'self';"
 const managementScriptPolicy = "script-src 'self' moz-extension: chrome-extension:;"
 
 const isManagementRequest = (url = '') => {

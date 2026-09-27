@@ -2,12 +2,12 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import Router from './router/Router'
 import naive from 'naive-ui'
-import VueGtag from 'vue-gtag'
 import * as Sentry from '@sentry/vue'
 import '@/style/style.css'
 import { captureActionTokenFromUrl } from '@/lib/actionTokens'
 import { redactSensitiveUrl } from '@/lib/security'
 import { isManagementPath } from '@/lib/managementRoute'
+import { initializeStatistics } from '@/lib/analytics'
 
 captureActionTokenFromUrl()
 const app = createApp(App)
@@ -30,9 +30,7 @@ const redactSentryEvent = (event) => {
 }
 
 if (import.meta.env.PROD && !isManagementPath(window.location.pathname)) {
-  app.use(VueGtag, {
-    config: { id: 'G-MYB5VKYR7S' },
-  })
+  initializeStatistics()
   Sentry.init({
     app,
     dsn: 'https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395',
