@@ -4,6 +4,9 @@ import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-
 import Disk from './Disk.vue'
 import { resourcePageUrl, type ResourceContents } from '@/lib/resourceBrowser'
 
+const warning = vi.hoisted(() => vi.fn())
+vi.mock('naive-ui', () => ({ createDiscreteApi: () => ({ message: { warning }, unmount: vi.fn() }) }))
+
 const folder = (path = '/', readme = '# 目录说明'): ResourceContents => ({
   name: '资料', path, type: 'directory', size: null, modified_at: '2026-09-07T00:00:00Z', readme, readme_warning: '',
   entries: [
@@ -20,6 +23,7 @@ let router: Router
 const fetchMock = vi.fn()
 
 beforeEach(() => {
+  warning.mockReset()
   localStorage.removeItem('nwuicu:resource-readme-collapsed')
   fetchMock.mockReset().mockResolvedValue(response(folder()))
   vi.stubGlobal('fetch', fetchMock)
@@ -40,6 +44,147 @@ async function mount(path = '/disk') {
 }
 
 describe('resource browser page', () => {
+  it.each(['file', 'directory'] as const)('restores search, sort and page after going back from a %s result', async (type) => {
+    vi.useFakeTimers()
+    const target = { name: '试卷.pdf', path: '/其他/试卷.pdf', type, size: 20, modified_at: '' }
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.startsWith('/api/resources/search/')) return { ok: true, json: async () => ({ contents: { entries: [target], total_count: 201 } }) }
+      const path = new URL(url, 'http://localhost').searchParams.get('path') || '/'
+      return response(path === target.path ? { ...folder(path), ...target } : folder(path))
+    })
+    await mount('/disk/课程.2026?q=试卷&sort=size&direction=asc&page=2')
+    await vi.advanceTimersByTimeAsync(250); await flush()
+    expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('试卷')
+    expect(host.querySelector('[data-sort="size"]')!.getAttribute('aria-label')).toContain('正序')
+    expect(host.textContent).toContain('2 / 3')
+    host.querySelector<HTMLAnchorElement>(`a[href="${resourcePageUrl(target.path)}"]`)!.click(); await flush()
+    expect(router.currentRoute.value.path).toBe(resourcePageUrl(target.path))
+    expect(router.currentRoute.value.query.q).toBeUndefined()
+    router.back(); await flush()
+    await vi.advanceTimersByTimeAsync(250); await flush()
+    expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('试卷')
+    expect(host.querySelector('[data-sort="size"]')!.getAttribute('aria-label')).toContain('正序')
+    expect(host.textContent).toContain('2 / 3')
+    expect(host.querySelector<HTMLAnchorElement>(`a[href="${resourcePageUrl(target.path)}"]`)).not.toBeNull()
+    const search = [...fetchMock.mock.calls].reverse().find(([url]) => url.startsWith('/api/resources/search/'))!
+    const params = new URL(search[0], 'http://localhost').searchParams
+    expect(params.get('page')).toBe('2')
+    expect(params.get('direction')).toBe('asc')
+  })
+  it('records typed searches in the current history entry without one entry per character', async () => {
+    await mount()
+    await router.push('/disk/课程.2026'); await flush()
+    const input = host.querySelector<HTMLInputElement>('input[type="search"]')!
+    for (const value of ['高', '高数']) {
+      input.value = value; input.dispatchEvent(new Event('input')); await flush()
+      expect(router.currentRoute.value.query.q).toBe(value)
+    }
+    router.back(); await flush()
+    expect(router.currentRoute.value.path).toBe('/disk')
+    expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('')
+  })
+  it('toggles each header direction while keeping directories first', async () => {
+    const data = folder()
+    data.entries = [
+      { name: 'B.pdf', path: '/B.pdf', type: 'file', size: 10, modified_at: '2026-01-03T00:00:00Z' },
+      { name: 'A.pdf', path: '/A.pdf', type: 'file', size: 30, modified_at: '2026-01-01T00:00:00Z' },
+      { name: 'C.pdf', path: '/C.pdf', type: 'file', size: 20, modified_at: '2026-01-02T00:00:00Z' },
+      { name: 'Z', path: '/Z', type: 'directory', size: null, modified_at: '' },
+    ]
+    fetchMock.mockResolvedValue(response(data))
+    await mount()
+    const names = () => [...host.querySelectorAll('[aria-label="文件列表"] ul a')].map(a => a.textContent)
+    const header = (key: string) => host.querySelector<HTMLButtonElement>(`[data-sort="${key}"]`)!
+    expect(host.querySelector('select')).toBeNull()
+    expect(names()).toEqual(['Z', 'A.pdf', 'B.pdf', 'C.pdf'])
+    header('name').click(); await flush()
+    expect(names()).toEqual(['Z', 'C.pdf', 'B.pdf', 'A.pdf'])
+    expect(header('name').getAttribute('aria-label')).toContain('倒序')
+    header('name').click(); await flush()
+    expect(names()).toEqual(['Z', 'A.pdf', 'B.pdf', 'C.pdf'])
+    header('modified').click(); await flush()
+    expect(names()).toEqual(['Z', 'B.pdf', 'C.pdf', 'A.pdf'])
+    header('modified').click(); await flush()
+    expect(names()).toEqual(['Z', 'A.pdf', 'C.pdf', 'B.pdf'])
+    header('size').click(); await flush()
+    expect(names()).toEqual(['Z', 'A.pdf', 'C.pdf', 'B.pdf'])
+    header('size').click(); await flush()
+    expect(names()).toEqual(['Z', 'B.pdf', 'C.pdf', 'A.pdf'])
+  })
+  it('sends header direction to global search and resets pagination', async () => {
+    await mount(); vi.useFakeTimers()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ contents: { entries: [], total_count: 101 } }) })
+    const input = host.querySelector<HTMLInputElement>('input[type="search"]')!
+    input.value = '试卷'; input.dispatchEvent(new Event('input')); await flush()
+    await vi.advanceTimersByTimeAsync(250); await flush()
+    ;[...host.querySelectorAll('button')].find(b => b.textContent === '下一页')!.click(); await flush()
+    await vi.advanceTimersByTimeAsync(250); await flush()
+    expect(new URL(fetchMock.mock.lastCall![0], 'http://localhost').searchParams.get('page')).toBe('2')
+    host.querySelector<HTMLButtonElement>('[data-sort="name"]')!.click(); await flush()
+    await vi.advanceTimersByTimeAsync(250); await flush()
+    const params = new URL(fetchMock.mock.lastCall![0], 'http://localhost').searchParams
+    expect(params.get('page')).toBe('1')
+    expect(params.get('sort')).toBe('name')
+    expect(params.get('direction')).toBe('desc')
+  })
+  it('shows select-all left of the name heading only in batch mode and tracks partial selection', async () => {
+    const data = folder()
+    data.entries!.push({ name: '第二份.pdf', path: '/第二份.pdf', type: 'file', size: 20, modified_at: '' })
+    fetchMock.mockResolvedValue(response(data))
+    await mount()
+    expect(host.querySelector('[aria-label="全选本页文件"]')).toBeNull()
+    document.cookie = 'csrftoken=test-token; path=/'
+    fetchMock.mockResolvedValueOnce({
+      status: 200, statusText: 'OK', headers: new Headers(),
+      text: async () => JSON.stringify({ errors: [], contents: {
+        max_files: 20, max_bytes: 200 * 1024 ** 2, idle_ttl: 1800, queue_limit: 100, anonymous: true,
+      } }),
+    })
+    ;[...host.querySelectorAll('button')].find(b => b.textContent === '批量下载')!.click()
+    await flush()
+    const selectAll = host.querySelector<HTMLInputElement>('[aria-label="全选本页文件"]')!
+    expect(selectAll.nextElementSibling?.textContent).toBe('名称')
+    expect(selectAll.closest('[aria-hidden="true"]')).toBeNull()
+    host.querySelector<HTMLButtonElement>('[data-sort="name"]')!.click(); await flush()
+    expect(selectAll.checked).toBe(false)
+    expect(host.textContent).toContain('已选 0 个')
+    host.querySelector<HTMLInputElement>('[aria-label="选择 试卷 #1%.pdf"]')!.click()
+    await flush()
+    expect(selectAll.indeterminate).toBe(true)
+    selectAll.click(); await flush()
+    expect(selectAll.checked).toBe(true)
+    expect(selectAll.indeterminate).toBe(false)
+    expect(host.textContent).toContain('已选 2 个')
+    selectAll.click(); await flush()
+    expect(selectAll.checked).toBe(false)
+    expect(host.textContent).toContain('已选 0 个')
+    ;[...host.querySelectorAll('button')].find(b => b.textContent === '取消选择')!.click()
+    await flush()
+    expect(host.querySelector('[aria-label="全选本页文件"]')).toBeNull()
+  })
+  it('restores a native checkbox when archive size limits reject the file', async () => {
+    document.cookie = 'csrftoken=test-token; path=/'
+    await mount()
+    fetchMock.mockResolvedValueOnce({
+      status: 200, statusText: 'OK', headers: new Headers(),
+      text: async () => JSON.stringify({ errors: [], contents: {
+        max_files: 20, max_bytes: 1, idle_ttl: 1800, queue_limit: 100, anonymous: true,
+      } }),
+    })
+    ;[...host.querySelectorAll('button')].find(b => b.textContent === '批量下载')!.click()
+    await flush()
+    const checkbox = host.querySelector<HTMLInputElement>('[aria-label="选择 试卷 #1%.pdf"]')!
+    checkbox.click(); await flush()
+    expect(checkbox.checked).toBe(false)
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining('请分批选择'), { duration: 4000 })
+    expect(host.textContent).not.toContain('请分批选择')
+    expect(host.textContent).toContain('已选 0 个')
+    const selectAll = host.querySelector<HTMLInputElement>('[aria-label="全选本页文件"]')!
+    selectAll.click(); await flush()
+    expect(selectAll.checked).toBe(false)
+    expect(warning).toHaveBeenCalledTimes(2)
+    expect(host.textContent).toContain('已选 0 个')
+  })
   it('sets distinct file metadata and replaces it when navigating between resources', async () => {
     const path = '/课程/试卷 #1%.pdf'
     fetchMock.mockResolvedValue(response({ ...folder(path), name: '试卷 #1%.pdf', type: 'file', size: 20 }))

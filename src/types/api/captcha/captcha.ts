@@ -18,7 +18,7 @@ export type APICaptcha = {
 const APICaptchaVerifyQuery = z.object({
   captcha_key: z.string(),
   captcha_value: z.string(),
-  scope: z.enum(['login', 'review_write', 'guestbook_write', 'reply_write', 'catalog_write', 'resource_download']).optional(),
+  scope: z.enum(['login', 'review_write', 'guestbook_write', 'reply_write', 'catalog_write', 'resource_download', 'resource_archive']).optional(),
 })
 export type APICaptchaVerify = {
   endpoint: '/api/captcha/'

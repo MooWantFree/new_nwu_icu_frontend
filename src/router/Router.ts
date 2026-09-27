@@ -295,9 +295,11 @@ const routes = [
 const Router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: (_to, _from, savedPosition) => {
+  scrollBehavior: (to, from, savedPosition) => {
     if (savedPosition) {
       return savedPosition
+    } else if (to.name === 'disk' && to.path === from.path) {
+      return false
     } else {
       return { top: 0 }
     }

@@ -1,4 +1,4 @@
-export type CaptchaScope = 'login' | 'review_write' | 'guestbook_write' | 'reply_write' | 'catalog_write' | 'resource_download'
+export type CaptchaScope = 'login' | 'review_write' | 'guestbook_write' | 'reply_write' | 'catalog_write' | 'resource_download' | 'resource_archive'
 
 type ChallengeHandler = (scope: CaptchaScope) => Promise<string | null>
 
@@ -10,6 +10,7 @@ const allowedScopes = new Set<CaptchaScope>([
   'reply_write',
   'catalog_write',
   'resource_download',
+  'resource_archive',
 ])
 
 export function registerCaptchaChallengeHandler(next?: ChallengeHandler) {

@@ -1,6 +1,7 @@
 <template>
   <NModal :show="visible" :mask-closable="!submitting" @update:show="cancel">
-    <section role="dialog" aria-modal="true" aria-labelledby="captcha-challenge-title" class="w-[calc(100vw-2rem)] max-w-md rounded-xl bg-white p-6 shadow-xl">
+    <!-- vueuc's focus trap locates a DIV slot root; a SECTION traps focus on its sentinel. -->
+    <div role="dialog" aria-modal="true" aria-labelledby="captcha-challenge-title" class="w-[calc(100vw-2rem)] max-w-md rounded-xl bg-white p-6 shadow-xl">
       <h2 id="captcha-challenge-title" class="text-lg font-semibold text-gray-900">请完成人机验证</h2>
       <p class="mt-1 text-sm text-gray-500">操作较为频繁，验证后会自动重试刚才的操作。</p>
       <div class="mt-5">
@@ -21,7 +22,7 @@
           {{ submitting ? '验证中…' : '验证并继续' }}
         </button>
       </div>
-    </section>
+    </div>
   </NModal>
 </template>
 

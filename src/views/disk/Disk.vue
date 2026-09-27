@@ -1,5 +1,5 @@
 <template>
-  <AppPageLayout title="资料下载" description="前人栽树，后人乘凉。把知识与经验留给后来者。">
+  <AppPageLayout title="资料下载" description="前人栽树，后人乘凉。把知识与经验留给后来者。" :class="{ 'pb-28': archives.state.selecting }">
     <template #actions>
       <RouterLink to="/upload" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
         <Upload class="h-4 w-4" />分享资料
@@ -41,19 +41,27 @@
       <p v-if="contents.readme_warning" role="status" class="mb-4 text-sm text-amber-700">{{ contents.readme_warning }}</p>
       <section v-if="contents.type === 'directory'" aria-label="文件列表" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:px-5">
-          <span class="text-sm text-gray-500">{{ directoryCount }} 个文件夹 · {{ fileCount }} 个文件</span>
+          <div class="flex flex-wrap items-center gap-3 text-sm">
+            <span class="text-gray-500">{{ directoryCount }} 个文件夹 · {{ fileCount }} 个文件</span>
+            <template v-if="archives.state.selecting">
+              <button type="button" :disabled="archives.state.busy" class="inline-flex h-[38px] w-[104px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 focus-visible:outline-gray-500 disabled:opacity-50" @click="archives.state.selecting = false; archives.state.selected = []"><X aria-hidden="true" class="h-4 w-4 shrink-0" />取消选择</button>
+            </template>
+            <button v-else type="button" class="inline-flex h-[38px] w-[104px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-blue-500" @click="archives.startSelection()"><Download aria-hidden="true" class="h-4 w-4 shrink-0" />批量下载</button>
+          </div>
           <div class="flex w-full items-center gap-2 sm:w-auto">
             <div class="relative min-w-0 flex-1 sm:w-60">
               <Search class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <input v-model="filter" type="search" maxlength="200" aria-label="全局搜索资料" placeholder="全局搜索资料…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" @keydown.enter.prevent="queueSearch(0)" />
+              <input :value="filter" type="search" maxlength="200" aria-label="全局搜索资料" placeholder="全局搜索资料…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" @input="updateFilter" @keydown.enter.prevent="queueSearch(0)" />
             </div>
-            <select v-model="sort" aria-label="排序方式" class="max-w-36 rounded-lg border border-gray-200 px-2 py-2 text-sm text-gray-600 focus:outline-blue-500">
-              <option value="name">名称排序</option><option value="modified">最近更新</option><option value="size">文件大小</option>
-            </select>
           </div>
         </div>
-        <div class="resource-row border-b border-gray-100 px-4 py-3 text-xs font-medium text-gray-500 sm:px-5" aria-hidden="true">
-          <span>名称</span><span class="hidden sm:block">修改时间</span><span class="text-right">大小</span><span />
+        <div class="resource-row min-h-12 border-b border-gray-100 px-4 py-1 text-xs font-medium text-gray-500 sm:px-5">
+          <div v-for="column in sortColumns" :key="column.key" class="flex min-w-0 items-center gap-2" :class="{ 'justify-end': column.key === 'size' }">
+            <input v-if="column.key === 'name' && archives.state.selecting" type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" aria-label="全选本页文件" :checked="archives.pageSelected" :indeterminate="archives.pagePartiallySelected" :disabled="archives.state.busy || !pagedEntries.some(entry => entry.type === 'file')" @change="toggleArchivePage" />
+            <button type="button" :data-sort="column.key" :aria-label="sortLabel(column.key, column.label)" class="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded focus-visible:outline-blue-500 hover:text-blue-600" :class="{ 'text-blue-600': sort === column.key }" @click="toggleSort(column.key)">
+              {{ column.label }}<component :is="sort === column.key ? (sortDirection === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown" aria-hidden="true" class="h-3 w-3 shrink-0" :class="{ 'text-gray-400': sort !== column.key }" />
+            </button>
+          </div><span />
         </div>
         <RouterLink v-if="currentPath !== '/'" :to="resourcePageUrl(parentPath)" class="flex items-center gap-3 border-b border-gray-50 px-4 py-3 text-sm text-gray-500 hover:bg-blue-50 sm:px-5">
           <CornerLeftUp class="h-5 w-5" />返回上一级
@@ -63,11 +71,15 @@
         <div v-else-if="searching && searchError" role="alert" class="px-5 py-8 text-center text-sm text-red-700">{{ searchError }} <button class="ml-2 text-blue-700 hover:underline" @click="queueSearch(0)">重试搜索</button></div>
         <ul v-else>
           <li v-for="entry in pagedEntries" :key="entry.path" class="resource-row group border-b border-gray-50 px-4 py-3 hover:bg-blue-50/60 sm:px-5">
-            <RouterLink :to="resourcePageUrl(entry.path)" class="flex min-w-0 items-center gap-3 text-sm text-gray-800 group-hover:text-blue-700">
+            <label v-if="archives.state.selecting && entry.type === 'file'" class="flex min-h-11 min-w-0 cursor-pointer items-center gap-3 text-sm text-gray-800">
+              <input type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" :aria-label="`选择 ${entry.name}`" :checked="archives.state.selected.some(item => item.path === entry.path)" :disabled="archives.state.busy" @change="toggleArchiveFile($event, entry)" />
+              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-gray-500">{{ entryParent(entry.path) }}</span></span>
+            </label>
+            <RouterLink v-else :to="resourcePageUrl(entry.path)" class="flex min-w-0 items-center gap-3 text-sm text-gray-800 group-hover:text-blue-700">
               <component :is="entry.type === 'directory' ? Folder : FileText" class="h-6 w-6 shrink-0" :class="entry.type === 'directory' ? 'fill-blue-100 text-blue-500' : 'text-gray-400'" />
               <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-gray-500">{{ entryParent(entry.path) === currentPath ? '当前目录' : entryParent(entry.path) }}</span></span>
             </RouterLink>
-            <time :datetime="entry.modified_at" class="hidden text-xs text-gray-400 sm:block">{{ formatDate(entry.modified_at) }}</time>
+            <time :datetime="entry.modified_at" class="text-[10px] text-gray-400 sm:text-xs">{{ formatDate(entry.modified_at) }}</time>
             <span class="text-right text-xs tabular-nums text-gray-500">{{ formatResourceSize(entry.size) }}</span>
             <button v-if="entry.type === 'file'" type="button" :aria-label="`下载 ${entry.name}`" class="rounded-md p-1 text-gray-400 hover:bg-blue-100 hover:text-blue-700" @click="openResource(entry.path, false)"><Download class="h-4 w-4" /></button>
             <ChevronRight v-else class="h-4 w-4 text-gray-300" />
@@ -79,7 +91,7 @@
         <div class="flex items-center justify-between gap-3 px-5 py-4 text-xs text-gray-400">
           <span>{{ searching ? (searchLoading ? '搜索中…' : searchError ? '搜索未完成' : `全局找到 ${totalEntries} 项`) : '资料仅供学习交流，请勿用于商业用途。' }}</span>
           <div v-if="pageCount > 1" class="flex shrink-0 items-center gap-3 text-gray-600">
-            <button :disabled="page === 1" class="disabled:opacity-30" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount" class="disabled:opacity-30" @click="page++">下一页</button>
+            <button :disabled="page === 1" class="disabled:opacity-30" @click="changePage(page - 1)">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount" class="disabled:opacity-30" @click="changePage(page + 1)">下一页</button>
           </div>
         </div>
       </section>
@@ -97,14 +109,17 @@
         <img v-if="isImage && imagePreviewUrl" :src="imagePreviewUrl" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-lg object-contain" />
       </section>
     </template>
+    <ResourceArchivePanel :control="archives" />
   </AppPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload } from 'lucide-vue-next'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload, X } from 'lucide-vue-next'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import ResourceArchivePanel from '@/components/disk/ResourceArchivePanel.vue'
+import { useResourceArchives } from '@/lib/useResourceArchives'
 import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, resourceMetadata, takeResourceBootstrap, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
 import { setPageMetadata } from '@/lib/pageMetadata'
 import { api } from '@/lib/requests'
@@ -137,8 +152,39 @@ const error = ref('')
 const loginRequired = ref(false)
 const loading = ref(true)
 const filter = ref('')
-const sort = ref('name')
+type SortKey = 'name' | 'modified' | 'size'
+const sortColumns: { key: SortKey; label: string }[] = [{ key: 'name', label: '名称' }, { key: 'modified', label: '修改时间' }, { key: 'size', label: '大小' }]
+const sort = ref<SortKey>('name')
+const sortDirection = ref<'asc' | 'desc'>('asc')
+function toggleSort(key: SortKey) {
+  sortDirection.value = sort.value === key ? (sortDirection.value === 'asc' ? 'desc' : 'asc') : (key === 'name' ? 'asc' : 'desc')
+  sort.value = key
+  page.value = 1
+  saveListingLocation()
+}
+function sortLabel(key: SortKey, label: string) {
+  return sort.value === key ? `${label}，当前${sortDirection.value === 'asc' ? '正序' : '倒序'}，点击切换` : `按${label}排序`
+}
 const page = ref(1)
+function saveListingLocation() {
+  const query = { ...route.query }
+  for (const key of ['q', 'sort', 'direction', 'page']) delete query[key]
+  if (filter.value) query.q = filter.value
+  if (sort.value !== 'name') query.sort = sort.value
+  if (sortDirection.value !== (sort.value === 'name' ? 'asc' : 'desc')) query.direction = sortDirection.value
+  if (page.value > 1) query.page = String(page.value)
+  // Update this listing's history entry; opening a result pushes a separate entry.
+  void router.replace({ path: route.path, query, hash: route.hash })
+}
+function updateFilter(event: Event) {
+  filter.value = (event.target as HTMLInputElement).value
+  page.value = 1
+  saveListingLocation()
+}
+function changePage(value: number) {
+  page.value = value
+  saveListingLocation()
+}
 const copyMessage = ref('')
 const imagePreviewUrl = ref('')
 let controller: AbortController | undefined
@@ -153,17 +199,21 @@ let searchVersion = 0
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 const entryParent = (path: string) => path.slice(0, path.lastIndexOf('/')) || '/'
 
-function queueSearch(delay = 250) {
+function resetSearch() {
   clearTimeout(searchTimer)
   searchController?.abort()
   const version = ++searchVersion
   searchEntries.value = []; searchTotal.value = 0; searchError.value = ''
   searchLoading.value = searching.value
+  return version
+}
+function queueSearch(delay = 250) {
+  const version = resetSearch()
   if (!searching.value) return
   searchTimer = setTimeout(async () => {
     const active = new AbortController(); searchController = active
     try {
-      const params = new URLSearchParams({ q: filter.value.trim(), path: currentPath.value, page: String(page.value), sort: sort.value })
+      const params = new URLSearchParams({ q: filter.value.trim(), path: currentPath.value, page: String(page.value), sort: sort.value, direction: sortDirection.value })
       const response = await fetch(`/api/resources/search/?${params}`, { signal: active.signal })
       if (!response.ok) throw new Error(response.status === 401 ? '请登录后重新搜索。' : response.status === 404 ? '当前目录不存在或无权访问，请刷新目录。' : '搜索暂时不可用，请稍后重试。')
       const data = (await response.json()).contents as { entries: ResourceEntry[]; total_count: number }
@@ -217,7 +267,6 @@ async function loadContents() {
         copyMessage.value = '图片预览暂不可用，可点击打开预览重试。'
       }
     }
-    page.value = 1
     if (searching.value) queueSearch(0)
   } catch (reason) {
     if (version === loadVersion && !controller.signal.aborted) {
@@ -235,13 +284,26 @@ const fileCount = computed(() => entries.value.length - directoryCount.value)
 const collator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
 const filteredEntries = computed(() => [...entries.value].sort((a, b) => {
   if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
-  if (sort.value === 'modified') return b.modified_at.localeCompare(a.modified_at) || collator.compare(a.name, b.name)
-  if (sort.value === 'size') return (b.size || 0) - (a.size || 0) || collator.compare(a.name, b.name)
-  return collator.compare(a.name, b.name)
+  const direction = sortDirection.value === 'asc' ? 1 : -1
+  if (sort.value === 'modified') return direction * a.modified_at.localeCompare(b.modified_at) || collator.compare(a.name, b.name)
+  if (sort.value === 'size') return direction * ((a.size || 0) - (b.size || 0)) || collator.compare(a.name, b.name)
+  return direction * collator.compare(a.name, b.name)
 }))
 const totalEntries = computed(() => searching.value ? searchTotal.value : filteredEntries.value.length)
 const pageCount = computed(() => Math.max(1, Math.ceil(totalEntries.value / 100)))
 const pagedEntries = computed(() => searching.value ? searchEntries.value : filteredEntries.value.slice((page.value - 1) * 100, page.value * 100))
+const archives = useResourceArchives(pagedEntries, computed(() => `${currentPath.value}\n${filter.value}`))
+function toggleArchivePage(event: Event) {
+  archives.selectPage()
+  const checkbox = event.target as HTMLInputElement
+  checkbox.checked = archives.pageSelected
+  checkbox.indeterminate = archives.pagePartiallySelected
+}
+function toggleArchiveFile(event: Event, entry: ResourceEntry) {
+  archives.toggle(entry)
+  // Restore the native checkbox when a size/count limit rejects the selection.
+  ;(event.target as HTMLInputElement).checked = archives.state.selected.some(item => item.path === entry.path)
+}
 const canPreview = computed(() => /\.(pdf|png|jpe?g|gif|webp|avif|txt)$/i.test(contents.value?.name || ''))
 const isImage = computed(() => /\.(png|jpe?g|gif|webp|avif)$/i.test(contents.value?.name || ''))
 const formatDate = (date: string) => new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -298,14 +360,27 @@ function followReadmeLink(event: MouseEvent) {
   const href = anchor.getAttribute('href') || ''
   if (href.startsWith('/disk/')) { event.preventDefault(); void router.push(href) }
 }
-watch(currentPath, () => { filter.value = ''; queueSearch(); void loadContents() }, { immediate: true })
-watch([filter, sort], () => { page.value = 1; queueSearch() })
-watch(page, () => { if (searching.value) queueSearch(0) })
+watch(() => route.fullPath, (_fullPath, previous) => {
+  const queryText = (key: string) => typeof route.query[key] === 'string' ? route.query[key] as string : ''
+  filter.value = queryText('q').slice(0, 200)
+  const key = queryText('sort')
+  sort.value = key === 'size' || key === 'modified' ? key : 'name'
+  const direction = queryText('direction')
+  sortDirection.value = direction === 'asc' || direction === 'desc' ? direction : (sort.value === 'name' ? 'asc' : 'desc')
+  const requestedPage = Number(queryText('page'))
+  page.value = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
+  if (previous === undefined || router.resolve(previous).path !== route.path) {
+    resetSearch()
+    void loadContents()
+  } else {
+    queueSearch(queryText('page') ? 0 : 250)
+  }
+}, { immediate: true })
 onBeforeUnmount(() => { loadVersion++; controller?.abort(); searchVersion++; searchController?.abort(); clearTimeout(searchTimer) })
 </script>
 
 <style scoped>
-.resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 70px 24px; align-items: center; gap: 12px; }
+.resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 56px 24px; align-items: center; gap: 8px; }
 @media (min-width: 640px) { .resource-row { grid-template-columns: minmax(0, 1fr) 110px 85px 24px; gap: 20px; } }
 .resource-readme { overflow-wrap: anywhere; }
 .resource-readme :deep(pre) { overflow-x: auto; }

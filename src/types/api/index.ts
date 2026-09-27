@@ -24,6 +24,7 @@ import type {
 import { MethodMap } from './base'
 import type * as ResourceTools from './resourceTools'
 import type { APIResourceFileAuthorize } from './resourceAccess'
+import type * as Archives from './resourceArchives'
 import type {
   APIManagementResourceFiles,
   APIManagementResourceTrash,
@@ -55,6 +56,9 @@ import type {
 
 export type RequestEndpoints = {
   [MethodMap.GET]: {
+    '/api/resources/archives/config/': Archives.ArchiveConfigAPI
+    '/api/resources/archives/': Archives.ArchiveListAPI
+    '/api/resources/archives/:id/': Archives.ArchiveDetailAPI
     '/api/resources/search/': import('./search/search').APIResourceSearch
     '/api/management/resources/readme/': ResourceTools.APIReadme
     '/api/management/resources/access/': ResourceTools.APIAccess
@@ -131,6 +135,9 @@ export type RequestEndpoints = {
     // Since Alist's API format is not same as present, so another method is used for it.
   }
   [MethodMap.POST]: {
+    '/api/resources/archives/': Archives.ArchiveCreateAPI
+    '/api/resources/archives/:id/cancel/': Archives.ArchiveCancelAPI
+    '/api/resources/archives/:id/authorize/': Archives.ArchiveAuthorizeAPI
     '/api/resources/file/authorize/': APIResourceFileAuthorize
     '/api/management/resources/operations/': ResourceTools.APIOperations
     '/api/management/resources/readme/': ResourceTools.APISaveReadme
