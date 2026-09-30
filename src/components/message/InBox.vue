@@ -75,7 +75,7 @@
         </footer>
       </section>
       <section class="min-w-0 flex-1 overflow-hidden bg-white" :class="selectedMessage ? 'flex' : 'hidden sm:flex'" aria-label="当前对话">
-        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" @read="handleConversationRead" @close="selectedMessage = null" />
+        <ChatView v-if="selectedMessage" :chatTarget="selectedMessage" @read="handleConversationRead" @close="closeConversation" />
         <div v-else class="flex h-full flex-1 flex-col items-center justify-center bg-slate-50/70 px-6 text-center">
           <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <MessageSquare class="h-9 w-9 text-blue-600" />
@@ -93,11 +93,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onUnmounted, nextTick } from 'vue'
+import { ref, watch, onMounted, computed, onUnmounted } from 'vue'
 import ChatView from './ChatView.vue'
 import { api } from '@/lib/requests'
 import { useMessage } from 'naive-ui'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
 import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
@@ -105,6 +105,7 @@ import Time from '@/components/tinyComponents/Time.vue'
 
 // TODO: Change this to inf scroll
 const route = useRoute()
+const router = useRouter()
 const message = useMessage()
 const loading = ref(true)
 const messages = ref<APIUserMessageList['response']['results'] | null>(null)
@@ -114,6 +115,7 @@ const selectedMessage = ref<
   APIUserMessageList['response']['results'][0] | null
 >(null)
 const isFetchingMessages = ref(false)
+let active = true
 
 const fetchMessages = async (page: number = 1) => {
   if (isFetchingMessages.value) return
@@ -123,6 +125,7 @@ const fetchMessages = async (page: number = 1) => {
       url: '/api/message/user/',
       query: { page },
     })
+    if (!active) return
     if (resp.status.toString().startsWith('2')) {
       messages.value = resp.data.contents.results
       totalPages.value = resp.data.contents.max_page
@@ -133,6 +136,7 @@ const fetchMessages = async (page: number = 1) => {
       }
     }
   } catch (e) {
+    if (!active) return
     console.error('Error fetching messages:', e)
     message.error('获取消息失败，请重试')
   } finally {
@@ -146,6 +150,11 @@ const prevPage = () =>
   currentPage.value > 1 && fetchMessages(currentPage.value - 1)
 const selectMessage = (msg: APIUserMessageList['response']['results'][0]) => {
   selectedMessage.value = msg
+  void router.push({ query: { ...route.query, talkTo: String(msg.chatter.id) } })
+}
+const closeConversation = () => {
+  selectedMessage.value = null
+  void router.push({ query: { ...route.query, talkTo: undefined } })
 }
 
 const handleConversationRead = (chatterId: number) => {
@@ -189,54 +198,45 @@ const finalMessages = computed(() => {
 
 const fetchInterval = ref<number | null>(null)
 
+watch(() => route.query.talkTo, async (target, _oldTarget, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  selectedMessage.value = null
+  newMessage.value = undefined
+  if (target === undefined) return
+  const userId = Number(target)
+  if (typeof target !== 'string' || !Number.isSafeInteger(userId) || userId <= 0) {
+    message.error('无效的对话对象')
+    return
+  }
+  const existing = messages.value?.find(msg => msg.chatter.id === userId)
+  if (existing) {
+    selectedMessage.value = existing
+    return
+  }
+  try {
+    const resp = await api.get({ url: '/api/user/profile/:id/', params: { id: userId } })
+    if (!current) return
+    if (resp.status !== 200) throw new Error('Failed to fetch conversation target')
+    newMessage.value = { chatter: {
+      id: resp.content.id, nickname: resp.content.nickname, avatar: resp.content.avatar,
+      uuid: resp.content.uuid, has_avatar: resp.content.has_avatar,
+    } }
+    selectedMessage.value = finalMessages.value.find(msg => msg.chatter.id === userId) || null
+  } catch (error) {
+    if (current) message.error('获取消息对象失败，请重试')
+  }
+}, { immediate: true })
+
 onMounted(async () => {
-  const talkToQuery = route.query.talkTo as string | undefined
-  if (talkToQuery) {
-    const userId = Number(talkToQuery)
-    if (!isNaN(userId)) {
-      const msg = messages.value?.find((msg) => msg.chatter.id === userId)
-      if (msg) {
-        selectedMessage.value = msg
-      } else {
-        // Fetch the user info
-        try {
-          const resp = await api.get({
-            url: '/api/user/profile/:id/',
-            params: { id: userId },
-          })
-          if (resp.status.toString().startsWith('2')) {
-            newMessage.value = {
-              chatter: {
-                id: resp.data.contents.id,
-                nickname: resp.data.contents.nickname,
-                avatar: resp.data.contents.avatar,
-                uuid: resp.data.contents.uuid,
-                has_avatar: resp.data.contents.has_avatar,
-              },
-            }
-          }
-        } catch (e) {
-          console.error('Error fetching messages:', e)
-          message.error('获取消息对象失败，请重试')
-        } finally {
-        }
-      }
-    } else {
-      message.error('无效的对话对象')
-      return
-    }
-  }
-  loading.value = true
   await fetchMessages()
-  await nextTick()
-  if (messages.value && finalMessages.value.find((msg) => msg.chatter.id === newMessage.value?.chatter.id)) {
-    selectedMessage.value = finalMessages.value.find((msg) => msg.chatter.id === newMessage.value?.chatter.id)!
-  }
+  if (!active) return
   loading.value = false
   fetchInterval.value = setInterval(() => fetchMessages(currentPage.value), 5000) as unknown as number
 })
 
 onUnmounted(() => {
+  active = false
   if (fetchInterval.value) {
     clearInterval(fetchInterval.value)
   }

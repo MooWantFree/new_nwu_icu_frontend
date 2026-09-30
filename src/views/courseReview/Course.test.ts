@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref, type App } from 'vue'
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import Course from './Course.vue'
 import type { CourseData } from '@/types/courseReview'
 
@@ -45,6 +45,7 @@ const deferred = () => {
   return { resolve, promise }
 }
 const flush = async () => {
+  await new Promise(resolve => setTimeout(resolve, 0))
   for (let i = 0; i < 8; i++) { await Promise.resolve(); await nextTick() }
 }
 let app: App | undefined
@@ -52,9 +53,10 @@ let container: HTMLDivElement
 const mount = async () => {
   const router = createRouter({ history: createMemoryHistory(), routes: [
     { path: '/review/course/:id', component: Course },
+    { path: '/review/teacher/:id', component: { render: () => h('p', 'teacher detail') } },
   ] })
   await router.push('/review/course/42')
-  app = createApp(Course).use(router)
+  app = createApp(RouterView).use(router)
   app.component('NPagination', defineComponent({
     props: ['page'], emits: ['update:page'],
     setup: (_props, { emit }) => () => h('button', { 'data-next-page': '', onClick: () => emit('update:page', 2) }, 'page 2'),
@@ -144,7 +146,7 @@ describe('course review query state', () => {
     const router = await mount()
     await select(0, 'highest')
     await select(1, '7')
-    await router.push('/review/course/42#review-9')
+    await router.push({ path: '/review/course/42', query: router.currentRoute.value.query, hash: '#review-9' })
     await flush()
     expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({
       sort: 'highest', semester: 7, focus_review_id: 9,
@@ -165,5 +167,26 @@ describe('course review query state', () => {
     await flush()
     expect(container.textContent).toContain('Course 43')
     expect([...container.querySelectorAll('select')].map(element => element.value)).toEqual(['liked', 'all', '0'])
+  })
+
+  it('restores review filters and pagination after returning from a teacher page', async () => {
+    const router = await mount()
+    await select(0, 'highest')
+    await select(1, '7')
+    await select(2, '5')
+    mocks.get.mockResolvedValue(response(42, 2))
+    container.querySelector<HTMLButtonElement>('[data-next-page]')!.click()
+    await flush()
+    expect(router.currentRoute.value.query).toEqual({ sort: 'highest', semester: '7', rating: '5', page: '2' })
+    await router.push('/review/teacher/9')
+    await new Promise<void>(resolve => { const stop = router.afterEach(() => { stop(); resolve() }); router.back() })
+    await flush()
+    expect([...container.querySelectorAll('select')].map(element => element.value)).toEqual(['highest', '7', '5'])
+    expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({
+      page: 2, sort: 'highest', semester: 7, rating: 5,
+    }) }))
+    await new Promise<void>(resolve => { const stop = router.afterEach(() => { stop(); resolve() }); router.back() })
+    await flush()
+    expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({ page: 1 }) }))
   })
 })

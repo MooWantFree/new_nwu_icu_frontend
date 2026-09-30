@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, type App } from 'vue'
+import { createApp, defineComponent, nextTick, type App } from 'vue'
 import Likes from './Likes.vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
@@ -20,6 +21,7 @@ const flush = async () => {
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.get.mockResolvedValue({
+    status: 200,
     content: {
       page: 1,
       max_page: 1,
@@ -59,19 +61,16 @@ afterEach(() => {
 
 describe('like notification targets', () => {
   it('links course likes to the exact review or reply', async () => {
-    const RouterLink = defineComponent({
-      props: { to: { type: [String, Object], required: true } },
-      setup: (props, { slots }) => () => h('a', { 'data-to': String(props.to) }, slots.default?.()),
-    })
-    app = createApp(Likes)
-    app.component('RouterLink', RouterLink)
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/message/likes', component: Likes }] })
+    await router.push('/message/likes')
+    app = createApp(Likes).use(router)
     app.component('NPagination', defineComponent({ render: () => null }))
     app.mount(container)
     await flush()
 
     const detailTargets = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'))
       .filter(anchor => anchor.textContent?.includes('查看详情'))
-      .map(anchor => anchor.dataset.to)
+      .map(anchor => anchor.getAttribute('href'))
     expect(detailTargets).toEqual([
       '/review/course/7#review-41',
       '/review/course/8#reply-52',

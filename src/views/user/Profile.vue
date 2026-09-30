@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import type { APIUserProfile, APIUserProfileGivenId } from '@/types/api/user/profilePage'
 import UserInfo from '@/components/user/profilePage/UserInfo.vue'
@@ -26,26 +26,20 @@ const { id } = defineProps<{
 const message = useMessage()
 const userInfo = ref<APIUserProfile['response'] | APIUserProfileGivenId['response'] | null>(null)
 
-watch(
-  () => id,
-  async () => {
-    await fetchUserData()
-  },
-)
-
 const realId = computed(() => {
   return id === 'me' ? userInfo.value?.id.toString() : id
 })
 
-const fetchUserData = async () => {
+const fetchUserData = async (userId: string, isCurrent: () => boolean) => {
   try {
     let numberId: number
-    if (id !== 'me') {
-      numberId = parseInt(id)
+    if (userId !== 'me') {
+      numberId = parseInt(userId)
       const resp = await api.get({
         url: '/api/user/profile/:id/',
         params: { id: numberId },
       })
+      if (!isCurrent()) return
       if (resp.status === 200) {
         userInfo.value = resp.content
       } else {
@@ -53,6 +47,7 @@ const fetchUserData = async () => {
       }
     } else {
       const resp = await api.get({ url: '/api/user/profile/' })
+      if (!isCurrent()) return
       if (resp.status === 200 && resp.content.is_me) {
         userInfo.value = resp.content
       } else {
@@ -60,11 +55,14 @@ const fetchUserData = async () => {
       }
     }
   } catch (error) {
-    message.error('获取用户信息失败，请稍后重试')
+    if (isCurrent()) message.error('获取用户信息失败，请稍后重试')
   }
 }
 
-onMounted(async () => {
-  await fetchUserData()
-})
+watch(() => id, (userId, _oldId, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  userInfo.value = null
+  void fetchUserData(userId, () => current)
+}, { immediate: true })
 </script>

@@ -37,7 +37,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ReviewList from './ReviewList.vue'
 import ReplyList from './ReplyList.vue'
 
@@ -50,10 +51,12 @@ const tabs = [
   { name: 'comments', label: '评论' },
 ]
 
-const activeTab = ref('reviews')
+const route = useRoute()
+const router = useRouter()
+const activeTab = computed(() => route.query.tab === 'comments' ? 'comments' : 'reviews')
 
 const setActiveTab = (tab: string) => {
-  activeTab.value = tab
+  void router.push({ query: { ...route.query, tab, page: '1' } })
 }
 </script>
 

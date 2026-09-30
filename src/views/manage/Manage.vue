@@ -257,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineComponent, h, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import { useMessage } from 'naive-ui'
@@ -479,17 +479,25 @@ const reportBoard = ref<'' | 'guestbook' | 'announcement'>('')
 const reportPage = ref(1)
 const reportMaxPage = ref(1)
 const reportNotes = reactive<Record<number, string>>({})
+let reportRequestVersion = 0
 
 const loadReports = async (page = 1) => {
+  const version = ++reportRequestVersion
+  reports.value = []
   sectionLoading.value = true; sectionError.value = ''
   try {
     const response = await api.get({ url: '/api/management/reports/', query: { status: reportStatus.value, board: reportBoard.value || undefined, page, pageSize: 10 } })
+    if (version !== reportRequestVersion || tab.value !== 'reports') return
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200) throw new Error(errorMessage(response.errors, '举报加载失败。'))
     reports.value = response.content.results
     reportPage.value = response.content.page
     reportMaxPage.value = response.content.max_page
-  } catch (error) { sectionError.value = error instanceof Error ? error.message : '举报加载失败。' } finally { sectionLoading.value = false }
+  } catch (error) {
+    if (version === reportRequestVersion && tab.value === 'reports') sectionError.value = error instanceof Error ? error.message : '举报加载失败。'
+  } finally {
+    if (version === reportRequestVersion && tab.value === 'reports') sectionLoading.value = false
+  }
 }
 
 const resolveReport = async (id: number, decision: 'dismiss' | 'remove') => {
@@ -681,17 +689,25 @@ const uploadPage = ref(1)
 const uploadMaxPage = ref(1)
 const uploadPaths = reactive<Record<number, string>>({})
 const uploadReasons = reactive<Record<number, string>>({})
+let uploadRequestVersion = 0
 
 const loadUploads = async (page = 1) => {
+  const version = ++uploadRequestVersion
+  uploads.value = []
   sectionLoading.value = true; sectionError.value = ''
   try {
     const response = await api.get({ url: '/api/management/uploads/', query: { status: uploadStatus.value || undefined, page, pageSize: 10 } })
+    if (version !== uploadRequestVersion || tab.value !== 'uploads') return
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200) throw new Error(errorMessage(response.errors, '投稿加载失败。'))
     uploads.value = response.content.results
     for (const upload of uploads.value) uploadPaths[upload.id] = upload.target_path
     uploadPage.value = response.content.page; uploadMaxPage.value = response.content.max_page
-  } catch (error) { sectionError.value = error instanceof Error ? error.message : '投稿加载失败。' } finally { sectionLoading.value = false }
+  } catch (error) {
+    if (version === uploadRequestVersion && tab.value === 'uploads') sectionError.value = error instanceof Error ? error.message : '投稿加载失败。'
+  } finally {
+    if (version === uploadRequestVersion && tab.value === 'uploads') sectionLoading.value = false
+  }
 }
 
 const reviewUpload = async (upload: ResourceUploadRequest, action: 'approve' | 'reject' | 'retry') => {
@@ -718,6 +734,8 @@ const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending
 const formatDate = (value: string) => new Date(value).toLocaleString('zh-CN')
 
 watch(tab, value => {
+  if (value !== 'reports') reportRequestVersion += 1
+  if (value !== 'uploads') uploadRequestVersion += 1
   if (value !== 'about') aboutRequestVersion += 1
   if (value !== 'announcements') announcementRequestVersion += 1
   if (value === 'about') void loadAbout()
@@ -728,4 +746,5 @@ watch(tab, value => {
 })
 watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'about') void loadAbout(); if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
 onMounted(loadSession)
+onUnmounted(() => { reportRequestVersion += 1; uploadRequestVersion += 1 })
 </script>

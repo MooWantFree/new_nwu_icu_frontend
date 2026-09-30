@@ -24,23 +24,23 @@
         <label class="min-w-0 sm:w-60">
           <span class="sr-only">选择学院</span>
           <n-select
-            v-model:value="schoolFilter"
+            :value="schoolFilter"
             :options="schoolOptions"
             :loading="schoolOptions.length === 1"
             filterable
             size="large"
             aria-label="选择学院"
-            @update:value="handlePageChange(1)"
+            @update:value="handleFilterChange('school', $event)"
           />
         </label>
         <label class="min-w-0 sm:w-36">
           <span class="sr-only">排序方式</span>
           <n-select
-            v-model:value="orderBy"
+            :value="orderBy"
             :options="orderByOptions"
             size="large"
             aria-label="排序方式"
-            @update:value="handlePageChange(1)"
+            @update:value="handleFilterChange('order', $event)"
           />
         </label>
       </div>
@@ -82,7 +82,7 @@
     </div>
 
     <div class="mt-6 flex justify-center" v-if="totalPages > 1">
-      <n-pagination v-model:page="currentPage" :page-count="totalPages" :on-update:page="handlePageChange"
+      <n-pagination :page="currentPage" :page-count="totalPages" @update:page="handlePageChange"
         :page-slot="isMobile ? 3 : 5" show-quick-jumper size="small">
         <template #prefix>
           <span class="hidden sm:inline">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
@@ -93,8 +93,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, computed, ref, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { Building2, ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
@@ -103,6 +103,7 @@ import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 
 enum OrderBy {
@@ -117,11 +118,14 @@ interface Teacher {
 }
 
 const teachers = ref<Teacher[]>([])
-const schoolFilter = ref<string>('')
-const orderBy = ref<OrderBy>(OrderBy.Rating)
+const schoolFilter = computed(() => typeof route.query.school === 'string' ? route.query.school : '')
+const orderBy = computed(() => route.query.order === OrderBy.Popular ? OrderBy.Popular : OrderBy.Rating)
 const data = ref<{ count: number; max_page: number; page: number; results: Teacher[] } | null>(null)
 const loading = ref(true)
-const currentPage = ref(1)
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const totalTeachers = ref(0)
 const showAddTeacherModal = ref(false)
 
@@ -147,8 +151,11 @@ const orderByOptions = [
   { label: '热门排序', value: OrderBy.Popular },
 ]
 
-const fetchTeachers = async (page: number = 1) => {
+const fetchTeachers = async (isCurrent: () => boolean) => {
   loading.value = true
+  teachers.value = []
+  data.value = null
+  totalTeachers.value = 0
 
   try {
     // Create query object according to APITeacherListQuery type
@@ -158,7 +165,7 @@ const fetchTeachers = async (page: number = 1) => {
       school?: string;
       order: 'rating' | 'popular';
     } = {
-      page,
+      page: currentPage.value,
       page_size: 12,
       order: orderBy.value
     }
@@ -172,16 +179,17 @@ const fetchTeachers = async (page: number = 1) => {
       url: '/api/assessment/teacher/',
       query
     })
-
+    if (!isCurrent()) return
+    if (response.status !== 200) throw new Error('Failed to fetch teachers')
     teachers.value = response.content.results
     data.value = response.content
-    currentPage.value = response.content.page
     totalTeachers.value = response.content.count
-    loading.value = false
   } catch (error) {
+    if (!isCurrent()) return
     console.error('Error fetching teachers:', error)
     message.error('网络错误，请重试')
-    loading.value = false
+  } finally {
+    if (isCurrent()) loading.value = false
   }
 }
 
@@ -205,8 +213,14 @@ const fetchSchoolOptions = async () => {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([fetchTeachers(), fetchSchoolOptions()])
+watch([schoolFilter, orderBy, currentPage], (_state, _oldState, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  void fetchTeachers(() => current)
+}, { immediate: true })
+
+onMounted(() => {
+  void fetchSchoolOptions()
   handleResize()
   window.addEventListener('resize', handleResize)
 })
@@ -217,8 +231,8 @@ onUnmounted(() => {
 
 const totalPages = computed(() => data.value?.max_page || 1)
 
-const handlePageChange = async (page: number) => {
-  currentPage.value = page
-  await fetchTeachers(page)
-}
+const handlePageChange = (page: number) => router.push({ query: { ...route.query, page: String(page) } })
+const handleFilterChange = (key: 'school' | 'order', value: string) => router.push({
+  query: { ...route.query, [key]: value || undefined, page: '1' },
+})
 </script>

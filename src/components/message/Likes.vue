@@ -77,9 +77,9 @@
 
       <footer v-if="totalCount > 0" class="flex justify-center border-t border-slate-200 bg-white px-4 py-3">
       <n-pagination
-        v-model:page="currentPage"
+        :page="currentPage"
         :page-count="maxPage"
-        :on-update:page="handlePageChange"
+        @update:page="handlePageChange"
         :size="isMobile ? 'small' : 'medium'"
         class="rounded-lg"
       />
@@ -89,7 +89,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import type { APILikeList } from '@/types/api/messages/like'
@@ -99,19 +100,29 @@ import { ChevronRight, LoaderCircle, RefreshCw, ThumbsUp, ThumbsDown } from 'luc
 const message = useMessage()
 const loading = ref(true)
 const likes = ref<APILikeList['response']['results']>([])
-const currentPage = ref(1)
+const route = useRoute()
+const router = useRouter()
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const totalCount = ref(0)
 const maxPage = ref(0)
 
 const isMobile = ref(false)
+let requestVersion = 0
 
 const fetchLikes = async (page: number) => {
+  const version = ++requestVersion
+  likes.value = []
   try {
     loading.value = true
     const response = await api.get({
       url: '/api/message/like/',
       query: { page },
     })
+    if (version !== requestVersion) return
+    if (response.status !== 200) throw new Error('Failed to fetch likes')
     likes.value = response.content.results
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
@@ -126,15 +137,14 @@ const fetchLikes = async (page: number) => {
       }
     }
   } catch (error) {
-    message.error('获取赞列表失败')
+    if (version === requestVersion) message.error('获取赞列表失败')
   } finally {
-    loading.value = false
+    if (version === requestVersion) loading.value = false
   }
 }
 
 const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchLikes(page)
+  void router.push({ query: { ...route.query, page: String(page) } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -147,14 +157,16 @@ const handleResize = () => {
 }
 
 onMounted(() => {
-  fetchLikes(currentPage.value)
   handleResize()
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
+  requestVersion += 1
   window.removeEventListener('resize', handleResize)
 })
+
+watch(currentPage, page => { void fetchLikes(page) }, { immediate: true })
 
 function extractText(html: string) {
   const parser = new DOMParser();

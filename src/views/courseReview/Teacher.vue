@@ -6,7 +6,7 @@
         :is="errorMsg.component"
         :detail="errorMsg.detail"
       />
-      <div v-if="loading">
+      <div v-else-if="loading">
         <TeacherSkeleton />
       </div>
       <div v-else-if="teacher">
@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { PlusCircle } from 'lucide-vue-next'
@@ -134,7 +134,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 
-const errorMsg = ref<{
+const errorMsg = shallowRef<{
   component: typeof Page404 | null,
   detail: string,
 }>({
@@ -154,13 +154,13 @@ const handleAddCourseButtonClick = async () => {
   }
 }
 
-const fetchTeacherData = async () => {
-  const teacherId = parseInt(route.params.id as string)
+const fetchTeacherData = async (teacherId: number, isCurrent: () => boolean) => {
   try {
     const { status, content } = await api.get({
       url: '/api/assessment/teacher/:id/',
       params: { id: teacherId },
     })
+    if (!isCurrent()) return
     if (status === 200) {
       teacher.value = content
     } else if (status === 404) {
@@ -173,6 +173,7 @@ const fetchTeacherData = async () => {
       throw new Error('Failed to fetch teacher data')
     }
   } catch (error) {
+    if (!isCurrent()) return
     console.error('Error fetching teacher data:', error)
     if (error instanceof Error) {
       errorMsg.value = {
@@ -181,9 +182,17 @@ const fetchTeacherData = async () => {
       }
     }
   } finally {
-    loading.value = false
+    if (isCurrent()) loading.value = false
   }
 }
 
-onMounted(fetchTeacherData)
+watch(() => route.params.id, (id, _oldId, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  teacher.value = null
+  errorMsg.value = { component: null, detail: '' }
+  showTeacherSelectorModal.value = false
+  loading.value = true
+  void fetchTeacherData(Number(id), () => current)
+}, { immediate: true })
 </script>

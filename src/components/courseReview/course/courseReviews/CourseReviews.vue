@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
@@ -116,7 +116,7 @@ import CourseReviewItem from '@/components/courseReview/course/courseReviews/Cou
 import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
 
 const emit = defineEmits<{
-  (e: 'reloadData', query?: APICourseInfo['query']): void
+  (e: 'reloadData'): void
 }>()
 
 const props = defineProps<{
@@ -232,9 +232,13 @@ const reviewResultsGeneration = ref(0)
 watch(() => props.courseData.reviews, () => { reviewResultsGeneration.value += 1 })
 
 const updateFilter = (filter: Partial<APICourseInfo['query']>) => {
-  emit('reloadData', { ...props.reviewQuery, ...filter, page: 1 })
+  const query: LocationQueryRaw = { ...route.query, page: '1' }
+  for (const [key, value] of Object.entries(filter)) {
+    query[key] = value === undefined ? undefined : String(value)
+  }
+  void router.push({ query })
 }
-const handlePageChange = (page: number) => emit('reloadData', { ...props.reviewQuery, page })
+const handlePageChange = (page: number) => router.push({ query: { ...route.query, page: String(page) } })
 
 const showEditor = ref(false)
 const isSubmittingReview = ref(false)

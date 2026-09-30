@@ -81,9 +81,10 @@
       </div>
       <div class="mt-6 flex justify-center items-center">
         <n-pagination
-          v-model:page="currentPage"
+          :page="currentPage"
           :page-count="data.max_page"
-          :on-update:page="handlePageChange"
+          @update:page="handlePageChange"
+          :page-size="pageSize"
           :page-sizes="[10, 20, 30, 40]"
           :show-size-picker="true"
           @update:page-size="handlePageSizeChange"
@@ -113,7 +114,8 @@
 // Import necessary components and types
 import { api } from '@/lib/requests'
 import { APIUserActivitiesReview } from '@/types/api/user/profilePage'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ReviewMetricScale from '@/components/courseReview/course/courseReviews/ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
 import { NRate } from 'naive-ui'
@@ -129,11 +131,21 @@ const props = defineProps<{
 // Define reactive data
 const data = ref<APIUserActivitiesReview['response'] | null>(null)
 const errorDetail = ref<string>('')
-const currentPage = ref(1)
-const pageSize = ref(10)
+const route = useRoute()
+const router = useRouter()
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
+const pageSize = computed(() => {
+  const size = Number(route.query.pageSize)
+  return [10, 20, 30, 40].includes(size) ? size : 10
+})
 
 // Fetch data function
-const fetchData = async () => {
+const fetchData = async (isCurrent: () => boolean) => {
+  data.value = null
+  errorDetail.value = ''
   if (!props.id) {
     return
   }
@@ -148,30 +160,34 @@ const fetchData = async () => {
         page_size: pageSize.value,
       },
     })
+    if (!isCurrent()) return
     if (response.status !== 200) {
       console.error('API request failed:', response.status)
-      errorDetail.value = response.errors[0].err_msg
+      errorDetail.value = response.errors?.[0]?.err_msg || '获取评价失败，请重试'
       return
     }
     data.value = response.data.contents
   } catch (error) {
+    if (!isCurrent()) return
     console.error('Failed to fetch reviews:', error)
+    errorDetail.value = '获取评价失败，请重试'
   }
 }
 
 // Watch for changes and fetch data
-watchEffect(fetchData)
+watch([() => props.id, currentPage, pageSize], (_state, _oldState, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  void fetchData(() => current)
+}, { immediate: true })
 
 // Page change handler
 const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchData()
+  void router.push({ query: { ...route.query, page: String(page) } })
 }
 
 // Page size change handler
 const handlePageSizeChange = (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
-  fetchData()
+  void router.push({ query: { ...route.query, page: '1', pageSize: String(size) } })
 }
 </script>

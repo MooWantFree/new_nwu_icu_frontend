@@ -76,9 +76,9 @@
 
       <footer v-if="totalCount > 0" class="flex justify-center border-t border-slate-200 bg-white px-4 py-3">
       <n-pagination
-        v-model:page="currentPage"
+        :page="currentPage"
         :page-count="maxPage"
-        :on-update:page="handlePageChange"
+        @update:page="handlePageChange"
         :size="isMobile ? 'small' : 'medium'"
         class="rounded-lg"
       />
@@ -88,7 +88,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { sanitizeGuestbookHtml } from '@/lib/guestbook'
@@ -100,11 +101,17 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 const message = useMessage()
 const loading = ref(true)
 const replies = ref<APINotificationList['response']['results']>([])
-const currentPage = ref(1)
+const route = useRoute()
+const router = useRouter()
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const totalCount = ref(0)
 const maxPage = ref(0)
 
 const isMobile = ref(false)
+let requestVersion = 0
 
 // Close menu when clicking outside
 const handleResize = () => {
@@ -112,22 +119,26 @@ const handleResize = () => {
 }
 
 onMounted(() => {
-  fetchReplies(currentPage.value)
   handleResize()
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
+  requestVersion += 1
   window.removeEventListener('resize', handleResize)
 })
 
 const fetchReplies = async (page: number) => {
+  const version = ++requestVersion
+  replies.value = []
   try {
     loading.value = true
     const response = await api.get({
       url: '/api/message/reply/',
       query: { page },
     })
+    if (version !== requestVersion) return
+    if (response.status !== 200) throw new Error('Failed to fetch replies')
     replies.value = response.content.results
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
@@ -142,9 +153,9 @@ const fetchReplies = async (page: number) => {
       }
     }
   } catch (error) {
-    message.error('获取回复列表失败')
+    if (version === requestVersion) message.error('获取回复列表失败')
   } finally {
-    loading.value = false
+    if (version === requestVersion) loading.value = false
   }
 }
 
@@ -153,10 +164,11 @@ const refreshReplies = () => {
 }
 
 const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchReplies(page)
+  void router.push({ query: { ...route.query, page: String(page) } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+watch(currentPage, page => { void fetchReplies(page) }, { immediate: true })
 </script>
 
 

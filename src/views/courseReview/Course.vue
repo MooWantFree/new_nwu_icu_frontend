@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, onUnmounted } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/lib/requests'
 import { setPageTitle } from '@/lib/pageMetadata'
@@ -58,7 +58,7 @@ import { ArrowUp } from 'lucide-vue-next'
 
 const route = useRoute()
 
-const errorMsg = ref<{
+const errorMsg = shallowRef<{
   component: typeof Page404 | typeof Page500 | null,
   detail: string,
 }>({
@@ -68,12 +68,29 @@ const errorMsg = ref<{
 const courseLoading = ref(true)
 const courseData = ref<CourseData | null>(null)
 const showTopButton = ref(false)
-const reviewQuery = ref<APICourseInfo['query']>({ page: 1, pageSize: 10, sort: 'liked' })
+const reviewQuery = computed<APICourseInfo['query']>(() => {
+  const positiveInteger = (value: unknown) => {
+    const number = Number(value)
+    return Number.isSafeInteger(number) && number > 0 ? number : undefined
+  }
+  const requestedSort = route.query.sort
+  const sort = ['liked', 'newest', 'oldest', 'highest', 'lowest'].includes(String(requestedSort))
+    ? requestedSort as NonNullable<APICourseInfo['query']['sort']> : 'liked'
+  const semester = positiveInteger(route.query.semester)
+  const rating = positiveInteger(route.query.rating)
+  const size = positiveInteger(route.query.pageSize)
+  return {
+    page: positiveInteger(route.query.page) ?? 1,
+    pageSize: size && size <= 50 ? size : 10,
+    sort,
+    ...(semester ? { semester } : {}),
+    ...(rating && rating <= 5 ? { rating } : {}),
+  }
+})
 let requestGeneration = 0
 
-const loadData = async (query?: APICourseInfo['query']) => {
+const loadData = async () => {
   const generation = ++requestGeneration
-  if (query) reviewQuery.value = { ...query }
   courseLoading.value = true
   errorMsg.value = { component: null, detail: '' }
   try {
@@ -106,7 +123,6 @@ const loadData = async (query?: APICourseInfo['query']) => {
     }
 
     courseData.value = content
-    reviewQuery.value = { ...reviewQuery.value, page: content.reviews.page }
     setPageTitle(`课程评价 - ${courseData.value.name}`)
   } catch (error) {
     if (generation !== requestGeneration) return
@@ -130,18 +146,16 @@ const handleScroll = () => {
   showTopButton.value = window.scrollY > 500
 }
 
-watch([() => route.params.id, () => route.hash], async ([newId], [oldId]) => {
+watch([() => route.params.id, () => route.hash, reviewQuery], async ([newId], [oldId]) => {
   if (newId) {
     if (newId !== oldId) {
       courseData.value = null
-      reviewQuery.value = { page: 1, pageSize: 10, sort: 'liked' }
     }
     await loadData()
   }
-})
+}, { immediate: true })
 
 onMounted(() => {
-  void loadData()
   window.addEventListener('scroll', handleScroll)
 })
 

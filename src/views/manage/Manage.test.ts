@@ -65,7 +65,7 @@ const announcementEntry = {
 }
 
 const flush = async () => {
-  for (let index = 0; index < 12; index += 1) {
+  for (let index = 0; index < 30; index += 1) {
     await Promise.resolve()
     await nextTick()
   }
@@ -101,8 +101,61 @@ beforeEach(() => {
   vi.clearAllMocks()
   container = document.createElement('div')
   document.body.append(container)
-  vi.mocked(api.get).mockResolvedValue({ status: 200, content: baseSession } as never)
+  vi.mocked(api.get).mockReset().mockResolvedValue({ status: 200, content: baseSession } as never)
   vi.mocked(browserSupportsWebAuthn).mockReturnValue(true)
+})
+
+describe('management list request ordering', () => {
+  const reports = (status: string) => ({ status: 200, content: { page: 1, max_page: 1, results: [{
+    id: 1, status, reason: 'spam', created_at: '', entry: { board: 'guestbook', content: `${status}举报`, author: {} }, reporter: {},
+  }] } })
+  const uploads = (status: string) => ({ status: 200, content: { page: 1, max_page: 1, results: [{
+    id: 1, status, uploaded_by: { nickname: `${status}投稿` }, files: [], target_path: '/课程', resource_url: '',
+  }] } })
+  const selectStatus = async (status: string) => {
+    const element = container.querySelector('select')!
+    element.value = status; element.dispatchEvent(new Event('change', { bubbles: true })); await flush()
+  }
+  for (const [tab, response, first, second] of [
+    ['reports', reports, 'dismissed', 'removed'], ['uploads', uploads, 'rejected', 'approved'],
+  ] as const) {
+    it(`keeps ${tab} results for the latest filter and ignores stale errors`, async () => {
+      vi.mocked(api.get).mockImplementation(async ({ url }) => (url === '/api/management/session/'
+        ? { status: 200, content: { ...baseSession, elevated: true } } : response('pending')) as never)
+      await mountManage(`?tab=${tab}`)
+      const old = deferred<ReturnType<typeof response>>()
+      const latest = deferred<ReturnType<typeof response>>()
+      vi.mocked(api.get).mockReturnValueOnce(old.promise as never).mockReturnValueOnce(latest.promise as never)
+      await selectStatus(first); await selectStatus(second)
+      old.resolve(response(first)); await flush()
+      expect(container.textContent).toContain('加载中…')
+      latest.resolve(response(second)); await flush()
+      expect(container.textContent).toContain(`${second}${tab === 'reports' ? '举报' : '投稿'}`)
+      expect(container.textContent).not.toContain(`${first}${tab === 'reports' ? '举报' : '投稿'}`)
+      let rejectOld!: (error: Error) => void
+      vi.mocked(api.get).mockReturnValueOnce(new Promise((_resolve, reject) => { rejectOld = reject }) as never)
+        .mockResolvedValueOnce(response(second) as never)
+      await selectStatus(first); await selectStatus(second)
+      rejectOld(new Error('stale failure')); await flush()
+      expect(container.textContent).not.toContain('stale failure')
+      expect(container.querySelector('select')?.value).toBe(second)
+    })
+  }
+
+  it('ignores a report response after switching to uploads', async () => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => (url === '/api/management/session/'
+      ? { status: 200, content: { ...baseSession, elevated: true } } : reports('pending')) as never)
+    await mountManage()
+    const old = deferred<ReturnType<typeof reports>>()
+    const latest = deferred<ReturnType<typeof uploads>>()
+    vi.mocked(api.get).mockReturnValueOnce(old.promise as never).mockReturnValueOnce(latest.promise as never)
+    await selectStatus('dismissed')
+    findButton('文件审核').click(); await flush()
+    old.resolve(reports('dismissed')); await flush()
+    expect(container.textContent).toContain('加载中…')
+    latest.resolve(uploads('approved')); await flush()
+    expect(container.textContent).toContain('approved投稿')
+  })
 })
 
 afterEach(() => {

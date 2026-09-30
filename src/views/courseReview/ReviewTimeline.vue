@@ -30,7 +30,7 @@
       class="mt-8 flex items-center justify-center"
     >
       <n-pagination
-        v-model:page="currentPage"
+        :page="currentPage"
         :item-count="totalReviewCount"
         :page-slot="5"
         :page-size="pageSize"
@@ -46,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
@@ -73,24 +73,31 @@ const route = useRoute()
 const reviews = ref<APILatestReviews['response']['results']>([])
 const totalReviewCount = ref(0)
 const loading = ref(true)
-const currentPage = ref(parseInt(route.query.page as string) || 1)
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const pageSizeOptions = [8, 20, 50]
-const requestedPageSize = parseInt(route.query.pageSize as string)
-const pageSize = ref(
-  pageSizeOptions.includes(requestedPageSize) ? requestedPageSize : props.pageSize,
-)
+const pageSize = computed(() => {
+  const size = Number(route.query.pageSize)
+  return pageSizeOptions.includes(size) ? size : props.pageSize
+})
 
-const fetchReviews = async (page: number, desc: number = 1) => {
+const fetchReviews = async (isCurrent: () => boolean) => {
+  loading.value = true
+  reviews.value = []
+  totalReviewCount.value = 0
   const searchParams = {
-    page: page,
+    page: currentPage.value,
     pageSize: pageSize.value,
-    desc: desc,
+    desc: 1,
   }
   try {
     const { status, content, errors } = await api.get({
       url: '/api/assessment/latest-review/',
       query: searchParams,
     })
+    if (!isCurrent()) return
 
     if (status !== 200) {
       throw new Error(errors ? errors.map(err => err.err_msg).join(', ') : '获取点评失败，请重试')
@@ -99,13 +106,15 @@ const fetchReviews = async (page: number, desc: number = 1) => {
     reviews.value = content.results
     totalReviewCount.value = content.count
   } catch (error) {
+    if (!isCurrent()) return
     console.error('Error fetching reviews:', error)
     message.error(error instanceof Error ? error.message : '获取点评失败，请重试')
+  } finally {
+    if (isCurrent()) loading.value = false
   }
 }
 
 const onPageUpdate = async (page: number) => {
-  loading.value = true
   await router.push({
     query: {
       ...route.query,
@@ -113,14 +122,9 @@ const onPageUpdate = async (page: number) => {
       pageSize: pageSize.value.toString(),
     },
   })
-  await fetchReviews(page)
-  loading.value = false
 }
 
 const onPageSizeUpdate = async (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
-  loading.value = true
   await router.push({
     query: {
       ...route.query,
@@ -128,17 +132,11 @@ const onPageSizeUpdate = async (size: number) => {
       pageSize: size.toString(),
     },
   })
-  await fetchReviews(1)
-  loading.value = false
 }
 
-watch(() => route.query.page, (newPage) => {
-  currentPage.value = parseInt(newPage as string) || 1
-})
-
-onMounted(async () => {
-  loading.value = true
-  await fetchReviews(currentPage.value)
-  loading.value = false
-})
+watch([currentPage, pageSize], (_state, _oldState, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  void fetchReviews(() => current)
+}, { immediate: true })
 </script>

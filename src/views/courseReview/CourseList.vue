@@ -25,9 +25,9 @@
           <span class="sr-only">课程类型</span>
           <Tags class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
           <select
-            v-model="courseType"
+            :value="courseType"
             class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            @change="handlePageChange(1)"
+            @change="handleFilterChange('course_type', $event)"
           >
             <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -39,9 +39,9 @@
           <span class="sr-only">排序方式</span>
           <ArrowUpDown class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
           <select
-            v-model="orderBy"
+            :value="orderBy"
             class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            @change="handlePageChange(1)"
+            @change="handleFilterChange('order_by', $event)"
           >
             <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -115,9 +115,9 @@
 
     <div class="mt-6 flex justify-center overflow-x-auto" v-if="totalPages > 1">
       <n-pagination
-        v-model:page="currentPage"
+        :page="currentPage"
         :page-count="totalPages"
-        :on-update:page="handlePageChange"
+        @update:page="handlePageChange"
         :page-slot="isMobile ? 3 : 5"
         show-quick-jumper
       >
@@ -131,17 +131,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref, onUnmounted } from 'vue'
+import { onMounted, computed, ref, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
-import { z } from 'zod'
 import { ArrowUpDown, BookOpen, ChevronDown, PlusCircle, Star, Tags } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 
 const message = useMessage()
+const route = useRoute()
+const router = useRouter()
 
 enum OrderBy {
   Rating = 'rating',
@@ -151,12 +153,18 @@ enum OrderBy {
 const CourseType = APICourseListQuery.shape.course_type.enum 
 
 const courses = ref<APICourseList['response']['results']>([])
-const courseType = ref<z.infer<typeof APICourseListQuery>['course_type']>(CourseType.all)
-const orderBy = ref<OrderBy>(OrderBy.Rating)
+const courseType = computed(() => {
+  const parsed = APICourseListQuery.shape.course_type.safeParse(route.query.course_type)
+  return parsed.success ? parsed.data : CourseType.all
+})
+const orderBy = computed(() => route.query.order_by === OrderBy.Popular ? OrderBy.Popular : OrderBy.Rating)
 const totalCourses = ref(0)
 const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
-const currentPage = ref(1)
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const showAddCourseModal = ref(false)
 const coursePageSize = 12
 
@@ -191,12 +199,11 @@ const courseTypeLabels: Record<string, string> = Object.fromEntries(
 
 const courseTypeLabel = (value: string) => courseTypeLabels[value] || value || '课程'
 
-const fetchCourses = async (page: number = 1) => {
+const fetchCourses = async (isCurrent: () => boolean) => {
   loading.value = true
-  const requestParams = new URLSearchParams()
-  requestParams.set('order_by', orderBy.value)
-  requestParams.set('course_type', courseType.value)
-  requestParams.set('page', page.toString())
+  courses.value = []
+  totalCourses.value = 0
+  data.value = null
 
   try {
     const response = await api.get({
@@ -204,23 +211,31 @@ const fetchCourses = async (page: number = 1) => {
       query: {
         order_by: orderBy.value,
         course_type: courseType.value,
-        page,
+        page: currentPage.value,
         pageSize: coursePageSize,
       },
     })
+    if (!isCurrent()) return
+    if (response.status !== 200) throw new Error('Failed to fetch courses')
     courses.value = response.content.results
     totalCourses.value = response.content.count
     data.value = response.content
   } catch (error) {
+    if (!isCurrent()) return
     console.error('Error fetching courses:', error)
     message.error('网络错误，请重试')
   } finally {
-    loading.value = false
+    if (isCurrent()) loading.value = false
   }
 }
 
-onMounted(async () => {
-  await fetchCourses()
+watch([courseType, orderBy, currentPage], (_state, _oldState, onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  void fetchCourses(() => current)
+}, { immediate: true })
+
+onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize)
 })
@@ -230,8 +245,10 @@ onUnmounted(() => {
 })
 
 const totalPages = computed(() => data.value?.max_page || 1)
-const handlePageChange = async (page: number) => {
-  currentPage.value = page
-  await fetchCourses(page)
-}
+const handlePageChange = (page: number) => router.push({
+  query: { ...route.query, page: page.toString() },
+})
+const handleFilterChange = (key: 'course_type' | 'order_by', event: Event) => router.push({
+  query: { ...route.query, [key]: (event.target as HTMLSelectElement).value, page: '1' },
+})
 </script>
