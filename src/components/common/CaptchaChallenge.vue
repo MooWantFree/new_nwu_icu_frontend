@@ -13,7 +13,9 @@
           required
           :error="error"
           :image-url="imageUrl"
+          :loading="isLoadingCaptcha"
           @refresh="loadCaptcha"
+          @error="error = '验证码加载失败，请稍后重试'"
         />
       </div>
       <div class="mt-5 flex justify-end gap-3">
@@ -35,6 +37,7 @@ import { registerCaptchaChallengeHandler, type CaptchaScope } from '@/lib/captch
 
 const visible = ref(false)
 const submitting = ref(false)
+const isLoadingCaptcha = ref(false)
 const imageUrl = ref('')
 const key = ref('')
 const value = ref('')
@@ -43,6 +46,8 @@ let scope: CaptchaScope = 'login'
 let settle: ((proof: string | null) => void) | undefined
 
 async function loadCaptcha() {
+  if (isLoadingCaptcha.value) return
+  isLoadingCaptcha.value = true
   error.value = ''
   value.value = ''
   imageUrl.value = ''
@@ -57,6 +62,8 @@ async function loadCaptcha() {
     error.value = '验证码加载失败，请稍后重试'
   } catch {
     error.value = '验证码加载失败，请稍后重试'
+  } finally {
+    isLoadingCaptcha.value = false
   }
 }
 

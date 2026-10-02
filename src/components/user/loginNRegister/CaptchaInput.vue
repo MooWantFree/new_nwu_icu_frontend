@@ -21,18 +21,14 @@
         />
       </div>
       
-      <div class="flex-shrink-0 relative w-32 h-10 border rounded-lg overflow-hidden">
-        <img 
-          v-if="imageUrl" 
-          :src="imageUrl" 
-          alt="验证码" 
-          class="w-full h-full object-cover cursor-pointer"
-          @click="$emit('refresh')" 
-        />
-        <div v-else class="w-full h-full flex items-center justify-center bg-gray-100">
-          <LoaderCircle class="animate-spin h-5 w-5 text-blue-700" />
-        </div>
-      </div>
+      <CaptchaImage
+        class="w-32 rounded-lg border-gray-300 bg-gray-100"
+        :image-url="imageUrl"
+        :loading="loading"
+        image-fit="cover"
+        @refresh="$emit('refresh')"
+        @error="$emit('error')"
+      />
     </div>
     
     <div v-if="error" class="mt-1 text-sm text-red-600">
@@ -45,9 +41,9 @@
 </template>
 
 <script lang="ts" setup>
-import { LoaderCircle } from 'lucide-vue-next';
+import CaptchaImage from '@/components/common/CaptchaImage.vue';
 
-defineProps<{
+withDefaults(defineProps<{
   modelValue: string;
   id: string;
   label: string;
@@ -55,11 +51,13 @@ defineProps<{
   required: boolean;
   error: string;
   imageUrl: string;
-}>()
+  loading?: boolean;
+}>(), { loading: false })
 
 defineEmits<{
   (e: 'update:modelValue', value: string): void;
   (e: 'refresh'): void;
+  (e: 'error'): void;
 }>()
 
 </script>

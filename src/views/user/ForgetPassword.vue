@@ -89,6 +89,7 @@
               :image-url="captchaImageUrl"
               :loading="isLoadingCaptcha"
               @refresh="getCaptcha"
+              @image-error="errorMessage = '验证码加载失败，请重试'"
             />
 
             <button
@@ -122,6 +123,7 @@
                 :image-url="captchaImageUrl"
                 :loading="isLoadingCaptcha"
                 @refresh="getCaptcha"
+                @image-error="errorMessage = '验证码加载失败，请重试'"
               />
 
               <button
@@ -179,6 +181,7 @@ import {
 import { api } from '@/lib/requests'
 import { clearActionToken, getActionToken } from '@/lib/actionTokens'
 import { basePasswordSchema } from '@/types/common/userBasicInfo'
+import CaptchaImage from '@/components/common/CaptchaImage.vue'
 
 const CaptchaField = defineComponent({
   props: {
@@ -186,7 +189,7 @@ const CaptchaField = defineComponent({
     imageUrl: { type: String, required: true },
     loading: { type: Boolean, required: true },
   },
-  emits: ['update:modelValue', 'refresh'],
+  emits: ['update:modelValue', 'refresh', 'image-error'],
   setup(props, { emit }) {
     return () => h('div', [
       h('label', { for: 'reset-captcha', class: 'block text-sm font-medium text-gray-700' }, '验证码'),
@@ -201,17 +204,15 @@ const CaptchaField = defineComponent({
           class: 'block min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm',
           onInput: (event: Event) => emit('update:modelValue', (event.target as HTMLInputElement).value),
         }),
-        props.loading
-          ? h('div', { class: 'h-10 w-28 animate-pulse rounded bg-gray-200' })
-          : h('button', {
-            type: 'button',
-            class: 'relative h-10 w-28 overflow-hidden rounded border border-gray-200 bg-gray-50',
-            title: '刷新验证码',
-            onClick: () => emit('refresh'),
-          }, [
-            h('img', { src: props.imageUrl, alt: '验证码', class: 'h-full w-full object-contain' }),
-            h(RefreshCw, { class: 'absolute right-1 top-1 h-3.5 w-3.5 rounded bg-white/80 p-0.5 text-gray-500' }),
-          ]),
+        h(CaptchaImage, {
+          class: 'w-28 rounded border-gray-200 bg-gray-50',
+          imageUrl: props.imageUrl,
+          loading: props.loading,
+          onRefresh: () => emit('refresh'),
+          onError: () => emit('image-error'),
+        }, {
+          default: () => h(RefreshCw, { class: 'absolute right-1 top-1 h-3.5 w-3.5 rounded bg-white/80 p-0.5 text-gray-500' }),
+        }),
       ]),
     ])
   },
@@ -254,7 +255,10 @@ const getErrorText = (errors: { err_msg: string }[] | undefined, fallback: strin
   errors?.map((item) => item.err_msg).filter(Boolean).join('；') || fallback
 
 const getCaptcha = async () => {
+  if (isLoadingCaptcha.value) return
   isLoadingCaptcha.value = true
+  captchaImageUrl.value = ''
+  if (errorMessage.value === '验证码加载失败，请重试') errorMessage.value = ''
   try {
     const response = await api.get({ url: '/api/captcha/' })
     if (response.status === 200) {

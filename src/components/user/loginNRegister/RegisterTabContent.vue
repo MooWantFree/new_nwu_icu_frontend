@@ -44,7 +44,8 @@
     </div>
 
     <CaptchaInput id="register-captcha" label="验证码" v-model="formData.captcha" placeholder="请输入验证码" required
-      :error="errors.captcha" :image-url="captchaInfo.imageUrl" @refresh="updateCaptcha" />
+      :error="errors.captcha" :image-url="captchaInfo.imageUrl" :loading="isLoadingCaptcha" @refresh="updateCaptcha"
+      @error="errors.captcha = '验证码加载失败，请重试'" />
 
     <button type="submit"
       class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all flex justify-center items-center"
@@ -81,6 +82,7 @@ const emit = defineEmits(['register-success', 'update:loading']);
 const checkingUsername = ref(false);
 const showPassword = ref(false);
 const passwordsMatch = ref(false);
+const isLoadingCaptcha = ref(false);
 
 const formData = reactive({
   username: '',
@@ -105,6 +107,9 @@ const captchaInfo = ref({
 });
 
 const updateCaptcha = async () => {
+  if (isLoadingCaptcha.value) return;
+  isLoadingCaptcha.value = true;
+  if (errors.captcha === '验证码加载失败，请重试') errors.captcha = '';
   captchaInfo.value = {
     key: '',
     imageUrl: ''
@@ -119,10 +124,14 @@ const updateCaptcha = async () => {
         key: content.key,
         imageUrl: content.image_url
       };
+    } else {
+      errors.general = '获取验证码失败，请刷新页面重试';
     }
   } catch (error) {
     console.error('Failed to fetch captcha:', error);
     errors.general = '获取验证码失败，请刷新页面重试';
+  } finally {
+    isLoadingCaptcha.value = false;
   }
 };
 
