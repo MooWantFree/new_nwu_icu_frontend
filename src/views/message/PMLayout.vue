@@ -72,12 +72,11 @@ import {
   ChevronRight
 } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
-import { onMounted, onUnmounted, ref } from 'vue'
-import { api } from '@/lib/requests'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-const { isLoggedIn, isLoading } = useUser()
+const { isLoggedIn, isLoading, userInfo, fetchUnreadCount } = useUser()
 const isSidebarOpen = ref(true)
-const unreadCount = ref({
+const unreadCount = computed(() => userInfo.value?.unread?.unread ?? {
   user: 0,
   reply: 0,
   like: 0,
@@ -95,24 +94,17 @@ const navLinks = [
   { to: '/message/system', icon: Bell, text: '系统通知', name: 'system' },
 ]
 
-const fetchUnreadCount = async () => {
-  if (!isLoggedIn.value) return
-  if (isFetchingUnread.value) return
-  isFetchingUnread.value = true
+const intervalId = ref<ReturnType<typeof setInterval> | undefined>(undefined)
+let isPollingUnread = false
+const pollUnreadCount = async () => {
+  if (isPollingUnread) return
+  isPollingUnread = true
   try {
-  const { content } = await api.get({ url: '/api/message/unread/' })
-  unreadCount.value = {
-    user: content.unread.user,
-    reply: content.unread.reply,
-    like: content.unread.like,
-    system: content.unread.system,
-  }
+    await fetchUnreadCount()
   } finally {
-    isFetchingUnread.value = false
+    isPollingUnread = false
   }
 }
-const isFetchingUnread = ref(false)
-const intervalId = ref<ReturnType<typeof setInterval> | undefined>(undefined)
 
 onMounted(() => {
   if (window.innerWidth < 768) {
@@ -120,8 +112,8 @@ onMounted(() => {
   }
   // Disable scroll
   document.body.style.overflow = 'hidden'
-  fetchUnreadCount()
-  intervalId.value = setInterval(fetchUnreadCount, 3000)
+  void pollUnreadCount()
+  intervalId.value = setInterval(pollUnreadCount, 3000)
 })
 
 onUnmounted(() => {

@@ -92,6 +92,8 @@ export type APISystemNotificationList = {
       title: string
       content: string
       datetime: string
+      source?: 'announcement' | 'bulletin'
+      target_url?: string
     }[]
   }
   errors: ErrorFactory<'auth'>[]

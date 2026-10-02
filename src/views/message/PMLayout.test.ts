@@ -3,9 +3,11 @@ import { createApp, defineComponent, h, nextTick, onMounted, onUnmounted, ref, t
 import PMLayout from './PMLayout.vue'
 
 type BooleanRef = { value: boolean }
+type UserRef = { value: { unread: { unread: { user: number; reply: number; like: number; system: number } } } }
 
 const mocks = vi.hoisted(() => ({
-  get: vi.fn(),
+  fetchUnreadCount: vi.fn(),
+  userInfo: undefined as unknown as UserRef,
   isLoggedIn: undefined as unknown as BooleanRef,
   isLoading: undefined as unknown as BooleanRef,
 }))
@@ -14,9 +16,10 @@ vi.mock('@/lib/useUser', () => ({
   useUser: () => ({
     isLoggedIn: mocks.isLoggedIn,
     isLoading: mocks.isLoading,
+    userInfo: mocks.userInfo,
+    fetchUnreadCount: mocks.fetchUnreadCount,
   }),
 }))
-vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
 
 let app: App | undefined
 let container: HTMLDivElement
@@ -26,9 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.isLoggedIn = ref(true)
   mocks.isLoading = ref(false)
-  mocks.get.mockResolvedValue({
-    content: { unread: { user: 0, reply: 0, like: 0, system: 0 } },
-  })
+  mocks.userInfo = ref({ unread: { unread: { user: 0, reply: 0, like: 0, system: 0 } } })
+  mocks.fetchUnreadCount.mockResolvedValue(undefined)
   container = document.createElement('div')
   document.body.append(container)
 })
@@ -41,6 +43,40 @@ afterEach(() => {
 })
 
 describe('message layout authentication refresh', () => {
+  it('waits for a slow poll before starting another unread request', async () => {
+    let finish!: () => void
+    mocks.fetchUnreadCount.mockReturnValueOnce(new Promise<void>(resolve => { finish = resolve }))
+    app = createApp(PMLayout)
+    app.component('RouterLink', defineComponent({ render: () => null }))
+    app.component('RouterView', defineComponent({ render: () => null }))
+    app.mount(container)
+    await vi.advanceTimersByTimeAsync(9000)
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledOnce()
+    finish(); await Promise.resolve()
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses shared unread counts and polls without an extra local count', async () => {
+    app = createApp(PMLayout)
+    app.component('RouterLink', defineComponent({
+      setup: (_, { slots }) => () => h('a', slots.default?.()),
+    }))
+    app.component('RouterView', defineComponent({ render: () => null }))
+    app.mount(container)
+    await nextTick()
+
+    mocks.userInfo.value = { unread: { unread: { user: 0, reply: 0, like: 0, system: 4 } } }
+    await nextTick()
+    expect(container.querySelectorAll('nav a')[3]?.textContent).toContain('4')
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledOnce()
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledTimes(2)
+
+    mocks.userInfo.value = { unread: { unread: { user: 0, reply: 0, like: 0, system: 0 } } }
+    await nextTick()
+    expect(container.querySelectorAll('nav a')[3]?.textContent).not.toContain('4')
+  })
   it('keeps the inbox mounted while a logged-in user refreshes in the background', async () => {
     let mounts = 0
     let unmounts = 0

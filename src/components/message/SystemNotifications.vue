@@ -11,7 +11,7 @@
             <p class="mt-1 text-xs text-slate-500">账户动态与全站公告</p>
           </div>
         </div>
-        <button type="button" aria-label="刷新系统通知" @click="fetchSystemNotifications" :disabled="loading" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" aria-label="刷新系统通知" @click="refreshNotifications" :disabled="loading" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
           <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
           <span class="hidden sm:inline">刷新</span>
         </button>
@@ -25,110 +25,152 @@
           </div>
         </div>
 
-        <div v-else class="mx-auto max-w-4xl space-y-7">
-          <section aria-labelledby="personal-notifications-title">
-            <div class="mb-3 flex items-center gap-2 px-1">
-              <Bell class="h-4 w-4 text-blue-700" />
-              <h2 id="personal-notifications-title" class="text-sm font-semibold text-slate-700">个人通知</h2>
-              <span class="text-xs text-slate-400">{{ personalNotifications.length }}</span>
-            </div>
-            <div v-if="personalNotifications.length" class="space-y-3">
-              <article v-for="notification in personalNotifications" :key="`personal-${notification.id}`" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-5">
-                <div class="flex min-w-0 items-start gap-3">
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                    <Bell class="h-5 w-5" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <h3 class="break-words font-semibold text-slate-900 [overflow-wrap:anywhere]">{{ notification.title }}</h3>
-                      <Time class="shrink-0" :time="notification.datetime" />
-                    </div>
-                    <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">{{ notification.content }}</p>
-                  </div>
+        <div v-else-if="notifications.length" class="mx-auto max-w-4xl space-y-3">
+          <article v-for="notification in notifications" :key="notification.id" class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-5">
+            <div class="flex min-w-0 items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <Bell class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 class="break-words font-semibold text-slate-900 [overflow-wrap:anywhere]">{{ notification.title }}</h2>
+                  <Time class="shrink-0" :time="notification.datetime" />
                 </div>
-              </article>
+                <div v-if="notification.source === 'announcement'" class="system-notification-content mt-2 break-words text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]" v-html="sanitizeAnnouncementHtml(notification.content)" />
+                <p v-else class="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">{{ notification.content }}</p>
+                <div v-if="notification.target_url" class="mt-4 flex justify-end">
+                  <RouterLink :to="notification.target_url" class="inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-900">
+                    查看公告<ChevronRight class="h-4 w-4" />
+                  </RouterLink>
+                </div>
+              </div>
             </div>
-            <div v-else class="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center text-sm text-slate-400">暂无个人通知</div>
-          </section>
+          </article>
+        </div>
 
-          <section aria-labelledby="bulletins-title">
-            <div class="mb-3 flex items-center gap-2 px-1">
-              <Megaphone class="h-4 w-4 text-blue-700" />
-              <h2 id="bulletins-title" class="text-sm font-semibold text-slate-700">全站公告</h2>
-              <span class="text-xs text-slate-400">{{ bulletins.length }}</span>
-            </div>
-            <div v-if="bulletins.length" class="space-y-3">
-              <article v-for="bulletin in bulletins" :key="`${bulletin.title}-${bulletin.update_time}`" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-5">
-                <div class="flex min-w-0 items-start gap-3">
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                    <Megaphone class="h-5 w-5" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <h3 class="break-words font-semibold text-slate-900 [overflow-wrap:anywhere]">{{ bulletin.title }}</h3>
-                      <Time class="shrink-0" :time="bulletin.update_time" />
-                    </div>
-                    <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">{{ bulletin.content }}</p>
-                  </div>
-                </div>
-              </article>
-            </div>
-            <div v-else class="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center text-sm text-slate-400">暂无全站公告</div>
-          </section>
+        <div v-else class="flex h-full flex-col items-center justify-center px-6 text-center">
+          <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <Bell class="h-9 w-9 text-slate-300" aria-hidden="true" />
+          </div>
+          <p class="mt-5 text-lg font-semibold text-slate-700">暂无系统通知</p>
         </div>
       </div>
+
+      <footer v-if="totalCount > 0" class="flex justify-center border-t border-slate-200 bg-white px-4 py-3">
+        <n-pagination
+          :page="displayedPage"
+          :page-count="maxPage"
+          @update:page="handlePageChange"
+          :size="isMobile ? 'small' : 'medium'"
+          class="rounded-lg"
+        />
+      </footer>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import { sanitizeAnnouncementHtml } from '@/lib/guestbook'
+import { useUser } from '@/lib/useUser'
+import type { APISystemNotificationList } from '@/types/api/messages/messages'
 import Time from '@/components/tinyComponents/Time.vue'
-import { Bell, LoaderCircle, Megaphone, RefreshCw } from 'lucide-vue-next'
-
-interface Bulletin {
-  title: string
-  content: string
-  update_time: string
-}
+import { Bell, ChevronRight, LoaderCircle, RefreshCw } from 'lucide-vue-next'
 
 const message = useMessage()
+const { fetchUnreadCount } = useUser(false)
+const route = useRoute()
+const router = useRouter()
+const currentPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+})
 const loading = ref(true)
-const personalNotifications = ref<Array<{
-  id: number
-  title: string
-  content: string
-  datetime: string
-}>>([])
-const bulletins = ref<Bulletin[]>([])
-const fetchSystemNotifications = async () => {
+const notifications = ref<APISystemNotificationList['response']['results']>([])
+const displayedPage = ref(currentPage.value)
+const totalCount = ref(0)
+const maxPage = ref(0)
+const isMobile = ref(false)
+let requestVersion = 0
+
+const markNotificationsRead = async (ids: number[], version: number) => {
   try {
-    loading.value = true
-    const [notificationResponse, bulletinResponse] = await Promise.all([
-      api.get({ url: '/api/message/system/', query: { page: 1 } }),
-      api.get({ url: '/api/bulletins/' }),
-    ])
-    if (notificationResponse.status !== 200 || bulletinResponse.status !== 200) {
-      throw new Error('Failed to fetch system notifications')
-    }
-    personalNotifications.value = notificationResponse.content.results
-    bulletins.value = bulletinResponse.content.bulletin_list
-    if (personalNotifications.value.length) {
-      await api.post({
-        url: '/api/message/notifications/read/',
-        query: { ids: personalNotifications.value.map(item => item.id) },
-      })
-    }
+    const response = await api.post({
+      url: '/api/message/notifications/read/',
+      query: { ids },
+    })
+    if (version !== requestVersion) return
+    if (response.status < 200 || response.status >= 300) throw new Error('Failed to mark system notifications read')
+  } catch {
+    if (version === requestVersion) message.error('标记系统通知已读失败，请刷新重试')
+    return
+  }
+  try {
+    await fetchUnreadCount()
   } catch (error) {
-    message.error('获取系统通知失败')
-  } finally {
-    loading.value = false
+    console.error('Error refreshing unread notifications:', error)
   }
 }
 
+const fetchSystemNotifications = async (page: number) => {
+  const version = ++requestVersion
+  loading.value = true
+  try {
+    const response = await api.get({ url: '/api/message/system/', query: { page } })
+    if (version !== requestVersion) return
+    if (response.status !== 200) throw new Error('Failed to fetch system notifications')
+    notifications.value = response.content.results
+    displayedPage.value = response.content.page
+    totalCount.value = response.content.count
+    maxPage.value = response.content.max_page
+    loading.value = false
+    await nextTick()
+    if (version !== requestVersion || !notifications.value.length) return
+    await markNotificationsRead(notifications.value.map(item => item.id), version)
+  } catch {
+    if (version === requestVersion) message.error('获取系统通知失败')
+  } finally {
+    if (version === requestVersion) loading.value = false
+  }
+}
+
+const refreshNotifications = () => {
+  void fetchSystemNotifications(currentPage.value)
+}
+
+const handlePageChange = (page: number) => {
+  if (page === currentPage.value) void fetchSystemNotifications(page)
+  else void router.push({ query: { ...route.query, page: String(page) } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
 onMounted(() => {
-  fetchSystemNotifications()
+  handleResize()
+  window.addEventListener('resize', handleResize)
 })
+
+onUnmounted(() => {
+  requestVersion += 1
+  window.removeEventListener('resize', handleResize)
+})
+
+watch(currentPage, page => { void fetchSystemNotifications(page) }, { immediate: true })
 </script>
+
+<style scoped>
+.system-notification-content :deep(p) { margin: 0 0 0.5rem; }
+.system-notification-content :deep(p:last-child) { margin-bottom: 0; }
+.system-notification-content :deep(a) { color: #1d4ed8; text-decoration: underline; text-underline-offset: 0.2em; }
+.system-notification-content :deep(img) { display: block; height: auto; margin: 0.75rem auto; max-width: 100%; border-radius: 0.5rem; }
+.system-notification-content :deep(img[data-size="25"]) { width: 25%; }
+.system-notification-content :deep(img[data-size="50"]) { width: 50%; }
+.system-notification-content :deep(img[data-size="75"]) { width: 75%; }
+.system-notification-content :deep(img[data-size="100"]) { width: 100%; }
+</style>

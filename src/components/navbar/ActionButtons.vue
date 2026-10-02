@@ -32,9 +32,10 @@ import {
   Mail,
 } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
+import { computed } from 'vue'
 
 const { userInfo } = useUser()
-const unreadCount = userInfo.value?.unread
+const unreadCount = computed(() => userInfo.value?.unread)
 
 defineEmits<{
   (e: 'showSearchModal'): void
