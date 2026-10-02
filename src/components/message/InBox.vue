@@ -49,7 +49,7 @@
                   {{ message.last_message.content || '开始新对话' }}
                 </p>
                 <p class="mt-1.5">
-                  <Time v-if="message.last_message.datetime" :time="message.last_message.datetime" />
+                  <Time v-if="message.last_message.datetime" :time="message.last_message.datetime" mode="message" />
                 </p>
               </div>
             </div>

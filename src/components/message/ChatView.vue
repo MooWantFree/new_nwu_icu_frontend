@@ -29,7 +29,7 @@
             <div v-if="showDateDivider(msg, index)"
               class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
               <CalendarIcon class="w-4 h-4 mr-2" />
-              <Time :time="msg.datetime" />
+              <Time :time="msg.datetime" mode="message" />
             </div>
             <div :class="[
               'flex items-start gap-3',
@@ -49,12 +49,12 @@
                 'min-w-0 flex flex-col',
                 { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
               ]">
-                <div class="flex items-center gap-2 mb-1"
+                <div class="flex flex-wrap items-center gap-2 mb-1"
                   :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
                   <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
-                  <span class="flex items-center">
+                  <span class="flex shrink-0 items-center">
                     <Clock class="w-3 h-3 mr-1" />
-                    <Time :time="msg.datetime" />
+                    <Time :time="msg.datetime" mode="message" />
                   </span>
                 </div>
                 <div :class="[
