@@ -1,166 +1,86 @@
 <template>
-  <div class="login-form-container">
-    <!-- Tab Headers -->
-    <div class="tab-headers">
-      <button 
-        class="tab-button" 
-        :class="{ 'active': activeTab === 'login' }"
-        @click="setActiveTab('login')"
+  <section :aria-labelledby="`${formId}-heading`" class="w-full p-6">
+    <header class="mb-6 pr-10">
+      <h2 :id="`${formId}-heading`" class="text-xl font-semibold tracking-tight text-zinc-950">
+        {{ activeMode === 'login' ? '登录账号' : '注册账号' }}
+      </h2>
+    </header>
+    <div ref="formContent">
+      <LoginTabContent
+        v-if="activeMode === 'login'"
+        :loading="loading"
+        :id-prefix="idPrefix"
+        @login-success="handleLoginSuccess"
+        @update:loading="updateLoading"
+        @close-modal="emit('close-modal')"
+      />
+      <RegisterTabContent
+        v-else
+        :loading="loading"
+        :id-prefix="idPrefix"
+        @register-success="handleRegisterSuccess"
+        @update:loading="updateLoading"
+      />
+    </div>
+    <div
+      v-if="successMessage"
+      role="status"
+      class="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-800"
+    >
+      {{ successMessage }}
+    </div>
+    <footer class="mt-6 border-t border-zinc-100 pt-5 text-center text-sm text-zinc-500">
+      <span>{{ activeMode === 'login' ? '还没有账号？' : '已有账号？' }}</span>
+      <button
+        type="button"
         :disabled="loading"
+        class="ml-1 rounded-sm font-medium text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:cursor-wait disabled:opacity-50"
+        @click="setActiveMode(activeMode === 'login' ? 'register' : 'login')"
       >
-        登录
+        {{ activeMode === 'login' ? '注册' : '登录' }}
       </button>
-      <button 
-        class="tab-button" 
-        :class="{ 'active': activeTab === 'register' }"
-        @click="setActiveTab('register')"
-        :disabled="loading"
-      >
-        注册
-      </button>
-    </div>
-    
-    <!-- Tab Contents -->
-    <div class="tab-contents p-6">
-      <Transition name="fade" mode="out-in">
-        <LoginTabContent 
-          v-if="activeTab === 'login'" 
-          :loading="loading"
-          @login-success="handleLoginSuccess"
-          @update:loading="updateLoading"
-          @close-modal="emit('close-modal')"
-        />
-        <RegisterTabContent 
-          v-else 
-          :loading="loading"
-          @register-success="handleRegisterSuccess"
-          @update:loading="updateLoading"
-        />
-      </Transition>
-    </div>
-    
-    <!-- Messages (Error or Success) -->
-    <div class="px-6 pb-4">
-      <div v-if="generalError" class="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-        {{ generalError }}
-      </div>
-      <div v-if="successMessage" class="text-green-600 text-sm bg-green-50 p-3 rounded-md">
-        {{ successMessage }}
-      </div>
-    </div>
-  </div>
+    </footer>
+  </section>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import LoginTabContent from './LoginTabContent.vue';
-import RegisterTabContent from './RegisterTabContent.vue';
-import { APILogin } from '@/types/api/user/user';
+import { nextTick, ref, useId } from 'vue'
+import LoginTabContent from './LoginTabContent.vue'
+import RegisterTabContent from './RegisterTabContent.vue'
+import type { APILogin } from '@/types/api/user/user'
 
-type UserProfile = APILogin['response'];
+type UserProfile = APILogin['response']
+type AuthMode = 'login' | 'register'
 
-// Shared state
-const activeTab = ref('login');
-const loading = ref(false);
-const generalError = ref('');
-const successMessage = ref('');
+withDefaults(defineProps<{ idPrefix?: string }>(), { idPrefix: '' })
 
-// Emitted events
+const formId = useId()
+const formContent = ref<HTMLDivElement | null>(null)
+const activeMode = ref<AuthMode>('login')
+const loading = ref(false)
+const successMessage = ref('')
+
 const emit = defineEmits<{
   (e: 'close-modal'): void
   (e: 'login-success', data: UserProfile): void
-}>();
+}>()
 
-// Tab switching
-const setActiveTab = (tab: string) => {
-  activeTab.value = tab;
-  generalError.value = '';
-  successMessage.value = '';
-};
+const setActiveMode = async (mode: AuthMode) => {
+  if (loading.value || activeMode.value === mode) return
+  activeMode.value = mode
+  successMessage.value = ''
+  await nextTick()
+  formContent.value?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true })
+}
 
-// Handle loading state from child components
-const updateLoading = (value: boolean) => {
-  loading.value = value;
-};
-
-// Handle login success
-const handleLoginSuccess = (profile: UserProfile) => {
-  emit('login-success', profile);
-};
-
-// Handle register success
+const updateLoading = (value: boolean) => { loading.value = value }
+const handleLoginSuccess = (profile: UserProfile) => { emit('login-success', profile) }
 const handleRegisterSuccess = () => {
-  // Clear any error messages
-  generalError.value = '';
-  // Show success message
-  successMessage.value = '注册成功！请检查你的邮箱，点击激活链接完成账号激活。';
-  // Keep user on the register tab to see the success message
-};
+  successMessage.value = '注册成功！请检查你的邮箱，点击激活链接完成账号激活。'
+}
 
-// For backward compatibility with code that might call this
-const switchToSignInTabTrigger = () => {
-  setActiveTab('login');
-};
-
-// Expose methods that might be called from parent components
 defineExpose({
-  switchToLoginTab: () => setActiveTab('login'),
-  switchToSignInTabTrigger
-});
+  switchToLoginTab: () => setActiveMode('login'),
+  switchToSignInTabTrigger: () => setActiveMode('login'),
+})
 </script>
-
-<style scoped>
-.login-form-container {
-  background-color: white;
-  width: 100%;
-  max-width: 460px;
-  overflow: hidden;
-}
-
-.tab-headers {
-  display: flex;
-  border-bottom: 1px solid #e5e5ea;
-}
-
-.tab-button {
-  flex: 1;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 500;
-  text-align: center;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #6e6e73;
-}
-
-.tab-button:hover:not(:disabled) {
-  color: #0066cc;
-}
-
-.tab-button.active {
-  color: #0066cc;
-  border-bottom: 2px solid #0071e3;
-}
-
-.tab-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.tab-contents {
-
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

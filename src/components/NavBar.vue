@@ -86,7 +86,7 @@ const route = useRoute()
 const isReviewRoute = computed(() => route.path === '/review' || route.path.startsWith('/review/'))
 
 // User state
-const { isLoggedIn, logout, userInfo, isLoading } = useUser()
+const { isLoggedIn, logout, userInfo, isLoading, fetchUserInfo } = useUser()
 
 // Modal states
 const showLoginPopup = ref(false)
@@ -99,8 +99,8 @@ const onPageWidthUpdate = () => {
 }
 
 // Event handlers
-const handleLoginSuccess = (data: UserProfile) => {
-  // login(data)
+const handleLoginSuccess = async (data: UserProfile) => {
+  await fetchUserInfo()
   const displayName = data?.nickname ?? data?.username ?? ''
   showMessage(`欢迎${displayName}，已成功登录`, 'success')
   showLoginPopup.value = false

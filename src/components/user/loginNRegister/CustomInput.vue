@@ -1,81 +1,85 @@
 <template>
-  <div class="mb-4">
-    <label 
-      :for="id" 
-      class="block text-sm font-medium text-gray-700 mb-1"
-    >
-      {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
-    </label>
-    
+  <div class="space-y-2">
+    <div class="flex min-h-4 items-center justify-between gap-3">
+      <label :for="id" class="block text-sm font-medium leading-none text-zinc-950">
+        {{ label }}
+      </label>
+      <slot name="label-action" />
+    </div>
     <div class="relative">
       <input
         :id="id"
-        :type="showPassword ? 'text' : type"
+        :name="id"
+        :type="showPassword && type === 'password' ? 'text' : type"
         :value="modelValue"
-        @input="handleInput"
+        :autocomplete="autocomplete"
         :placeholder="placeholder"
-        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        :disabled="disabled"
+        :aria-required="required"
+        :aria-invalid="Boolean(error)"
+        :aria-describedby="error ? `${id}-error` : undefined"
+        class="h-10 w-full rounded-md border bg-white px-3 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
         :class="[
-          error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300',
-          loading ? 'pr-10' : ''
+          error ? 'border-red-400 focus:ring-red-300' : 'border-zinc-200 focus:border-zinc-400 focus:ring-zinc-300',
+          loading || type === 'password' ? 'pr-10' : '',
         ]"
+        @input="handleInput"
       />
-      
-      <!-- Password toggle button -->
       <button
-        v-if="type === 'password'"
+        v-if="type === 'password' && !loading"
         type="button"
-        @click="togglePassword"
-        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-        tabindex="-1"
+        :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+        :aria-pressed="showPassword"
+        :disabled="disabled"
+        class="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-sm text-zinc-400 transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:cursor-not-allowed"
+        @click="showPassword = !showPassword"
       >
-        <Eye v-if="showPassword" class="h-5 w-5" />
-        <EyeOff v-else class="h-5 w-5" />
+        <EyeOff v-if="showPassword" class="h-4 w-4" aria-hidden="true" />
+        <Eye v-else class="h-4 w-4" aria-hidden="true" />
       </button>
-      
-      <!-- Loading spinner -->
-      <div v-if="loading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-        <LoaderCircle class="animate-spin h-5 w-5 text-blue-700" />
-      </div>
+      <span
+        v-if="loading"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+        aria-hidden="true"
+      >
+        <LoaderCircle class="h-4 w-4 animate-spin" />
+      </span>
     </div>
-    
-    <div v-if="error" class="mt-1 text-sm text-red-600">
+    <p v-if="error" :id="`${id}-error`" class="text-xs leading-5 text-red-600">
       {{ error }}
-    </div>
+    </p>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { Eye, EyeOff, LoaderCircle } from 'lucide-vue-next';
+import { ref } from 'vue'
+import { Eye, EyeOff, LoaderCircle } from 'lucide-vue-next'
 
-const {
-  type = 'text',
-  required = false,
-  error = '',
-  loading = false
-} = defineProps<{
-  modelValue: string,
-  id: string,
-  label: string,
-  placeholder: string,
-  type?: string,
-  required: boolean,
-  error: string,
-  loading: boolean
+withDefaults(defineProps<{
+  modelValue: string
+  id: string
+  label: string
+  placeholder: string
+  type?: string
+  required?: boolean
+  error?: string
+  loading?: boolean
+  disabled?: boolean
+  autocomplete?: string
+}>(), {
+  type: 'text',
+  required: false,
+  error: '',
+  loading: false,
+  disabled: false,
+  autocomplete: undefined,
+})
+
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
 }>()
-
-const emit = defineEmits(['update:modelValue']);
-
+const showPassword = ref(false)
 const handleInput = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  emit('update:modelValue', target.value);
-};
-
-const showPassword = ref(false);
-
-const togglePassword = () => {
-  showPassword.value = !showPassword.value;
-};
+  emit('update:modelValue', (event.target as HTMLInputElement).value)
+}
 </script>

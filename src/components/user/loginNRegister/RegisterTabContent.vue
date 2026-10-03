@@ -1,68 +1,68 @@
 <template>
-  <form @submit.prevent="handleSignUp" class="space-y-4">
-    <CustomInput id="register-username" label="用户名" v-model="formData.username"
+  <form @submit.prevent="handleSignUp" class="space-y-5" novalidate>
+    <CustomInput :id="`${idPrefix}register-username`" label="用户名" v-model="formData.username"
       @update:model-value="checkUsernameAvailability" placeholder="请输入用户名" required :error="errors.username"
-      :loading="checkingUsername" />
+      autocomplete="username" :disabled="loading" :loading="checkingUsername" />
 
-    <CustomInput id="register-email" label="邮箱" v-model="formData.email" placeholder="请输入邮箱" required
-      :error="errors.email" :loading="loading" />
+    <CustomInput :id="`${idPrefix}register-email`" label="邮箱" v-model="formData.email" placeholder="请输入邮箱" type="email" required
+      autocomplete="email" :disabled="loading" :error="errors.email" :loading="loading" />
 
     <div class="space-y-1">
-      <CustomInput id="register-password" label="密码" v-model="formData.password" placeholder="请输入密码"
-        :type="showPassword ? 'text' : 'password'" required :error="errors.password"
-        :append-icon="showPassword ? 'eye-slash' : 'eye'" @icon-click="togglePasswordVisibility"
+      <CustomInput :id="`${idPrefix}register-password`" label="密码" v-model="formData.password" placeholder="请输入密码"
+        type="password" required :error="errors.password" autocomplete="new-password" :disabled="loading"
         @update:model-value="checkPasswordAvailability" :loading="loading" />
       <div v-if="formData.password" class="mt-1">
         <div class="flex items-center space-x-2">
-          <div class="h-1 flex-grow rounded-full overflow-hidden bg-gray-200">
+          <div class="h-1 flex-grow rounded-full overflow-hidden bg-zinc-100">
             <div :class="passwordStrengthBarClass" :style="{ width: `${passwordStrength * 25}%` }"
               class="h-full transition-all duration-300"></div>
           </div>
           <span :class="passwordStrengthTextClass" class="text-xs font-medium">{{ passwordStrengthText }}</span>
         </div>
-        <div class="text-xs text-gray-500 mt-1">
+        <div class="text-xs leading-5 text-zinc-500 mt-1">
           密码必须包含至少一个大写字母、一个小写字母和一个数字，长度在8-30个字符之间
         </div>
       </div>
     </div>
 
     <div class="space-y-1">
-      <CustomInput id="register-repeat-password" label="重复密码" v-model="formData.repeatPassword" placeholder="请重复密码"
-        :type="showPassword ? 'text' : 'password'" required :error="errors.repeatPassword"
-        :append-icon="showPassword ? 'eye-slash' : 'eye'" @icon-click="togglePasswordVisibility"
+      <CustomInput :id="`${idPrefix}register-repeat-password`" label="确认密码" v-model="formData.repeatPassword" placeholder="再次输入密码"
+        type="password" required :error="errors.repeatPassword" autocomplete="new-password" :disabled="loading"
         @update:model-value="checkPasswordsMatch" :loading="loading" />
       <div v-if="formData.repeatPassword && formData.password" class="flex items-center mt-1 text-xs">
-        <span v-if="passwordsMatch" class="text-green-500 flex items-center">
+        <span v-if="passwordsMatch" class="text-emerald-700 flex items-center">
           <Check class="h-4 w-4 mr-1" />
           密码匹配
         </span>
-        <span v-else class="text-red-500 flex items-center">
+        <span v-else class="text-red-600 flex items-center">
           <X class="h-4 w-4 mr-1" />
           密码不匹配
         </span>
       </div>
     </div>
 
-    <CaptchaInput id="register-captcha" label="验证码" v-model="formData.captcha" placeholder="请输入验证码" required
-      :error="errors.captcha" :image-url="captchaInfo.imageUrl" :loading="isLoadingCaptcha" @refresh="updateCaptcha"
+    <CaptchaInput :id="`${idPrefix}register-captcha`" label="验证码" v-model="formData.captcha" placeholder="请输入验证码" required
+      :error="errors.captcha" :image-url="captchaInfo.imageUrl" :loading="isLoadingCaptcha" :disabled="loading" @refresh="updateCaptcha"
       @error="errors.captcha = '验证码加载失败，请重试'" />
 
     <button type="submit"
-      class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all flex justify-center items-center"
+      class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
       :disabled="loading">
-      <LoaderCircle v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-      注册
+      <LoaderCircle v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
+      {{ loading ? '注册中…' : '创建账号' }}
     </button>
 
-    <div v-if="errors.general" class="text-red-600 text-sm text-center p-2 bg-red-50 rounded-md">
-      {{ errors.general }}
+    <div v-if="errors.general" role="alert" aria-live="polite" class="grid grid-cols-[1rem_1fr] items-start gap-x-3 gap-y-1 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700">
+      <CircleAlert class="mt-0.5 h-4 w-4" aria-hidden="true" />
+      <p class="font-medium leading-5">注册失败</p>
+      <p class="col-start-2 whitespace-pre-line leading-5">{{ errors.general }}</p>
     </div>
   </form>
 </template>
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue';
-import { Check, X, LoaderCircle } from 'lucide-vue-next';
+import { Check, X, CircleAlert, LoaderCircle } from 'lucide-vue-next';
 import { debounce } from 'lodash-es';
 import CustomInput from './CustomInput.vue';
 import CaptchaInput from './CaptchaInput.vue';
@@ -70,7 +70,8 @@ import { api } from '@/lib/requests';
 import { usernameSchema, basePasswordSchema } from '@/types/common/userBasicInfo';
 import { z } from 'zod';
 
-defineProps({
+const props = defineProps({
+  idPrefix: { type: String, default: '' },
   loading: {
     type: Boolean,
     default: false
@@ -80,7 +81,7 @@ defineProps({
 const emit = defineEmits(['register-success', 'update:loading']);
 
 const checkingUsername = ref(false);
-const showPassword = ref(false);
+const submitting = ref(false);
 const passwordsMatch = ref(false);
 const isLoadingCaptcha = ref(false);
 
@@ -246,8 +247,9 @@ const validateForm = (): boolean => {
 };
 
 const handleSignUp = async () => {
+  if (props.loading || submitting.value) return;
   if (!validateForm()) return;
-
+  submitting.value = true;
   emit('update:loading', true);
 
   try {
@@ -292,13 +294,9 @@ const handleSignUp = async () => {
     }
     console.error(e);
   } finally {
+    submitting.value = false;
     emit('update:loading', false);
   }
-};
-
-// Toggle password visibility
-const togglePasswordVisibility = () => {
-  showPassword.value = !showPassword.value;
 };
 
 // Check password availability (complexity requirements)
@@ -355,24 +353,24 @@ const passwordStrengthText = computed(() => {
 // Password strength bar class
 const passwordStrengthBarClass = computed(() => {
   switch (passwordStrength.value) {
-    case 0: return 'bg-gray-300';
+    case 0: return 'bg-zinc-300';
     case 1: return 'bg-red-500';
-    case 2: return 'bg-yellow-500';
-    case 3: return 'bg-blue-600';
-    case 4: return 'bg-green-500';
-    default: return 'bg-gray-300';
+    case 2: return 'bg-amber-500';
+    case 3: return 'bg-zinc-600';
+    case 4: return 'bg-emerald-600';
+    default: return 'bg-zinc-300';
   }
 });
 
 // Password strength text class
 const passwordStrengthTextClass = computed(() => {
   switch (passwordStrength.value) {
-    case 0: return 'text-gray-500';
+    case 0: return 'text-zinc-500';
     case 1: return 'text-red-500';
-    case 2: return 'text-yellow-500';
-    case 3: return 'text-blue-700';
-    case 4: return 'text-green-500';
-    default: return 'text-gray-500';
+    case 2: return 'text-amber-700';
+    case 3: return 'text-zinc-600';
+    case 4: return 'text-emerald-700';
+    default: return 'text-zinc-500';
   }
 });
 

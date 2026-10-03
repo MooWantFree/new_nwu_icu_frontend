@@ -1,71 +1,79 @@
 <template>
-  <form @submit.prevent="handleLogin" class="space-y-4">
+  <form @submit.prevent="handleLogin" class="space-y-5" novalidate>
     <CustomInput
-      id="login-username"
+      :id="`${idPrefix}login-username`"
       label="用户名"
       v-model="formData.username"
-      placeholder="请输入用户名或邮箱"
+      placeholder="请输入用户名"
       required
+      autocomplete="username"
+      :disabled="loading"
       :loading="loading"
       :error="errors.username"
     />
     
     <CustomInput
-      id="login-password"
+      :id="`${idPrefix}login-password`"
       label="密码"
       v-model="formData.password"
       placeholder="请输入密码"
       type="password"
       required
+      autocomplete="current-password"
+      :disabled="loading"
       :loading="loading"
       :error="errors.password"
-    />
-    
-    <div class="flex justify-between items-center">
-      <div></div>
-      <button 
-        type="button" 
-        class="text-sm font-medium text-blue-700 hover:text-blue-800 transition-colors"
-        @click="goToForgotPassword"
-      >
-        忘记密码？
-      </button>
-    </div>
+    >
+      <template #label-action>
+        <button
+          type="button"
+          class="shrink-0 rounded-sm text-xs leading-4 text-zinc-500 transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50"
+          :disabled="loading"
+          @click="goToForgotPassword"
+        >
+          忘记密码？
+        </button>
+      </template>
+    </CustomInput>
 
     <div
       v-if="errors.general"
       role="alert"
       aria-live="polite"
-      class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+      class="grid grid-cols-[1rem_1fr] items-start gap-x-3 gap-y-1 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"
     >
-      {{ errors.general }}
+      <CircleAlert class="mt-0.5 h-4 w-4" aria-hidden="true" />
+      <p class="font-medium leading-5">登录失败</p>
+      <p class="col-start-2 whitespace-pre-line leading-5">{{ errors.general }}</p>
     </div>
     
     <button
       type="submit"
-      class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all flex justify-center items-center"
+      class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
       :disabled="loading"
     >
-      <LoaderCircle v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-      登录
+      <LoaderCircle v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
+      {{ loading ? '登录中…' : '登录' }}
     </button>
   </form>
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import CustomInput from './CustomInput.vue';
-import { LoaderCircle } from 'lucide-vue-next'
+import { CircleAlert, LoaderCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests';
 
-defineProps<{
+const props = withDefaults(defineProps<{
   loading: boolean
-}>();
+  idPrefix?: string
+}>(), { idPrefix: '' });
 
 const emit = defineEmits(['login-success', 'update:loading','close-modal']);
 
 const router = useRouter();
+const submitting = ref(false);
 
 const formData = reactive({
   username: '',
@@ -87,7 +95,7 @@ const validateForm = () => {
   errors.general = '';
   
   if (!formData.username.trim()) {
-    errors.username = '请输入用户名或邮箱';
+    errors.username = '请输入用户名';
     isValid = false;
   }
   
@@ -100,8 +108,9 @@ const validateForm = () => {
 };
 
 const handleLogin = async () => {
+  if (props.loading || submitting.value) return;
   if (!validateForm()) return;
-  
+  submitting.value = true;
   emit('update:loading', true);
   
   try {
@@ -142,6 +151,7 @@ const handleLogin = async () => {
     }
     console.error(e);
   } finally {
+    submitting.value = false;
     emit('update:loading', false);
   }
 };
