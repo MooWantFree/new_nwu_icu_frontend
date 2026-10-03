@@ -21,7 +21,7 @@
               <label for="teacherName" class="block text-sm font-medium text-gray-700 mb-1">教师姓名</label>
               <input type="text" id="teacherName" v-model="teacherName"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="请输入教师姓名" :disabled="loadingSubmit" />
+                placeholder="请输入教师姓名" :disabled="loadingSubmit || checkingLogin" />
               <p v-if="errorMessage.teacherName" class="mt-1 text-sm text-red-600">{{ errorMessage.teacherName }}</p>
             </div>
 
@@ -36,7 +36,7 @@
                 filterable
                 size="large"
                 aria-label="所属学院"
-                :disabled="loadingSubmit"
+                :disabled="loadingSubmit || checkingLogin"
               />
               <p v-if="errorMessage.teacherSchool" class="mt-1 text-sm text-red-600">{{ errorMessage.teacherSchool }}
               </p>
@@ -45,12 +45,12 @@
             <div class="flex justify-end space-x-4 pt-6">
               <button type="button" @click="closeModal"
                 class="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 取消
               </button>
               <button type="submit"
                 class="px-5 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 <LoaderCircle v-if="loadingSubmit" class="w-5 h-5 mr-2 text-white animate-spin" />
                 {{ loadingSubmit ? '提交中...' : '提交' }}
               </button>
@@ -67,6 +67,7 @@ import { onMounted, ref, watch } from 'vue'
 import { LoaderCircle } from 'lucide-vue-next'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import { isLoginRequiredResponse, useCreationLogin } from '@/lib/useCreationLogin'
 
 const props = defineProps<{
   modelValue: boolean
@@ -82,6 +83,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { checkingLogin, requireLogin, notifyLoginRequired } = useCreationLogin()
 const errorMessage = ref<{
   teacherName?: string
   teacherSchool?: string
@@ -143,6 +145,11 @@ watch(() => teacherSchool.value,
 )
 
 const submitTeacher = async () => {
+  if (loadingSubmit.value || checkingLogin.value) return
+  if (!(await requireLogin('添加教师'))) {
+    errorMessage.value.other = '请先登录后再添加教师'
+    return
+  }
   // Reset error messages before validation
   errorMessage.value = {
     teacherName: '',
@@ -188,6 +195,10 @@ const submitTeacher = async () => {
       message.success('添加教师成功')
       emit('add', { id: resp.data.contents.teacher_id, name: teacherName.value, school: schoolObj.name })
       closeModal()
+    }
+    else if (isLoginRequiredResponse(resp)) {
+      errorMessage.value.other = '请先登录后再添加教师'
+      notifyLoginRequired('添加教师')
     }
     else {
       message.error(JSON.stringify(resp.errors))

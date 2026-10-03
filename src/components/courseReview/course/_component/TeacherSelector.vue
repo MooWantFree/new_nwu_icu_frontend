@@ -6,8 +6,8 @@
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="text-lg font-medium">选择教师</h3>
         <div class="flex items-center gap-2">
-          <button @click="showAddTeacherModal = true"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1.5">
+          <button type="button" @click="handleAddTeacher" :disabled="checkingLogin"
+            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50">
             <PlusCircle />
             添加教师
           </button>
@@ -75,8 +75,8 @@
             <p class="text-sm mt-2 text-gray-500">请尝试调整搜索关键词</p>
             <div class="border-t border-gray-200 my-4 w-full"></div>
             <p class="text-sm text-gray-600 mb-2">找不到教师？你可以添加一个新教师</p>
-            <button @click="showAddTeacherModal = true"
-              class="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2">
+            <button type="button" @click="handleAddTeacher" :disabled="checkingLogin"
+              class="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
               <PlusCircle />
               添加新教师
             </button>
@@ -103,6 +103,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { LoaderCircle, Search, X, PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
+import { useCreationLogin } from '@/lib/useCreationLogin'
 import { TeacherSearchResult } from '@/types/api/search/search'
 import AddTeacherModal from '../AddTeacherModal.vue'
 
@@ -124,6 +125,12 @@ const currentPage = ref(1)
 const totalPage = ref(1)
 const scrollContainer = ref<HTMLElement | null>(null)
 const showAddTeacherModal = ref(false)
+const { checkingLogin, requireLogin } = useCreationLogin()
+const handleAddTeacher = async () => {
+  if (await requireLogin('添加教师')) {
+    showAddTeacherModal.value = true
+  }
+}
 
 watch(() => props.modelValue, (newVal) => {
   show.value = newVal

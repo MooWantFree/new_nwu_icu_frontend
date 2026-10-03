@@ -40,8 +40,9 @@
         </div>
         <button
           type="button"
-          class="inline-flex min-h-11 w-fit items-center justify-center gap-2 self-end rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:self-auto"
-          @click="showAddTeacherModal = true"
+          :disabled="checkingLogin"
+          class="inline-flex min-h-11 w-fit items-center justify-center gap-2 self-end rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 sm:self-auto"
+          @click="handleAddTeacher"
         >
           <PlusCircle class="h-4 w-4" aria-hidden="true" />
           添加教师
@@ -99,6 +100,7 @@ import { onMounted, computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import { useCreationLogin } from '@/lib/useCreationLogin'
 import { ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
 import AddTeacherModal from '@/components/courseReview/course/AddTeacherModal.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
@@ -108,6 +110,7 @@ import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const { checkingLogin, requireLogin } = useCreationLogin()
 
 enum OrderBy {
   Rating = 'rating',
@@ -132,6 +135,10 @@ const currentPage = computed(() => {
 const totalTeachers = ref(0)
 const showAddTeacherModal = ref(false)
 const teacherPageSize = 16
+
+const handleAddTeacher = async () => {
+  if (await requireLogin('添加教师')) showAddTeacherModal.value = true
+}
 
 const teacherSkeletonCount = computed(() => data.value?.results.length || teacherPageSize)
 const handleTeacherAdded = ({ id }: { id: number, name: string, school: string }) => {

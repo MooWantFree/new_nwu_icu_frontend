@@ -21,7 +21,7 @@
               <label for="courseName" class="block text-sm font-medium text-gray-700 mb-1">课程名称</label>
               <input type="text" id="courseName" v-model="courseName"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="请输入课程名称" :disabled="loadingSubmit" />
+                placeholder="请输入课程名称" :disabled="loadingSubmit || checkingLogin" />
               <p v-if="errorMessage.courseName" class="mt-1 text-sm text-red-600">{{ errorMessage.courseName }}</p>
             </div>
 
@@ -36,7 +36,7 @@
                 filterable
                 size="large"
                 aria-label="所属学院"
-                :disabled="loadingSubmit"
+                :disabled="loadingSubmit || checkingLogin"
               />
               <p v-if="errorMessage.courseSchool" class="mt-1 text-sm text-red-600">{{ errorMessage.courseSchool }}</p>
             </div>
@@ -45,7 +45,7 @@
               <label for="courseClassification" class="block text-sm font-medium text-gray-700 mb-1">课程分类</label>
               <select id="courseClassification" v-model="courseClassification"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 <option value="" disabled>请选择课程分类</option>
                 <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
@@ -59,7 +59,7 @@
               <label for="teacherId" class="block text-sm font-medium text-gray-700 mb-1">授课教师</label>
               <button @click.prevent="showTeacherSelectorModal = true" type="button"
                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 <div v-if="selectedTeacher.id" class="flex items-center">
                   <div class="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                     <div :class="[
@@ -93,12 +93,12 @@
             <div class="flex justify-end space-x-4 pt-6">
               <button type="button" @click="closeModal"
                 class="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 取消
               </button>
               <button type="submit"
                 class="px-5 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                :disabled="loadingSubmit">
+                :disabled="loadingSubmit || checkingLogin">
                 <LoaderCircle v-if="loadingSubmit" class="w-5 h-5 mr-2 text-white animate-spin" />
                 {{ loadingSubmit ? '提交中...' : '提交' }}
               </button>
@@ -119,6 +119,7 @@ import { APICourseListQuery, APICourseNewQuery } from '@/types/api/courseReview/
 import TeacherSelector from './_component/TeacherSelector.vue'
 import { z } from 'zod'
 import { useRouter } from 'vue-router'
+import { isLoginRequiredResponse, useCreationLogin } from '@/lib/useCreationLogin'
 
 const props = defineProps<{
   modelValue: boolean
@@ -153,6 +154,7 @@ const courseTypeOptions = [
 
 const message = useMessage()
 const router = useRouter()
+const { checkingLogin, requireLogin, notifyLoginRequired } = useCreationLogin()
 const errorMessage = ref<{
   courseName?: string
   courseSchool?: string
@@ -239,6 +241,11 @@ watch(() => selectedTeacher.value.id,
 )
 
 const submitCourse = async () => {
+  if (loadingSubmit.value || checkingLogin.value) return
+  if (!(await requireLogin('添加课程'))) {
+    errorMessage.value.other = '请先登录后再添加课程'
+    return
+  }
   // Reset error messages before validation
   errorMessage.value = {
     courseName: '',
@@ -297,6 +304,9 @@ const submitCourse = async () => {
         }
       })
       closeModal()
+    } else if (isLoginRequiredResponse(resp)) {
+      errorMessage.value.other = '请先登录后再添加课程'
+      notifyLoginRequired('添加课程')
     } else {
       errorMessage.value.other = '添加课程失败: ' + JSON.stringify(resp.errors)
     }

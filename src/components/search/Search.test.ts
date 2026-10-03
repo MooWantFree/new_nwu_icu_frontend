@@ -6,6 +6,7 @@ import { api } from '@/lib/requests'
 import { resourcePageUrl } from '@/lib/resourceBrowser'
 
 vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn() } }))
+vi.mock('naive-ui', () => ({ useMessage: () => ({ error: vi.fn() }) }))
 vi.mock('../courseReview/course/AddCourseModal.vue', () => ({ default: { render: () => null } }))
 let app: App, host: HTMLDivElement, router: Router
 const close = vi.fn()

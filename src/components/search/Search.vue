@@ -129,8 +129,9 @@
             <p class="text-sm text-gray-500 mb-3">找不到课程？添加一个新的</p>
             <button
               type="button"
-              @click="showAddCourseModal = true"
-              class="btn-primary w-full"
+              @click="handleAddCourse"
+              :disabled="checkingLogin"
+              class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
             >
               <PlusCircle class="w-5 h-5 mr-2" />
               添加新课程
@@ -152,6 +153,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { LoaderCircle, Search, PlusCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
+import { useCreationLogin } from '@/lib/useCreationLogin'
 import { searchEnums, searchTabs, SearchType, searchTypeTooltip } from './enums'
 import {
   APISearch,
@@ -185,6 +187,12 @@ const scrollLoading = ref(false)
 const searchError = ref('')
 
 const showAddCourseModal = ref(false)
+const { checkingLogin, requireLogin } = useCreationLogin()
+const handleAddCourse = async () => {
+  if (await requireLogin('添加课程')) {
+    showAddCourseModal.value = true
+  }
+}
 let searchRequestId = 0
 let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
 

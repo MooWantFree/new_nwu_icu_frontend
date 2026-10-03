@@ -34,6 +34,7 @@
             <AddCourseModal v-model="showTeacherSelectorModal" :init-value="{teacher: teacher.teacher_info}" />
             <button
               type="button"
+              :disabled="checkingLogin"
               class="btn-primary"
               @click="handleAddCourseButtonClick"
             >
@@ -120,7 +121,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
 import { PlusCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.vue'
@@ -128,11 +128,11 @@ import { APITeacherInfo } from '@/types/api/courseReview/teacher'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import Page404 from '@/components/infoNErrors/404.vue'
 import Page500 from '@/components/infoNErrors/500.vue'
-import { checkLoginStatus } from '@/lib/logins'
+import { useCreationLogin } from '@/lib/useCreationLogin'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
+const { checkingLogin, requireLogin } = useCreationLogin()
 
 const errorMsg = shallowRef<{
   component: typeof Page404 | null,
@@ -146,12 +146,7 @@ const loading = ref(true)
 const showTeacherSelectorModal = ref(false)
 
 const handleAddCourseButtonClick = async () => {
-  // If user already login then show the modal
-  if (await checkLoginStatus()) {
-    showTeacherSelectorModal.value = true
-  } else {
-    message.error('请先登录后再进行课程添加')
-  }
+  if (await requireLogin('添加课程')) showTeacherSelectorModal.value = true
 }
 
 const fetchTeacherData = async (teacherId: number, isCurrent: () => boolean) => {

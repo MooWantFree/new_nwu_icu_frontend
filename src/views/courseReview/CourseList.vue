@@ -44,8 +44,9 @@
         </div>
         <button
           type="button"
+          :disabled="checkingLogin"
           @click="handleAddCourse"
-          class="inline-flex min-h-11 w-fit items-center justify-center gap-2 self-end rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:self-auto"
+          class="inline-flex min-h-11 w-fit items-center justify-center gap-2 self-end rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 sm:self-auto"
         >
           <PlusCircle class="h-4 w-4" aria-hidden="true" />
           添加课程
@@ -129,6 +130,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
+import { useCreationLogin } from '@/lib/useCreationLogin'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { ArrowUpDown, BookOpen, ChevronDown, PlusCircle, Star, Tags } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
@@ -138,6 +140,7 @@ import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 const message = useMessage()
 const route = useRoute()
 const router = useRouter()
+const { checkingLogin, requireLogin } = useCreationLogin()
 
 enum OrderBy {
   Rating = 'rating',
@@ -162,8 +165,8 @@ const currentPage = computed(() => {
 const showAddCourseModal = ref(false)
 const coursePageSize = 12
 
-const handleAddCourse = () => {
-  showAddCourseModal.value = true
+const handleAddCourse = async () => {
+  if (await requireLogin('添加课程')) showAddCourseModal.value = true
 }
 
 const courseTypeOptions = [
