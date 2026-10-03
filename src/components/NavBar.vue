@@ -1,18 +1,18 @@
 <template>
-  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm" :class="{ 'home-nav': isHome }">
+  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm" :class="{ 'home-nav': isShadcnPage }">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo component -->  
-        <div class="flex shrink-0 items-center" :class="{ 'gap-2': isHome }">
+        <div class="flex shrink-0 items-center" :class="{ 'gap-2': isShadcnPage }">
           <Logo @showMessage="showMessage" />
-          <div v-if="isHome" class="flex flex-col">
+          <div v-if="isShadcnPage" class="flex flex-col">
             <span class="text-[15px] font-semibold leading-5 tracking-tight text-zinc-950">NWU.ICU</span>
             <span class="hidden text-[10px] leading-4 tracking-wide text-zinc-500 sm:block">Campus community</span>
           </div>
         </div>
 
         <!-- Desktop Navigation Menu -->  
-        <div :class="isHome ? 'hidden lg:flex lg:items-center lg:justify-between lg:flex-1 lg:ml-8' : 'hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10'">
+        <div :class="isShadcnPage ? 'hidden lg:flex lg:items-center lg:justify-between lg:flex-1 lg:ml-8' : 'hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10'">
           <NavMenu :menuItems="menuOptions" />
           
           <div class="flex items-center space-x-4">
@@ -21,7 +21,7 @@
             
             <!-- User Menu -->  
             <UserMenu 
-              :class="{ 'home-account': isHome }"
+              :class="{ 'home-account': isShadcnPage }"
               :isLoggedIn="isLoggedIn" 
               :isLoading="isLoading" 
               :userInfo="userInfo"
@@ -33,7 +33,7 @@
         </div>
         
         <!-- Mobile Menu -->  
-        <div class="flex items-center space-x-2" :class="isHome ? 'home-mobile lg:hidden' : 'md:hidden'">
+        <div class="flex items-center space-x-2" :class="isShadcnPage ? 'home-mobile lg:hidden' : 'md:hidden'">
           <button
             @click="showSearchModal = true"
             class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -82,7 +82,7 @@ import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
 const route = useRoute()
-const isHome = computed(() => route.path === '/')
+const isShadcnPage = computed(() => route.path === '/' || route.path === '/review/timeline')
 
 // User state
 const { isLoggedIn, logout, userInfo, isLoading } = useUser()
@@ -229,6 +229,8 @@ onUnmounted(() => {
 }
 
 .home-nav :deep(nav a.router-link-exact-active),
+.home-nav :deep(nav li > div:has(> a.router-link-exact-active)),
+.home-nav :deep(.home-mobile .items-stretch:has(> a.router-link-exact-active)),
 .home-nav :deep(.home-mobile a.router-link-exact-active) {
   color: #18181b;
   background-color: #f4f4f5;

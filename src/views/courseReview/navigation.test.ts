@@ -50,6 +50,7 @@ const mount = async (path: string) => {
   const router = createRouter({ history: createMemoryHistory(), routes: [
     { path: '/review/teacher/:id', component: Teacher },
     { path: '/review/course', component: CourseList },
+    { path: '/review/teacher', component: { render: () => null } },
     { path: '/review/course/:id', component: { render: () => h('p', 'course detail') } },
     { path: '/review/timeline', component: ReviewTimeline },
   ] })
