@@ -3,7 +3,7 @@
     <span class="sr-only">正在加载最近评价</span>
     <article v-for="index in pageSize" :key="index" class="min-h-[116px] px-5 py-5 sm:px-6">
       <div class="flex gap-3 motion-safe:animate-pulse" aria-hidden="true">
-        <div class="h-9 w-9 shrink-0 rounded-lg bg-zinc-100" />
+        <div class="h-9 w-9 shrink-0 rounded-full bg-zinc-100" />
         <div class="min-w-0 flex-1">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -35,9 +35,13 @@
   <div v-else-if="reviews.length" class="divide-y divide-zinc-200">
     <article v-for="review in reviews" :key="review.id" class="min-h-[116px] px-5 py-5 transition-colors hover:bg-zinc-50 sm:px-6">
       <div class="flex gap-3">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200/70 bg-zinc-100 text-zinc-600">
-          <BookOpen class="h-4 w-4" aria-hidden="true" />
-        </div>
+        <UserAvatar
+          :avatar="review.author.avatar_uuid"
+          :uuid="review.author.id > 0 ? review.author.uuid : undefined"
+          :has-avatar="review.author.id > 0 ? review.author.has_avatar : true"
+          :alt="review.author.id > 0 ? `${review.author.nickname}的头像` : '匿名用户头像'"
+          class="h-9 w-9 shrink-0 rounded-full border border-zinc-200/70 bg-zinc-100 object-cover"
+        />
         <div class="min-w-0 flex-1">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div class="min-w-0">
@@ -93,7 +97,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { BookOpen } from 'lucide-vue-next'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import { api } from '@/lib/requests'
