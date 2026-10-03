@@ -1,12 +1,18 @@
 <template>
-  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
+  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm" :class="{ 'home-nav': isHome }">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo component -->  
-        <Logo @showMessage="showMessage" />
+        <div class="flex shrink-0 items-center" :class="{ 'gap-2': isHome }">
+          <Logo @showMessage="showMessage" />
+          <div v-if="isHome" class="flex flex-col">
+            <span class="text-[15px] font-semibold leading-5 tracking-tight text-zinc-950">NWU.ICU</span>
+            <span class="hidden text-[10px] leading-4 tracking-wide text-zinc-500 sm:block">Campus community</span>
+          </div>
+        </div>
 
         <!-- Desktop Navigation Menu -->  
-        <div class="hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10">
+        <div :class="isHome ? 'hidden lg:flex lg:items-center lg:justify-between lg:flex-1 lg:ml-8' : 'hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10'">
           <NavMenu :menuItems="menuOptions" />
           
           <div class="flex items-center space-x-4">
@@ -15,6 +21,7 @@
             
             <!-- User Menu -->  
             <UserMenu 
+              :class="{ 'home-account': isHome }"
               :isLoggedIn="isLoggedIn" 
               :isLoading="isLoading" 
               :userInfo="userInfo"
@@ -26,7 +33,7 @@
         </div>
         
         <!-- Mobile Menu -->  
-        <div class="flex md:hidden items-center space-x-2">
+        <div class="flex items-center space-x-2" :class="isHome ? 'home-mobile lg:hidden' : 'md:hidden'">
           <button
             @click="showSearchModal = true"
             class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -58,7 +65,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUser } from '@/lib/useUser'
 import { APILogin } from '@/types/api/user/user'
 import { Search } from 'lucide-vue-next'
@@ -73,6 +81,8 @@ import LoginModal from '@/components/navbar/LoginModal.vue'
 import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
+const route = useRoute()
+const isHome = computed(() => route.path === '/')
 
 // User state
 const { isLoggedIn, logout, userInfo, isLoading } = useUser()
@@ -181,3 +191,76 @@ onUnmounted(() => {
   window.removeEventListener('resize', onPageWidthUpdate)
 })
 </script>
+
+<style scoped>
+.home-nav {
+  border-color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+}
+
+.home-nav :deep(nav) {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.home-nav :deep(nav ul) {
+  gap: 2px;
+}
+
+.home-nav :deep(nav li + li) {
+  margin-left: 0;
+}
+
+.home-nav :deep(nav .text-gray-700),
+.home-nav :deep(.home-mobile .text-gray-700),
+.home-nav :deep(.text-gray-600) {
+  color: #71717a;
+}
+
+.home-nav :deep(nav a:hover),
+.home-nav :deep(nav button:hover),
+.home-nav :deep(nav li > div:hover),
+.home-nav :deep(.home-mobile a:hover),
+.home-nav :deep(.home-mobile button:hover) {
+  color: #18181b;
+  background-color: #f4f4f5;
+}
+
+.home-nav :deep(nav a.router-link-exact-active),
+.home-nav :deep(.home-mobile a.router-link-exact-active) {
+  color: #18181b;
+  background-color: #f4f4f5;
+}
+
+.home-nav :deep(.home-account > button) {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: #fafafa;
+  background-color: #18181b;
+}
+
+.home-nav :deep(.home-account > button:hover) {
+  background-color: #3f3f46;
+}
+
+.home-nav :deep(button:focus-visible),
+.home-nav :deep(a:focus-visible) {
+  outline: 2px solid #71717a;
+  outline-offset: 3px;
+  --tw-ring-color: #71717a;
+}
+
+.home-nav :deep(.home-mobile > .md\:hidden) {
+  display: block;
+}
+
+.home-nav :deep(.home-mobile .shadow-lg),
+.home-nav :deep(nav .shadow-lg),
+.home-nav :deep(.home-account .shadow-lg) {
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 4px 12px rgb(24 24 27 / 8%);
+}
+</style>

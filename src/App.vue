@@ -8,11 +8,11 @@
               <n-layout class="min-h-screen">
                 <div class="flex min-h-screen flex-col">
                   <NavBar v-if="!isManagement" />
-                  <div class="flex flex-1 flex-col bg-gray-50 text-gray-900">
+                  <div class="flex flex-1 flex-col" :class="isHome ? 'home-shell bg-zinc-50 text-zinc-950' : 'bg-gray-50 text-gray-900'">
                     <div class="flex-1">
                       <RouterView />
                     </div>
-                    <footer v-if="!isManagement" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs text-gray-500">
+                    <footer v-if="!isManagement" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs" :class="isHome ? 'text-zinc-500' : 'text-gray-500'">
                       <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
                       <span aria-hidden="true">·</span>
                       <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
@@ -42,6 +42,7 @@ import CaptchaChallenge from '@/components/common/CaptchaChallenge.vue'
 import { themeOverrides } from '@/theme'
 
 const route = useRoute()
+const isHome = computed(() => route.path === '/')
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
 const backendCommit = import.meta.env.VITE_BACKEND_COMMIT
@@ -59,3 +60,9 @@ const frontendCommitUrl = commitUrl(import.meta.env.VITE_FRONTEND_GITHUB_URL, fr
 const backendCommitUrl = commitUrl(import.meta.env.VITE_BACKEND_GITHUB_URL, backendCommit)
 const shortCommit = (commit: string) => commit === 'unknown' ? 'unknown' : commit.slice(0, 8)
 </script>
+
+<style scoped>
+.home-shell footer a:hover {
+  color: #18181b;
+}
+</style>

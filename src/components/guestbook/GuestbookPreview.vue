@@ -1,37 +1,37 @@
 <template>
-  <div v-if="loading" class="divide-y divide-slate-200" aria-label="正在加载留言" role="status">
+  <div v-if="loading" class="divide-y divide-zinc-200" aria-label="正在加载留言" role="status">
     <span class="sr-only">正在加载留言</span>
     <div v-for="index in 3" :key="index" class="px-5 py-5 sm:px-6">
       <div class="flex gap-3 motion-safe:animate-pulse" aria-hidden="true">
-        <div class="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
+        <div class="h-9 w-9 shrink-0 rounded-full bg-zinc-200" />
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-3">
-            <div class="h-4 w-24 rounded-md bg-slate-200" />
-            <div class="h-4 w-12 rounded-md bg-slate-100" />
+            <div class="h-4 w-24 rounded bg-zinc-200" />
+            <div class="h-4 w-12 rounded bg-zinc-100" />
           </div>
-          <div class="mt-2 h-4 w-4/5 rounded-md bg-slate-100" />
+          <div class="mt-2 h-4 w-4/5 rounded bg-zinc-100" />
           <div class="mt-3 flex items-center gap-4">
-            <div class="h-4 w-8 rounded-md bg-slate-100" />
-            <div class="h-4 w-8 rounded-md bg-slate-100" />
+            <div class="h-4 w-8 rounded bg-zinc-100" />
+            <div class="h-4 w-8 rounded bg-zinc-100" />
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div v-else-if="entries.length" class="divide-y divide-slate-200">
+  <div v-else-if="entries.length" class="divide-y divide-zinc-200">
     <RouterLink
       v-for="entry in entries"
       :key="entry.id"
       :to="`/guestbook/${entry.id}`"
-      class="block px-5 py-5 transition-colors hover:bg-blue-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 sm:px-6"
+      class="block px-5 py-5 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 sm:px-6"
     >
       <div class="flex gap-3">
         <img
           v-if="entry.anonymous"
           :src="`/api/download/${entry.author.avatar}/`"
           alt="匿名用户头像"
-          class="h-10 w-10 shrink-0 rounded-full object-cover"
+          class="h-9 w-9 shrink-0 rounded-full border border-zinc-200 object-cover"
         />
         <UserAvatar
           v-else
@@ -39,24 +39,24 @@
           :uuid="entry.author.uuid"
           :has-avatar="entry.author.has_avatar"
           :alt="entry.author.nickname"
-          class="h-10 w-10 shrink-0 rounded-full object-cover"
+          class="h-9 w-9 shrink-0 rounded-full border border-zinc-200 object-cover"
         />
 
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-3">
-            <span class="truncate text-sm font-semibold text-slate-800">{{ entry.author.nickname }}</span>
+            <span class="truncate text-sm font-semibold text-zinc-900">{{ entry.author.nickname }}</span>
             <Time :time="entry.created_at" class="shrink-0 whitespace-nowrap" />
           </div>
-          <p class="mt-2 line-clamp-1 break-words text-sm leading-6 text-slate-600">
+          <p class="mt-1.5 line-clamp-1 break-words text-sm leading-6 text-zinc-500">
             {{ guestbookPlainText(entry.content) }}
           </p>
-          <div class="mt-3 flex items-center gap-4 text-xs text-slate-400">
+          <div class="mt-2.5 flex items-center gap-3 text-xs text-zinc-500">
             <span v-if="!entry.is_deleted" class="inline-flex items-center gap-1">
-              <ThumbsUp class="h-4 w-4" aria-hidden="true" />
+              <ThumbsUp class="h-3.5 w-3.5" aria-hidden="true" />
               {{ entry.like_count }}
             </span>
             <span class="inline-flex items-center gap-1">
-              <MessageCircle class="h-4 w-4" aria-hidden="true" />
+              <MessageCircle class="h-3.5 w-3.5" aria-hidden="true" />
               {{ entry.reply_count || 0 }}
             </span>
           </div>
@@ -66,17 +66,17 @@
   </div>
 
   <div v-else-if="failed" class="px-5 py-16 text-center sm:px-6" role="alert">
-    <p class="text-sm text-slate-500">留言加载失败。</p>
+    <p class="text-sm text-zinc-500">留言加载失败。</p>
     <button
       type="button"
-      class="mt-3 min-h-11 rounded-lg px-4 text-sm font-medium text-blue-700 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      class="mt-3 min-h-10 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-900 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
       @click="load"
     >
       重新加载
     </button>
   </div>
 
-  <p v-else class="px-5 py-16 text-center text-sm text-slate-500 sm:px-6">
+  <p v-else class="px-5 py-16 text-center text-sm text-zinc-500 sm:px-6">
     还没有留言。
   </p>
 </template>
@@ -111,3 +111,8 @@ const load = async () => {
 
 onMounted(load)
 </script>
+
+<style scoped>
+:deep(.app-time) { color: #71717a; }
+:deep(.app-time:hover) { color: #18181b; }
+</style>
