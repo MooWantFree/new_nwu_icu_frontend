@@ -57,14 +57,6 @@ const mount = async (path: string) => {
   await router.push(path)
   app = createApp(RouterView).use(router)
   app.component('NRate', { render: () => null })
-  app.component('NPagination', defineComponent({
-    props: ['page', 'pageSize'], emits: ['update:page', 'update:page-size'],
-    setup: (props, { emit }) => () => h('nav', [
-      h('span', { 'data-page': '' }, `${props.page}/${props.pageSize}`),
-      h('button', { 'data-page-two': '', onClick: () => emit('update:page', 2) }, '第2页'),
-      h('button', { 'data-size-twenty': '', onClick: () => emit('update:page-size', 20) }, '每页20条'),
-    ]),
-  }))
   app.mount(container)
   await flush()
   return router
@@ -130,7 +122,7 @@ describe('review navigation', () => {
     const router = await mount('/review/course?source=directory')
     await select(0, 'english')
     await select(1, 'popular')
-    container.querySelector<HTMLButtonElement>('[data-page-two]')!.click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="第 2 页"]')!.click()
     await flush()
     expect(router.currentRoute.value.query).toEqual({ source: 'directory', course_type: 'english', order_by: 'popular', page: '2' })
     container.querySelector<HTMLAnchorElement>('a[href="/review/course/42"]')!.click()
@@ -138,7 +130,7 @@ describe('review navigation', () => {
     expect(container.textContent).toContain('course detail')
     await travel(router, -1)
     expect([...container.querySelectorAll('select')].map(el => el.value)).toEqual(['english', 'popular'])
-    expect(container.querySelector('[data-page]')?.textContent).toContain('2/')
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     expect(container.textContent).toContain('共 4 门课程')
     expect(container.textContent).toContain('英美诗歌选读')
     expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: { course_type: 'english', order_by: 'popular', page: 2, pageSize: 12 } }))
@@ -146,7 +138,7 @@ describe('review navigation', () => {
     expect(router.currentRoute.value.query.page).toBe('1')
     await travel(router, -1)
     expect(container.querySelector('select')?.value).toBe('english')
-    expect(container.querySelector('[data-page]')?.textContent).toContain('2/')
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
   })
 
   it('ignores stale course results and errors after changing filters', async () => {
@@ -169,22 +161,34 @@ describe('review navigation', () => {
   it('reloads timeline content and page size on browser back and forward without duplicate requests', async () => {
     mocks.get.mockImplementation(({ query }) => Promise.resolve(reviewResponse(query.page, query.pageSize)))
     const router = await mount('/review/timeline')
-    container.querySelector<HTMLButtonElement>('[data-page-two]')!.click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="第 2 页"]')!.click()
     await flush()
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     expect(container.textContent).toContain('评价第2页，每页8条')
     await travel(router, -1)
-    expect(container.querySelector('[data-page]')?.textContent).toBe('1/8')
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 1 页')
     expect(container.textContent).toContain('评价第1页，每页8条')
     await travel(router, 1)
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     expect(container.textContent).toContain('评价第2页，每页8条')
-    container.querySelector<HTMLButtonElement>('[data-size-twenty]')!.click()
+    await router.push({ query: { ...router.currentRoute.value.query, page: '1', pageSize: '20' } })
     await flush()
-    expect(container.querySelector('[data-page]')?.textContent).toBe('1/20')
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 1 页')
     expect(container.textContent).toContain('评价第1页，每页20条')
+    expect(container.querySelector('select, [role="combobox"]')).toBeNull()
     await travel(router, -1)
-    expect(container.querySelector('[data-page]')?.textContent).toBe('2/8')
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     expect(container.textContent).toContain('评价第2页，每页8条')
     expect(mocks.get).toHaveBeenCalledTimes(6)
+  })
+
+  it.each([8, 20, 50])('preserves timeline pageSize=%i URLs without showing a size picker', async (size) => {
+    mocks.get.mockImplementation(({ query }) => Promise.resolve(reviewResponse(query.page, query.pageSize)))
+    await mount(`/review/timeline?page=2&pageSize=${size}`)
+    expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: { page: 2, pageSize: size, desc: 1 } }))
+    expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
+    expect(container.textContent).toContain(`评价第2页，每页${size}条`)
+    expect(container.querySelector('select, [role="combobox"]')).toBeNull()
   })
 
   it('prevents a slow timeline page from replacing the page restored by back', async () => {
@@ -193,7 +197,7 @@ describe('review navigation', () => {
     const old = deferred()
     const latest = deferred()
     mocks.get.mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise)
-    container.querySelector<HTMLButtonElement>('[data-page-two]')!.click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="第 2 页"]')!.click()
     await flush()
     await travel(router, -1)
     old.resolve(reviewResponse(2))

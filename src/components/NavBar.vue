@@ -1,19 +1,19 @@
 <template>
-  <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm" :class="{ 'home-nav': isShadcnPage }">
+  <header class="app-nav sticky top-0 z-40 w-full bg-white border-b border-zinc-200">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo component -->  
-        <div class="flex shrink-0 items-center" :class="{ 'gap-2': isShadcnPage }">
+        <div class="flex shrink-0 items-center gap-2">
           <Logo @showMessage="showMessage" />
-          <div v-if="isShadcnPage" class="flex flex-col">
+          <RouterLink to="/" aria-label="NWU.ICU 主页" class="flex flex-col rounded-md">
             <span class="text-[15px] font-semibold leading-5 tracking-tight text-zinc-950">NWU.ICU</span>
             <span class="hidden text-[10px] leading-4 tracking-wide text-zinc-500 sm:block">Campus community</span>
-          </div>
+          </RouterLink>
         </div>
 
         <!-- Desktop Navigation Menu -->  
-        <div :class="isShadcnPage ? 'hidden lg:flex lg:items-center lg:justify-between lg:flex-1 lg:ml-8' : 'hidden md:flex md:items-center md:justify-between md:flex-1 md:ml-10'">
-          <NavMenu :menuItems="menuOptions" />
+        <div class="hidden lg:flex lg:items-center lg:justify-between lg:flex-1 lg:ml-8">
+          <NavMenu :menuItems="menuOptions" :class="{ 'review-nav-active': isReviewRoute }" />
           
           <div class="flex items-center space-x-4">
             <!-- Action Buttons (Search, Notifications) -->  
@@ -21,7 +21,7 @@
             
             <!-- User Menu -->  
             <UserMenu 
-              :class="{ 'home-account': isShadcnPage }"
+              class="app-account"
               :isLoggedIn="isLoggedIn" 
               :isLoading="isLoading" 
               :userInfo="userInfo"
@@ -33,7 +33,7 @@
         </div>
         
         <!-- Mobile Menu -->  
-        <div class="flex items-center space-x-2" :class="isShadcnPage ? 'home-mobile lg:hidden' : 'md:hidden'">
+        <div class="app-mobile flex items-center space-x-2 lg:hidden">
           <button
             @click="showSearchModal = true"
             class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -43,6 +43,7 @@
           </button>
 
           <MobileMenu
+            :class="{ 'review-nav-active': isReviewRoute }"
             :menuItems="menuOptions"
             :isLoggedIn="isLoggedIn"
             @showLoginModal="showLoginPopup = true"
@@ -82,7 +83,7 @@ import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
 const route = useRoute()
-const isShadcnPage = computed(() => route.path === '/' || route.path === '/review/timeline')
+const isReviewRoute = computed(() => route.path === '/review' || route.path.startsWith('/review/'))
 
 // User state
 const { isLoggedIn, logout, userInfo, isLoading } = useUser()
@@ -193,50 +194,52 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.home-nav {
+.app-nav {
   border-color: #e4e4e7;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: none;
   backdrop-filter: blur(12px);
 }
 
-.home-nav :deep(nav) {
+.app-nav :deep(nav) {
   font-size: 13px;
   font-weight: 500;
 }
 
-.home-nav :deep(nav ul) {
+.app-nav :deep(nav ul) {
   gap: 2px;
 }
 
-.home-nav :deep(nav li + li) {
+.app-nav :deep(nav li + li) {
   margin-left: 0;
 }
 
-.home-nav :deep(nav .text-gray-700),
-.home-nav :deep(.home-mobile .text-gray-700),
-.home-nav :deep(.text-gray-600) {
+.app-nav :deep(nav .text-gray-700),
+.app-nav :deep(.app-mobile .text-gray-700),
+.app-nav :deep(.text-gray-600) {
   color: #71717a;
 }
 
-.home-nav :deep(nav a:hover),
-.home-nav :deep(nav button:hover),
-.home-nav :deep(nav li > div:hover),
-.home-nav :deep(.home-mobile a:hover),
-.home-nav :deep(.home-mobile button:hover) {
+.app-nav :deep(nav a:hover),
+.app-nav :deep(nav button:hover),
+.app-nav :deep(nav li > div:hover),
+.app-nav :deep(.app-mobile a:hover),
+.app-nav :deep(.app-mobile button:hover) {
   color: #18181b;
   background-color: #f4f4f5;
 }
 
-.home-nav :deep(nav a.router-link-exact-active),
-.home-nav :deep(nav li > div:has(> a.router-link-exact-active)),
-.home-nav :deep(.home-mobile .items-stretch:has(> a.router-link-exact-active)),
-.home-nav :deep(.home-mobile a.router-link-exact-active) {
+.app-nav :deep(nav a.router-link-exact-active),
+.app-nav :deep(nav li > div:has(> a.router-link-exact-active)),
+.app-nav :deep(nav.review-nav-active li.group:has(a[href="/review/timeline"]) > div.flex),
+.app-nav :deep(.app-mobile .review-nav-active .items-stretch:has(> a[href="/review/timeline"])),
+.app-nav :deep(.app-mobile .items-stretch:has(> a.router-link-exact-active)),
+.app-nav :deep(.app-mobile a.router-link-exact-active) {
   color: #18181b;
   background-color: #f4f4f5;
 }
 
-.home-nav :deep(.home-account > button) {
+.app-nav :deep(.app-account > button) {
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -244,24 +247,24 @@ onUnmounted(() => {
   background-color: #18181b;
 }
 
-.home-nav :deep(.home-account > button:hover) {
+.app-nav :deep(.app-account > button:hover) {
   background-color: #3f3f46;
 }
 
-.home-nav :deep(button:focus-visible),
-.home-nav :deep(a:focus-visible) {
+.app-nav :deep(button:focus-visible),
+.app-nav :deep(a:focus-visible) {
   outline: 2px solid #71717a;
   outline-offset: 3px;
   --tw-ring-color: #71717a;
 }
 
-.home-nav :deep(.home-mobile > .md\:hidden) {
+.app-nav :deep(.app-mobile > .md\:hidden) {
   display: block;
 }
 
-.home-nav :deep(.home-mobile .shadow-lg),
-.home-nav :deep(nav .shadow-lg),
-.home-nav :deep(.home-account .shadow-lg) {
+.app-nav :deep(.app-mobile .shadow-lg),
+.app-nav :deep(nav .shadow-lg),
+.app-nav :deep(.app-account .shadow-lg) {
   border: 1px solid #e4e4e7;
   box-shadow: 0 4px 12px rgb(24 24 27 / 8%);
 }

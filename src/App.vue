@@ -42,7 +42,7 @@ import CaptchaChallenge from '@/components/common/CaptchaChallenge.vue'
 import { themeOverrides } from '@/theme'
 
 const route = useRoute()
-const isShadcnPage = computed(() => route.path === '/' || route.path === '/review/timeline')
+const isShadcnPage = computed(() => ['/', '/home', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path))
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
 const backendCommit = import.meta.env.VITE_BACKEND_COMMIT

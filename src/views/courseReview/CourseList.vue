@@ -1,145 +1,139 @@
 <template>
-  <AppPageLayout
-    title="课程目录"
-    description="聚合课程评分、教师与开课学期，用更少的滚动完成选课比较。"
-  >
-    <template #meta>
-      <span v-if="totalCourses > 0">共 {{ totalCourses }} 门课程</span>
-    </template>
-    <template #actions>
-      <button
-        @click="handleAddCourse"
-        class="btn-primary"
-      >
-        <PlusCircle class="w-5 h-5 mr-2" />
-        添加课程
-      </button>
-    </template>
+  <main class="course-directory min-h-[calc(100vh-7rem)] bg-zinc-50 text-zinc-950">
+    <div class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">课程目录</h1>
+          <span v-if="totalCourses > 0" class="text-sm text-zinc-500">共 {{ totalCourses }} 门课程</span>
+        </div>
+        <ReviewDirectoryNav active="course" />
+      </header>
 
-    <AddCourseModal v-model="showAddCourseModal" />
+      <AddCourseModal v-model="showAddCourseModal" />
 
-    <section class="surface-card mb-5 flex flex-col gap-3 p-2.5 sm:flex-row sm:items-center sm:justify-between">
-      <ReviewDirectoryNav active="course" />
-      <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center" aria-label="课程筛选">
-        <label class="relative min-w-0 sm:w-36">
-          <span class="sr-only">课程类型</span>
-          <Tags class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
-          <select
-            :value="courseType"
-            class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            @change="handleFilterChange('course_type', $event)"
-          >
-            <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-        </label>
-        <label class="relative min-w-0 sm:w-36">
-          <span class="sr-only">排序方式</span>
-          <ArrowUpDown class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden="true" />
-          <select
-            :value="orderBy"
-            class="h-10 w-full appearance-none rounded-[10px] border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm text-gray-700 transition hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            @change="handleFilterChange('order_by', $event)"
-          >
-            <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-        </label>
+      <section class="mb-5 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center" aria-label="课程筛选">
+          <label class="relative min-w-0 sm:w-36">
+            <span class="sr-only">课程类型</span>
+            <Tags class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" aria-hidden="true" />
+            <select
+              :value="courseType"
+              class="h-10 w-full appearance-none rounded-md border border-zinc-200 bg-white py-2 pl-9 pr-8 text-sm text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              @change="handleFilterChange('course_type', $event)"
+            >
+              <option v-for="option in courseTypeOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+          </label>
+          <label class="relative min-w-0 sm:w-36">
+            <span class="sr-only">排序方式</span>
+            <ArrowUpDown class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" aria-hidden="true" />
+            <select
+              :value="orderBy"
+              class="h-10 w-full appearance-none rounded-md border border-zinc-200 bg-white py-2 pl-9 pr-8 text-sm text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              @change="handleFilterChange('order_by', $event)"
+            >
+              <option v-for="option in orderByOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <ChevronDown class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+          </label>
+        </div>
+        <button
+          type="button"
+          @click="handleAddCourse"
+          class="inline-flex min-h-11 w-fit items-center justify-center gap-2 self-end rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:self-auto"
+        >
+          <PlusCircle class="h-4 w-4" aria-hidden="true" />
+          添加课程
+        </button>
+      </section>
+
+      <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          v-for="i in 12"
+          :key="i"
+          class="course-card h-[172px] p-4 motion-safe:animate-pulse"
+        >
+          <div class="mb-3 h-5 w-2/3 rounded bg-zinc-200"></div>
+          <div class="mb-2 h-3 w-1/2 rounded bg-zinc-100"></div>
+          <div class="h-3 w-1/3 rounded bg-zinc-100"></div>
+          <div class="mt-6 flex justify-between">
+            <div class="h-5 w-20 rounded bg-zinc-200"></div>
+            <div class="h-5 w-16 rounded bg-zinc-100"></div>
+          </div>
+        </div>
       </div>
-    </section>
 
-    <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <div
-        v-for="i in 12"
-        :key="i"
-        class="surface-card h-[148px] animate-pulse p-4"
+        v-else-if="courses && courses.length === 0"
+        class="course-card py-16 text-center"
       >
-        <div class="mb-3 h-5 w-2/3 rounded-full bg-gray-200"></div>
-        <div class="mb-2 h-3 w-1/2 rounded-full bg-gray-100"></div>
-        <div class="h-3 w-1/3 rounded-full bg-gray-100"></div>
-        <div class="mt-6 flex justify-between">
-          <div class="h-5 w-20 rounded-full bg-gray-200"></div>
-          <div class="h-5 w-16 rounded-full bg-gray-100"></div>
-        </div>
+        <BookOpen class="mx-auto mb-3 h-8 w-8 text-zinc-400" aria-hidden="true" />
+        <p class="font-medium text-zinc-700">没有找到课程</p>
+        <p class="mt-1 text-sm text-zinc-500">试试切换课程类型，或添加一门新课程。</p>
+      </div>
+
+      <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <RouterLink
+          v-for="course in courses"
+          :key="course.id"
+          :to="`/review/course/${course.id}`"
+          class="group course-card flex min-h-[172px] flex-col gap-4 p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+        >
+          <div class="flex min-w-0 items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="line-clamp-2 text-base font-semibold leading-6 text-zinc-950 underline-offset-4 group-hover:underline">
+                {{ course.name }}
+              </h2>
+              <p class="mt-1.5 truncate text-sm text-zinc-600">{{ course.teacher || '教师待补充' }}</p>
+            </div>
+            <span class="shrink-0 rounded-md border border-zinc-200 bg-zinc-100 px-2 py-1 text-[11px] font-medium text-zinc-600">
+              {{ courseTypeLabel(course.classification) }}
+            </span>
+          </div>
+
+          <div class="mt-auto flex items-end justify-between gap-3 border-t border-zinc-100 pt-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-sm">
+                <Star class="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+                <strong class="font-semibold text-zinc-900">{{ course.average_rating.toFixed(1) }}</strong>
+                <span class="text-xs text-zinc-500">{{ course.review_count }} 条评价</span>
+              </div>
+              <p class="mt-1 truncate text-xs text-zinc-500">{{ course.semester || '学期待补充' }}</p>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-[11px] text-zinc-500">标准化评分</p>
+              <p class="text-sm font-semibold tabular-nums text-zinc-700">{{ course.normalized_rating.toFixed(2) }}</p>
+            </div>
+          </div>
+        </RouterLink>
+      </div>
+
+      <div class="mt-6 flex min-w-0 justify-center" v-if="totalPages > 1">
+        <ReviewPagination
+          :page="currentPage"
+          :page-count="totalPages"
+          @update:page="handlePageChange"
+        />
       </div>
     </div>
-
-    <div
-      v-else-if="courses && courses.length === 0"
-      class="surface-card py-16 text-center"
-    >
-      <BookOpen class="mx-auto mb-3 h-8 w-8 text-gray-400" aria-hidden="true" />
-      <p class="font-medium text-gray-700">没有找到课程</p>
-      <p class="mt-1 text-sm text-gray-500">试试切换课程类型，或添加一门新课程。</p>
-    </div>
-
-    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      <RouterLink
-        v-for="course in courses"
-        :key="course.id"
-        :to="`/review/course/${course.id}`"
-        class="group surface-card flex min-h-[148px] flex-col p-4 transition duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md"
-      >
-        <div class="flex min-w-0 items-start justify-between gap-3">
-          <div class="min-w-0">
-            <h2 class="line-clamp-2 text-base font-semibold leading-6 text-gray-900 transition-colors group-hover:text-blue-700">
-              {{ course.name }}
-            </h2>
-            <p class="mt-1.5 truncate text-sm text-gray-600">{{ course.teacher || '教师待补充' }}</p>
-          </div>
-          <span class="shrink-0 rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600">
-            {{ courseTypeLabel(course.classification) }}
-          </span>
-        </div>
-
-        <div class="mt-auto flex items-end justify-between gap-3 border-t border-gray-100 pt-3">
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5 text-sm">
-              <Star class="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-              <strong class="font-semibold text-gray-900">{{ course.average_rating.toFixed(1) }}</strong>
-              <span class="text-xs text-gray-500">{{ course.review_count }} 条评价</span>
-            </div>
-            <p class="mt-1 truncate text-xs text-gray-500">{{ course.semester || '学期待补充' }}</p>
-          </div>
-          <div class="shrink-0 text-right">
-            <p class="text-[11px] text-gray-400">标准化评分</p>
-            <p class="text-sm font-semibold tabular-nums text-gray-700">{{ course.normalized_rating.toFixed(2) }}</p>
-          </div>
-        </div>
-      </RouterLink>
-    </div>
-
-    <div class="mt-6 flex justify-center overflow-x-auto" v-if="totalPages > 1">
-      <n-pagination
-        :page="currentPage"
-        :page-count="totalPages"
-        @update:page="handlePageChange"
-        :page-slot="isMobile ? 3 : 5"
-        show-quick-jumper
-      >
-        <template #prefix>
-          <span class="hidden sm:inline">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
-          <span class="sm:hidden">{{ currentPage }}/{{ totalPages }}</span>
-        </template>
-      </n-pagination>
-    </div>
-  </AppPageLayout>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref, onUnmounted, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from '@/lib/requests'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
 import { ArrowUpDown, BookOpen, ChevronDown, PlusCircle, Star, Tags } from 'lucide-vue-next'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
-import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
 const message = useMessage()
 const route = useRoute()
@@ -167,11 +161,6 @@ const currentPage = computed(() => {
 })
 const showAddCourseModal = ref(false)
 const coursePageSize = 12
-
-const isMobile = ref(false)
-const handleResize = () => {
-  isMobile.value = window.innerWidth < 768
-}
 
 const handleAddCourse = () => {
   showAddCourseModal.value = true
@@ -235,15 +224,6 @@ watch([courseType, orderBy, currentPage], (_state, _oldState, onCleanup) => {
   void fetchCourses(() => current)
 }, { immediate: true })
 
-onMounted(() => {
-  handleResize()
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
-
 const totalPages = computed(() => data.value?.max_page || 1)
 const handlePageChange = (page: number) => router.push({
   query: { ...route.query, page: page.toString() },
@@ -252,3 +232,18 @@ const handleFilterChange = (key: 'course_type' | 'order_by', event: Event) => ro
   query: { ...route.query, [key]: (event.target as HTMLSelectElement).value, page: '1' },
 })
 </script>
+
+<style scoped>
+.course-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.025);
+}
+
+.course-card[href]:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+}
+
+</style>
