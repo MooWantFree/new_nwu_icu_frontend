@@ -59,14 +59,6 @@ const mount = async (path: string, component: Component, routePath: string, prop
     setup: (props, { emit }) => () => h('select', { value: props.value, onChange: (event: Event) => emit('update:value', (event.target as HTMLSelectElement).value) },
       props.options.map((option: { value: string; label: string }) => h('option', { value: option.value }, option.label))),
   }))
-  app.component('NPagination', defineComponent({
-    props: ['page', 'pageSize'], emits: ['update:page', 'update:page-size'],
-    setup: (props, { emit }) => () => h('nav', [
-      h('span', { 'data-page': '' }, `${props.page}/${props.pageSize}`),
-      h('button', { 'data-next': '', onClick: () => emit('update:page', 2) }, 'page 2'),
-      h('button', { 'data-size': '', onClick: () => emit('update:page-size', 20) }, 'size 20'),
-    ]),
-  }))
   app.mount(container)
   await flush()
   return router
@@ -163,12 +155,15 @@ for (const [name, component] of [['review', ReviewList], ['reply', ReplyList]] a
       mocks.get.mockResolvedValue(activity(name, 1))
       const router = await mount('/user/1?tab=comments', component, '/user/:id', true)
       mocks.get.mockClear()
-      container.querySelector<HTMLButtonElement>('[data-size]')!.click(); await flush()
-      container.querySelector<HTMLButtonElement>('[data-next]')!.click(); await flush()
+      const pageSize = container.querySelector<HTMLSelectElement>('select[aria-label="每页条数"]')!
+      pageSize.value = '20'
+      pageSize.dispatchEvent(new Event('change', { bubbles: true })); await flush()
+      container.querySelector<HTMLButtonElement>('button[aria-label="第 2 页"]')!.click(); await flush()
       expect(mocks.get).toHaveBeenCalledTimes(2)
       await router.push('/review/course/42'); await back(router)
       expect(router.currentRoute.value.query).toEqual({ tab: 'comments', page: '2', pageSize: '20' })
-      expect(container.querySelector('[data-page]')?.textContent).toBe('2/20')
+      expect(container.querySelector('[aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
+      expect(container.querySelector<HTMLSelectElement>('select[aria-label="每页条数"]')?.value).toBe('20')
       expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: { page: 2, page_size: 20 } }))
     })
   })

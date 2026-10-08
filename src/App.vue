@@ -44,7 +44,8 @@ import { themeOverrides } from '@/theme'
 const route = useRoute()
 const isShadcnPage = computed(() =>
   ['/', '/home', '/login', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path)
-  || /^\/review\/(course|teacher)\/\d+$/.test(route.path),
+  || /^\/review\/(course|teacher)\/\d+$/.test(route.path)
+  || /^\/user\/(me|\d+)$/.test(route.path),
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT

@@ -1,24 +1,24 @@
 <template>
-  <div>
-    <div v-if="data && data.results.length > 0">
-      <div
+  <div class="min-w-0">
+    <div v-if="data && data.results.length > 0" class="space-y-4">
+      <article
         v-for="review in data.results"
         :key="review.id"
-        class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
+        class="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5"
       >
-        <div class="flex justify-between items-center mb-2">
+        <header class="mb-3 flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <router-link
             :to="`/review/course/${review.course.id}`"
-            class="text-lg font-bold text-blue-700 transition-colors duration-200 hover:text-blue-800"
+            class="min-w-0 rounded-sm break-words text-base font-semibold leading-6 text-zinc-950 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
           >
             {{ review.course.name }}
           </router-link>
-          <Time :time="review.datetime" />
-        </div>
-        <div class="flex items-center mb-2">
-          <span class="mr-2 text-sm text-gray-600">评分:</span>
-          <div class="flex items-center">
-            <span class="text-lg font-bold text-yellow-500 mr-2">
+          <Time :time="review.datetime" class="shrink-0 whitespace-nowrap" />
+        </header>
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          <span class="text-xs text-zinc-500">评分:</span>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold tabular-nums text-amber-700">
               {{ review.rating.rating.toFixed(1) }}
             </span>
             <n-rate
@@ -26,14 +26,14 @@
               :size="16"
               readonly
               allow-half
-              class="text-yellow-400"
+              class="text-amber-400"
             />
           </div>
         </div>
-        <p class="text-gray-700 mb-2">
+        <div class="mb-4 min-w-0 text-sm leading-7 text-zinc-600 [overflow-wrap:anywhere]">
           <ReviewPlainText :content="review.content.current_content" />
-        </p>
-        <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+        </div>
+        <div class="grid grid-cols-1 gap-x-4 gap-y-3 rounded-lg border border-zinc-100 bg-zinc-50/70 p-3 text-xs text-zinc-600 sm:grid-cols-2">
           <span class="flex items-center">
             <span class="font-medium mr-1">难度:</span>
             <ReviewMetricScale :model-value="review.rating.difficulty" v-bind="reviewMetrics.difficulty" readonly />
@@ -51,23 +51,24 @@
             <ReviewMetricScale :model-value="review.rating.reward" v-bind="reviewMetrics.reward" readonly />
           </span>
         </div>
-        <div class="mt-2 flex justify-between items-center">
-          <div class="flex items-center text-sm text-gray-500">
-            <span class="mr-4">
-              <ThumbsUp class="inline-block w-4 h-4 mr-1" />
+        <footer class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-3">
+          <div class="flex items-center gap-3 text-xs text-zinc-500">
+            <span class="inline-flex items-center gap-1.5">
+              <ThumbsUp class="h-3.5 w-3.5" aria-hidden="true" />
               {{ review.like.like }}
             </span>
-            <span>
-              <ThumbsDown class="inline-block w-4 h-4 mr-1" />
+            <span class="inline-flex items-center gap-1.5">
+              <ThumbsDown class="h-3.5 w-3.5" aria-hidden="true" />
               {{ review.like.dislike }}
             </span>
           </div>
-          <div class="flex items-center">
-            <span v-if="review.is_me && review.anonymous" class="mr-2 text-sm text-gray-500">
+          <div class="flex flex-wrap items-center gap-2">
+            <span v-if="review.is_me && review.anonymous" class="text-xs text-zinc-500">
               (匿名评价)
             </span>
             <button
-              class="btn-secondary min-h-8 px-3 py-1"
+              type="button"
+              class="inline-flex min-h-8 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
               @click="
                 $router.push(
                   `/review/course/${review.course.id}#review-${review.id}`
@@ -77,35 +78,43 @@
               更多
             </button>
           </div>
-        </div>
-      </div>
-      <div class="mt-6 flex justify-center items-center">
-        <n-pagination
-          :page="currentPage"
-          :page-count="data.max_page"
-          @update:page="handlePageChange"
-          :page-size="pageSize"
-          :page-sizes="[10, 20, 30, 40]"
-          :show-size-picker="true"
-          @update:page-size="handlePageSizeChange"
-        >
-          <template #prefix>
+        </footer>
+      </article>
+      <div class="space-y-4 pt-2">
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+          <span>
             第 {{ (currentPage - 1) * pageSize + 1 }} -
             {{ Math.min(currentPage * pageSize, data.count) }} 条，共
             {{ data.count }} 条
-          </template>
-        </n-pagination>
+          </span>
+          <label class="inline-flex items-center gap-2">
+            <span>每页</span>
+            <select
+              :value="pageSize"
+              aria-label="每页条数"
+              class="h-8 rounded-md border border-zinc-200 bg-white px-2 text-xs text-zinc-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+              @change="handlePageSizeChange(Number(($event.target as HTMLSelectElement).value))"
+            >
+              <option v-for="size in [10, 20, 30, 40]" :key="size" :value="size">{{ size }} 条</option>
+            </select>
+          </label>
+        </div>
+        <ReviewPagination
+          :page="currentPage"
+          :page-count="data.max_page"
+          @update:page="handlePageChange"
+        />
       </div>
     </div>
-    <div v-else-if="errorDetail" class="text-center py-8">
-      <p class="text-gray-500">{{ errorDetail }}</p>
+    <div v-else-if="errorDetail" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center" role="alert">
+      <p class="text-sm leading-6 text-zinc-500">{{ errorDetail }}</p>
     </div>
-    <div v-else-if="data && data.results.length === 0" class="text-center py-8">
-      <p class="text-gray-500">暂无评价</p>
+    <div v-else-if="data && data.results.length === 0" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center">
+      <p class="text-sm text-zinc-500">暂无评价</p>
     </div>
-    <div v-else class="flex justify-center items-center h-32">
-      <LoaderCircle class="w-8 h-8 text-blue-700 animate-spin" />
-      <span class="ml-2 text-gray-600">加载中...</span>
+    <div v-else class="flex min-h-32 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white" role="status">
+      <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
+      <span class="text-sm text-zinc-500">加载中...</span>
     </div>
   </div>
 </template>
@@ -122,6 +131,7 @@ import { NRate } from 'naive-ui'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
 // Define props
 const props = defineProps<{
@@ -191,3 +201,8 @@ const handlePageSizeChange = (size: number) => {
   void router.push({ query: { ...route.query, page: '1', pageSize: String(size) } })
 }
 </script>
+
+<style scoped>
+:deep(.app-time) { color: #71717a; }
+:deep(.app-time:hover) { color: #18181b; }
+</style>

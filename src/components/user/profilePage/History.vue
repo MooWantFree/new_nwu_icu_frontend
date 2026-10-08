@@ -1,39 +1,31 @@
 <template>
-  <div>
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div class="border-b border-gray-200">
-        <nav class="-mb-px flex relative">
-          <button
-            v-for="tab in tabs"
-            :key="tab.name"
-            @click="setActiveTab(tab.name)"
-            :class="[
-              'w-1/2 py-4 px-1 text-center font-medium text-sm transition-colors duration-200',
-              activeTab === tab.name
-                ? 'text-blue-700'
-                : 'text-gray-500 hover:text-gray-700',
-            ]"
-          >
-            {{ tab.label }}
-          </button>
-          <div
-            class="absolute bottom-0 h-0.5 w-1/2 bg-blue-600 transition-transform duration-300 ease-in-out"
-            :style="{
-              transform: `translateX(${
-                activeTab === 'reviews' ? '0%' : '100%'
-              })`,
-            }"
-          ></div>
-        </nav>
-      </div>
-      <div class="mt-4">
-        <transition name="fade" mode="out-in">
-          <ReviewList v-if="activeTab === 'reviews'" :id="id" key="reviews" />
-          <ReplyList v-else-if="activeTab === 'comments'" :id="id" key="comments" />
-        </transition>
-      </div>
+  <section class="min-w-0" aria-label="个人动态">
+    <div class="mb-4">
+      <nav aria-label="评价与评论" class="inline-flex w-full rounded-lg bg-zinc-100 p-1 sm:w-auto">
+        <button
+          v-for="tab in tabs"
+          :key="tab.name"
+          type="button"
+          :aria-pressed="activeTab === tab.name"
+          @click="setActiveTab(tab.name)"
+          :class="[
+            'inline-flex min-h-9 flex-1 items-center justify-center rounded-md px-5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:flex-none',
+            activeTab === tab.name
+              ? 'bg-white text-zinc-950 shadow-sm'
+              : 'text-zinc-500 hover:text-zinc-950',
+          ]"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
     </div>
-  </div>
+    <div>
+      <transition name="fade" mode="out-in">
+        <ReviewList v-if="activeTab === 'reviews'" :id="id" key="reviews" />
+        <ReplyList v-else-if="activeTab === 'comments'" :id="id" key="comments" />
+      </transition>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
