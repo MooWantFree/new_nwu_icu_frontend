@@ -39,6 +39,7 @@ const mount = async (redirect = '/upload') => {
       path: '/upload',
       component: { render: () => h('p', '资料投稿页面') },
       meta: {
+        pageTitle: '分享资料',
         loginReason: '请先登录或注册，再继续投稿资料',
         loginSuccessMessage: '登录成功，正在继续投稿',
       },

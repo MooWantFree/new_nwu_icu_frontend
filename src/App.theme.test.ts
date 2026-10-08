@@ -27,7 +27,7 @@ describe('application theme scope', () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [
       { path: '/', component },
       { path: '/500', component },
-      { path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?', component, meta: { isManagement: true } },
+      { path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?', component, meta: { pageTitle: '管理员面板', isManagement: true } },
     ] })
     await router.push('/manage/files')
     host = document.createElement('div')

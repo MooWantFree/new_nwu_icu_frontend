@@ -97,7 +97,7 @@ const mountManage = async (location = '', previousLocation?: string) => {
     history: createMemoryHistory(),
     routes: [{
       path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?',
-      name: 'manage', component: Manage, meta: { isManagement: true },
+      name: 'manage', component: Manage, meta: { pageTitle: '管理员面板', isManagement: true },
     }],
   })
   if (previousLocation) await router.push(`/manage${previousLocation}`)
