@@ -59,6 +59,43 @@ afterEach(() => {
 })
 
 describe('review semester initialization', () => {
+  it('publishes the selected overall star rating while preserving the other course metrics', async () => {
+    await mount(null)
+    const editor = container.querySelector('textarea')!
+    editor.value = '值得推荐的课程'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    button('继续').click()
+    await flush()
+    const group = container.querySelector<HTMLElement>('[role="radiogroup"][aria-label="总体评分"]')!
+    expect(group.querySelector<HTMLInputElement>('input:checked')?.value).toBe('3')
+    group.querySelector<HTMLInputElement>('[aria-label="5 星"]')!.click()
+    await flush()
+    expect(group.querySelector<HTMLInputElement>('input:checked')?.value).toBe('5')
+    expect(container.textContent).toContain('强烈推荐')
+    button('发布评价').click()
+    expect(submit).toHaveBeenCalledWith(expect.objectContaining({
+      rating: 5, semester: 9, difficulty: 3, homework: 3, grade: 3, reward: 3,
+    }))
+  })
+
+  it('restores existing review stars and saves a changed score with the editing draft', async () => {
+    await mount(review(7))
+    button('继续').click()
+    await flush()
+    const group = container.querySelector<HTMLElement>('[role="radiogroup"][aria-label="总体评分"]')!
+    expect(group.querySelector<HTMLInputElement>('input:checked')?.value).toBe('4')
+    group.querySelector<HTMLInputElement>('[aria-label="2 星"]')!.click()
+    await flush()
+    expect(container.textContent).toContain('不太推荐')
+    button('上一步').click()
+    await flush()
+    button('取消').click()
+    await flush()
+    expect(loadCourseReviewDraft(1, 42, 9)?.rating).toBe(2)
+    expect(mocks.close).toHaveBeenCalledWith(false)
+  })
+
   it('keeps the edited draft when Shadcn close confirmation is canceled and closes only after acceptance', async () => {
     await mount(null)
     const editor = container.querySelector('textarea')!

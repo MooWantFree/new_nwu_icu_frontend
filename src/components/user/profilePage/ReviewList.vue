@@ -22,6 +22,8 @@
               {{ review.rating.rating.toFixed(1) }}
             </span>
             <ShadcnRating
+              color="yellow"
+              label="总体评分"
               :value="review.rating.rating"
               :size="16"
               readonly

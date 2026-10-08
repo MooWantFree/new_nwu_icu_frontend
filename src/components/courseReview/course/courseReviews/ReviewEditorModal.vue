@@ -86,11 +86,22 @@
                     <p class="font-medium text-zinc-800">总体评分</p>
                     <p class="mt-1 text-xs text-zinc-500">你会愿意把这门课推荐给同学吗？</p>
                   </div>
-                  <ReviewMetricScale
-                    v-model="rating"
-                    label="总体评分"
-                    :levels="['很不推荐', '不太推荐', '一般', '推荐', '强烈推荐']"
-                  />
+                  <div class="w-64 max-w-full space-y-1">
+                    <ShadcnRating
+                      v-model:value="rating"
+                      label="总体评分"
+                      color="yellow"
+                      :readonly="false"
+                      :disabled="submitting"
+                      :size="24"
+                      :aria-describedby="ratingDescriptionId"
+                    />
+                    <p :id="ratingDescriptionId" class="text-xs text-zinc-500">
+                      <span class="font-medium text-zinc-950">{{ rating }} 分</span>
+                      <span aria-hidden="true"> · </span>
+                      {{ ratingDescriptions[rating - 1] }}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -178,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue'
 import { LoaderCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
@@ -188,6 +199,7 @@ import ReviewMetricScale from './ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
 import { useCourseReviewDraft } from '@/lib/useCourseReviewDraft'
 import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
+import ShadcnRating from '@/components/common/ShadcnRating.vue'
 import { useShadcnDialog } from '@/lib/useShadcnDialog'
 
 const props = defineProps<{
@@ -205,6 +217,8 @@ const emit = defineEmits<{
 }>()
 
 const step = ref<1 | 2>(1)
+const ratingDescriptionId = `review-rating-description-${useId()}`
+const ratingDescriptions = ['很不推荐', '不太推荐', '一般', '推荐', '强烈推荐']
 const dialog = useShadcnDialog()
 const confirmingClose = ref(false)
 const initialDraft = {

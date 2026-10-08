@@ -12,7 +12,7 @@
             <span class="text-sm text-zinc-400">/ 5</span>
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <ShadcnRating readonly :allow-half="true" :value="Number(courseData.rating_avg)" :size="18" />
+            <ShadcnRating readonly color="yellow" label="综合评分" :allow-half="true" :value="Number(courseData.rating_avg)" :size="18" />
             <span class="text-xs text-zinc-500">{{ courseData.total_review_count }} 人评价</span>
           </div>
         </div>
@@ -39,7 +39,7 @@
             <span class="text-sm text-zinc-400">/ 5</span>
           </div>
           <div class="mt-2">
-            <ShadcnRating readonly :allow-half="true" :value="Number(courseData.normalized_rating_avg)" :size="18" />
+            <ShadcnRating readonly color="yellow" label="归一化平均分" :allow-half="true" :value="Number(courseData.normalized_rating_avg)" :size="18" />
           </div>
         </div>
       </div>

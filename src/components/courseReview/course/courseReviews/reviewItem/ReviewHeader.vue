@@ -37,7 +37,7 @@
           </div>
           <div class="mt-1 flex flex-wrap items-center gap-2">
             <div class="flex items-center">
-              <ShadcnRating readonly allow-half :default-value="review.rating" :size="16" />
+              <ShadcnRating readonly allow-half color="yellow" label="总体评分" :value="review.rating" :size="16" />
             </div>
             <span class="text-xs text-zinc-500">{{ review.semester }}</span>
           </div>
