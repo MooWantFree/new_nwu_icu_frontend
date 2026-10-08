@@ -16,7 +16,11 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: mocks.checkLoginStatus }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('naive-ui', async importOriginal => ({
+  ...await importOriginal<typeof import('naive-ui')>(),
+  useMessage: () => ({ error: mocks.error }),
+}))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
 vi.mock('@/components/courseReview/course/AddCourseModal.vue', () => ({
   default: defineComponent({
@@ -69,6 +73,7 @@ let host: HTMLDivElement
 const flush = async () => {
   for (let index = 0; index < 15; index++) { await Promise.resolve(); await nextTick() }
 }
+const settle = async () => { await flush(); await vi.advanceTimersByTimeAsync(350); await flush() }
 
 const mount = async (entry: AccessCase): Promise<Router> => {
   const router = createRouter({ history: createMemoryHistory(), routes: [
@@ -81,14 +86,16 @@ const mount = async (entry: AccessCase): Promise<Router> => {
   ] })
   await router.push(entry.path)
   await router.isReady()
-  app = createApp({ render: () => h(entry.component, { ...entry.props, onClose: mocks.close }) }).use(router)
+  app = createApp({ render: () => h(entry.component, {
+    ...entry.props, ...(entry.component === Search ? { onClose: mocks.close } : {}),
+  }) }).use(router)
   app.component('NRate', { render: () => null })
   app.component('NSelect', { render: () => null })
   app.mount(host)
-  await flush()
+  await settle()
 
   if (entry.search === 'course') {
-    const input = host.querySelector<HTMLInputElement>('input')!
+    const input = document.body.querySelector<HTMLInputElement>('input')!
     input.value = '不存在的课程'
     input.dispatchEvent(new Event('input', { bubbles: true }))
     await flush()
@@ -96,18 +103,18 @@ const mount = async (entry: AccessCase): Promise<Router> => {
     await flush()
     expect(host.textContent).toContain('未找到结果')
   } else if (entry.search === 'teacher') {
-    const input = host.querySelector<HTMLInputElement>('input')!
+    const input = document.body.querySelector<HTMLInputElement>('input')!
     input.value = '不存在的教师'
     input.dispatchEvent(new Event('input', { bubbles: true }))
     await vi.advanceTimersByTimeAsync(300)
     await flush()
-    expect(host.textContent).toContain('未找到教师')
+    expect(document.body.textContent).toContain('未找到教师')
   }
   return router
 }
 
 const findButton = (label: string): HTMLButtonElement => {
-  const button = [...host.querySelectorAll<HTMLButtonElement>('button')]
+  const button = [...document.body.querySelectorAll<HTMLButtonElement>('button')]
     .find(element => element.textContent?.trim() === label)
   expect(button).toBeDefined()
   return button!
@@ -145,11 +152,11 @@ describe('course and teacher creation access', () => {
     mocks.checkLoginStatus.mockResolvedValue(false)
     const router = await mount(entry)
     const path = router.currentRoute.value.fullPath
-    expect(host.querySelector(entry.modal)).toBeNull()
+    expect(document.body.querySelector(entry.modal)).toBeNull()
     findButton(entry.button).click()
     await flush()
     expect(mocks.checkLoginStatus).toHaveBeenCalledOnce()
-    expect(host.querySelector(entry.modal)).toBeNull()
+    expect(document.body.querySelector(entry.modal)).toBeNull()
     expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining('请先登录'))
     expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining(entry.action))
     expect(router.currentRoute.value.fullPath).toBe(path)
@@ -159,11 +166,11 @@ describe('course and teacher creation access', () => {
   it.each(accessCases)('$name opens the form after verifying login', async (entry) => {
     mocks.checkLoginStatus.mockResolvedValue(true)
     await mount(entry)
-    expect(host.querySelector(entry.modal)).toBeNull()
+    expect(document.body.querySelector(entry.modal)).toBeNull()
     findButton(entry.button).click()
     await flush()
     expect(mocks.checkLoginStatus).toHaveBeenCalledOnce()
-    const modal = host.querySelector(entry.modal)
+    const modal = document.body.querySelector(entry.modal)
     expect(modal).not.toBeNull()
     expect(mocks.error).not.toHaveBeenCalled()
     if (entry.initialTeacher) {

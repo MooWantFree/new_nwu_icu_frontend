@@ -210,7 +210,7 @@ export const APICourseNewQuery = z.object({
     'required',
     'optional',
   ]),
-  teacher_id: z.number(),
+  teacher_ids: z.array(z.number().int().positive()).min(1),
 })
 export type APICourseNew = {
   endpoint: '/api/assessment/course/'
@@ -219,7 +219,7 @@ export type APICourseNew = {
   response: {
     course_id: number
   }
-  errors: ErrorFactory<'course' | 'classification' | 'school' | 'teacher'>[]
+  errors: ErrorFactory<'course' | 'classification' | 'school' | 'teacher' | 'teacher_ids'>[]
 }
 
 // GET

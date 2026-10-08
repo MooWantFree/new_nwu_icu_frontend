@@ -1,73 +1,94 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    @click.self="closeModal">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
-      <div class="flex items-start justify-between p-4 sm:p-5 border-b border-gray-300">
-        <h3 class="text-xl sm:text-2xl font-semibold">添加教师</h3>
-        <button
-          class="p-1 ml-auto bg-transparent border-0 text-black float-right text-3xl leading-none font-semibold outline-none focus:outline-none hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center w-8 h-8 rounded-md"
-          @click="closeModal">
-          <span class="bg-transparent text-black block outline-none focus:outline-none">×</span>
-        </button>
+  <ShadcnFormDialog :show="modelValue" title="添加教师" :busy="loadingSubmit || checkingLogin" @close="closeModal">
+    <form :id="formId" class="space-y-5" :aria-busy="loadingSubmit || checkingLogin" @submit.prevent="submitTeacher">
+      <div v-if="errorMessage.other" role="alert" class="rounded-md border border-red-200 bg-red-50/50 px-3 py-2.5 text-sm text-red-700">
+        {{ errorMessage.other }}
       </div>
-      <div class="p-4 sm:p-6">
-        <div v-if="loading" class="flex justify-center items-center py-12">
-          <LoaderCircle class="w-10 h-10 animate-spin text-blue-700" />
-        </div>
-        <div v-else class="space-y-6">
-          <p v-if="errorMessage.other" class="mt-1 text-sm text-red-600">{{ errorMessage.other }}</p>
-          <form @submit.prevent="submitTeacher" class="space-y-5">
-            <div>
-              <label for="teacherName" class="block text-sm font-medium text-gray-700 mb-1">教师姓名</label>
-              <input type="text" id="teacherName" v-model="teacherName"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="请输入教师姓名" :disabled="loadingSubmit || checkingLogin" />
-              <p v-if="errorMessage.teacherName" class="mt-1 text-sm text-red-600">{{ errorMessage.teacherName }}</p>
-            </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">所属学院</label>
-              <n-select
-                v-model:value="teacherSchool"
-                :options="schools"
-                label-field="name"
-                value-field="id"
-                placeholder="请选择学院"
-                filterable
-                size="large"
-                aria-label="所属学院"
-                :disabled="loadingSubmit || checkingLogin"
-              />
-              <p v-if="errorMessage.teacherSchool" class="mt-1 text-sm text-red-600">{{ errorMessage.teacherSchool }}
-              </p>
-            </div>
-
-            <div class="flex justify-end space-x-4 pt-6">
-              <button type="button" @click="closeModal"
-                class="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                :disabled="loadingSubmit || checkingLogin">
-                取消
-              </button>
-              <button type="submit"
-                class="px-5 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                :disabled="loadingSubmit || checkingLogin">
-                <LoaderCircle v-if="loadingSubmit" class="w-5 h-5 mr-2 text-white animate-spin" />
-                {{ loadingSubmit ? '提交中...' : '提交' }}
-              </button>
-            </div>
-          </form>
-        </div>
+      <div class="space-y-2">
+        <label :for="nameId" class="block text-sm font-medium text-zinc-950">教师姓名</label>
+        <input
+          :id="nameId"
+          v-model="teacherName"
+          type="text"
+          autocomplete="off"
+          class="h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+          :class="{ 'border-red-300 focus:border-red-400 focus:ring-red-100': errorMessage.teacherName }"
+          placeholder="请输入教师姓名"
+          :disabled="loadingSubmit || checkingLogin"
+          :aria-invalid="!!errorMessage.teacherName"
+          :aria-describedby="errorMessage.teacherName ? nameErrorId : undefined"
+        />
+        <p v-if="errorMessage.teacherName" :id="nameErrorId" role="alert" class="text-sm text-red-600">
+          {{ errorMessage.teacherName }}
+        </p>
       </div>
-    </div>
-  </div>
+
+      <div class="space-y-2">
+        <label :id="schoolLabelId" class="block text-sm font-medium text-zinc-950">所属学院</label>
+        <div v-if="loading" role="status" class="flex h-10 items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+          <LoaderCircle class="size-4 animate-spin" aria-hidden="true" />
+          加载学院中…
+        </div>
+        <div v-else-if="schoolLoadError" role="alert" class="rounded-md border border-red-200 bg-red-50/50 p-3 text-sm text-red-700">
+          <p>{{ schoolLoadError }}</p>
+          <button type="button" class="mt-2 rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-red-200" @click="loadSchoolId">
+            重新加载
+          </button>
+        </div>
+        <n-select
+          v-else
+          v-model:value="teacherSchool"
+          :options="schools"
+          label-field="name"
+          value-field="id"
+          placeholder="请选择学院"
+          filterable
+          size="large"
+          :status="errorMessage.teacherSchool ? 'error' : undefined"
+          :theme-overrides="reviewSelectTheme"
+          :aria-labelledby="schoolLabelId"
+          aria-label="所属学院"
+          :aria-invalid="!!errorMessage.teacherSchool"
+          :aria-describedby="errorMessage.teacherSchool ? schoolErrorId : undefined"
+          :disabled="loadingSubmit || checkingLogin"
+        />
+        <p v-if="errorMessage.teacherSchool" :id="schoolErrorId" role="alert" class="text-sm text-red-600">
+          {{ errorMessage.teacherSchool }}
+        </p>
+      </div>
+    </form>
+
+    <template #footer>
+      <button
+        type="button"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        :disabled="loadingSubmit || checkingLogin"
+        @click="closeModal"
+      >
+        取消
+      </button>
+      <button
+        type="submit"
+        :form="formId"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        :disabled="loading || !!schoolLoadError || loadingSubmit || checkingLogin"
+      >
+        <LoaderCircle v-if="loadingSubmit || checkingLogin" class="size-4 animate-spin" aria-hidden="true" />
+        {{ loadingSubmit ? '添加中…' : checkingLogin ? '验证登录中…' : '添加教师' }}
+      </button>
+    </template>
+  </ShadcnFormDialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, ref, useId, watch } from 'vue'
 import { LoaderCircle } from 'lucide-vue-next'
-import { useMessage } from 'naive-ui'
+import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
+import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
 import { api } from '@/lib/requests'
 import { isLoginRequiredResponse, useCreationLogin } from '@/lib/useCreationLogin'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 
 const props = defineProps<{
   modelValue: boolean
@@ -82,131 +103,105 @@ const emit = defineEmits<{
   (e: 'add', teacher: { id: number, name: string, school: string }): void
 }>()
 
-const message = useMessage()
+const message = useShadcnToast()
 const { checkingLogin, requireLogin, notifyLoginRequired } = useCreationLogin()
-const errorMessage = ref<{
-  teacherName?: string
-  teacherSchool?: string
-  other?: string
-}>({
-  teacherName: '',
-  teacherSchool: '',
-  other: '',
-})
-const loading = ref(true)
+const dialogId = useId()
+const formId = `${dialogId}-teacher-form`
+const nameId = `${dialogId}-teacher-name`
+const nameErrorId = `${dialogId}-teacher-name-error`
+const schoolLabelId = `${dialogId}-teacher-school-label`
+const schoolErrorId = `${dialogId}-teacher-school-error`
+const errorMessage = ref<{ teacherName?: string; teacherSchool?: string; other?: string }>({})
+const loading = ref(false)
 const loadingSubmit = ref(false)
-const schools = ref<{
-  id: number,
-  name: string
-}[]>([])
-
-const teacherName = ref(props.initValue?.name || "")
+const schoolLoadError = ref('')
+const schools = ref<{ id: number; name: string }[]>([])
+const teacherName = ref(props.initValue?.name || '')
 const teacherSchool = ref<number | null>(props.initValue?.school ?? null)
+let mounted = true
+let session = 0
+let schoolRequest = 0
 
+const isActive = (owner: number) => mounted && props.modelValue && owner === session
 const closeModal = () => {
+  if (loadingSubmit.value || checkingLogin.value) return
   emit('update:modelValue', false)
 }
 
-onMounted(() => {
-  loadSchoolId()
-})
-
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-  }
-}, { immediate: true })
-
 const loadSchoolId = async () => {
+  const owner = session
+  const request = ++schoolRequest
   loading.value = true
+  schoolLoadError.value = ''
   try {
-    const resp = await api.get({
-      url: '/api/assessment/school/'
-    })
+    const resp = await api.get({ url: '/api/assessment/school/' })
+    if (!isActive(owner) || request !== schoolRequest) return
+    if (resp.status !== 200 || !Array.isArray(resp.data.contents.schools)) throw new Error('Unable to load schools')
     schools.value = resp.data.contents.schools
-  } catch (error) {
-    message.error('加载学院失败')
+    if (!schools.value.length) schoolLoadError.value = '暂无可选学院，请稍后重试'
+  } catch {
+    if (!isActive(owner) || request !== schoolRequest) return
+    schoolLoadError.value = '加载学院失败，请稍后重试'
+    message.error('加载学院失败，请稍后重试')
   } finally {
-    loading.value = false
+    if (mounted && request === schoolRequest) loading.value = false
   }
 }
 
-watch(() => teacherName.value,
-  () => {
-    errorMessage.value.teacherName = ''
-  }
-)
-watch(() => teacherSchool.value,
-  () => {
-    errorMessage.value.teacherSchool = ''
-  }
-)
+watch(() => props.modelValue, show => {
+  session++
+  if (!show) loadingSubmit.value = false
+  else errorMessage.value.other = ''
+  if (show && !schools.value.length) void loadSchoolId()
+}, { immediate: true, flush: 'sync' })
+watch(teacherName, () => { errorMessage.value.teacherName = '' })
+watch(teacherSchool, () => { errorMessage.value.teacherSchool = '' })
+onBeforeUnmount(() => { mounted = false; schoolRequest++; session++ })
 
 const submitTeacher = async () => {
-  if (loadingSubmit.value || checkingLogin.value) return
+  if (!props.modelValue || loading.value || schoolLoadError.value || loadingSubmit.value || checkingLogin.value) return
+  const owner = session
   if (!(await requireLogin('添加教师'))) {
-    errorMessage.value.other = '请先登录后再添加教师'
+    if (isActive(owner)) errorMessage.value.other = '请先登录后再添加教师'
     return
   }
-  // Reset error messages before validation
-  errorMessage.value = {
-    teacherName: '',
-    teacherSchool: '',
-    other: ''
-  }
+  if (!isActive(owner)) return
+  errorMessage.value = {}
+  if (!teacherName.value.trim()) errorMessage.value.teacherName = '教师姓名不能为空'
+  if (!teacherSchool.value) errorMessage.value.teacherSchool = '请选择所属学院'
+  if (errorMessage.value.teacherName || errorMessage.value.teacherSchool) return
 
-  // Validate required fields
-  if (!teacherName.value || teacherName.value.trim() === '') {
-    errorMessage.value.teacherName = '教师姓名不能为空'
-  }
-  if (!teacherSchool.value) {
-    errorMessage.value.teacherSchool = '请选择所属学院'
-  }
-
-  // Check if any validation errors exist
-  if (errorMessage.value.teacherName ||
-    errorMessage.value.teacherSchool) {
+  const schoolObj = schools.value.find(school => school.id === teacherSchool.value)
+  if (!schoolObj) {
+    errorMessage.value.teacherSchool = '无效的学院选择，请重新选择'
     return
   }
-
-  // Submit
+  const submittedName = teacherName.value.trim()
+  loadingSubmit.value = true
   try {
-    loadingSubmit.value = true
-
-    const schoolObj = schools.value.find(s => s.id === teacherSchool.value)
-    if (!schoolObj) {
-      errorMessage.value.teacherSchool = '无效的学院选择'
-      return
-    }
-
-    // The API currently only accepts name and school
-    // Title field is collected in the UI but not sent to the API yet
     const resp = await api.post({
       url: '/api/assessment/teacher/',
-      query: {
-        name: teacherName.value,
-        school: schoolObj.id
-      }
+      query: { name: submittedName, school: schoolObj.id },
     })
-
-    if (resp.status === 200) {
+    if (!isActive(owner)) return
+    if (resp.status === 200 && typeof resp.data.contents.teacher_id === 'number') {
       message.success('添加教师成功')
-      emit('add', { id: resp.data.contents.teacher_id, name: teacherName.value, school: schoolObj.name })
-      closeModal()
-    }
-    else if (isLoginRequiredResponse(resp)) {
+      emit('add', { id: resp.data.contents.teacher_id, name: submittedName, school: schoolObj.name })
+      emit('update:modelValue', false)
+    } else if (isLoginRequiredResponse(resp)) {
       errorMessage.value.other = '请先登录后再添加教师'
       notifyLoginRequired('添加教师')
+    } else {
+      const detail = Array.isArray(resp.errors) ? resp.errors.find(error => typeof error.err_msg === 'string')?.err_msg : undefined
+      errorMessage.value.other = resp.status === 429 ? '操作过于频繁，请稍后再试' : detail || '添加教师失败，请稍后重试'
+      message.error(errorMessage.value.other)
     }
-    else {
-      message.error(JSON.stringify(resp.errors))
-    }
-  } catch (error) {
-    message.error('添加教师失败')
+  } catch {
+    if (!isActive(owner)) return
+    errorMessage.value.other = '添加教师失败，请稍后重试'
+    message.error(errorMessage.value.other)
   } finally {
-    loadingSubmit.value = false
+    if (isActive(owner)) loadingSubmit.value = false
   }
 }
 </script>

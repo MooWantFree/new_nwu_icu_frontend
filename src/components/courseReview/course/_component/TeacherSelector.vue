@@ -1,246 +1,308 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
-    <AddTeacherModal v-model="showAddTeacherModal" @add="handleTeacherAdded" />
-    <div class="fixed inset-0 bg-black bg-opacity-50" @click="closeModal"></div>
-    <div class="w-full max-w-md mx-auto bg-white rounded-lg shadow-xl z-10">
-      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="text-lg font-medium">选择教师</h3>
-        <div class="flex items-center gap-2">
-          <button type="button" @click="handleAddTeacher" :disabled="checkingLogin"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50">
-            <PlusCircle />
-            添加教师
-          </button>
-          <button
-            class="p-1.5 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
-            @click="closeModal">
-            <X class="w-5 h-5" />
-          </button>
+  <ShadcnFormDialog
+    :show="modelValue"
+    title="选择教师"
+    :busy="checkingLogin"
+    :suspended="showAddTeacherModal"
+    @close="closeModal"
+  >
+    <div class="space-y-4">
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <div class="relative min-w-0 flex-1">
+          <Search class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-zinc-400" aria-hidden="true" />
+          <input
+            v-model="searchQuery"
+            type="search"
+            :disabled="checkingLogin || showAddTeacherModal"
+            aria-label="搜索教师"
+            placeholder="搜索教师姓名"
+            class="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2"
+            @keydown.enter.prevent="searchNow"
+          />
         </div>
+        <button
+          type="button"
+          :disabled="checkingLogin || showAddTeacherModal"
+          class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          @click="handleAddTeacher"
+        >
+          <LoaderCircle v-if="checkingLogin" class="h-4 w-4 animate-spin" aria-hidden="true" />
+          <Plus v-else class="h-4 w-4" aria-hidden="true" />
+          添加教师
+        </button>
       </div>
 
-      <div class="p-4 space-y-4">
-        <div class="relative">
-          <input type="text" placeholder="搜索教师"
-            class="w-full py-3 pl-12 pr-4 text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-            v-model="searchQuery" @input="() => debouncedSearch()" @keyup.enter="() => handleSearch()" />
-          <div class="absolute top-3 left-3">
-            <Search v-if="!searchLoading" class="w-6 h-6 text-gray-400" />
-            <LoaderCircle v-else class="w-6 h-6 text-blue-700 animate-spin" />
-          </div>
-        </div>
-
-        <div v-if="!searchLoading && teachers.length > 0" class="space-y-2 max-h-[50vh] overflow-y-auto"
-          ref="scrollContainer">
-          <div v-for="teacher in teachers" :key="teacher.id"
-            class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
-            @click="selectTeacher(teacher)">
-            <div class="flex items-center">
-              <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img v-if="teacher.avatar_uuid" :src="`/api/download/${teacher.avatar_uuid}/`"
-                  class="w-full h-full object-cover" @error="handleAvatarError($event, teacher)" />
-                <div v-else :class="[
-                  'w-full h-full flex justify-center items-center text-white text-sm font-bold',
-                  [
-                    'bg-indigo-500',
-                    'bg-teal-600',
-                    'bg-orange-600',
-                    'bg-pink-600',
-                    'bg-cyan-600',
-                  ][teacher.name.charCodeAt(0) % 5],
-                ]">
-                  {{ teacher.name.charAt(0).toUpperCase() }}
-                </div>
-              </div>
-              <div class="ml-3">
-                <div class="text-base font-medium text-blue-700">{{ teacher.name }}</div>
-                <div class="text-sm text-gray-600">{{ teacher.school }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="scrollLoading" class="text-center py-4">
-            <LoaderCircle class="w-8 h-8 mx-auto text-blue-700 animate-spin" />
-          </div>
-        </div>
-
-        <div v-else class="text-center py-8">
-          <template v-if="searchLoading">
-            <LoaderCircle class="w-12 h-12 mx-auto mb-4 text-blue-700 animate-spin" />
-            <p class="text-lg font-medium text-gray-600">搜索中...</p>
-          </template>
-          <template v-else-if="searchQuery">
-            <Search class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p class="text-lg font-medium text-gray-600">未找到教师</p>
-            <p class="text-sm mt-2 text-gray-500">请尝试调整搜索关键词</p>
-            <div class="border-t border-gray-200 my-4 w-full"></div>
-            <p class="text-sm text-gray-600 mb-2">找不到教师？你可以添加一个新教师</p>
-            <button type="button" @click="handleAddTeacher" :disabled="checkingLogin"
-              class="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
-              <PlusCircle />
-              添加新教师
+      <div v-if="draftTeachers.length" class="space-y-2" role="group" aria-label="已选择教师">
+        <p class="text-xs font-medium text-zinc-500">已选择 {{ draftTeachers.length }} 位教师</p>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="teacher in draftTeachers" :key="teacher.id" class="inline-flex max-w-full items-center gap-1 rounded-md border border-zinc-200 bg-zinc-50 py-1 pl-2 text-sm text-zinc-950">
+            <span class="truncate">{{ teacher.name }}</span>
+            <button
+              type="button"
+              :aria-label="`取消选择${teacher.name}`"
+              :disabled="checkingLogin || showAddTeacherModal"
+              class="mr-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-zinc-500 hover:bg-zinc-200 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+              @click="removeTeacher(teacher.id)"
+            >
+              <X class="h-3 w-3" aria-hidden="true" />
             </button>
-          </template>
-          <template v-else>
-            <Search class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p class="text-lg font-medium text-gray-600">输入关键词开始搜索</p>
-          </template>
+          </span>
         </div>
       </div>
 
-      <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
-        <button @click="closeModal"
-          class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
-          取消
+      <div
+        v-if="searchLoading"
+        class="flex min-h-48 items-center justify-center gap-2 text-sm text-zinc-500"
+        role="status"
+      >
+        <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
+        搜索中…
+      </div>
+      <div v-else-if="teachers.length" class="rounded-md border border-zinc-200">
+        <div class="max-h-[min(45vh,360px)] divide-y divide-zinc-100 overflow-y-auto" role="region" aria-label="教师搜索结果" @scroll="handleScroll">
+          <button
+            v-for="teacher in teachers"
+            :key="teacher.id"
+            type="button"
+            :aria-pressed="selectedIds.has(teacher.id)"
+            :disabled="checkingLogin || showAddTeacherModal"
+            class="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-950"
+            :class="selectedIds.has(teacher.id) ? 'bg-zinc-50' : 'bg-white'"
+            @click="toggleTeacher(teacher)"
+          >
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 text-sm font-medium text-zinc-600">
+              <img
+                v-if="teacher.avatar_uuid && !failedAvatars.has(teacher.avatar_uuid)"
+                :src="`/api/download/${teacher.avatar_uuid}/`"
+                alt=""
+                class="h-full w-full object-cover"
+                @error="failedAvatars.add(teacher.avatar_uuid)"
+              />
+              <span v-else>{{ teacher.name.charAt(0) }}</span>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-medium text-zinc-950">{{ teacher.name }}</span>
+              <span class="mt-0.5 block truncate text-xs text-zinc-500">{{ teacher.school }}</span>
+            </span>
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border" :class="selectedIds.has(teacher.id) ? 'border-zinc-950 bg-zinc-950 text-white' : 'border-zinc-300 bg-white'" aria-hidden="true">
+              <Check v-if="selectedIds.has(teacher.id)" class="h-3 w-3" />
+            </span>
+          </button>
+          <div v-if="scrollLoading" class="flex items-center justify-center gap-2 py-4 text-xs text-zinc-500" role="status">
+            <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
+            加载更多…
+          </div>
+        </div>
+        <div v-if="searchError" class="flex items-center justify-between gap-3 border-t border-zinc-200 px-3 py-3 text-sm" role="alert">
+          <span class="text-zinc-500">{{ searchError }}</span>
+          <button type="button" class="shrink-0 font-medium text-zinc-950 underline underline-offset-4" @click="handleSearch(true)">重试</button>
+        </div>
+      </div>
+      <div v-else-if="searchError" class="rounded-md border border-zinc-200 px-4 py-8 text-center" role="alert">
+        <p class="text-sm text-zinc-500">{{ searchError }}</p>
+        <button type="button" class="mt-3 inline-flex h-9 items-center justify-center rounded-md border border-zinc-200 px-3 text-sm font-medium text-zinc-950 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2" @click="searchNow">重新加载</button>
+      </div>
+      <div v-else-if="!searchQuery.trim()" class="rounded-md border border-dashed border-zinc-200 px-4 py-8 text-center">
+        <Search class="mx-auto h-5 w-5 text-zinc-400" aria-hidden="true" />
+        <p class="mt-3 text-sm font-medium text-zinc-950">输入教师姓名开始搜索</p>
+        <p class="mt-1 text-xs text-zinc-500">也可以直接添加一位新教师。</p>
+      </div>
+      <div v-else class="rounded-md border border-dashed border-zinc-200 px-4 py-8 text-center">
+        <Search class="mx-auto h-5 w-5 text-zinc-400" aria-hidden="true" />
+        <p class="mt-3 text-sm font-medium text-zinc-950">未找到教师</p>
+        <p class="mt-1 text-xs text-zinc-500">试试其他姓名，或添加一位新教师。</p>
+        <button type="button" :disabled="checkingLogin || showAddTeacherModal" class="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-md border border-zinc-200 px-3 text-sm font-medium text-zinc-950 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" @click="handleAddTeacher">
+          <Plus class="h-4 w-4" aria-hidden="true" />
+          添加新教师
         </button>
       </div>
     </div>
-  </div>
+    <template #footer>
+      <button type="button" :disabled="checkingLogin || showAddTeacherModal" class="inline-flex h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-950 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" @click="closeModal">取消</button>
+      <button type="button" :disabled="checkingLogin || showAddTeacherModal" class="inline-flex h-10 items-center justify-center rounded-md bg-zinc-950 px-4 text-sm font-medium text-white hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" @click="confirmSelection">确认选择</button>
+    </template>
+  </ShadcnFormDialog>
+  <AddTeacherModal v-if="modelValue && showAddTeacherModal" v-model="showAddTeacherModal" @add="handleTeacherAdded" />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
-import { LoaderCircle, Search, X, PlusCircle } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { Check, LoaderCircle, Plus, Search, X } from 'lucide-vue-next'
+import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
 import { api } from '@/lib/requests'
 import { useCreationLogin } from '@/lib/useCreationLogin'
-import { TeacherSearchResult } from '@/types/api/search/search'
+import { useShadcnToast } from '@/lib/useShadcnToast'
+import type { TeacherSearchResult } from '@/types/api/search/search'
 import AddTeacherModal from '../AddTeacherModal.vue'
 
-const props = defineProps<{
-  modelValue: boolean
-}>()
-
+const props = defineProps<{ modelValue: boolean; selectedTeachers?: TeacherSearchResult[] }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'select', teacher: TeacherSearchResult): void
+  (e: 'select', teachers: TeacherSearchResult[]): void
 }>()
 
-const show = ref(props.modelValue)
+const message = useShadcnToast()
+const { checkingLogin, requireLogin } = useCreationLogin()
 const searchQuery = ref('')
 const teachers = ref<TeacherSearchResult[]>([])
+const draftTeachers = ref<TeacherSearchResult[]>([])
+const selectedIds = computed(() => new Set(draftTeachers.value.map(teacher => teacher.id)))
 const searchLoading = ref(false)
 const scrollLoading = ref(false)
-const currentPage = ref(1)
+const searchError = ref('')
+const currentPage = ref(0)
 const totalPage = ref(1)
-const scrollContainer = ref<HTMLElement | null>(null)
 const showAddTeacherModal = ref(false)
-const { checkingLogin, requireLogin } = useCreationLogin()
+const failedAvatars = reactive(new Set<string>())
+let requestId = 0
+let openSession = 0
+let unmounted = false
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
+
+const cancelDebounce = () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = undefined
+}
+
+const resetSearch = () => {
+  ++requestId
+  teachers.value = []
+  searchError.value = ''
+  searchLoading.value = false
+  scrollLoading.value = false
+  currentPage.value = 0
+  totalPage.value = 1
+}
+
+const handleSearch = async (loadMore = false) => {
+  if (!props.modelValue || unmounted || (loadMore && (searchLoading.value || scrollLoading.value))) return
+  const keyword = searchQuery.value.trim()
+  if (!keyword) {
+    resetSearch()
+    return
+  }
+  const id = ++requestId
+  const page = loadMore ? currentPage.value + 1 : 1
+  searchError.value = ''
+  if (loadMore) {
+    scrollLoading.value = true
+  } else {
+    searchLoading.value = true
+    scrollLoading.value = false
+    teachers.value = []
+    currentPage.value = 0
+  }
+  const isCurrent = () => !unmounted && props.modelValue && id === requestId
+  try {
+    const query = { keyword, type: 'teacher' as const, current_page: page, page_size: 10 }
+    const response = await api.post({ url: '/api/search/', query })
+    if (!isCurrent()) return
+    if (response.status !== 200) throw new Error('Search failed')
+    const contents = response.content ?? response.data.contents
+    const results = contents.search_result.filter((result): result is TeacherSearchResult => 'school' in result && 'name' in result)
+    teachers.value = loadMore ? [...teachers.value, ...results] : results
+    currentPage.value = contents.current_page || page
+    totalPage.value = contents.total_pages || 1
+  } catch {
+    if (!isCurrent()) return
+    searchError.value = loadMore ? '加载更多教师失败' : '搜索教师失败，请稍后重试'
+    message.error(searchError.value)
+  } finally {
+    if (isCurrent()) {
+      searchLoading.value = false
+      scrollLoading.value = false
+    }
+  }
+}
+
+const searchNow = () => {
+  cancelDebounce()
+  void handleSearch()
+}
+
+watch(searchQuery, () => {
+  cancelDebounce()
+  ++requestId
+  if (!props.modelValue) return
+  if (!searchQuery.value.trim()) {
+    resetSearch()
+    return
+  }
+  searchError.value = ''
+  teachers.value = []
+  searchLoading.value = true
+  scrollLoading.value = false
+  debounceTimer = setTimeout(searchNow, 300)
+})
+
+watch(() => props.modelValue, (show) => {
+  ++openSession
+  ++requestId
+  cancelDebounce()
+  showAddTeacherModal.value = false
+  if (show) {
+    draftTeachers.value = [...new Map((props.selectedTeachers ?? []).map(teacher => [teacher.id, teacher])).values()]
+    searchNow()
+  } else {
+    draftTeachers.value = []
+    searchLoading.value = false
+    scrollLoading.value = false
+  }
+}, { immediate: true })
+
+const handleScroll = (event: Event) => {
+  const container = event.currentTarget as HTMLElement
+  if (container.scrollHeight - container.scrollTop - container.clientHeight < 50 && !searchError.value && currentPage.value < totalPage.value) {
+    void handleSearch(true)
+  }
+}
+
 const handleAddTeacher = async () => {
-  if (await requireLogin('添加教师')) {
+  if (!props.modelValue || showAddTeacherModal.value || checkingLogin.value) return
+  const session = openSession
+  if (await requireLogin('添加教师') && !unmounted && props.modelValue && session === openSession) {
     showAddTeacherModal.value = true
   }
 }
 
-watch(() => props.modelValue, (newVal) => {
-  show.value = newVal
-})
-
-watch(() => show.value, (newVal) => {
-  emit('update:modelValue', newVal)
-})
-
-const handleTeacherAdded = (teacher: TeacherSearchResult) => {
-  emit('select', teacher)
-  closeModal()
-}
-const handleSearch = async (loadMore = false) => {
-  if (!loadMore) {
-    searchLoading.value = true
-    teachers.value = []
-    currentPage.value = 1
+function toggleTeacher(teacher: TeacherSearchResult) {
+  if (!props.modelValue || showAddTeacherModal.value || checkingLogin.value) return
+  if (selectedIds.value.has(teacher.id)) {
+    removeTeacher(teacher.id)
   } else {
-    scrollLoading.value = true
-  }
-
-  try {
-    // Type system workaround
-    type Teacher = 'teacher'
-    const teacher: Teacher = 'teacher'
-    const requestQueryData = {
-      keyword: searchQuery.value,
-      type: teacher,
-      current_page: currentPage.value,
-      page_size: 10
-    }
-    const response = await api.post({
-      url: '/api/search/',
-      query: requestQueryData
-    })
-
-    const results = response.data.contents.search_result || []
-
-    if (loadMore) {
-      // @ts-expect-error The type of teachers.value is TeacherSearchResult[]
-      teachers.value = [...teachers.value, ...results]
-    } else {
-      // @ts-expect-error The type of teachers.value is TeacherSearchResult[]
-      teachers.value = results
-    }
-
-    // API response might not have total_pages property, so we need to handle it safely
-    totalPage.value = (response.data as any).total_pages || 1
-  } catch (error) {
-    console.error('搜索教师失败', error)
-  } finally {
-    searchLoading.value = false
-    scrollLoading.value = false
+    draftTeachers.value.push(teacher)
   }
 }
 
-const debouncedSearch = useDebounceFn(handleSearch, 300)
-
-const handleScroll = () => {
-  if (!scrollContainer.value) return
-
-  const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
-
-  // Load more when user scrolls to bottom (with a small threshold)
-  if (scrollHeight - scrollTop - clientHeight < 50 &&
-    !scrollLoading.value &&
-    currentPage.value < totalPage.value) {
-    currentPage.value++
-    handleSearch(true)
-  }
+function removeTeacher(id: number) {
+  if (!props.modelValue || showAddTeacherModal.value || checkingLogin.value) return
+  draftTeachers.value = draftTeachers.value.filter(teacher => teacher.id !== id)
 }
 
-function selectTeacher(teacher: TeacherSearchResult) {
-  emit('select', teacher)
+function confirmSelection() {
+  if (!props.modelValue || showAddTeacherModal.value || checkingLogin.value) return
+  emit('select', [...draftTeachers.value])
   closeModal()
+}
+
+function handleTeacherAdded(teacher: TeacherSearchResult) {
+  if (!props.modelValue || !showAddTeacherModal.value) return
+  if (!selectedIds.value.has(teacher.id)) draftTeachers.value.push(teacher)
+  showAddTeacherModal.value = false
 }
 
 function closeModal() {
-  show.value = false
+  if (!props.modelValue || checkingLogin.value || showAddTeacherModal.value) return
+  cancelDebounce()
+  ++requestId
+  draftTeachers.value = []
+  showAddTeacherModal.value = false
+  emit('update:modelValue', false)
 }
 
-function handleAvatarError(event: Event, teacher: TeacherSearchResult) {
-  const target = event.target as HTMLImageElement
-  if (target && target.parentElement) {
-    // Create a fallback with the first character of the teacher's name
-    const fallbackEl = document.createElement('div');
-    fallbackEl.className = [
-      'w-full h-full flex justify-center items-center text-white text-2xl font-semibold',
-      [
-        'bg-indigo-500',
-        'bg-teal-600',
-        'bg-orange-600',
-        'bg-pink-600',
-        'bg-cyan-600',
-      ][teacher.name.charCodeAt(0) % 5],
-    ].join(' ')
-    fallbackEl.textContent = teacher.name.split(' ').pop()?.charAt(0).toUpperCase() || teacher.name.charAt(0).toUpperCase()
-    target.parentElement.appendChild(fallbackEl)
-    target.parentElement.removeChild(target)
-  }
-}
-
-onMounted(() => {
-  if (show.value) {
-    handleSearch()
-  }
-
-  if (scrollContainer.value) {
-    scrollContainer.value.addEventListener('scroll', handleScroll)
-  }
+onBeforeUnmount(() => {
+  unmounted = true
+  ++requestId
+  cancelDebounce()
 })
 </script>

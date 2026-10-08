@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { checkLoginStatus } from '@/lib/logins'
 
 type CreationAction = '添加课程' | '添加教师'
@@ -10,7 +10,7 @@ export const isLoginRequiredResponse = (response: { status: number; errors?: unk
   ))
 
 export function useCreationLogin() {
-  const message = useMessage()
+  const message = useShadcnToast()
   const checkingLogin = ref(false)
   const notifyLoginRequired = (action: CreationAction) => message.error(`请先登录后再${action}`)
 
