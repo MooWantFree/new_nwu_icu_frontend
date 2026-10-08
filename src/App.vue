@@ -12,7 +12,7 @@
                     <div class="flex-1">
                       <RouterView />
                     </div>
-                    <footer v-if="!isManagement" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs" :class="isShadcnPage ? 'text-zinc-500' : 'text-gray-500'">
+                    <footer v-if="!isManagement && !isMessagePage" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs" :class="isShadcnPage ? 'text-zinc-500' : 'text-gray-500'">
                       <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
                       <span aria-hidden="true">·</span>
                       <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
@@ -42,6 +42,7 @@ import CaptchaChallenge from '@/components/common/CaptchaChallenge.vue'
 import { themeOverrides } from '@/theme'
 
 const route = useRoute()
+const isMessagePage = computed(() => /^\/message(?:\/|$)/.test(route.path))
 const isShadcnPage = computed(() =>
   ['/', '/home', '/login', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path)
   || /^\/review\/(course|teacher)\/\d+$/.test(route.path)
@@ -49,6 +50,7 @@ const isShadcnPage = computed(() =>
   || /^\/user\/settings(?:\/|$)/.test(route.path)
   || /^\/user\/(activate|forget-password|bind-college-email|bind-college-mail)\/?$/.test(route.path)
   || /^\/(announcements|blog|guestbook)(?:\/\d+)?\/?$/.test(route.path)
+  || isMessagePage.value
   || route.path.replace(/\/+$/, '') === '/about',
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))

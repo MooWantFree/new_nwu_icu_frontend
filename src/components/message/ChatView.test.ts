@@ -5,7 +5,7 @@ import type { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messa
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({ userInfo: ref({
   id: 1, nickname: 'Me', avatar: '', uuid: 'me', has_avatar: false,
 }) }) }))
@@ -81,6 +81,19 @@ afterEach(() => {
 })
 
 describe('conversation identity and asynchronous requests', () => {
+  it('reports a failed send through the shared toast and retains the draft for retry', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.post.mockImplementation((request) => Promise.resolve(request.url === '/api/message/'
+      ? { status: 500, errors: [] }
+      : { status: 200, content: {} }))
+    await mount()
+    await draft('retry this message')
+    await send()
+    expect(mocks.error).toHaveBeenCalledWith('发送消息失败，请重试')
+    expect(input().value).toBe('retry this message')
+    expect(input().disabled).toBe(false)
+  })
+
   it('opens a first conversation without an error and allows the first message', async () => {
     const missingConversation = { status: 404, errors: [{ field: 'chat', err_code: 'chat_not_exist', err_msg: '站内信不存在' }] }
     mocks.get.mockResolvedValueOnce(missingConversation).mockResolvedValueOnce(missingConversation)

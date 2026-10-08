@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, type App } from 'vue'
+import { createApp, h, nextTick, type App } from 'vue'
 import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-router'
 import type { APISystemNotificationList } from '@/types/api/messages/messages'
 import SystemNotifications from './SystemNotifications.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), error: vi.fn(), fetchUnreadCount: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({ fetchUnreadCount: mocks.fetchUnreadCount }) }))
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => null } }))
 
@@ -54,19 +54,12 @@ const mount = async (path = '/message/system') => {
   ] })
   await router.push(path)
   app = createApp(RouterView).use(router)
-  app.component('NPagination', defineComponent({
-    props: ['page'], emits: ['update:page'],
-    setup: (props, { emit }) => () => h('nav', [
-      h('span', { 'data-page': '' }, String(props.page)),
-      h('button', { 'data-next': '', onClick: () => emit('update:page', 2) }, 'page 2'),
-    ]),
-  }))
   app.mount(container)
   await flush()
   return router
 }
 const nextPage = async () => {
-  container.querySelector<HTMLButtonElement>('[data-next]')!.click()
+  container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click()
   await flush()
 }
 const refresh = async () => {
@@ -148,6 +141,21 @@ describe('unified system notifications', () => {
     expect(mocks.fetchUnreadCount).not.toHaveBeenCalled()
   })
 
+  it('shows a retryable load error on an initial failure without masking it as an empty inbox', async () => {
+    mocks.get.mockRejectedValueOnce(new Error('network unavailable'))
+    await mount()
+    const alert = container.querySelector('[role="alert"]')
+    expect(alert?.textContent).toContain('获取系统通知失败')
+    expect(container.textContent).not.toContain('暂无系统通知')
+    expect(mocks.post).not.toHaveBeenCalled()
+    alert!.querySelector<HTMLButtonElement>('button')!.click()
+    await flush()
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(container.textContent).toContain('第1页通知')
+    expect(mocks.get).toHaveBeenCalledTimes(2)
+    expect(mocks.post).toHaveBeenCalledWith(expect.objectContaining({ query: { ids: [1] } }))
+  })
+
   it.each(['rejection', 'non-success status'])('preserves displayed notices when read fails with %s', async failure => {
     if (failure === 'rejection') mocks.post.mockRejectedValue(new Error('read failed'))
     else mocks.post.mockResolvedValue({ status: 500 })
@@ -163,11 +171,12 @@ describe('unified system notifications', () => {
     mocks.get.mockRejectedValueOnce(new Error('page failed'))
     await nextPage()
     expect(container.textContent).toContain('第1页通知')
-    expect(container.querySelector('[data-page]')?.textContent).toBe('1')
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('1')
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('获取系统通知失败')
     expect(mocks.post).not.toHaveBeenCalled()
     expect(mocks.error).toHaveBeenCalledExactlyOnceWith('获取系统通知失败')
     await nextPage()
-    expect(container.querySelector('[data-page]')?.textContent).toBe('2')
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('2')
     expect(container.textContent).toContain('第2页通知')
     expect(mocks.post).toHaveBeenCalledWith(expect.objectContaining({ query: { ids: [2] } }))
   })
@@ -202,7 +211,7 @@ describe('unified system notifications', () => {
     expect(mocks.post).not.toHaveBeenCalled()
     latest.resolve(response(2))
     await flush()
-    expect(container.querySelector('[data-page]')?.textContent).toBe('2')
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('2')
     expect(container.textContent).toContain('第2页通知')
     expect(mocks.post).toHaveBeenCalledExactlyOnceWith({
       url: '/api/message/notifications/read/', query: { ids: [2] },
@@ -262,10 +271,10 @@ describe('unified system notifications', () => {
     await flush()
     expect(router.currentRoute.value.path).toBe('/announcements/92')
     await goBack(router)
-    expect(container.querySelector('[data-page]')?.textContent).toBe('2')
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('2')
     expect(container.textContent).toContain('第2页通知')
     await goBack(router)
-    expect(container.querySelector('[data-page]')?.textContent).toBe('1')
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('1')
     expect(container.textContent).toContain('第1页通知')
   })
 })

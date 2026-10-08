@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, nextTick, type App } from 'vue'
+import { createApp, nextTick, type App } from 'vue'
 import Likes from './Likes.vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => null } }))
 
 let app: App | undefined
@@ -64,7 +64,6 @@ describe('like notification targets', () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/message/likes', component: Likes }] })
     await router.push('/message/likes')
     app = createApp(Likes).use(router)
-    app.component('NPagination', defineComponent({ render: () => null }))
     app.mount(container)
     await flush()
 

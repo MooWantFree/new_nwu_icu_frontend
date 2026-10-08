@@ -1,65 +1,78 @@
 <template>
-  <div class="flex h-full min-w-0 flex-1 flex-col bg-white">
-    <div class="flex min-h-20 items-center justify-between border-b border-slate-200 px-4 sm:px-5">
+  <div class="flex h-full min-w-0 flex-1 flex-col bg-white text-zinc-950">
+    <div class="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 px-4 sm:px-5">
       <div class="flex min-w-0 items-center gap-3">
-        <button type="button" aria-label="返回会话列表" class="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 sm:hidden" @click="emit('close')">
-          <ArrowLeft class="h-5 w-5" />
+        <button type="button" aria-label="返回会话列表" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-600 shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:hidden" @click="emit('close')">
+          <ArrowLeft class="h-4 w-4" />
         </button>
+        <UserAvatar
+          :avatar="chatTarget.chatter.avatar"
+          :uuid="chatTarget.chatter.uuid"
+          :has-avatar="chatTarget.chatter.has_avatar"
+          :alt="chatTarget.chatter.nickname"
+          class="h-9 w-9 shrink-0 rounded-full border border-zinc-200 bg-zinc-100 object-cover"
+        />
         <div class="min-w-0">
-          <span class="block truncate font-semibold text-slate-900">{{ chatTarget.chatter.nickname }}</span>
-          <span class="mt-0.5 block text-xs text-slate-400">站内私信</span>
+          <span class="block truncate text-sm font-semibold">{{ chatTarget.chatter.nickname }}</span>
+          <span class="mt-0.5 block text-xs text-zinc-500">站内私信</span>
         </div>
       </div>
     </div>
-    <div class="min-h-0 flex-1 overflow-y-auto bg-slate-50/40 p-4 sm:p-5" ref="messageContainer" @scroll="handleScroll">
-      <div v-if="isLoading" class="flex justify-center items-center h-full">
-        <Loader2 class="w-8 h-8 text-blue-700 animate-spin" />
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white p-4 sm:p-5" ref="messageContainer" @scroll="handleScroll">
+      <div v-if="isLoading" role="status" aria-label="正在加载消息" class="flex h-full items-center justify-center">
+        <Loader2 class="h-5 w-5 animate-spin text-zinc-500" />
       </div>
-      <div v-else class="mx-auto max-w-screen-md space-y-4">
-        <div v-if="finalMessageList.length === 0" class="text-center text-sm text-gray-500">
-          <InboxIcon class="w-12 h-12 mx-auto mb-2 text-gray-400" />
+      <div v-else class="mx-auto max-w-screen-md space-y-5">
+        <div v-if="finalMessageList.length === 0" class="flex min-h-56 flex-col items-center justify-center gap-3 text-center text-sm text-zinc-500">
+          <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50">
+            <InboxIcon class="h-5 w-5 text-zinc-400" />
+          </span>
           没有更多消息了～
         </div>
         <template v-else>
-          <div v-if="isLoadingMore" class="text-center py-2">
-            <Loader2 class="w-5 h-5 text-blue-700 animate-spin mx-auto" />
-            <span class="text-xs text-gray-500">加载更多消息...</span>
+          <div v-if="isLoadingMore" role="status" class="flex items-center justify-center gap-2 py-2 text-xs text-zinc-500">
+            <Loader2 class="h-4 w-4 animate-spin" />
+            <span>加载更多消息...</span>
           </div>
           <template v-for="(msg, index) in finalMessageList" :key="msg.id">
             <div v-if="showDateDivider(msg, index)"
-              class="text-center text-sm text-gray-500 my-4 flex items-center justify-center">
-              <CalendarIcon class="w-4 h-4 mr-2" />
-              <Time :time="msg.datetime" mode="message" />
+              class="flex items-center justify-center gap-3 py-2 text-xs text-zinc-400">
+              <span class="h-px max-w-16 flex-1 bg-zinc-200" aria-hidden="true" />
+              <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2 py-1">
+                <CalendarIcon class="h-3 w-3" />
+                <Time :time="msg.datetime" mode="message" class="!text-zinc-500" />
+              </span>
+              <span class="h-px max-w-16 flex-1 bg-zinc-200" aria-hidden="true" />
             </div>
             <div :class="[
-              'flex items-start gap-3',
+              'flex items-start gap-2.5',
               { 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }
             ]">
               <div
-                class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100">
                 <UserAvatar
                   :avatar="msg.chatter.avatar"
                   :uuid="msg.chatter.uuid"
                   :has-avatar="msg.chatter.has_avatar"
                   :alt="msg.chatter.nickname"
-                  class="w-full h-full object-cover"
+                  class="h-full w-full object-cover"
                 />
               </div>
               <div :class="[
-                'min-w-0 flex flex-col',
+                'flex min-w-0 max-w-[calc(100%_-_3rem)] flex-col',
                 { 'items-end': msg.chatter.id !== chatTarget.chatter.id }
               ]">
-                <div class="flex flex-wrap items-center gap-2 mb-1"
+                <div class="mb-1.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500"
                   :class="{ 'flex-row-reverse': msg.chatter.id !== chatTarget.chatter.id }">
-                  <span class="font-medium text-sm">{{ msg.chatter.nickname }}</span>
-                  <span class="flex shrink-0 items-center">
-                    <Clock class="w-3 h-3 mr-1" />
-                    <Time :time="msg.datetime" mode="message" />
+                  <span class="font-medium text-zinc-700">{{ msg.chatter.nickname }}</span>
+                  <span class="inline-flex shrink-0 items-center gap-1 text-zinc-400">
+                    <Clock class="h-3 w-3" />
+                    <Time :time="msg.datetime" mode="message" class="!text-zinc-500" />
                   </span>
                 </div>
                 <div :class="[
-                  'max-w-xs rounded-2xl px-3.5 py-2.5 shadow-sm',
-                  msg.chatter.id === chatTarget.chatter.id ? 'bg-gray-100' : 'bg-blue-600 text-white'
+                  'max-w-sm rounded-xl px-3.5 py-2.5',
+                  msg.chatter.id === chatTarget.chatter.id ? 'rounded-tl-sm bg-zinc-100 text-zinc-900' : 'rounded-tr-sm bg-zinc-950 text-white'
                 ]">
                   <p class="whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere]">{{ msg.content }}</p>
                 </div>
@@ -70,23 +83,23 @@
       </div>
     </div>
 
-    <div class="border-t border-slate-200 bg-white p-3 sm:p-4">
+    <div class="shrink-0 border-t border-zinc-200 bg-white p-3 sm:p-4">
       <div class="max-w-2xl mx-auto">
         <div class="flex items-center gap-2">
-          <input type="text" placeholder="发送消息..." maxlength="500"
+          <input type="text" aria-label="消息内容" placeholder="发送消息..." maxlength="500"
             :disabled="isSending"
-            class="min-w-0 flex-1 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            class="h-10 min-w-0 flex-1 rounded-md border border-zinc-200 bg-white px-3 text-sm shadow-sm transition-shadow placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
             v-model="newMessage" @keyup.enter="sendMessage" />
-          <button @click="sendMessage"
-            class="flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+          <button type="button" @click="sendMessage" aria-label="发送消息" :aria-busy="isSending"
+            class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
             :disabled="!newMessage.trim() || isSending">
             <span v-if="!isSending">发送</span>
             <Loader2 v-else class="w-4 h-4 animate-spin" />
             <Send class="w-4 h-4" />
           </button>
         </div>
-        <div class="mt-2 flex items-center justify-end text-xs text-slate-400">
-          <span :class="{ 'text-red-500': newMessage.length >= 500 }">{{ newMessage.length }}/500</span>
+        <div class="mt-2 flex items-center justify-end text-xs text-zinc-400">
+          <span :class="{ 'text-red-600': newMessage.length >= 500 }">{{ newMessage.length }}/500</span>
         </div>
       </div>
     </div>
@@ -96,7 +109,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, nextTick, useTemplateRef, computed, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { api } from '@/lib/requests'
 import { APIUserMessageDetail, APIUserMessageList } from '@/types/api/messages/inbox'
 import { useUser } from '@/lib/useUser'
@@ -106,7 +119,7 @@ import Time from '@/components/tinyComponents/Time.vue'
 import { drainAfterCursor, mergeByMessageId } from '@/lib/messageCursor'
 
 // TODO: Using Cache(LRU) to cache messages while tab switching
-const message = useMessage()
+const message = useShadcnToast()
 const { userInfo } = useUser()
 
 const props = defineProps<{

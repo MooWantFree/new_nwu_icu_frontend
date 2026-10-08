@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/components/common/UserAvatar.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => null } }))
 vi.mock('./ChatView.vue', () => ({ default: defineComponent({
@@ -38,7 +38,7 @@ const mount = async (query = '') => {
   await flush()
   return router
 }
-const rows = () => container.querySelectorAll<HTMLDivElement>('.cursor-pointer')
+const rows = () => container.querySelectorAll<HTMLButtonElement>('button[aria-label^="与"][aria-label$="的对话"]')
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -49,6 +49,7 @@ beforeEach(() => {
 })
 afterEach(() => {
   app?.unmount()
+  app = undefined
   container.remove()
   vi.useRealTimers()
 })
@@ -116,10 +117,62 @@ describe('inbox conversation refresh', () => {
     expect(rows()[1].querySelector('[data-unread-badge]')?.textContent).toBe('3')
   })
 
+  it('offers focusable conversation buttons and exposes the selected conversation', async () => {
+    await mount()
+    const first = rows()[0]
+    expect(first.type).toBe('button')
+    expect(first.getAttribute('aria-label')).toBe('与User 2的对话')
+    expect(first.getAttribute('aria-pressed')).toBe('false')
+    first.focus()
+    expect(document.activeElement).toBe(first)
+    first.click()
+    await flush()
+    expect(rows()[0].getAttribute('aria-pressed')).toBe('true')
+    expect(rows()[1].getAttribute('aria-pressed')).toBe('false')
+    expect(container.querySelector('[data-chat="2"]')).not.toBeNull()
+  })
+
+  it('allows retrying an initial list failure without mounting a stale conversation', async () => {
+    mocks.get.mockRejectedValueOnce(new Error('connection unavailable'))
+    await mount()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('获取消息失败')
+    expect(rows()).toHaveLength(0)
+    const retry = [...container.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('重新加载'))!
+    retry.click()
+    await flush()
+    expect(rows()).toHaveLength(2)
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(container.querySelector('[data-chat]')).toBeNull()
+  })
+
+  it('keeps pagination requests bounded while loading the next conversation page', async () => {
+    const firstPage = list()
+    firstPage.data.contents.max_page = 3
+    mocks.get.mockResolvedValueOnce(firstPage)
+    await mount()
+    expect(container.querySelector<HTMLButtonElement>('[aria-label="上一页"]')?.disabled).toBe(true)
+    let finishPage!: (result: ReturnType<typeof list>) => void
+    mocks.get.mockReturnValueOnce(new Promise(resolve => { finishPage = resolve }))
+    const nextPage = container.querySelector<HTMLButtonElement>('[aria-label="下一页"]')!
+    nextPage.click()
+    await flush()
+    nextPage.click()
+    await flush()
+    expect(mocks.get).toHaveBeenCalledTimes(2)
+    expect(mocks.get).toHaveBeenLastCalledWith({ url: '/api/message/user/', query: { page: 2 } })
+    const secondPage = list(' page two')
+    secondPage.data.contents.max_page = 3
+    secondPage.data.contents.page = 2
+    finishPage(secondPage)
+    await flush()
+    expect(rows()[0].textContent).toContain('User 2 page two')
+    expect(container.querySelector<HTMLButtonElement>('[aria-label="上一页"]')?.disabled).toBe(false)
+  })
+
   it('clips the two-pane layout instead of creating a page-level horizontal scrollbar', async () => {
     await mount()
     const root = container.firstElementChild
-    const panes = root?.querySelector('.rounded-2xl')
+    const panes = root?.querySelector('[aria-label="会话列表"]')?.parentElement
     expect(root?.classList.contains('min-w-0')).toBe(true)
     expect(root?.classList.contains('overflow-hidden')).toBe(true)
     expect(panes?.classList.contains('min-w-0')).toBe(true)

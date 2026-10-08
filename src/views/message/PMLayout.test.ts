@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, onMounted, onUnmounted, ref, type App } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import PMLayout from './PMLayout.vue'
 
 type BooleanRef = { value: boolean }
@@ -23,6 +24,20 @@ vi.mock('@/lib/useUser', () => ({
 
 let app: App | undefined
 let container: HTMLDivElement
+let originalBodyOverflow: string
+
+const mountLayout = async (path = '/message/inbox', content = defineComponent({ render: () => null })) => {
+  const router = createRouter({ history: createMemoryHistory(), routes: [
+    { path: '/message/:section', component: content },
+    { path: '/login', component: defineComponent({ render: () => null }) },
+    { path: '/', component: defineComponent({ render: () => null }) },
+  ] })
+  await router.push(path)
+  app = createApp(PMLayout).use(router)
+  app.mount(container)
+  await nextTick()
+  return router
+}
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -33,12 +48,14 @@ beforeEach(() => {
   mocks.fetchUnreadCount.mockResolvedValue(undefined)
   container = document.createElement('div')
   document.body.append(container)
+  originalBodyOverflow = document.body.style.overflow
 })
 
 afterEach(() => {
   app?.unmount()
   app = undefined
   container.remove()
+  document.body.style.overflow = originalBodyOverflow
   vi.useRealTimers()
 })
 
@@ -46,10 +63,7 @@ describe('message layout authentication refresh', () => {
   it('waits for a slow poll before starting another unread request', async () => {
     let finish!: () => void
     mocks.fetchUnreadCount.mockReturnValueOnce(new Promise<void>(resolve => { finish = resolve }))
-    app = createApp(PMLayout)
-    app.component('RouterLink', defineComponent({ render: () => null }))
-    app.component('RouterView', defineComponent({ render: () => null }))
-    app.mount(container)
+    await mountLayout()
     await vi.advanceTimersByTimeAsync(9000)
     expect(mocks.fetchUnreadCount).toHaveBeenCalledOnce()
     finish(); await Promise.resolve()
@@ -58,13 +72,7 @@ describe('message layout authentication refresh', () => {
   })
 
   it('uses shared unread counts and polls without an extra local count', async () => {
-    app = createApp(PMLayout)
-    app.component('RouterLink', defineComponent({
-      setup: (_, { slots }) => () => h('a', slots.default?.()),
-    }))
-    app.component('RouterView', defineComponent({ render: () => null }))
-    app.mount(container)
-    await nextTick()
+    await mountLayout()
 
     mocks.userInfo.value = { unread: { unread: { user: 0, reply: 0, like: 0, system: 4 } } }
     await nextTick()
@@ -88,13 +96,7 @@ describe('message layout authentication refresh', () => {
       },
     })
 
-    app = createApp(PMLayout)
-    app.component('RouterLink', defineComponent({
-      setup: (_, { slots }) => () => h('a', slots.default?.()),
-    }))
-    app.component('RouterView', inbox)
-    app.mount(container)
-    await nextTick()
+    await mountLayout('/message/inbox', inbox)
 
     mocks.isLoading.value = true
     await nextTick()
@@ -102,20 +104,66 @@ describe('message layout authentication refresh', () => {
     expect(container.querySelector('[data-inbox]')).not.toBeNull()
     expect(mounts).toBe(1)
     expect(unmounts).toBe(0)
-    expect(container.querySelector('[data-message-layout]')?.classList.contains('h-[calc(100vh-4rem)]')).toBe(true)
-    expect(container.querySelector('[data-message-shell]')?.classList.contains('h-full')).toBe(true)
+    expect(container.querySelector('[data-message-layout]')).not.toBeNull()
+    expect(container.querySelector('[data-message-shell]')).not.toBeNull()
   })
 
   it('still shows the blocking loader during the initial authentication check', async () => {
     mocks.isLoggedIn.value = false
     mocks.isLoading.value = true
-    app = createApp(PMLayout)
-    app.component('RouterLink', defineComponent({ render: () => null }))
-    app.component('RouterView', defineComponent({ render: () => null }))
-    app.mount(container)
-    await nextTick()
+    await mountLayout()
 
     expect(container.querySelector('.animate-spin')).not.toBeNull()
     expect(container.textContent).not.toContain('需要登录')
+  })
+
+  it('starts unread refresh when authentication succeeds and skips polls after logout', async () => {
+    mocks.isLoggedIn.value = false
+    mocks.isLoading.value = true
+    await mountLayout()
+    expect(mocks.fetchUnreadCount).not.toHaveBeenCalled()
+    mocks.isLoggedIn.value = true
+    mocks.isLoading.value = false
+    await nextTick()
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledOnce()
+    expect(container.querySelector('[data-message-shell]')).not.toBeNull()
+
+    mocks.isLoggedIn.value = false
+    await nextTick()
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(mocks.fetchUnreadCount).toHaveBeenCalledOnce()
+    expect(container.querySelector('[data-message-shell]')).toBeNull()
+  })
+
+  it('links the login gate back to the requested conversation without polling as a guest', async () => {
+    mocks.isLoggedIn.value = false
+    const router = await mountLayout('/message/inbox?talkTo=42')
+    const login = container.querySelector<HTMLAnchorElement>('a[href^="/login"]')!
+    expect(login).not.toBeNull()
+    expect(container.querySelector('[data-message-shell]')).toBeNull()
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(mocks.fetchUnreadCount).not.toHaveBeenCalled()
+
+    await new Promise<void>(resolve => {
+      const stop = router.afterEach(() => { stop(); resolve() })
+      login.click()
+    })
+    expect(router.currentRoute.value.path).toBe('/login')
+    expect(router.currentRoute.value.query.redirect).toBe('/message/inbox?talkTo=42')
+  })
+
+  it('keeps collapsed navigation accessible and preserves the host page scroll setting', async () => {
+    document.body.style.overflow = 'clip'
+    await mountLayout()
+    const collapse = container.querySelector<HTMLButtonElement>('[aria-label="收起消息导航"]')!
+    collapse.click()
+    await nextTick()
+    expect(container.querySelector('[aria-label="展开消息导航"]')).not.toBeNull()
+    const inboxLink = container.querySelector<HTMLAnchorElement>('nav a[href="/message/inbox"]')!
+    expect(inboxLink.getAttribute('aria-label') || inboxLink.textContent).toContain('我的消息')
+    expect(document.body.style.overflow).toBe('clip')
+    app?.unmount()
+    app = undefined
+    expect(document.body.style.overflow).toBe('clip')
   })
 })

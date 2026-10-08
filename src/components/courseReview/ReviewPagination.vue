@@ -1,6 +1,6 @@
 <template>
   <nav aria-label="分页" class="flex w-full flex-wrap items-center justify-center gap-3 text-zinc-700">
-    <ul class="flex items-center gap-0.5 sm:gap-1">
+    <ul class="flex flex-wrap items-center justify-center gap-0.5 sm:gap-1">
       <li>
         <button
           type="button"

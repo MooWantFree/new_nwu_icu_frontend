@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, type App } from 'vue'
+import { createApp, h, nextTick, type App } from 'vue'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import Likes from './Likes.vue'
 import Replies from './Replies.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/components/common/UserAvatar.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => null } }))
 const response = (page: number) => ({ status: 200, content: { page, count: 20, max_page: 2, results: [{
@@ -45,15 +45,24 @@ for (const [name, component] of [['likes', Likes], ['replies', Replies]] as cons
       ] })
       await router.push(`/message/${name}`)
       app = createApp(RouterView).use(router)
-      app.component('NPagination', defineComponent({ props: ['page'], emits: ['update:page'],
-        setup: (props, { emit }) => () => h('nav', [
-          h('span', { 'data-page': '' }, String(props.page)),
-          h('button', { 'data-next': '', onClick: () => emit('update:page', 2) }, 'page 2'),
-        ]),
-      }))
       app.mount(container); await flush()
       return router
     }
+
+    it('shows a retryable load error instead of the empty state', async () => {
+      mocks.get.mockRejectedValueOnce(new Error('network unavailable'))
+      await mount()
+      const alert = container.querySelector('[role="alert"]')
+      expect(alert?.textContent).toContain(name === 'likes' ? '获取赞列表失败' : '获取回复列表失败')
+      expect(container.textContent).not.toContain(name === 'likes' ? '暂无收到的赞' : '暂无收到的回复')
+      expect(mocks.post).not.toHaveBeenCalled()
+      alert!.querySelector<HTMLButtonElement>('button')!.click()
+      await flush()
+      expect(container.querySelector('[role="alert"]')).toBeNull()
+      expect(container.textContent).toContain(name === 'likes' ? '第1页点赞' : '第1页回复')
+      expect(mocks.get).toHaveBeenCalledTimes(2)
+      expect(mocks.post).toHaveBeenCalledWith(expect.objectContaining({ query: { ids: [1] } }))
+    })
 
     it('ignores old page results and does not mark stale notifications as read', async () => {
       await mount()
@@ -61,12 +70,12 @@ for (const [name, component] of [['likes', Likes], ['replies', Replies]] as cons
       const old = deferred(), latest = deferred()
       mocks.get.mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise)
       container.querySelector<HTMLButtonElement>('button[aria-label^="刷新"]')!.click(); await flush()
-      container.querySelector<HTMLButtonElement>('[data-next]')!.click(); await flush()
+      container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click(); await flush()
       old.resolve(response(1)); await flush()
       expect(container.querySelector('article')).toBeNull()
       expect(mocks.post).not.toHaveBeenCalled()
       latest.resolve(response(2)); await flush()
-      expect(container.querySelector('[data-page]')?.textContent).toBe('2')
+      expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('2')
       expect(container.textContent).toContain(name === 'likes' ? '第2页点赞' : '第2页回复')
       expect(mocks.post).toHaveBeenCalledWith(expect.objectContaining({ query: { ids: [2] } }))
     })
@@ -76,7 +85,7 @@ for (const [name, component] of [['likes', Likes], ['replies', Replies]] as cons
       const old = deferred(), latest = deferred()
       mocks.get.mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise)
       container.querySelector<HTMLButtonElement>('button[aria-label^="刷新"]')!.click(); await flush()
-      container.querySelector<HTMLButtonElement>('[data-next]')!.click(); await flush()
+      container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click(); await flush()
       latest.resolve(response(2)); await flush()
       old.reject(new Error('old request')); await flush()
       expect(container.textContent).toContain(name === 'likes' ? '第2页点赞' : '第2页回复')
@@ -86,15 +95,15 @@ for (const [name, component] of [['likes', Likes], ['replies', Replies]] as cons
     it('restores pagination on back from a course and reloads page one on another back', async () => {
       const router = await mount()
       mocks.get.mockImplementation(({ query }) => Promise.resolve(response(query.page)))
-      container.querySelector<HTMLButtonElement>('[data-next]')!.click(); await flush()
+      container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click(); await flush()
       await router.push('/review/course/42')
       await new Promise<void>(resolve => { const stop = router.afterEach(() => { stop(); resolve() }); router.back() })
       await flush()
-      expect(container.querySelector('[data-page]')?.textContent).toBe('2')
+      expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('2')
       expect(container.textContent).toContain(name === 'likes' ? '第2页点赞' : '第2页回复')
       await new Promise<void>(resolve => { const stop = router.afterEach(() => { stop(); resolve() }); router.back() })
       await flush()
-      expect(container.querySelector('[data-page]')?.textContent).toBe('1')
+      expect(container.querySelector('[aria-current="page"]')?.textContent).toBe('1')
       expect(container.textContent).toContain(name === 'likes' ? '第1页点赞' : '第1页回复')
     })
   })
