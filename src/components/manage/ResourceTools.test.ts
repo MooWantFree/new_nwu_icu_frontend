@@ -5,13 +5,25 @@ import { api } from '@/lib/requests'
 
 vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn() } }))
 let app: App, host: HTMLDivElement
+const originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
 const currentPath = ref('/')
 const expired = vi.fn()
 const flush = async () => { for (let i = 0; i < 20; i++) { await Promise.resolve(); await nextTick() } }
+const settle = async () => { await flush(); await vi.advanceTimersByTimeAsync(50); await flush() }
+async function chooseOption(label: string, optionLabel: string) {
+  const trigger = host.querySelector<HTMLElement>(`[role="combobox"][aria-label="${label}"]`)!
+  trigger.focus(); trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })); await settle()
+  const option = [...document.body.querySelectorAll<HTMLElement>('[role="option"]')].find(item => item.textContent?.trim() === optionLabel)!
+  expect(option).toBeTruthy()
+  option.focus(); option.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); await settle()
+}
 async function click(label: string) { const button = [...host.querySelectorAll('button')].find(item => item.textContent?.trim() === label); expect(button).toBeTruthy(); button!.click(); await flush() }
 async function mount() { app = createApp({ render: () => h(ResourceTools, { path: currentPath.value, onSessionExpired: expired }) }); app.mount(host); await flush() }
 beforeEach(() => {
   vi.resetAllMocks(); currentPath.value = '/'
+  vi.useFakeTimers()
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} })
+  Element.prototype.scrollIntoView = vi.fn()
   host = document.createElement('div'); document.body.append(host)
   vi.mocked(api.get).mockImplementation(async ({ url, query }) => {
     const path = (query as unknown as { path: string } | undefined)?.path || '/'
@@ -26,7 +38,12 @@ beforeEach(() => {
       daily: [{ date: '2026-09-07', count: 3 }], files: [{ path: '/资料.pdf', count: 3 }] } } as never
   })
 })
-afterEach(() => { app?.unmount(); host.remove() })
+afterEach(() => {
+  app?.unmount(); host.remove()
+  if (originalScroll) Object.defineProperty(Element.prototype, 'scrollIntoView', originalScroll)
+  else Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
+  vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals()
+})
 describe('resource maintenance tools', () => {
   it('sanitizes preview and preserves the original directory when an unsaved draft is open', async () => {
     await mount()
@@ -49,7 +66,7 @@ describe('resource maintenance tools', () => {
   })
   it('updates directory permissions and shows inherited restrictions', async () => {
     await mount(); await click('访问权限')
-    const select = host.querySelector('select')!; select.value = 'login'; select.dispatchEvent(new Event('change')); await flush()
+    await chooseOption('目录规则', '仅登录用户')
     vi.mocked(api.post).mockResolvedValueOnce({ status: 200, content: { effective: 'login' } } as never)
     await click('保存访问权限')
     expect(api.post).toHaveBeenCalledWith({ url: '/api/management/resources/access/', query: { path: '/', mode: 'login' } })
@@ -75,7 +92,7 @@ describe('resource maintenance tools', () => {
     expect(host.querySelector('[aria-label="下载记录明细"]')?.textContent).toContain('ExampleBrowser/1')
     ;(host.querySelector('[aria-label="筛选 IP 203.0.113.7"]') as HTMLButtonElement).click(); await flush()
     expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/statistics/', query: { days: 30, ip: '203.0.113.7' } })
-    await click('下一页')
+    host.querySelector<HTMLButtonElement>('[aria-label="下一页"]')!.click(); await flush()
     expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/statistics/', query: { days: 30, ip: '203.0.113.7', page: 2 } })
     ;(host.querySelector('[aria-label="筛选用户 42"]') as HTMLButtonElement).click(); await flush()
     expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/statistics/', query: { days: 30, ip: '203.0.113.7', user_id: 42 } })
@@ -90,5 +107,39 @@ describe('resource maintenance tools', () => {
     ;(host.querySelector('[aria-label="筛选 IP 203.0.113.7"]') as HTMLButtonElement).click(); await flush()
     expect(host.textContent).toContain('IP 地址格式错误'); expect(host.textContent).not.toContain('当前报表筛选')
     expect(host.querySelector('[aria-label="下载记录明细"]')?.textContent).toContain('学生 #42')
+  })
+  it('changes the statistics range through the shared dropdown while preserving numeric days', async () => {
+    await mount(); await click('下载统计')
+    const trigger = host.querySelector<HTMLElement>('#resource-statistics-days')!
+    trigger.focus(); trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })); await settle()
+    const option = [...document.body.querySelectorAll<HTMLElement>('[role="option"]')].find(item => item.textContent?.trim() === '近 90 天')!
+    option.focus(); option.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); await settle()
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/statistics/', query: { days: 90 } })
+  })
+  it('keeps a draft when dismissal is cancelled and blocks closing while the confirmed reload is pending', async () => {
+    await mount()
+    const textarea = host.querySelector<HTMLTextAreaElement>('[aria-label="目录说明 Markdown"]')!
+    textarea.value = '尚未保存的草稿'; textarea.dispatchEvent(new Event('input')); await flush()
+    const originalCalls = vi.mocked(api.get).mock.calls.length
+    await click('放弃草稿并重新加载'); await settle()
+    const dialog = () => document.body.querySelector<HTMLElement>('[role="dialog"]')
+    expect(dialog()?.textContent).toContain('放弃目录说明草稿？')
+    ;[...dialog()!.querySelectorAll<HTMLButtonElement>('button')].find(item => item.textContent?.trim() === '保留草稿')!.click(); await settle()
+    expect(dialog()).toBeNull()
+    expect(textarea.value).toBe('尚未保存的草稿')
+    expect(vi.mocked(api.get).mock.calls.length).toBe(originalCalls)
+    await click('放弃草稿并重新加载'); await settle()
+    let finish!: (value: never) => void
+    vi.mocked(api.get).mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+    ;[...dialog()!.querySelectorAll<HTMLButtonElement>('button')].find(item => item.textContent?.trim() === '放弃并重新加载')!.click(); await settle()
+    expect(dialog()!.querySelector<HTMLButtonElement>('[aria-label="关闭确认弹窗"]')!.disabled).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); await settle()
+    document.body.querySelector<HTMLElement>('[data-shadcn-modal-overlay]')!.click(); await settle()
+    expect(dialog()).not.toBeNull()
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/readme/', query: { path: '/' } })
+    finish({ status: 200, content: { path: '/', content: '# 最新说明', version: 'v2', warning: '' } } as never); await settle()
+    expect(dialog()).toBeNull()
+    expect(host.querySelector<HTMLTextAreaElement>('textarea')!.value).toBe('# 最新说明')
+    expect(api.post).not.toHaveBeenCalled()
   })
 })

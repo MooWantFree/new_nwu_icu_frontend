@@ -1,105 +1,125 @@
 <template>
-  <section class="space-y-4" aria-label="资料文件管理">
-    <div class="surface-card p-5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 class="text-lg font-semibold">资料管理</h2><p class="mt-1 text-sm text-gray-500">管理已发布的资料。上传直接发布，删除后可从回收站恢复。</p></div>
-        <div class="flex gap-2">
-          <button :disabled="busy" class="btn-secondary disabled:opacity-40" @click="switchTrash">{{ showTrash ? '返回文件' : '回收站' }}</button>
-          <button :disabled="busy || loading" class="btn-secondary disabled:opacity-40" @click="refresh">刷新</button>
+  <section class="min-w-0 space-y-4 text-zinc-950" aria-label="资料文件管理">
+    <div class="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h2 class="text-lg font-semibold tracking-tight">资料管理</h2>
+          <p class="mt-1 text-sm leading-6 text-zinc-500">管理已发布的资料。上传直接发布，删除后可从回收站恢复。</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" :disabled="busy" :class="secondaryButton" @click="switchTrash"><component :is="showTrash ? FolderOpen : Trash2" class="h-4 w-4" aria-hidden="true" />{{ showTrash ? '返回文件' : '回收站' }}</button>
+          <button type="button" :disabled="busy || loading" :class="secondaryButton" @click="refresh"><RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" aria-hidden="true" />刷新</button>
         </div>
       </div>
-      <p v-if="error" role="alert" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
-      <p v-if="message" role="status" class="mt-4 text-sm text-emerald-700">{{ message }}</p>
+      <div v-if="error" role="alert" class="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"><CircleAlert class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ error }}</p></div>
+      <div v-if="message" role="status" class="mt-4 flex items-start gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600"><CircleCheck class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ message }}</p></div>
       <fieldset v-if="!showTrash" :disabled="busy || loading" class="mt-5 min-w-0 disabled:opacity-60">
-        <div class="flex flex-wrap items-center gap-3 text-sm">
-          <button class="text-blue-700 hover:underline" @click="loadFiles('/')">根目录</button>
-          <button :disabled="currentPath === '/'" class="text-blue-700 hover:underline disabled:opacity-40" @click="loadFiles(parent(currentPath))">上一级</button>
-          <span class="min-w-0 flex-1 break-all text-gray-600">{{ currentPath }}</span>
-          <a :href="resourcePageUrl(currentPath)" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline">查看公开页面</a>
-          <button class="btn-secondary" @click="openDialog({ action: 'mkdir', name: '', path: currentPath })">新建文件夹</button>
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <button type="button" :class="secondaryButton" @click="loadFiles('/')"><House class="h-4 w-4" aria-hidden="true" />根目录</button>
+          <button type="button" :disabled="currentPath === '/'" :class="secondaryButton" @click="loadFiles(parent(currentPath))"><ArrowUp class="h-4 w-4" aria-hidden="true" />上一级</button>
+          <span class="min-w-0 flex-1 break-all px-1 font-mono text-xs leading-6 text-zinc-500">{{ currentPath }}</span>
+          <a :href="resourcePageUrl(currentPath)" target="_blank" rel="noopener noreferrer" :class="secondaryButton">查看公开页面<ExternalLink class="h-3.5 w-3.5" aria-hidden="true" /></a>
+          <button type="button" :class="secondaryButton" @click="openDialog({ action: 'mkdir', name: '', path: currentPath })"><FolderPlus class="h-4 w-4" aria-hidden="true" />新建文件夹</button>
         </div>
-        <div class="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+        <div class="mt-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50/70 p-4">
           <label class="block text-sm font-medium">上传到当前目录
-            <input ref="fileInput" type="file" multiple class="mt-3 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-blue-100 file:px-3 file:py-2 file:text-blue-700" @change="chooseFiles" />
+            <input ref="fileInput" type="file" multiple class="mt-3 block w-full min-w-0 text-sm text-zinc-500 file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-zinc-200 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-950 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @change="chooseFiles" />
           </label>
-          <p class="mt-2 text-xs text-gray-500">每次最多 {{ maxFiles }} 个文件，单个不超过 {{ formatResourceSize(maxFileSize) }}。同名文件不覆盖。</p>
-          <ul v-if="selectedFiles.length" class="mt-3 max-h-32 overflow-y-auto text-sm text-gray-600"><li v-for="file in selectedFiles" :key="file.name" class="break-all">{{ file.name }} · {{ formatResourceSize(file.size) }}</li></ul>
-          <button v-if="selectedFiles.length" type="button" class="btn-primary mt-3" @click="upload">上传并发布 {{ selectedFiles.length }} 个文件</button>
+          <p class="mt-2 text-xs leading-5 text-zinc-500">每次最多 {{ maxFiles }} 个文件，单个不超过 {{ formatResourceSize(maxFileSize) }}。同名文件不覆盖。</p>
+          <ul v-if="selectedFiles.length" class="mt-3 max-h-32 space-y-1 overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-600"><li v-for="file in selectedFiles" :key="file.name" class="break-all">{{ file.name }} · {{ formatResourceSize(file.size) }}</li></ul>
+          <button v-if="selectedFiles.length" type="button" :class="primaryButton" class="mt-3" @click="upload"><Upload class="h-4 w-4" aria-hidden="true" />上传并发布 {{ selectedFiles.length }} 个文件</button>
         </div>
       </fieldset>
-      <p v-if="busy" role="status" class="mt-4 text-sm text-blue-700">{{ uploading ? `正在上传 ${progress}%…` : '正在处理…' }}</p>
+      <div v-if="busy" role="status" class="mt-4 space-y-2">
+        <p class="flex items-center gap-2 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />{{ uploading ? `正在上传 ${progress}%…` : '正在处理…' }}</p>
+        <div v-if="uploading" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" aria-label="文件上传进度" class="h-2 overflow-hidden rounded-full bg-zinc-100"><div class="h-full rounded-full bg-zinc-950 transition-[width]" :style="{ width: `${progress}%` }" /></div>
+      </div>
     </div>
 
+    <slot name="settings" />
     <ResourceTools v-show="!showTrash" :path="currentPath" @session-expired="emit('session-expired')" @changed="refresh" />
 
-    <div class="surface-card overflow-hidden">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 p-4">
-        <h3 class="font-medium">{{ showTrash ? '回收站' : '当前目录' }} <span class="text-sm font-normal text-gray-400">{{ filteredItems.length }} 项</span></h3>
-        <input v-model="filter" type="search" :disabled="busy" aria-label="筛选管理文件" placeholder="按名称筛选…" class="max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+    <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 p-4 sm:px-5">
+        <h3 class="flex items-center gap-2 font-semibold">{{ showTrash ? '回收站' : '当前目录' }}<span class="rounded-md border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500">{{ filteredItems.length }} 项</span></h3>
+        <label class="relative w-full sm:w-64"><Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" /><input v-model="filter" type="search" :disabled="busy" aria-label="筛选管理文件" placeholder="按名称筛选…" :class="inputClass" class="pl-9" /></label>
       </div>
-      <div v-if="showTrash" class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-sm"><span class="text-gray-500">回收站占用 {{ formatResourceSize(trash.reduce((total, item) => total + item.size, 0)) }} · {{ trash.length }} 个文件</span><button :disabled="busy || loading || !trash.length" class="btn-danger disabled:opacity-40" @click="askPurge(trash)">清空回收站</button></div>
-      <div v-else class="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3 text-sm"><label class="flex items-center gap-2"><input type="checkbox" :disabled="busy || loading" :checked="pageSelected" @change="selectPage" />选择本页文件</label><span class="text-gray-500">已选 {{ selectedRows.length }} 个（最多 100 个）</span><button :disabled="busy || !selectedRows.length" class="btn-secondary disabled:opacity-40" @click="askBatch('move')">批量移动</button><button :disabled="busy || !selectedRows.length" class="btn-danger disabled:opacity-40" @click="askBatch('delete')">批量删除</button></div>
-      <p v-if="loading" role="status" class="p-10 text-center text-sm text-gray-500">正在读取文件…</p>
+      <div v-if="showTrash" class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm sm:px-5"><span class="text-zinc-500">回收站占用 {{ formatResourceSize(trash.reduce((total, item) => total + item.size, 0)) }} · {{ trash.length }} 个文件</span><button type="button" :disabled="busy || loading || !trash.length" :class="dangerButton" @click="askPurge(trash)"><Trash2 class="h-4 w-4" aria-hidden="true" />清空回收站</button></div>
+      <div v-else class="flex flex-wrap items-center gap-3 border-b border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm sm:px-5"><label class="flex cursor-pointer items-center gap-2"><input type="checkbox" :class="checkboxClass" :disabled="busy || loading" :checked="pageSelected" @change="selectPage" />选择本页文件</label><span class="text-xs text-zinc-500">已选 {{ selectedRows.length }} 个（最多 100 个）</span><div class="flex flex-wrap gap-2 sm:ml-auto"><button type="button" :disabled="busy || !selectedRows.length" :class="secondaryButton" @click="askBatch('move')">批量移动</button><button type="button" :disabled="busy || !selectedRows.length" :class="dangerButton" @click="askBatch('delete')">批量删除</button></div></div>
+      <p v-if="loading" role="status" class="flex items-center justify-center gap-2 p-10 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在读取文件…</p>
       <template v-else>
-        <ul v-if="showTrash" class="divide-y divide-gray-100">
-          <li v-for="item in pagedTrash" :key="item.id" class="flex flex-wrap items-center gap-3 p-4">
-            <div class="min-w-0 flex-1"><p class="break-all text-sm font-medium">{{ item.name }}</p><p class="mt-1 break-all text-xs text-gray-500">原位置：{{ item.path }}</p><p class="mt-1 text-xs text-gray-400">{{ formatResourceSize(item.size) }} · {{ new Date(item.deleted_at).toLocaleString('zh-CN') }}</p></div>
-            <button :disabled="busy" class="btn-secondary shrink-0 disabled:opacity-40" :aria-label="`恢复 ${item.name}`" @click="askRestore(item)">恢复</button>
-            <button :disabled="busy" class="btn-danger shrink-0 disabled:opacity-40" :aria-label="`永久删除 ${item.name}`" @click="askPurge([item])">永久删除</button>
+        <ul v-if="showTrash" class="divide-y divide-zinc-200">
+          <li v-for="item in pagedTrash" :key="item.id" class="flex flex-wrap items-center gap-3 p-4 transition-colors hover:bg-zinc-50/70 sm:px-5">
+            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500"><FileText class="h-5 w-5" aria-hidden="true" /></span>
+            <div class="min-w-0 flex-1"><p class="break-all text-sm font-medium">{{ item.name }}</p><p class="mt-1 break-all text-xs leading-5 text-zinc-500">原位置：{{ item.path }}</p><p class="mt-1 text-xs leading-5 text-zinc-400">{{ formatResourceSize(item.size) }} · {{ new Date(item.deleted_at).toLocaleString('zh-CN') }}</p></div>
+            <div class="flex w-full flex-wrap justify-end gap-2 sm:w-auto"><button type="button" :disabled="busy" :class="secondaryButton" :aria-label="`恢复 ${item.name}`" @click="askRestore(item)"><RotateCcw class="h-3.5 w-3.5" aria-hidden="true" />恢复</button><button type="button" :disabled="busy" :class="dangerButton" :aria-label="`永久删除 ${item.name}`" @click="askPurge([item])">永久删除</button></div>
           </li>
         </ul>
-        <ul v-else class="divide-y divide-gray-100">
-          <li v-for="item in pagedFiles" :key="item.path" class="flex flex-wrap items-center gap-3 p-4">
-            <input v-if="item.type === 'file'" v-model="selectedRows" type="checkbox" :value="item.path" :aria-label="`选择 ${item.name}`" :disabled="busy || (selectedRows.length >= 100 && !selectedRows.includes(item.path))" />
-            <component :is="item.type === 'directory' ? Folder : FileText" class="h-5 w-5 shrink-0" :class="item.type === 'directory' ? 'text-blue-500' : 'text-gray-400'" />
+        <ul v-else class="divide-y divide-zinc-200">
+          <li v-for="item in pagedFiles" :key="item.path" class="flex flex-wrap items-center gap-3 p-4 transition-colors hover:bg-zinc-50/70 sm:px-5">
+            <input v-if="item.type === 'file'" v-model="selectedRows" type="checkbox" :class="checkboxClass" :value="item.path" :aria-label="`选择 ${item.name}`" :disabled="busy || (selectedRows.length >= 100 && !selectedRows.includes(item.path))" />
+            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500"><component :is="item.type === 'directory' ? Folder : FileText" class="h-5 w-5" aria-hidden="true" /></span>
             <div class="min-w-0 flex-1">
-              <button v-if="item.type === 'directory'" :disabled="busy" class="break-all text-left text-sm font-medium text-blue-700 hover:underline" @click="loadFiles(item.path)">{{ item.name }}</button>
-              <p v-else class="break-all text-sm font-medium">{{ item.name }} <span v-if="item.name.toLowerCase() === 'readme.md'" class="text-xs font-normal text-amber-700">目录说明</span></p>
-              <p class="mt-1 text-xs text-gray-400">{{ formatResourceSize(item.size) }} · {{ new Date(item.modified_at).toLocaleString('zh-CN') }}</p>
+              <button v-if="item.type === 'directory'" type="button" :disabled="busy" class="break-all rounded text-left text-sm font-medium text-zinc-950 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" @click="loadFiles(item.path)">{{ item.name }}</button>
+              <p v-else class="break-all text-sm font-medium leading-6">{{ item.name }} <span v-if="item.name.toLowerCase() === 'readme.md'" class="ml-1 inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-1.5 text-xs font-normal text-zinc-500">目录说明</span></p>
+              <p class="mt-1 text-xs leading-5 text-zinc-400">{{ formatResourceSize(item.size) }} · {{ new Date(item.modified_at).toLocaleString('zh-CN') }}</p>
             </div>
-            <div v-if="item.type === 'file'" class="flex shrink-0 gap-2">
-              <button :disabled="busy" class="btn-secondary disabled:opacity-40" :aria-label="`重命名 ${item.name}`" @click="openDialog({ ...item, action: 'rename' })">重命名</button>
-              <button :disabled="busy" class="btn-secondary disabled:opacity-40" :aria-label="`移动 ${item.name}`" @click="askMove(item)">移动</button>
-              <button :disabled="busy" class="btn-danger disabled:opacity-40" :aria-label="`删除 ${item.name}`" @click="askDelete(item)">删除</button>
+            <div v-if="item.type === 'file'" class="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
+              <button type="button" :disabled="busy" :class="secondaryButton" :aria-label="`重命名 ${item.name}`" @click="openDialog({ ...item, action: 'rename' })">重命名</button>
+              <button type="button" :disabled="busy" :class="secondaryButton" :aria-label="`移动 ${item.name}`" @click="askMove(item)">移动</button>
+              <button type="button" :disabled="busy" :class="dangerButton" :aria-label="`删除 ${item.name}`" @click="askDelete(item)">删除</button>
             </div>
           </li>
         </ul>
-        <p v-if="!filteredItems.length" class="p-10 text-center text-sm text-gray-500">{{ filter ? '没有匹配的文件。' : showTrash ? '回收站为空。' : '此目录为空。' }}</p>
-        <div v-if="pageCount > 1" class="flex items-center justify-center gap-4 border-t border-gray-100 p-4 text-sm"><button :disabled="page === 1 || busy" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount || busy" @click="page++">下一页</button></div>
+        <div v-if="!filteredItems.length" role="status" class="flex flex-col items-center gap-3 px-4 py-12 text-center"><span class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400"><component :is="showTrash ? Trash2 : filter ? Search : FolderOpen" class="h-6 w-6" aria-hidden="true" /></span><p class="text-sm text-zinc-500">{{ filter ? '没有匹配的文件。' : showTrash ? '回收站为空。' : '此目录为空。' }}</p></div>
+        <fieldset v-if="pageCount > 1" :disabled="busy" class="min-w-0 border-t border-zinc-200 p-4 disabled:opacity-60"><ReviewPagination v-model:page="page" :page-count="pageCount" /></fieldset>
       </template>
     </div>
 
-    <dialog ref="dialog" aria-labelledby="file-action-title" class="m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-xl backdrop:bg-black/40" @cancel="cancelDialog">
-      <template v-if="pending">
-        <h3 id="file-action-title" class="text-lg font-semibold">{{ actionTitles[pending.action] }}</h3>
-        <p class="mt-3 break-all text-sm text-gray-700">{{ pending.name }}</p>
-        <ul v-if="pending.items" class="mt-3 max-h-32 overflow-y-auto text-xs text-gray-500"><li v-for="item in pending.items" :key="item.path" class="break-all">{{ item.name }}</li></ul>
-        <label v-if="pending.action === 'rename' || pending.action === 'mkdir'" class="mt-4 block text-sm">{{ pending.action === 'rename' ? '新文件名' : '文件夹名称' }}<input v-model="newName" :disabled="busy" maxlength="255" class="mt-2 block w-full rounded-lg border border-gray-300 p-3" /></label>
-        <div v-if="pending.action === 'purge'" class="mt-4 space-y-3 text-sm"><p class="text-red-700">将永久删除 {{ pending.trash_ids?.length }} 个文件（{{ formatResourceSize(pending.size || 0) }}），此操作无法恢复。</p><label class="block">输入“永久删除”确认<input v-model="confirmation" :disabled="busy" autocomplete="off" class="mt-2 block w-full rounded-lg border border-gray-300 p-3" /></label></div>
-        <p v-if="pending.action === 'delete'" class="mt-3 text-sm leading-6 text-gray-600">文件将从公开目录移入回收站，之后可以恢复。</p>
-        <p v-if="pending.action === 'restore'" class="mt-3 break-all text-sm leading-6 text-gray-600">恢复到 {{ pending.path }}。原位置已有同名文件时不会覆盖。</p>
-        <fieldset v-if="pending.action === 'move'" :disabled="busy || targetLoading" class="mt-4 min-w-0 rounded-lg border border-gray-200">
-          <div class="flex flex-wrap items-center gap-3 border-b border-gray-100 p-3 text-sm"><button class="text-blue-700" @click="loadTarget('/')">根目录</button><button :disabled="targetPath === '/'" class="text-blue-700 disabled:opacity-40" @click="loadTarget(parent(targetPath))">上一级</button><span class="min-w-0 break-all text-gray-500">{{ targetPath }}</span></div>
-          <p v-if="targetLoading" role="status" class="p-4 text-sm text-gray-500">正在读取目标目录…</p>
-          <ul v-else class="max-h-52 overflow-y-auto"><li v-for="item in targetDirectories" :key="item.path"><button class="flex w-full items-center gap-2 p-3 text-left text-sm text-blue-700 hover:bg-blue-50" @click="loadTarget(item.path)"><Folder class="h-4 w-4 shrink-0" /><span class="break-all">{{ item.name }}</span></button></li></ul>
-          <p class="border-t border-gray-100 p-3 text-xs text-gray-500">选择文件夹后，点击下方“移动到此目录”。</p>
-        </fieldset>
-        <p v-if="dialogError" role="alert" class="mt-3 text-sm text-red-700">{{ dialogError }}</p>
-        <div class="mt-6 flex justify-end gap-3"><button :disabled="busy" class="btn-secondary" @click="closeDialog">取消</button><button :disabled="busy || targetLoading || (pending.action === 'move' && (!targetReady || targetPath === parent(pending.path))) || (pending.action === 'purge' && confirmation !== '永久删除') || (['rename', 'mkdir'].includes(pending.action) && !newName.trim())" :class="['delete', 'purge'].includes(pending.action) ? 'btn-danger disabled:opacity-40' : 'btn-primary disabled:opacity-40'" @click="confirmAction">{{ busy ? '处理中…' : actionButtons[pending.action] }}</button></div>
-      </template>
-    </dialog>
+    <ShadcnModal :show="!!pending" :title="pending ? actionTitles[pending.action] : '文件操作'" :busy="busy" :auto-focus="false" @update:show="updateDialogVisibility" @after-enter="focusActionField">
+      <section ref="actionPanel" tabindex="-1" :aria-busy="busy" class="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg flex-col rounded-xl border border-zinc-200 bg-white text-zinc-950 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.25)] outline-none">
+        <template v-if="pending">
+          <header class="flex shrink-0 items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6"><h3 class="text-lg font-semibold tracking-tight">{{ actionTitles[pending.action] }}</h3><button type="button" :disabled="busy" :aria-label="`关闭${actionTitles[pending.action]}窗口`" class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-50" @click="closeDialog"><X class="h-4 w-4" aria-hidden="true" /></button></header>
+          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+            <p v-if="pending.name" class="break-all text-sm leading-6 text-zinc-600">{{ pending.name }}</p>
+            <ul v-if="pending.items" class="max-h-32 space-y-1 overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs leading-5 text-zinc-500"><li v-for="item in pending.items" :key="item.path" class="break-all">{{ item.name }}</li></ul>
+            <label v-if="pending.action === 'rename' || pending.action === 'mkdir'" class="block text-sm font-medium">{{ pending.action === 'rename' ? '新文件名' : '文件夹名称' }}<input v-model="newName" :disabled="busy" maxlength="255" :class="inputClass" class="mt-2" /></label>
+            <div v-if="pending.action === 'purge'" class="space-y-4 text-sm"><p class="rounded-lg border border-red-200 bg-red-50 p-3 leading-6 text-red-700">将永久删除 {{ pending.trash_ids?.length }} 个文件（{{ formatResourceSize(pending.size || 0) }}），此操作无法恢复。</p><label class="block font-medium">输入“永久删除”确认<input v-model="confirmation" :disabled="busy" autocomplete="off" :class="inputClass" class="mt-2" /></label></div>
+            <p v-if="pending.action === 'delete'" class="text-sm leading-6 text-zinc-500">文件将从公开目录移入回收站，之后可以恢复。</p>
+            <p v-if="pending.action === 'restore'" class="break-all text-sm leading-6 text-zinc-500">恢复到 {{ pending.path }}。原位置已有同名文件时不会覆盖。</p>
+            <fieldset v-if="pending.action === 'move'" :disabled="busy || targetLoading" class="min-w-0 overflow-hidden rounded-lg border border-zinc-200 disabled:opacity-60">
+              <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 p-3 text-sm"><button type="button" :class="secondaryButton" @click="loadTarget('/')">根目录</button><button type="button" :disabled="targetPath === '/'" :class="secondaryButton" @click="loadTarget(parent(targetPath))">上一级</button><span class="min-w-0 break-all font-mono text-xs text-zinc-500">{{ targetPath }}</span></div>
+              <p v-if="targetLoading" role="status" class="flex items-center gap-2 p-4 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在读取目标目录…</p>
+              <ul v-else class="max-h-52 divide-y divide-zinc-100 overflow-y-auto overscroll-contain"><li v-for="item in targetDirectories" :key="item.path"><button type="button" class="flex w-full items-center gap-2 p-3 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400" @click="loadTarget(item.path)"><Folder class="h-4 w-4 shrink-0 text-zinc-400" aria-hidden="true" /><span class="break-all">{{ item.name }}</span></button></li></ul>
+              <p class="border-t border-zinc-200 bg-zinc-50 p-3 text-xs leading-5 text-zinc-500">选择文件夹后，点击下方“移动到此目录”。</p>
+            </fieldset>
+            <p v-if="dialogError" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">{{ dialogError }}</p>
+          </div>
+          <footer class="flex shrink-0 flex-col-reverse gap-2 px-5 pb-5 sm:flex-row sm:justify-end sm:px-6 sm:pb-6"><button type="button" :disabled="busy" :class="secondaryButton" @click="closeDialog">取消</button><button type="button" :disabled="busy || targetLoading || (pending.action === 'move' && (!targetReady || targetPath === parent(pending.path))) || (pending.action === 'purge' && confirmation !== '永久删除') || (['rename', 'mkdir'].includes(pending.action) && !newName.trim())" :class="['delete', 'purge'].includes(pending.action) ? destructiveButton : primaryButton" @click="confirmAction"><LoaderCircle v-if="busy" class="h-4 w-4 animate-spin" aria-hidden="true" />{{ busy ? '处理中…' : actionButtons[pending.action] }}</button></footer>
+        </template>
+      </section>
+    </ShadcnModal>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { FileText, Folder } from 'lucide-vue-next'
+import { ArrowUp, CircleAlert, CircleCheck, ExternalLink, FileText, Folder, FolderOpen, FolderPlus, House, LoaderCircle, RefreshCw, RotateCcw, Search, Trash2, Upload, X } from 'lucide-vue-next'
 import ResourceTools from './ResourceTools.vue'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 import { api } from '@/lib/requests'
 import { formatResourceSize, resourcePageUrl } from '@/lib/resourceBrowser'
 import type { ManagedResourceFile, ResourceFileAction, ResourceTrashEntry } from '@/types/api/management'
 
 const emit = defineEmits<{ (event: 'session-expired'): void }>()
+const buttonClass = 'inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+const secondaryButton = `${buttonClass} border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-100`
+const primaryButton = `${buttonClass} bg-zinc-950 text-white hover:bg-zinc-800`
+const dangerButton = `${buttonClass} border border-zinc-200 bg-white text-red-600 hover:border-red-200 hover:bg-red-50`
+const destructiveButton = `${buttonClass} bg-red-600 text-white hover:bg-red-700`
+const inputClass = 'h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-950 shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+const checkboxClass = 'h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-300 accent-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 const currentPath = ref('/')
 const files = ref<ManagedResourceFile[]>([])
 const trash = ref<ResourceTrashEntry[]>([])
@@ -116,7 +136,7 @@ const maxFiles = ref(20)
 const maxFileSize = ref(100 * 1024 * 1024)
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement>()
-const dialog = ref<HTMLDialogElement>()
+const actionPanel = ref<HTMLElement>()
 type Pending = { action: 'move' | 'delete' | 'restore' | 'rename' | 'mkdir' | 'purge'; name: string; path: string; version?: string; trash_id?: string; trash_ids?: string[]; items?: ManagedResourceFile[]; size?: number | null }
 const actionTitles = { move: '移动文件', delete: '删除文件', restore: '恢复文件', rename: '重命名文件', mkdir: '新建文件夹', purge: '永久删除' }
 const actionButtons = { move: '移动到此目录', delete: '移入回收站', restore: '恢复文件', rename: '保存新名称', mkdir: '创建文件夹', purge: '确认永久删除' }
@@ -196,9 +216,15 @@ async function upload() {
   } catch (cause) { error.value = cause instanceof Error ? cause.message : '上传失败，请刷新目录确认结果后再重试。' }
   finally { busy.value = false; uploading.value = false }
 }
-async function openDialog(value: Pending) { pending.value = value; dialogError.value = ''; newName.value = value.action === 'rename' ? value.name : ''; confirmation.value = ''; await nextTick(); dialog.value?.showModal() }
-function closeDialog() { dialog.value?.close(); pending.value = null; targetVersion++; targetLoading.value = false }
-function cancelDialog(event: Event) { if (busy.value) event.preventDefault(); else closeDialog() }
+async function openDialog(value: Pending) { if (busy.value) return; pending.value = value; dialogError.value = ''; newName.value = value.action === 'rename' ? value.name : ''; confirmation.value = ''; targetReady.value = false; await nextTick() }
+function clearDialog() { pending.value = null; targetVersion++; targetLoading.value = false; targetReady.value = false }
+function closeDialog() { if (!busy.value) clearDialog() }
+function updateDialogVisibility(show: boolean) { if (!show) closeDialog() }
+function focusActionField() {
+  if (!pending.value) return
+  const field = actionPanel.value?.querySelector<HTMLElement>('input:not(:disabled)')
+  ;(field ?? actionPanel.value)?.focus({ preventScroll: true })
+}
 async function askMove(file: ManagedResourceFile) { targetReady.value = false; await openDialog({ ...file, action: 'move' }); await loadTarget(parent(file.path)) }
 function askDelete(file: ManagedResourceFile) { return openDialog({ ...file, action: 'delete' }) }
 function askRestore(file: ResourceTrashEntry) { return openDialog({ ...file, action: 'restore', trash_id: file.id }) }
@@ -242,11 +268,11 @@ async function confirmAction() {
       const result = await api.post({ url: '/api/management/resources/action/', query }); check(result)
       message.value = action.action === 'delete' ? '文件已移入回收站。' : action.action === 'move' ? '文件已移动。' : action.action === 'rename' ? '文件已重命名。' : '文件已恢复。'
     }
-    closeDialog(); await refresh()
+    clearDialog(); await refresh()
   } catch (cause) { dialogError.value = cause instanceof Error ? cause.message : '操作失败。' }
   finally { busy.value = false }
 }
 watch(filter, () => { page.value = 1 })
 onMounted(refresh)
-onBeforeUnmount(() => { requestVersion++; targetVersion++; dialog.value?.close() })
+onBeforeUnmount(() => { requestVersion++; targetVersion++ })
 </script>

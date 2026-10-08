@@ -20,7 +20,7 @@ afterEach(() => {
 })
 
 describe('application theme scope', () => {
-  it('keeps management on the existing theme while public and error routes use Shadcn', async () => {
+  it('uses Shadcn surfaces while keeping management and public route scopes separate', async () => {
     vi.stubEnv('VITE_FRONTEND_COMMIT', 'unknown')
     vi.stubEnv('VITE_BACKEND_COMMIT', 'unknown')
     const component = { render: () => null }
@@ -35,7 +35,7 @@ describe('application theme scope', () => {
     app = createApp(App).use(router)
     app.mount(host)
     expect(document.documentElement.dataset.uiTheme).toBe('management')
-    expect(host.querySelector('.bg-gray-50')).not.toBeNull()
+    expect(host.querySelector('.management-shell.bg-zinc-50')).not.toBeNull()
 
     await router.push('/500')
     await nextTick()

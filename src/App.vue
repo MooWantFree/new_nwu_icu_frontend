@@ -2,7 +2,7 @@
   <ShadcnFeedbackProvider>
     <div class="flex min-h-screen flex-col">
       <NavBar v-if="!isManagement" />
-      <div class="flex flex-1 flex-col" :class="isManagement ? 'bg-gray-50 text-gray-900' : 'home-shell bg-zinc-50 text-zinc-950'">
+      <div class="flex flex-1 flex-col bg-zinc-50 text-zinc-950" :class="isManagement ? 'management-shell' : 'home-shell'">
         <div class="flex-1">
           <RouterView />
         </div>

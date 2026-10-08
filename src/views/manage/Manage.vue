@@ -1,48 +1,52 @@
 <template>
-  <main class="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
+  <main class="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950 sm:px-6 sm:py-10">
     <div class="mx-auto max-w-6xl">
-      <div v-if="loading" class="surface-card p-10 text-center text-gray-500">
+      <div v-if="loading" role="status" class="surface-card flex min-h-60 items-center justify-center gap-2 p-6 text-sm text-zinc-500">
+        <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
         正在验证管理权限…
       </div>
 
       <div v-else-if="notFound" class="py-24 text-center">
-        <p class="text-7xl font-semibold text-gray-300">404</p>
-        <p class="mt-4 text-gray-500">页面不存在</p>
+        <p class="text-7xl font-semibold text-zinc-300">404</p>
+        <h1 class="mt-4 text-lg font-semibold text-zinc-950">页面不存在</h1>
+        <a href="/" class="btn-secondary mt-6">返回主页</a>
       </div>
 
       <section v-else-if="session && !session.passkey_enrolled" class="surface-card mx-auto max-w-lg p-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">首次绑定</p>
+        <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50"><KeyRound class="h-5 w-5 text-zinc-700" aria-hidden="true" /></div>
+        <p class="text-xs font-medium text-zinc-500">首次绑定</p>
         <h1 class="mt-2 text-2xl font-semibold">绑定管理员 Passkey</h1>
-        <p class="mt-3 text-sm leading-6 text-gray-600">
-          请先通过 SSH 执行 <code>python manage.py admin_passkey_enroll &lt;username&gt;</code>，再输入五分钟内有效的一次性许可码。
+        <p class="mt-3 text-sm leading-6 text-zinc-600">
+          请先通过 SSH 执行 <code class="break-all rounded bg-zinc-100 px-1 py-0.5 text-xs">python manage.py admin_passkey_enroll &lt;username&gt;</code>，再输入五分钟内有效的一次性许可码。
         </p>
-        <label class="mt-6 block text-sm font-medium text-gray-700">设备名称</label>
-        <input v-model.trim="deviceName" maxlength="100" autocomplete="off" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" placeholder="例如：Windows Hello" />
-        <label class="mt-4 block text-sm font-medium text-gray-700">一次性许可码</label>
-        <input v-model.trim="enrollmentCode" maxlength="128" autocomplete="one-time-code" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+        <label for="manage-passkey-device" class="mt-6 block text-sm font-medium text-zinc-700">设备名称</label>
+        <input id="manage-passkey-device" v-model.trim="deviceName" maxlength="100" autocomplete="off" class="mt-2 w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" placeholder="例如：Windows Hello" />
+        <label for="manage-enrollment-code" class="mt-4 block text-sm font-medium text-zinc-700">一次性许可码</label>
+        <input id="manage-enrollment-code" v-model.trim="enrollmentCode" maxlength="128" autocomplete="one-time-code" class="mt-2 w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 font-mono shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" />
         <button :disabled="passkeyBusy || !deviceName || !enrollmentCode" class="btn-primary mt-6 w-full py-2.5" @click="registerPasskey">
           {{ passkeyBusy ? '正在绑定…' : '绑定 Passkey' }}
         </button>
-        <p v-if="authError" class="mt-3 text-sm text-red-700">{{ authError }}</p>
+        <div v-if="authError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ authError }}</p></div>
       </section>
 
       <section v-else-if="session && !session.elevated" class="surface-card mx-auto max-w-lg p-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">管理员验证</p>
+        <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50"><ShieldCheck class="h-5 w-5 text-zinc-700" aria-hidden="true" /></div>
+        <p class="text-xs font-medium text-zinc-500">管理员验证</p>
         <h1 class="mt-2 text-2xl font-semibold">使用 Passkey 继续</h1>
-        <p class="mt-3 text-sm leading-6 text-gray-600">验证成功后将获得十分钟管理权限，每次管理操作会刷新有效期。系统不会向普通用户提供此功能。</p>
+        <p class="mt-3 text-sm leading-6 text-zinc-600">验证成功后将获得十分钟管理权限，每次管理操作会刷新有效期。系统不会向普通用户提供此功能。</p>
         <button :disabled="passkeyBusy || !webAuthnSupported" class="btn-primary mt-6 w-full py-2.5" @click="authenticatePasskey">
           {{ passkeyBusy ? '正在验证…' : webAuthnSupported ? '验证 Passkey' : '当前浏览器不支持 Passkey' }}
         </button>
         <p v-if="session.passkey_count < 2" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">当前只有一个有效凭据；验证后可通过管理员面板再绑定一个备用设备。</p>
-        <p v-if="authError" class="mt-3 text-sm text-red-700">{{ authError }}</p>
+        <div v-if="authError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ authError }}</p></div>
       </section>
 
       <template v-else-if="session?.elevated">
-        <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <header class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">NWU.ICU</p>
-            <h1 class="mt-2 text-3xl font-semibold">管理员面板</h1>
-            <p class="mt-2 text-sm text-gray-600">Passkey 有效期为十分钟，每次管理操作后重新计时，连续十分钟无操作将自动失效。</p>
+            <p class="text-xs font-medium text-zinc-500">NWU.ICU</p>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight">管理员面板</h1>
+            <p class="mt-2 text-sm text-zinc-600">Passkey 有效期为十分钟，每次管理操作后重新计时，连续十分钟无操作将自动失效。</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <button class="btn-secondary" @click="showEnrollmentForm = !showEnrollmentForm">
@@ -52,80 +56,84 @@
           </div>
         </header>
 
-        <section v-if="showEnrollmentForm" class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <section v-if="showEnrollmentForm" class="surface-card mb-6 p-5">
           <h2 class="font-semibold">添加管理员 Passkey</h2>
-          <p class="mt-2 text-sm text-gray-600">先通过 SSH 签发新的五分钟许可码，再在此设备完成注册。</p>
+          <p class="mt-2 text-sm text-zinc-600">先通过 SSH 签发新的五分钟许可码，再在此设备完成注册。</p>
           <div class="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <label class="text-sm font-medium text-gray-700">设备名称<input v-model.trim="deviceName" maxlength="100" autocomplete="off" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>
-            <label class="text-sm font-medium text-gray-700">一次性许可码<input v-model.trim="enrollmentCode" maxlength="128" autocomplete="one-time-code" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>
+            <label class="text-sm font-medium text-zinc-700">设备名称<input v-model.trim="deviceName" maxlength="100" autocomplete="off" class="mt-1 block w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" /></label>
+            <label class="text-sm font-medium text-zinc-700">一次性许可码<input v-model.trim="enrollmentCode" maxlength="128" autocomplete="one-time-code" class="mt-1 block w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 font-mono shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" /></label>
             <button :disabled="passkeyBusy || !deviceName || !enrollmentCode" class="btn-primary" @click="registerPasskey">
               {{ passkeyBusy ? '正在绑定…' : '绑定 Passkey' }}
             </button>
           </div>
-          <p v-if="authError" class="mt-3 text-sm text-red-700">{{ authError }}</p>
+          <div v-if="authError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ authError }}</p></div>
         </section>
 
-        <nav class="mb-6 flex flex-wrap gap-2" aria-label="管理功能">
-          <button v-if="session.permissions.moderate_reports" :class="tabClass('reports')" @click="selectTab('reports')">举报处理</button>
-          <button v-if="session.permissions.publish_announcements" :class="tabClass('announcements')" @click="selectTab('announcements')">公告管理</button>
-          <button v-if="session.permissions.review_resource_uploads" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核</button>
-          <button v-if="session.permissions.manage_resource_files" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
-          <button v-if="session.permissions.manage_telegram_notifications" :class="tabClass('notifications')" @click="selectTab('notifications')">Telegram 通知</button>
-          <button v-if="session.permissions.publish_announcements" :class="tabClass('about')" @click="selectTab('about')">关于本站</button>
+        <nav class="mb-6 flex gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1" aria-label="管理功能">
+          <button v-if="session.permissions.review_resource_uploads" :aria-pressed="tab === 'uploads'" :class="tabClass('uploads')" @click="selectTab('uploads')">文件审核<span v-if="hasPendingUploads" data-pending-dot="uploads" role="img" aria-label="有待审核文件" class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500" /></button>
+          <button v-if="session.permissions.publish_announcements" :aria-pressed="tab === 'announcements'" :class="tabClass('announcements')" @click="selectTab('announcements')">公告管理</button>
+          <button v-if="session.permissions.manage_resource_files || session.permissions.review_resource_uploads" :aria-pressed="tab === 'files'" :class="tabClass('files')" @click="selectTab('files')">资料管理</button>
+          <button v-if="session.permissions.manage_telegram_notifications" :aria-pressed="tab === 'notifications'" :class="tabClass('notifications')" @click="selectTab('notifications')">Telegram 通知</button>
+          <button v-if="session.permissions.moderate_reports" :aria-pressed="tab === 'reports'" :class="tabClass('reports')" @click="selectTab('reports')">举报处理<span v-if="hasPendingReports" data-pending-dot="reports" role="img" aria-label="有待处理举报" class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500" /></button>
+          <button v-if="session.permissions.publish_announcements" :aria-pressed="tab === 'about'" :class="tabClass('about')" @click="selectTab('about')">关于本站</button>
         </nav>
 
-        <ResourceFileManager v-if="tab === 'files' && session.permissions.manage_resource_files" @session-expired="loadSession" />
-        <section v-else-if="!availableTabs.length" class="surface-card p-8 text-center text-gray-500">当前账号没有管理功能权限。</section>
+        <section v-if="tab === 'files' && (session.permissions.manage_resource_files || session.permissions.review_resource_uploads)" class="space-y-4">
+          <ResourceFileManager v-if="session.permissions.manage_resource_files" @session-expired="loadSession">
+            <template #settings><ResourceBlacklistSettings v-if="session.permissions.review_resource_uploads" @session-expired="loadSession" /></template>
+          </ResourceFileManager>
+          <ResourceBlacklistSettings v-else-if="session.permissions.review_resource_uploads" @session-expired="loadSession" />
+        </section>
+        <section v-else-if="!availableTabs.length" class="surface-card p-8 text-center text-zinc-500">当前账号没有管理功能权限。</section>
 
         <section v-else-if="tab === 'about'" class="surface-card p-5">
           <h2 class="font-semibold">编辑关于本站</h2>
-          <p class="mt-1 text-sm text-gray-500">正文使用与公告相同的格式，可插入链接和图片。</p>
-          <div v-if="aboutLoading" class="py-12 text-center text-gray-500">加载中…</div>
+          <p class="mt-1 text-sm text-zinc-500">正文使用与公告相同的格式，可插入链接和图片。</p>
+          <div v-if="aboutLoading" class="py-12 text-center text-zinc-500">加载中…</div>
           <template v-else>
-            <div v-if="aboutError" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div v-if="aboutError" class="mt-4 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700" role="alert">
               {{ aboutError }}
               <button type="button" class="ml-2 font-medium underline" @click="loadAbout">重试</button>
             </div>
-            <label class="mt-5 block text-sm font-medium text-gray-700">正文</label>
-            <div class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900"><GuestbookEditor v-model="aboutContent" :disabled="aboutBusy || Boolean(aboutError)" allow-images placeholder="输入关于本站的内容…" /></div>
+            <label class="mt-5 block text-sm font-medium text-zinc-700">正文</label>
+            <div class="mt-2"><GuestbookEditor v-model="aboutContent" appearance="shadcn" :disabled="aboutBusy || Boolean(aboutError)" allow-images placeholder="输入关于本站的内容…" /></div>
             <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
-              <span v-if="aboutMessage" class="mr-auto text-sm" :class="aboutSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ aboutMessage }}</span>
+              <p v-if="aboutMessage" :role="aboutSucceeded ? 'status' : 'alert'" class="mr-auto flex w-full items-start gap-2 rounded-lg border bg-white p-3 text-sm" :class="aboutSucceeded ? 'border-zinc-200 text-zinc-700' : 'border-red-200 text-red-700'"><component :is="aboutSucceeded ? CheckCircle2 : CircleAlert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{ aboutMessage }}</p>
               <button :disabled="aboutBusy || Boolean(aboutError)" class="btn-primary px-5" @click="saveAbout">{{ aboutBusy ? '正在保存…' : '保存内容' }}</button>
             </div>
           </template>
         </section>
 
         <section v-else-if="tab === 'reports'" class="space-y-4">
-          <div class="flex flex-wrap gap-3">
-            <select v-model="reportStatus" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadReports(1)">
-              <option value="pending">待处理</option><option value="dismissed">已驳回</option><option value="removed">已移除</option>
-            </select>
-            <select v-model="reportBoard" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadReports(1)">
-              <option value="">全部来源</option><option value="guestbook">留言板</option><option value="announcement">公告回复</option>
-            </select>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><h2 class="text-lg font-semibold tracking-tight">举报处理</h2><p class="mt-1 text-sm text-zinc-500">查看举报内容并记录处理说明。</p></div>
+            <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+              <div class="min-w-0 sm:w-32"><ShadcnSelect :value="reportStatus" :options="reportStatusOptions" aria-label="举报状态" @update:value="updateReportStatus" /></div>
+              <div class="min-w-0 sm:w-36"><ShadcnSelect :value="reportBoard" :options="reportBoardOptions" aria-label="举报来源" @update:value="updateReportBoard" /></div>
+            </div>
           </div>
-          <div v-if="sectionLoading" class="py-16 text-center text-gray-500">加载中…</div>
+          <div v-if="sectionLoading" class="py-16 text-center text-zinc-500">加载中…</div>
           <article v-for="report in reports" v-else :key="report.id" class="surface-card p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <div><span class="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{{ reasonLabel(report.reason) }}</span><span class="ml-2 text-sm text-gray-600">#{{ report.id }} · {{ report.entry.board === 'guestbook' ? '留言板' : '公告回复' }}</span></div>
-              <time class="text-xs text-gray-500">{{ formatDate(report.created_at) }}</time>
+              <div><span class="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{{ reasonLabel(report.reason) }}</span><span class="ml-2 text-sm text-zinc-600">#{{ report.id }} · {{ report.entry.board === 'guestbook' ? '留言板' : '公告回复' }}</span></div>
+              <time class="text-xs text-zinc-500">{{ formatDate(report.created_at) }}</time>
             </div>
-            <p class="mt-4 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-800">{{ report.entry.content }}</p>
-            <p v-if="report.entry.parent_content" class="mt-2 text-xs text-gray-500">回复上下文：{{ report.entry.parent_content }}</p>
-            <dl class="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+            <p class="mt-4 whitespace-pre-wrap rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-800">{{ report.entry.content }}</p>
+            <p v-if="report.entry.parent_content" class="mt-2 text-xs text-zinc-500">回复上下文：{{ report.entry.parent_content }}</p>
+            <dl class="mt-4 grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
               <div>作者：{{ report.entry.author.nickname }}（{{ report.entry.author.username }}）</div>
               <div>举报人：{{ report.reporter.nickname }}（{{ report.reporter.username }}）</div>
               <div v-if="report.detail" class="sm:col-span-2">说明：{{ report.detail }}</div>
             </dl>
             <div v-if="report.status === 'pending'" class="mt-4 flex flex-col gap-3 sm:flex-row">
-              <input v-model.trim="reportNotes[report.id]" maxlength="500" class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" placeholder="处理说明（必填）" />
+              <input v-model.trim="reportNotes[report.id]" :aria-label="`举报 ${report.id} 的处理说明`" maxlength="500" class="min-w-0 flex-1 min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" placeholder="处理说明（必填）" />
               <button class="btn-secondary" @click="resolveReport(report.id, 'dismiss')">驳回举报</button>
               <button class="btn-danger" @click="resolveReport(report.id, 'remove')">移除内容</button>
             </div>
-            <p v-else class="mt-4 text-sm text-gray-600">处理说明：{{ report.handling_note }}</p>
+            <p v-else class="mt-4 text-sm text-zinc-600">处理说明：{{ report.handling_note }}</p>
           </article>
-          <p v-if="!sectionLoading && !reports.length" class="py-16 text-center text-gray-500">没有符合条件的举报。</p>
-          <Pager :page="reportPage" :max-page="reportMaxPage" @change="loadReports" />
+          <p v-if="!sectionLoading && !reports.length" class="py-16 text-center text-zinc-500">没有符合条件的举报。</p>
+          <div v-if="reportMaxPage > 1" class="flex justify-center pt-2"><ReviewPagination :page="reportPage" :page-count="reportMaxPage" @update:page="loadReports" /></div>
         </section>
 
         <section v-else-if="tab === 'announcements'" class="space-y-4">
@@ -133,22 +141,22 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 class="font-semibold">{{ editingAnnouncementId === null ? '发布公告' : '编辑公告' }}</h2>
-                <p class="mt-1 text-sm text-gray-500">优先级越高越靠前；相同优先级按更新时间倒序。</p>
+                <p class="mt-1 text-sm text-zinc-500">优先级越高越靠前；相同优先级按更新时间倒序。</p>
               </div>
               <button v-if="editingAnnouncementId !== null" type="button" :disabled="announcementBusy" class="btn-secondary" @click="resetAnnouncementEditor">取消编辑</button>
             </div>
             <div class="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
-              <label class="block text-sm font-medium text-gray-700">标题
-                <input v-model.trim="announcementTitle" :disabled="announcementBusy" maxlength="100" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100" />
+              <label class="block text-sm font-medium text-zinc-700">标题
+                <input v-model.trim="announcementTitle" :disabled="announcementBusy" maxlength="100" class="mt-2 w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:bg-zinc-100" />
               </label>
-              <label class="block text-sm font-medium text-gray-700">优先级
-                <input v-model.number="announcementPriority" :disabled="announcementBusy" type="number" min="-100" max="100" step="1" class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100" />
+              <label class="block text-sm font-medium text-zinc-700">优先级
+                <input v-model.number="announcementPriority" :disabled="announcementBusy" type="number" min="-100" max="100" step="1" class="mt-2 w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:bg-zinc-100" />
               </label>
             </div>
-            <label class="mt-5 block text-sm font-medium text-gray-700">正文</label>
-            <div class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900"><GuestbookEditor v-model="announcementContent" :disabled="announcementBusy" allow-images placeholder="输入公告内容…" /></div>
+            <label class="mt-5 block text-sm font-medium text-zinc-700">正文</label>
+            <div class="mt-2"><GuestbookEditor v-model="announcementContent" appearance="shadcn" :disabled="announcementBusy" allow-images placeholder="输入公告内容…" /></div>
             <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
-              <span v-if="announcementMessage" class="mr-auto text-sm" :class="announcementSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ announcementMessage }}</span>
+              <p v-if="announcementMessage" :role="announcementSucceeded ? 'status' : 'alert'" class="mr-auto flex w-full items-start gap-2 rounded-lg border bg-white p-3 text-sm" :class="announcementSucceeded ? 'border-zinc-200 text-zinc-700' : 'border-red-200 text-red-700'"><component :is="announcementSucceeded ? CheckCircle2 : CircleAlert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{ announcementMessage }}</p>
               <button :disabled="announcementBusy" class="btn-primary px-5" @click="saveAnnouncement">
                 {{ announcementBusy ? '正在保存…' : editingAnnouncementId === null ? '发布公告' : '保存修改' }}
               </button>
@@ -158,18 +166,15 @@
           <div class="surface-card p-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 class="font-semibold">公告列表</h2>
-              <select v-model="announcementVisibility" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadAnnouncements(1)">
-                <option value="published">已发布</option>
-                <option value="hidden">已隐藏</option>
-              </select>
+              <div class="w-32"><ShadcnSelect :value="announcementVisibility" :options="announcementVisibilityOptions" aria-label="公告状态" :disabled="announcementBusy || announcementActionId !== null" @update:value="updateAnnouncementVisibility" /></div>
             </div>
-            <div v-if="sectionLoading" class="py-12 text-center text-gray-500">加载中…</div>
-            <div v-else-if="announcements.length" class="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            <div v-if="sectionLoading" class="py-12 text-center text-zinc-500">加载中…</div>
+            <div v-else-if="announcements.length" class="mt-4 divide-y divide-zinc-200 rounded-xl border border-zinc-200">
               <article v-for="announcement in announcements" :key="announcement.id" class="p-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <h3 class="truncate font-medium text-gray-900">{{ announcement.title || '公告' }}</h3>
-                    <p class="mt-1 text-xs text-gray-500">优先级 {{ announcement.priority }} · 更新于 {{ formatDate(announcement.updated_at) }}</p>
+                    <h3 class="truncate font-medium text-zinc-900">{{ announcement.title || '公告' }}</h3>
+                    <p class="mt-1 text-xs text-zinc-500">优先级 {{ announcement.priority }} · 更新于 {{ formatDate(announcement.updated_at) }}</p>
                   </div>
                   <div class="flex flex-wrap gap-2">
                     <button type="button" class="btn-secondary min-h-9 px-3 py-1" :disabled="announcementBusy || announcementActionId !== null" @click="editAnnouncement(announcement)">编辑</button>
@@ -179,8 +184,8 @@
                 </div>
               </article>
             </div>
-            <p v-else class="py-12 text-center text-gray-500">没有{{ announcementVisibility === 'published' ? '已发布' : '已隐藏' }}的公告。</p>
-            <Pager :page="announcementPage" :max-page="announcementMaxPage" @change="loadAnnouncements" />
+            <p v-else class="py-12 text-center text-zinc-500">没有{{ announcementVisibility === 'published' ? '已发布' : '已隐藏' }}的公告。</p>
+            <div v-if="announcementMaxPage > 1" class="mt-5 flex justify-center"><ReviewPagination :page="announcementPage" :page-count="announcementMaxPage" @update:page="loadAnnouncements" /></div>
           </div>
         </section>
 
@@ -188,16 +193,18 @@
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 class="font-semibold">Telegram 通知</h2>
-              <p class="mt-2 text-sm text-gray-600">分别控制网站事件是否发送到已配置的 Telegram 管理群组。关闭开关不会影响站内通知。</p>
+              <p class="mt-2 text-sm text-zinc-600">分别控制网站事件是否发送到已配置的 Telegram 管理群组。关闭开关不会影响站内通知。</p>
             </div>
-            <span v-if="telegramMessage" class="text-sm" :class="telegramSucceeded ? 'text-emerald-700' : 'text-red-700'">{{ telegramMessage }}</span>
           </div>
-          <div v-if="sectionLoading" class="py-12 text-center text-gray-500">加载中…</div>
-          <div v-else class="mt-5 divide-y divide-gray-200 rounded-xl border border-gray-200">
-            <label v-for="item in telegramSwitches" :key="item.key" class="flex cursor-pointer items-center justify-between gap-4 p-4">
-              <span><span class="block text-sm font-medium text-gray-900">{{ item.label }}</span><span class="mt-1 block text-xs text-gray-500">{{ item.description }}</span></span>
-              <input v-model="telegramSettings[item.key]" type="checkbox" class="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            </label>
+          <p v-if="telegramMessage" :role="telegramSucceeded ? 'status' : 'alert'" class="mt-4 flex items-start gap-2 rounded-lg border bg-white p-3 text-sm" :class="telegramSucceeded ? 'border-zinc-200 text-zinc-700' : 'border-red-200 text-red-700'"><component :is="telegramSucceeded ? CheckCircle2 : CircleAlert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{ telegramMessage }}</p>
+          <div v-if="sectionLoading" class="py-12 text-center text-zinc-500">加载中…</div>
+          <div v-else class="mt-5 divide-y divide-zinc-200 rounded-xl border border-zinc-200">
+            <div v-for="item in telegramSwitches" :key="item.key" class="flex items-center justify-between gap-4 p-4">
+              <span><span class="block text-sm font-medium text-zinc-900">{{ item.label }}</span><span class="mt-1 block text-xs leading-5 text-zinc-500">{{ item.description }}</span></span>
+              <SwitchRoot v-model="telegramSettings[item.key]" :aria-label="item.label" :disabled="telegramBusy" class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-zinc-950 data-[state=unchecked]:bg-zinc-200">
+                <SwitchThumb class="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0" />
+              </SwitchRoot>
+            </div>
           </div>
           <div class="mt-5 flex justify-end">
             <button :disabled="telegramBusy || sectionLoading" class="btn-primary px-5" @click="saveTelegramSettings">{{ telegramBusy ? '正在保存…' : '保存设置' }}</button>
@@ -205,30 +212,21 @@
         </section>
 
         <section v-else-if="tab === 'uploads'" class="space-y-4">
-          <div class="surface-card p-5">
-            <button type="button" class="flex w-full items-center justify-between gap-3 text-left font-semibold" :aria-expanded="showUploadBlacklist" aria-controls="upload-blacklist" @click="showUploadBlacklist = !showUploadBlacklist">
-              <span>投稿文件夹黑名单</span><span class="text-sm text-blue-700">{{ showUploadBlacklist ? '收起' : '设置' }}</span>
-            </button>
-            <p class="mt-2 text-sm text-gray-600">此黑名单仅控制投稿，不影响公开浏览或下载。要隐藏资料，请在“资料管理”中进入目标目录，再设置“访问权限”。</p>
-            <ResourceUploadBlacklist v-if="showUploadBlacklist" id="upload-blacklist" class="mt-5" @session-expired="loadSession" />
-          </div>
-          <select v-model="uploadStatus" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm" @change="loadUploads(1)">
-            <option value="pending">待审核</option><option value="publish_failed">发布失败</option><option value="publishing">发布中</option><option value="rejected">已拒绝</option><option value="approved">已通过</option><option value="">全部</option>
-          </select>
-          <div v-if="sectionLoading" class="py-16 text-center text-gray-500">加载中…</div>
+          <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-semibold tracking-tight">投稿审核</h2><div class="w-36"><ShadcnSelect :value="uploadStatus" :options="uploadStatusOptions" aria-label="审核状态" @update:value="updateUploadStatus" /></div></div>
+          <div v-if="sectionLoading" class="py-16 text-center text-zinc-500">加载中…</div>
           <article v-for="upload in uploads" v-else :key="upload.id" class="surface-card p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <div><h2 class="font-semibold">投稿 #{{ upload.id }}</h2><p class="mt-1 text-sm text-gray-600">{{ upload.uploaded_by.nickname }}（{{ upload.uploaded_by.username }}）· {{ upload.total_size_display }}</p></div>
-              <span class="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">{{ uploadStatusLabel(upload.status) }}</span>
+              <div><h2 class="font-semibold">投稿 #{{ upload.id }}</h2><p class="mt-1 text-sm text-zinc-600">{{ upload.uploaded_by.nickname }}（{{ upload.uploaded_by.username }}）· {{ upload.total_size_display }}</p></div>
+              <span class="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">{{ uploadStatusLabel(upload.status) }}</span>
             </div>
-            <div class="mt-4 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
+            <div class="mt-4 space-y-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm">
               <template v-for="file in upload.files" :key="file.id">
                 <span v-if="upload.status === 'approved'" class="block">{{ file.relative_path }} · {{ file.size_display }}</span>
                 <a v-else :href="`/api/management/uploads/files/${file.id}/download/`" class="text-link block">{{ file.relative_path }} · {{ file.size_display }}</a>
               </template>
             </div>
             <div v-if="upload.status === 'approved' && toSafeExternalUrl(upload.resource_url)" class="mt-4">
-              <p class="text-xs font-medium text-gray-500">主站目录</p>
+              <p class="text-xs font-medium text-zinc-500">主站目录</p>
               <a
                 :href="toSafeExternalUrl(upload.resource_url) ?? undefined"
                 target="_blank"
@@ -237,32 +235,37 @@
               >{{ displayResourceUrl(upload.resource_url) }}</a>
             </div>
             <div v-if="upload.status === 'pending' || upload.status === 'publish_failed'" class="mt-4 grid gap-3">
-              <label class="text-sm font-medium text-gray-700">最终目录<input v-model.trim="uploadPaths[upload.id]" maxlength="2048" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>
-              <label class="text-sm font-medium text-gray-700">拒绝理由<input v-model.trim="uploadReasons[upload.id]" maxlength="2000" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>
+              <label class="text-sm font-medium text-zinc-700">最终目录<input v-model.trim="uploadPaths[upload.id]" maxlength="2048" class="mt-1 block w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" /></label>
+              <label class="text-sm font-medium text-zinc-700">拒绝理由<input v-model.trim="uploadReasons[upload.id]" maxlength="2000" class="mt-1 block w-full min-h-10 rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" /></label>
               <div class="flex justify-end gap-3">
-                <button class="inline-flex min-h-10 items-center justify-center rounded-[10px] border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50" @click="reviewUpload(upload, 'reject')">拒绝</button>
+                <button class="inline-flex min-h-10 items-center justify-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50" @click="reviewUpload(upload, 'reject')">拒绝</button>
                 <button class="btn-primary" @click="reviewUpload(upload, upload.status === 'publish_failed' ? 'retry' : 'approve')">{{ upload.status === 'publish_failed' ? '重新发布' : '通过并发布' }}</button>
               </div>
             </div>
             <p v-if="upload.publish_error" class="mt-3 text-sm text-red-700">发布错误：{{ upload.publish_error }}</p>
           </article>
-          <p v-if="!sectionLoading && !uploads.length" class="py-16 text-center text-gray-500">没有符合条件的投稿。</p>
-          <Pager :page="uploadPage" :max-page="uploadMaxPage" @change="loadUploads" />
+          <p v-if="!sectionLoading && !uploads.length" class="py-16 text-center text-zinc-500">没有符合条件的投稿。</p>
+          <div v-if="uploadMaxPage > 1" class="flex justify-center pt-2"><ReviewPagination :page="uploadPage" :page-count="uploadMaxPage" @update:page="loadUploads" /></div>
         </section>
 
-        <p v-if="sectionError" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ sectionError }}</p>
+        <div v-if="sectionError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ sectionError }}</p></div>
       </template>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
+import { CheckCircle2, CircleAlert, KeyRound, LoaderCircle, ShieldCheck } from 'lucide-vue-next'
+import { SwitchRoot, SwitchThumb } from 'reka-ui'
 import { useShadcnToast } from '@/lib/useShadcnToast'
+import { useShadcnDialog } from '@/lib/useShadcnDialog'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
-import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
+import ResourceBlacklistSettings from '@/components/manage/ResourceBlacklistSettings.vue'
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 import { toSafeExternalUrl } from '@/lib/security'
@@ -272,20 +275,9 @@ import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
 type Tab = 'about' | 'reports' | 'announcements' | 'uploads' | 'files' | 'notifications'
 
-const Pager = defineComponent({
-  props: { page: { type: Number, required: true }, maxPage: { type: Number, required: true } },
-  emits: ['change'],
-  setup(props, { emit }) {
-    return () => props.maxPage > 1 ? h('div', { class: 'flex justify-center gap-3 pt-2' }, [
-      h('button', { disabled: props.page <= 1, class: 'btn-secondary min-h-9 px-3 py-1 disabled:opacity-40', onClick: () => emit('change', props.page - 1) }, '上一页'),
-      h('span', { class: 'px-2 py-1 text-sm text-gray-500' }, `${props.page} / ${props.maxPage}`),
-      h('button', { disabled: props.page >= props.maxPage, class: 'btn-secondary min-h-9 px-3 py-1 disabled:opacity-40', onClick: () => emit('change', props.page + 1) }, '下一页'),
-    ]) : null
-  },
-})
-
 const route = useRoute()
 const message = useShadcnToast()
+const dialog = useShadcnDialog()
 const loading = ref(true)
 const notFound = ref(false)
 const session = ref<ManagementSession | null>(null)
@@ -296,9 +288,13 @@ const enrollmentCode = ref('')
 const deviceName = ref('')
 const showEnrollmentForm = ref(false)
 const requestedTab = typeof route.query.tab === 'string' ? route.query.tab : ''
-const tab = ref<Tab>((['about', 'reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'reports')
+const tab = ref<Tab>((['about', 'reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'uploads')
 const sectionLoading = ref(false)
 const sectionError = ref('')
+const hasPendingReports = ref(false)
+const hasPendingUploads = ref(false)
+type PendingKind = 'reports' | 'uploads'
+const pendingRequestVersions: Record<PendingKind, number> = { reports: 0, uploads: 0 }
 
 const safeNext = computed(() => {
   const value = typeof route.query.next === 'string' ? route.query.next : ''
@@ -308,14 +304,36 @@ const availableTabs = computed<Tab[]>(() => {
   if (!session.value) return []
   const permissions = session.value.permissions
   return [
-    permissions.moderate_reports && 'reports',
-    permissions.publish_announcements && 'announcements',
     permissions.review_resource_uploads && 'uploads',
-    permissions.manage_resource_files && 'files',
+    permissions.publish_announcements && 'announcements',
+    (permissions.manage_resource_files || permissions.review_resource_uploads) && 'files',
     permissions.manage_telegram_notifications && 'notifications',
+    permissions.moderate_reports && 'reports',
     permissions.publish_announcements && 'about',
   ].filter((value): value is Tab => Boolean(value))
 })
+
+const refreshPendingIndicators = async (kinds: PendingKind[] = ['reports', 'uploads']) => {
+  const currentSession = session.value
+  if (!currentSession?.elevated) return
+  await Promise.allSettled(kinds.map(async kind => {
+    const allowed = kind === 'reports' ? currentSession.permissions.moderate_reports : currentSession.permissions.review_resource_uploads
+    if (!allowed) return
+    const version = ++pendingRequestVersions[kind]
+    const response = kind === 'reports'
+      ? await api.get({ url: '/api/management/reports/', query: { status: 'pending', page: 1, pageSize: 1 } })
+      : await api.get({ url: '/api/management/uploads/', query: { status: 'pending', page: 1, pageSize: 1 } })
+    if (version !== pendingRequestVersions[kind] || session.value !== currentSession) return
+    if (response.status === 200) {
+      const hasPending = response.content.count > 0
+      if (kind === 'reports') hasPendingReports.value = hasPending
+      else hasPendingUploads.value = hasPending
+    } else if (response.status === 401 || response.status === 403) {
+      if (kind === 'reports') hasPendingReports.value = false
+      else hasPendingUploads.value = false
+    }
+  }))
+}
 
 const errorMessage = (errors: Array<{ err_msg: string }> | undefined, fallback: string) => errors?.[0]?.err_msg || fallback
 
@@ -384,7 +402,7 @@ const loadSession = async () => {
     if (response.status === 404) { notFound.value = true; return }
     if (response.status !== 200) throw new Error()
     session.value = response.content
-    if (!availableTabs.value.includes(tab.value)) tab.value = availableTabs.value[0] || 'reports'
+    if (!availableTabs.value.includes(tab.value)) tab.value = availableTabs.value[0] || 'uploads'
   } catch { notFound.value = true } finally { loading.value = false }
 }
 
@@ -476,6 +494,18 @@ const saveAbout = async () => {
 const reports = ref<ManagementReport[]>([])
 const reportStatus = ref<'pending' | 'dismissed' | 'removed'>('pending')
 const reportBoard = ref<'' | 'guestbook' | 'announcement'>('')
+const reportStatusOptions = [{ value: 'pending', label: '待处理' }, { value: 'dismissed', label: '已驳回' }, { value: 'removed', label: '已移除' }]
+const reportBoardOptions = [{ value: '', label: '全部来源' }, { value: 'guestbook', label: '留言板' }, { value: 'announcement', label: '公告回复' }]
+const updateReportStatus = (value: string | number | null) => {
+  if (value !== 'pending' && value !== 'dismissed' && value !== 'removed') return
+  reportStatus.value = value
+  void loadReports(1)
+}
+const updateReportBoard = (value: string | number | null) => {
+  if (value !== '' && value !== 'guestbook' && value !== 'announcement') return
+  reportBoard.value = value
+  void loadReports(1)
+}
 const reportPage = ref(1)
 const reportMaxPage = ref(1)
 const reportNotes = reactive<Record<number, string>>({})
@@ -503,11 +533,11 @@ const loadReports = async (page = 1) => {
 const resolveReport = async (id: number, decision: 'dismiss' | 'remove') => {
   const note = reportNotes[id]?.trim()
   if (!note) { sectionError.value = '请先填写处理说明。'; return }
-  if (decision === 'remove' && !confirm('确定移除该内容并处理它的全部待处理举报吗？')) return
+  if (decision === 'remove' && !(await dialog.confirm({ title: '移除举报内容', description: '确定移除该内容并处理它的全部待处理举报吗？', confirmText: '移除内容', destructive: true }))) return
   const response = await api.post({ url: '/api/management/reports/:id/resolve/', params: { id }, query: { decision, note } })
   if (response.status === 403) { await loadSession(); return }
   if (response.status !== 200) { sectionError.value = errorMessage(response.errors, '处理举报失败。'); return }
-  await loadReports(reportPage.value)
+  await Promise.allSettled([loadReports(reportPage.value), refreshPendingIndicators(['reports'])])
 }
 
 const announcementTitle = ref('')
@@ -519,6 +549,12 @@ const announcementMessage = ref('')
 const announcementSucceeded = ref(false)
 const announcements = ref<GuestbookEntry[]>([])
 const announcementVisibility = ref<'published' | 'hidden'>('published')
+const announcementVisibilityOptions = [{ value: 'published', label: '已发布' }, { value: 'hidden', label: '已隐藏' }]
+const updateAnnouncementVisibility = (value: string | number | null) => {
+  if (value !== 'published' && value !== 'hidden') return
+  announcementVisibility.value = value
+  void loadAnnouncements(1)
+}
 const announcementPage = ref(1)
 const announcementMaxPage = ref(1)
 const announcementActionId = ref<number | null>(null)
@@ -626,7 +662,7 @@ const toggleAnnouncementVisibility = async (announcement: GuestbookEntry) => {
 }
 
 const deleteAnnouncement = async (announcement: GuestbookEntry) => {
-  if (announcement.is_visible || !confirm('确定从公告管理中移除这条已隐藏的公告吗？移除后无法在管理界面恢复。')) return
+  if (announcement.is_visible || !(await dialog.confirm({ title: '删除公告', description: '确定从公告管理中移除这条已隐藏的公告吗？移除后无法在管理界面恢复。', confirmText: '删除公告', destructive: true }))) return
   announcementActionId.value = announcement.id
   announcementMessage.value = ''
   announcementSucceeded.value = false
@@ -683,8 +719,13 @@ const saveTelegramSettings = async () => {
 }
 
 const uploads = ref<ResourceUploadRequest[]>([])
-const showUploadBlacklist = ref(false)
 const uploadStatus = ref<ResourceUploadRequest['status'] | ''>('pending')
+const uploadStatusOptions = [{ value: 'pending', label: '待审核' }, { value: 'publish_failed', label: '发布失败' }, { value: 'publishing', label: '发布中' }, { value: 'rejected', label: '已拒绝' }, { value: 'approved', label: '已通过' }, { value: '', label: '全部状态' }]
+const updateUploadStatus = (value: string | number | null) => {
+  if (value !== '' && value !== 'pending' && value !== 'publish_failed' && value !== 'publishing' && value !== 'rejected' && value !== 'approved') return
+  uploadStatus.value = value
+  void loadUploads(1)
+}
 const uploadPage = ref(1)
 const uploadMaxPage = ref(1)
 const uploadPaths = reactive<Record<number, string>>({})
@@ -719,15 +760,15 @@ const reviewUpload = async (upload: ResourceUploadRequest, action: 'approve' | '
   if (response.status === 403) { await loadSession(); return }
   if (response.status !== 200) { sectionError.value = errorMessage(response.errors, '审核投稿失败。'); return }
   if (action === 'approve') message.success('审核已通过，资料正在发布。')
-  await loadUploads(uploadPage.value)
+  await Promise.allSettled([loadUploads(uploadPage.value), refreshPendingIndicators(['uploads'])])
 }
 
 const selectTab = (value: Tab) => { tab.value = value }
 const tabClass = (value: Tab) => [
-  'rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition-colors',
+  'relative inline-flex min-h-9 shrink-0 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2',
   tab.value === value
-    ? 'border-blue-600 bg-blue-600 text-white'
-    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+    ? 'bg-white text-zinc-950 shadow-sm'
+    : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-950',
 ]
 const reasonLabel = (value: ManagementReport['reason']) => ({ spam: '垃圾广告', abuse: '攻击辱骂', privacy: '泄露隐私', other: '其他' })[value]
 const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending: '待审核', publishing: '发布中', approved: '已通过', rejected: '已拒绝', publish_failed: '发布失败' })[value]
@@ -745,6 +786,11 @@ watch(tab, value => {
   if (value === 'notifications') void loadTelegramSettings()
 })
 watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'about') void loadAbout(); if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
+watch(session, () => {
+  pendingRequestVersions.reports += 1; pendingRequestVersions.uploads += 1
+  hasPendingReports.value = false; hasPendingUploads.value = false
+  void refreshPendingIndicators()
+})
 onMounted(loadSession)
-onUnmounted(() => { reportRequestVersion += 1; uploadRequestVersion += 1 })
+onUnmounted(() => { reportRequestVersion += 1; uploadRequestVersion += 1; pendingRequestVersions.reports += 1; pendingRequestVersions.uploads += 1 })
 </script>

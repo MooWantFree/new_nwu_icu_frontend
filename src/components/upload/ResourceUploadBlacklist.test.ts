@@ -11,7 +11,8 @@ const flush = async () => {
   for (let i = 0; i < 10; i += 1) { await Promise.resolve(); await nextTick() }
 }
 const button = (label: string) => container.querySelector(`[aria-label="${label}"]`) as HTMLButtonElement | null
-const mount = async () => { app = createApp(ResourceUploadBlacklist); app.mount(container); await flush() }
+const expired = vi.fn()
+const mount = async () => { app = createApp(ResourceUploadBlacklist, { onSessionExpired: expired }); app.mount(container); await flush() }
 
 beforeEach(() => {
   vi.resetAllMocks()
@@ -63,5 +64,26 @@ describe('upload directory blacklist management', () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('保存失败')
     expect(button('解除黑名单 /private')).not.toBeNull()
     expect(container.querySelector('[role="status"]')).toBeNull()
+  })
+  it('disables further changes while a blacklist update is pending', async () => {
+    await mount()
+    let finish!: (value: never) => void
+    vi.mocked(api.post).mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+    button('拉黑 /public')!.click(); await flush()
+    expect(button('解除黑名单 /private')!.disabled).toBe(true)
+    expect(button('拉黑 /public')!.disabled).toBe(true)
+    button('解除黑名单 /private')!.click(); await flush()
+    expect(api.post).toHaveBeenCalledOnce()
+    finish({ status: 200, content: { paths: ['/private', '/public'] } } as never); await flush()
+    expect(button('解除黑名单 /public')!.disabled).toBe(false)
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('已禁止向该文件夹及其子文件夹投稿')
+  })
+  it('requests renewed authorization without changing saved paths when a write is forbidden', async () => {
+    await mount()
+    vi.mocked(api.post).mockResolvedValueOnce({ status: 403, errors: [{ err_msg: '请重新验证管理权限' }] } as never)
+    button('解除黑名单 /private')!.click(); await flush()
+    expect(expired).toHaveBeenCalledOnce()
+    expect(button('解除黑名单 /private')).not.toBeNull()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('请重新验证管理权限')
   })
 })
