@@ -35,11 +35,14 @@
         <!-- Mobile Menu -->  
         <div class="app-mobile flex items-center space-x-2 lg:hidden">
           <button
+            type="button"
             @click="showSearchModal = true"
-            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-            title="搜索"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-colors hover:bg-zinc-50 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            aria-label="打开全局搜索"
+            aria-haspopup="dialog"
+            title="全局搜索"
           >
-            <Search class="h-5 w-5" />
+            <Search class="h-4 w-4" aria-hidden="true" />
           </button>
 
           <MobileMenu

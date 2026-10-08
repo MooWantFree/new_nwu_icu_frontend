@@ -1,31 +1,36 @@
 <template>
-  <!-- Resource card with hover effect and shadow -->
-  <div class="bg-white rounded-lg shadow-md p-4">
-    <!-- Resource name and type section -->
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-semibold text-blue-700 truncate mr-2">
-        <RouterLink :to="safeResourceUrl" class="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500" @click="handleClick">{{ resource.name }}</RouterLink>
-      </h3>
-      <!-- File type badge -->
-      <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
-        {{ resource.type === 'file' ? '文件' : '文件夹' }}
-      </span>
+  <article class="flex gap-3 px-4 py-4 transition-colors hover:bg-zinc-50">
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500" aria-hidden="true">
+      <File v-if="resource.type === 'file'" class="h-4 w-4" />
+      <Folder v-else class="h-4 w-4" />
     </div>
 
-    <p class="break-all text-xs text-gray-500">所在目录：{{ resource.path || '/' }}</p>
-  </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-start justify-between gap-3">
+        <RouterLink
+          :to="safeResourceUrl"
+          class="break-all rounded-sm text-sm font-medium leading-5 text-zinc-950 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+          @click="handleClick"
+        >{{ resource.name }}</RouterLink>
+        <span class="shrink-0 rounded-md border border-zinc-200 px-1.5 py-0.5 text-xs text-zinc-500">
+          {{ resource.type === 'file' ? '文件' : '文件夹' }}
+        </span>
+      </div>
+      <p class="mt-1 break-all text-xs leading-5 text-zinc-500">所在目录：{{ resource.path || '/' }}</p>
+    </div>
+  </article>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ResourceSearchResult } from '@/types/api/search/search'
+import { RouterLink } from 'vue-router'
+import { File, Folder } from 'lucide-vue-next'
+import type { ResourceSearchResult } from '@/types/api/search/search'
 import { resourcePageUrl } from '@/lib/resourceBrowser'
 
-// Define props with TypeScript type
-const props = defineProps<{
-  resource: ResourceSearchResult
-}>()
+const props = defineProps<{ resource: ResourceSearchResult }>()
 const emit = defineEmits<{ (event: 'close'): void }>()
+
 function handleClick(event: MouseEvent) {
   if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) emit('close')
 }
@@ -34,5 +39,4 @@ const safeResourceUrl = computed(() => {
   const path = `${props.resource.path.replace(/\/+$/, '')}/${props.resource.name}`
   return resourcePageUrl(path)
 })
-
 </script>

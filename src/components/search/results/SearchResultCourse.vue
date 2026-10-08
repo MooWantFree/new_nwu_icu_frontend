@@ -1,83 +1,63 @@
-<!-- Course search result card component -->
 <template>
-  <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-    <!-- Course title with clickable link -->
-    <a @click="handleCourseClick" class="cursor-pointer">
-      <h3 class="text-lg font-semibold text-blue-700 mb-2 hover:underline">
-        <SearchHighlight :text="course.name" :highlight-ranges="course.name_highlight_ranges" />
-      </h3>
-    </a>
-
-    <!-- Course basic information section -->
-    <div class="grid grid-cols-2 gap-2 mb-3">
-      <p class="text-sm text-gray-600">教师: {{ course.teacher }}</p>
-      <p class="text-sm text-gray-600">分类: {{ course.classification }}</p>
-      <p class="text-sm text-gray-600">学校: {{ course.school }}</p>
-      <p class="text-sm text-gray-600">学期: {{ course.semester }}</p>
+  <article class="flex gap-3 px-4 py-4 transition-colors hover:bg-zinc-50">
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500" aria-hidden="true">
+      <BookOpen class="h-4 w-4" />
     </div>
 
-    <!-- Rating and review statistics section -->
-    <div class="flex items-center mb-3">
-      <div class="flex items-center">
-        <span class="text-yellow-500 mr-1">★</span>
-        <span class="font-medium">{{
-          course.rating.average_rating.toFixed(1)
-        }}</span>
-        <span class="text-sm text-gray-500 ml-2">
-          (标准化: {{ course.rating.normalized_rating.toFixed(2) }})
+    <div class="min-w-0 flex-1">
+      <div class="flex items-start justify-between gap-3">
+        <RouterLink
+          :to="{ name: 'courseReviewItem', params: { id: course.id } }"
+          class="rounded-sm text-sm font-medium leading-5 text-zinc-950 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+          @click="handleClick"
+        >
+          <SearchHighlight :text="course.name" :highlight-ranges="course.name_highlight_ranges" />
+        </RouterLink>
+        <span
+          class="inline-flex shrink-0 items-center gap-1 rounded-md border border-zinc-200 px-1.5 py-0.5 text-xs font-medium text-zinc-700"
+          :title="`标准化评分：${course.rating.normalized_rating.toFixed(2)}`"
+        >
+          <Star class="h-3 w-3" aria-hidden="true" />
+          {{ course.rating.average_rating.toFixed(1) }}
+        </span>
+      </div>
+
+      <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-zinc-500">
+        <span v-if="course.teacher">{{ course.teacher }}</span>
+        <span v-if="course.school">{{ course.school }}</span>
+        <span v-if="course.classification" class="rounded bg-zinc-100 px-1.5 text-zinc-600">{{ course.classification }}</span>
+        <span v-if="course.semester">{{ course.semester }}</span>
+      </div>
+
+      <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+        <span>{{ course.review_count }} 条评价</span>
+        <span class="inline-flex items-center gap-1" :title="`${course.like.like} 人赞同`">
+          <ThumbsUp class="h-3 w-3" aria-hidden="true" />
+          {{ course.like.like }}
+        </span>
+        <span class="inline-flex items-center gap-1" :title="`${course.like.dislike} 人不赞同`">
+          <ThumbsDown class="h-3 w-3" aria-hidden="true" />
+          {{ course.like.dislike }}
+        </span>
+        <span v-if="course.latest_review_time" class="inline-flex items-center gap-1">
+          最近评价 <Time :time="course.latest_review_time" />
         </span>
       </div>
     </div>
-
-    <!-- Like/Dislike and review count section -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-4 text-sm text-gray-600">
-        <div class="flex items-center">
-          <ThumbsUp class="w-5 h-5 text-slate-400 mr-1" />
-          <span>{{ course.like.like }}</span>
-        </div>
-        <div class="flex items-center">
-          <ThumbsDown class="w-5 h-5 text-slate-400 mr-1" />
-          <span>{{ course.like.dislike }}</span>
-        </div>
-      </div>
-      <div class="text-sm text-gray-600">
-        评价数: {{ course.review_count }}
-        <span v-if="course.latest_review_time" class="ml-2">
-          (最新: <Time :time="course.latest_review_time" />)
-        </span>
-      </div>
-    </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
-// Import required dependencies
-import { CourseSearchResult } from '@/types/api/search/search'
-import { useRouter } from 'vue-router'
-import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
+import { BookOpen, Star, ThumbsDown, ThumbsUp } from 'lucide-vue-next'
 import Time from '@/components/tinyComponents/Time.vue'
 import SearchHighlight from '@/components/tinyComponents/SearchHighlight.vue'
+import type { CourseSearchResult } from '@/types/api/search/search'
 
-// Define component props
-const { course } = defineProps<{
-  course: CourseSearchResult
-}>()
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+defineProps<{ course: CourseSearchResult }>()
+const emit = defineEmits<{ (event: 'close'): void }>()
 
-// Initialize router for navigation
-const router = useRouter()
-
-// Handle course click event to navigate to course details
-const handleCourseClick = () => {
-  router.push({
-    name: 'courseReviewItem',
-    params: {
-      id: course.id,
-    },
-  })
-  emit('close')
+function handleClick(event: MouseEvent) {
+  if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) emit('close')
 }
 </script>

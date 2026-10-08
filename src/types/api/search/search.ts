@@ -16,6 +16,8 @@ export type APIResourceSearch = {
 export const APISearchQuery = z.object({
   keyword: z.string(),
   type: z.enum(['review', 'course', 'teacher', 'resource']),
+  current_page: z.number().int().min(1).optional(),
+  page_size: z.number().int().min(1).max(100).optional(),
 })
 export type ReviewSearchResult = {
   id: number
