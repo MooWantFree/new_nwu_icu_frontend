@@ -257,7 +257,7 @@ const guestbookRoutes = [
 
 const routes = [
   {
-    path: '/manage',
+    path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?',
     name: 'manage',
     component: () => import('@/views/manage/Manage.vue'),
     meta: { pageTitle: '管理员面板', isManagement: true },

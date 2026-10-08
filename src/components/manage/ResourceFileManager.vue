@@ -1,49 +1,27 @@
 <template>
   <section class="min-w-0 space-y-4 text-zinc-950" aria-label="资料文件管理">
-    <div class="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0">
-          <h2 class="text-lg font-semibold tracking-tight">资料管理</h2>
-          <p class="mt-1 text-sm leading-6 text-zinc-500">管理已发布的资料。上传直接发布，删除后可从回收站恢复。</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <button type="button" :disabled="busy" :class="secondaryButton" @click="switchTrash"><component :is="showTrash ? FolderOpen : Trash2" class="h-4 w-4" aria-hidden="true" />{{ showTrash ? '返回文件' : '回收站' }}</button>
-          <button type="button" :disabled="busy || loading" :class="secondaryButton" @click="refresh"><RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" aria-hidden="true" />刷新</button>
-        </div>
-      </div>
-      <div v-if="error" role="alert" class="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"><CircleAlert class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ error }}</p></div>
-      <div v-if="message" role="status" class="mt-4 flex items-start gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600"><CircleCheck class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ message }}</p></div>
-      <fieldset v-if="!showTrash" :disabled="busy || loading" class="mt-5 min-w-0 disabled:opacity-60">
-        <div class="flex flex-wrap items-center gap-2 text-sm">
-          <button type="button" :class="secondaryButton" @click="loadFiles('/')"><House class="h-4 w-4" aria-hidden="true" />根目录</button>
-          <button type="button" :disabled="currentPath === '/'" :class="secondaryButton" @click="loadFiles(parent(currentPath))"><ArrowUp class="h-4 w-4" aria-hidden="true" />上一级</button>
-          <span class="min-w-0 flex-1 break-all px-1 font-mono text-xs leading-6 text-zinc-500">{{ currentPath }}</span>
-          <a :href="resourcePageUrl(currentPath)" target="_blank" rel="noopener noreferrer" :class="secondaryButton">查看公开页面<ExternalLink class="h-3.5 w-3.5" aria-hidden="true" /></a>
-          <button type="button" :class="secondaryButton" @click="openDialog({ action: 'mkdir', name: '', path: currentPath })"><FolderPlus class="h-4 w-4" aria-hidden="true" />新建文件夹</button>
-        </div>
-        <div class="mt-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50/70 p-4">
-          <label class="block text-sm font-medium">上传到当前目录
-            <input ref="fileInput" type="file" multiple class="mt-3 block w-full min-w-0 text-sm text-zinc-500 file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-zinc-200 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-950 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @change="chooseFiles" />
-          </label>
-          <p class="mt-2 text-xs leading-5 text-zinc-500">每次最多 {{ maxFiles }} 个文件，单个不超过 {{ formatResourceSize(maxFileSize) }}。同名文件不覆盖。</p>
-          <ul v-if="selectedFiles.length" class="mt-3 max-h-32 space-y-1 overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-600"><li v-for="file in selectedFiles" :key="file.name" class="break-all">{{ file.name }} · {{ formatResourceSize(file.size) }}</li></ul>
-          <button v-if="selectedFiles.length" type="button" :class="primaryButton" class="mt-3" @click="upload"><Upload class="h-4 w-4" aria-hidden="true" />上传并发布 {{ selectedFiles.length }} 个文件</button>
-        </div>
-      </fieldset>
-      <div v-if="busy" role="status" class="mt-4 space-y-2">
-        <p class="flex items-center gap-2 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />{{ uploading ? `正在上传 ${progress}%…` : '正在处理…' }}</p>
-        <div v-if="uploading" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" aria-label="文件上传进度" class="h-2 overflow-hidden rounded-full bg-zinc-100"><div class="h-full rounded-full bg-zinc-950 transition-[width]" :style="{ width: `${progress}%` }" /></div>
-      </div>
-    </div>
+    <nav class="inline-flex max-w-full flex-wrap gap-1 rounded-lg bg-zinc-100 p-1" aria-label="资料管理">
+      <button v-for="item in views" :key="item.id" type="button" :disabled="busy" :aria-pressed="currentView === item.id" :class="viewButtonClass(item.id)" @click="selectView(item.id)"><component :is="item.icon" class="h-4 w-4" aria-hidden="true" />{{ item.label }}</button>
+    </nav>
+    <div v-if="error" role="alert" class="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"><CircleAlert class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ error }}</p></div>
+    <div v-if="message" role="status" class="flex items-start gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600"><CircleCheck class="mt-1 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ message }}</p></div>
+    <p v-if="busy" role="status" class="flex items-center gap-2 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在处理…</p>
 
-    <slot name="settings" />
-    <ResourceTools v-show="!showTrash" :path="currentPath" @session-expired="emit('session-expired')" @changed="refresh" />
+    <ResourceTools :active="currentView === 'maintenance'" :path="currentPath" :can-review-uploads="canReviewUploads" @session-expired="emit('session-expired')" />
 
-    <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+    <div v-if="currentView !== 'maintenance'" class="overflow-hidden rounded-xl border border-zinc-200 bg-white">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 p-4 sm:px-5">
         <h3 class="flex items-center gap-2 font-semibold">{{ showTrash ? '回收站' : '当前目录' }}<span class="rounded-md border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500">{{ filteredItems.length }} 项</span></h3>
-        <label class="relative w-full sm:w-64"><Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" /><input v-model="filter" type="search" :disabled="busy" aria-label="筛选管理文件" placeholder="按名称筛选…" :class="inputClass" class="pl-9" /></label>
+        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto"><label class="relative min-w-0 flex-1 sm:w-64"><Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" /><input v-model="filter" type="search" :disabled="busy" aria-label="筛选管理文件" placeholder="按名称筛选…" :class="inputClass" class="pl-9" /></label><button type="button" :disabled="busy || loading" :class="secondaryButton" @click="refresh"><RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" aria-hidden="true" />刷新</button></div>
       </div>
+      <fieldset v-if="!showTrash" :disabled="busy || loading" class="min-w-0 border-b border-zinc-200 p-4 disabled:opacity-60 sm:px-5">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <button type="button" :class="secondaryButton" @click="navigateDirectory('/')"><House class="h-4 w-4" aria-hidden="true" />根目录</button>
+          <button type="button" :disabled="currentPath === '/'" :class="secondaryButton" @click="navigateDirectory(parent(currentPath))"><ArrowUp class="h-4 w-4" aria-hidden="true" />上一级</button>
+          <span class="min-w-0 flex-1 break-all px-1 font-mono text-xs leading-6 text-zinc-500">{{ currentPath }}</span>
+          <div class="flex w-full flex-wrap gap-2 sm:w-auto"><a :href="resourcePageUrl(currentPath)" target="_blank" rel="noopener noreferrer" :class="secondaryButton">查看公开页面<ExternalLink class="h-3.5 w-3.5" aria-hidden="true" /></a><button type="button" :class="secondaryButton" :disabled="!directoryReady" @click="createReadme"><FilePlus2 class="h-4 w-4" aria-hidden="true" />新建 README.md</button><button type="button" :class="secondaryButton" @click="openDialog({ action: 'mkdir', name: '', path: currentPath })"><FolderPlus class="h-4 w-4" aria-hidden="true" />新建文件夹</button></div>
+        </div>
+      </fieldset>
       <div v-if="showTrash" class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm sm:px-5"><span class="text-zinc-500">回收站占用 {{ formatResourceSize(trash.reduce((total, item) => total + item.size, 0)) }} · {{ trash.length }} 个文件</span><button type="button" :disabled="busy || loading || !trash.length" :class="dangerButton" @click="askPurge(trash)"><Trash2 class="h-4 w-4" aria-hidden="true" />清空回收站</button></div>
       <div v-else class="flex flex-wrap items-center gap-3 border-b border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm sm:px-5"><label class="flex cursor-pointer items-center gap-2"><input type="checkbox" :class="checkboxClass" :disabled="busy || loading" :checked="pageSelected" @change="selectPage" />选择本页文件</label><span class="text-xs text-zinc-500">已选 {{ selectedRows.length }} 个（最多 100 个）</span><div class="flex flex-wrap gap-2 sm:ml-auto"><button type="button" :disabled="busy || !selectedRows.length" :class="secondaryButton" @click="askBatch('move')">批量移动</button><button type="button" :disabled="busy || !selectedRows.length" :class="dangerButton" @click="askBatch('delete')">批量删除</button></div></div>
       <p v-if="loading" role="status" class="flex items-center justify-center gap-2 p-10 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在读取文件…</p>
@@ -60,11 +38,12 @@
             <input v-if="item.type === 'file'" v-model="selectedRows" type="checkbox" :class="checkboxClass" :value="item.path" :aria-label="`选择 ${item.name}`" :disabled="busy || (selectedRows.length >= 100 && !selectedRows.includes(item.path))" />
             <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500"><component :is="item.type === 'directory' ? Folder : FileText" class="h-5 w-5" aria-hidden="true" /></span>
             <div class="min-w-0 flex-1">
-              <button v-if="item.type === 'directory'" type="button" :disabled="busy" class="break-all rounded text-left text-sm font-medium text-zinc-950 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" @click="loadFiles(item.path)">{{ item.name }}</button>
+              <button v-if="item.type === 'directory'" type="button" :disabled="busy" class="break-all rounded text-left text-sm font-medium text-zinc-950 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" @click="navigateDirectory(item.path)">{{ item.name }}</button>
               <p v-else class="break-all text-sm font-medium leading-6">{{ item.name }} <span v-if="item.name.toLowerCase() === 'readme.md'" class="ml-1 inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-1.5 text-xs font-normal text-zinc-500">目录说明</span></p>
               <p class="mt-1 text-xs leading-5 text-zinc-400">{{ formatResourceSize(item.size) }} · {{ new Date(item.modified_at).toLocaleString('zh-CN') }}</p>
             </div>
             <div v-if="item.type === 'file'" class="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
+              <button v-if="item.name.toLowerCase() === 'readme.md'" type="button" :disabled="busy" :class="secondaryButton" :aria-label="`编辑 ${item.name}`" @click="readmeEditor?.open()">编辑</button>
               <button type="button" :disabled="busy" :class="secondaryButton" :aria-label="`重命名 ${item.name}`" @click="openDialog({ ...item, action: 'rename' })">重命名</button>
               <button type="button" :disabled="busy" :class="secondaryButton" :aria-label="`移动 ${item.name}`" @click="askMove(item)">移动</button>
               <button type="button" :disabled="busy" :class="dangerButton" :aria-label="`删除 ${item.name}`" @click="askDelete(item)">删除</button>
@@ -99,20 +78,40 @@
         </template>
       </section>
     </ShadcnModal>
+    <ResourceReadmeEditor ref="readmeEditor" :path="currentPath" @session-expired="emit('session-expired')" @changed="refresh" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowUp, CircleAlert, CircleCheck, ExternalLink, FileText, Folder, FolderOpen, FolderPlus, House, LoaderCircle, RefreshCw, RotateCcw, Search, Trash2, Upload, X } from 'lucide-vue-next'
+import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { routeLocationKey, routerKey, type LocationQuery } from 'vue-router'
+import { ArrowUp, CircleAlert, CircleCheck, ExternalLink, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, House, LoaderCircle, RefreshCw, RotateCcw, Search, Trash2, Wrench, X } from 'lucide-vue-next'
 import ResourceTools from './ResourceTools.vue'
+import ResourceReadmeEditor from './ResourceReadmeEditor.vue'
 import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 import { api } from '@/lib/requests'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { formatResourceSize, resourcePageUrl } from '@/lib/resourceBrowser'
 import type { ManagedResourceFile, ResourceFileAction, ResourceTrashEntry } from '@/types/api/management'
 
+withDefaults(defineProps<{ canReviewUploads?: boolean }>(), { canReviewUploads: false })
 const emit = defineEmits<{ (event: 'session-expired'): void }>()
+const router = inject(routerKey, undefined)
+const route = inject(routeLocationKey, undefined)
+const hasRouteHistory = computed(() => !!router && route?.path === '/manage/files')
+const historyPath = computed(() => typeof route?.query.path === 'string' && route.query.path.startsWith('/') ? route.query.path : '/')
+type View = 'directory' | 'maintenance' | 'trash'
+const views = [{ id: 'directory', label: '当前目录', icon: FolderOpen }, { id: 'maintenance', label: '资料维护', icon: Wrench }, { id: 'trash', label: '回收站', icon: Trash2 }] as const
+const localView = ref<View>('directory')
+const currentView = computed<View>(() => {
+  if (!hasRouteHistory.value) return localView.value
+  if (route?.query.trash === '1') return 'trash'
+  if (route?.query.view === 'maintenance' || (!route?.query.view && typeof route?.query.tool === 'string')) return 'maintenance'
+  return 'directory'
+})
+const toast = useShadcnToast()
+const viewButtonClass = (view: View) => ['inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50', currentView.value === view ? 'bg-white text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-950']
 const buttonClass = 'inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 const secondaryButton = `${buttonClass} border border-zinc-200 bg-white text-zinc-950 hover:bg-zinc-100`
 const primaryButton = `${buttonClass} bg-zinc-950 text-white hover:bg-zinc-800`
@@ -122,20 +121,18 @@ const inputClass = 'h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-whi
 const checkboxClass = 'h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-300 accent-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 const currentPath = ref('/')
 const files = ref<ManagedResourceFile[]>([])
+const hasReadme = computed(() => files.value.some(item => item.type === 'file' && item.name.toLowerCase() === 'readme.md'))
 const trash = ref<ResourceTrashEntry[]>([])
 const loading = ref(false)
 const busy = ref(false)
-const uploading = ref(false)
-const progress = ref(0)
 const error = ref('')
 const message = ref('')
 const filter = ref('')
 const page = ref(1)
-const showTrash = ref(false)
-const maxFiles = ref(20)
-const maxFileSize = ref(100 * 1024 * 1024)
-const selectedFiles = ref<File[]>([])
-const fileInput = ref<HTMLInputElement>()
+const showTrash = computed(() => currentView.value === 'trash')
+const loadedFilesPath = ref<string>()
+const directoryReady = computed(() => !busy.value && !loading.value && loadedFilesPath.value === currentPath.value)
+const readmeEditor = ref<InstanceType<typeof ResourceReadmeEditor>>()
 const actionPanel = ref<HTMLElement>()
 type Pending = { action: 'move' | 'delete' | 'restore' | 'rename' | 'mkdir' | 'purge'; name: string; path: string; version?: string; trash_id?: string; trash_ids?: string[]; items?: ManagedResourceFile[]; size?: number | null }
 const actionTitles = { move: '移动文件', delete: '删除文件', restore: '恢复文件', rename: '重命名文件', mkdir: '新建文件夹', purge: '永久删除' }
@@ -171,23 +168,23 @@ function check(result: { status: number; errors?: { err_msg: string }[]; data?: 
   }
   if (result.status !== expected) throw new Error(result.errors?.[0]?.err_msg || result.data?.message || (result.status === 409 ? '文件已变化或存在同名文件，请刷新后重试。' : '操作失败，请刷新后重试。'))
 }
-function clearSelection() { selectedFiles.value = []; if (fileInput.value) fileInput.value.value = '' }
 async function loadFiles(path: string) {
   const version = ++requestVersion
+  loadedFilesPath.value = undefined
+  if (currentPath.value !== path) files.value = []
   loading.value = true; error.value = ''
   try {
     const result = await api.get({ url: '/api/management/resources/', query: { path } })
     check(result)
     if (version !== requestVersion) return
-    if (currentPath.value !== result.content.path) clearSelection()
-    currentPath.value = result.content.path; files.value = result.content.entries
+    currentPath.value = result.content.path; files.value = result.content.entries; loadedFilesPath.value = result.content.path
     selectedRows.value = []
-    maxFiles.value = result.content.max_files; maxFileSize.value = result.content.max_file_size
     page.value = 1
   } catch (cause) { if (version === requestVersion) error.value = String(cause instanceof Error ? cause.message : cause) }
   finally { if (version === requestVersion) loading.value = false }
 }
 async function refresh() {
+  if (currentView.value === 'maintenance') return
   if (!showTrash.value) return loadFiles(currentPath.value)
   const version = ++requestVersion
   loading.value = true; error.value = ''
@@ -197,24 +194,56 @@ async function refresh() {
   } catch (cause) { if (version === requestVersion) error.value = cause instanceof Error ? cause.message : '回收站读取失败。' }
   finally { if (version === requestVersion) loading.value = false }
 }
-async function switchTrash() { showTrash.value = !showTrash.value; filter.value = ''; clearSelection(); await refresh() }
-function chooseFiles(event: Event) {
-  const picked = Array.from((event.target as HTMLInputElement).files || [])
-  error.value = ''; message.value = ''
-  if (picked.length > maxFiles.value || picked.some(file => file.size > maxFileSize.value)) { error.value = '文件数量或大小超过上传限制。'; clearSelection(); return }
-  if (new Set(picked.map(file => file.name.toLowerCase())).size !== picked.length) { error.value = '所选文件包含同名文件。'; clearSelection(); return }
-  selectedFiles.value = picked
+async function navigateDirectory(path: string) {
+  if (busy.value) return
+  if (hasRouteHistory.value && router && route) {
+    if (historyPath.value === path && currentView.value === 'directory') return loadFiles(path)
+    const query: LocationQuery = { ...route.query, path }
+    delete query.trash; delete query.view; delete query.tool
+    await router.push({ path: route.path, query, hash: route.hash })
+  } else {
+    if (localView.value !== 'directory') { currentPath.value = path; localView.value = 'directory' }
+    else { filter.value = ''; await loadFiles(path) }
+  }
 }
-async function upload() {
-  if (busy.value || !selectedFiles.value.length) return
-  busy.value = true; uploading.value = true; progress.value = 0; error.value = ''; message.value = ''
-  const data = new FormData(); data.append('path', currentPath.value)
-  selectedFiles.value.forEach(file => data.append('files', file))
+async function selectView(view: View) {
+  if (busy.value) return
+  if (view === currentView.value) return
+  if (hasRouteHistory.value && router && route) {
+    const query = { ...route.query }
+    delete query.view; delete query.trash
+    if (view === 'maintenance') query.view = 'maintenance'
+    else delete query.tool
+    if (view === 'trash') query.trash = '1'
+    await router.push({ path: route.path, query, hash: route.hash })
+  } else {
+    localView.value = view
+  }
+}
+async function createReadme() {
+  if (!directoryReady.value) return
+  if (hasReadme.value) { toast.info('当前目录已存在 README.md。'); return }
+  const path = currentPath.value
+  let created = false
+  busy.value = true
   try {
-    const result = await api.post({ url: '/api/management/resources/upload/', query: data, onUploadProgress: event => { progress.value = event.total ? Math.round(event.loaded / event.total * 100) : 0 } })
-    check(result, 201); clearSelection(); message.value = `已发布 ${result.content.uploaded} 个文件。`; await refresh()
-  } catch (cause) { error.value = cause instanceof Error ? cause.message : '上传失败，请刷新目录确认结果后再重试。' }
-  finally { busy.value = false; uploading.value = false }
+    const existing = await api.get({ url: '/api/management/resources/readme/', query: { path } }); check(existing)
+    if (existing.content.version || existing.content.warning) {
+      toast.info('当前目录已存在 README.md。'); await refresh(); return
+    }
+    const result = await api.post({ url: '/api/management/resources/readme/', query: { path, version: '', content: '' } })
+    if (result.status === 409) {
+      await refresh()
+      if (hasReadme.value) { toast.info('当前目录已存在 README.md。'); return }
+    }
+    check(result)
+    toast.success('README.md 已创建。')
+    await refresh()
+    created = true
+  } catch (cause) {
+    toast.error(cause instanceof Error ? cause.message : 'README.md 创建失败，请稍后重试。')
+  } finally { busy.value = false }
+  if (created && currentView.value === 'directory' && currentPath.value === path) await readmeEditor.value?.open()
 }
 async function openDialog(value: Pending) { if (busy.value) return; pending.value = value; dialogError.value = ''; newName.value = value.action === 'rename' ? value.name : ''; confirmation.value = ''; targetReady.value = false; await nextTick() }
 function clearDialog() { pending.value = null; targetVersion++; targetLoading.value = false; targetReady.value = false }
@@ -273,6 +302,15 @@ async function confirmAction() {
   finally { busy.value = false }
 }
 watch(filter, () => { page.value = 1 })
-onMounted(refresh)
+watch([hasRouteHistory, historyPath, currentView], async ([routeHistory, path, view]) => {
+  if (route && !routeHistory) return
+  filter.value = ''; selectedRows.value = []
+  if (routeHistory) {
+    if (currentPath.value !== path) { files.value = []; loadedFilesPath.value = undefined }
+    currentPath.value = path
+  }
+  if (view === 'maintenance') { requestVersion++; loading.value = false; error.value = ''; return }
+  await refresh()
+}, { immediate: true })
 onBeforeUnmount(() => { requestVersion++; targetVersion++ })
 </script>

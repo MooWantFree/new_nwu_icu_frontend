@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, nextTick, type App, type Slots } from 'vue'
+import { createApp, h, nextTick, type App } from 'vue'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 
 import Manage from './Manage.vue'
+import ResourceTools from '@/components/manage/ResourceTools.vue'
 import ShadcnFeedbackProvider from '@/components/common/ShadcnFeedbackProvider.vue'
 import { api } from '@/lib/requests'
 import {
@@ -23,9 +24,14 @@ vi.mock('@simplewebauthn/browser', () => ({
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ success: messageSuccess }) }))
 vi.mock('@/components/manage/ResourceFileManager.vue', () => ({
   default: {
-    setup: (_props: unknown, { slots }: { slots: Slots }) => {
+    props: ['canReviewUploads'],
+    emits: ['session-expired'],
+    setup: (props: { canReviewUploads: boolean }, { emit }: { emit: (event: string) => void }) => {
       fileManagerSetup()
-      return () => h('section', { 'aria-label': '资料文件管理' }, slots.settings?.())
+      return () => h('section', { 'aria-label': '资料文件管理' }, h(ResourceTools, {
+        path: '/', canManageFiles: true, canReviewUploads: props.canReviewUploads,
+        onSessionExpired: () => emit('session-expired'),
+      }))
     },
   },
 }))
@@ -86,12 +92,16 @@ let container: HTMLDivElement
 const originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
 const waitOptions = { timeout: 2_000, interval: 10 }
 
-const mountManage = async (query = '') => {
+const mountManage = async (location = '', previousLocation?: string) => {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/manage', component: Manage }],
+    routes: [{
+      path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?',
+      name: 'manage', component: Manage, meta: { isManagement: true },
+    }],
   })
-  await router.push(`/manage${query}`)
+  if (previousLocation) await router.push(`/manage${previousLocation}`)
+  await router.push(`/manage${location}`)
   app = createApp({ render: () => h(ShadcnFeedbackProvider, null, { default: () => h(RouterView) }) }).use(router)
   app.mount(container)
   await flush()
@@ -364,9 +374,152 @@ describe('management navigation and pending indicators', () => {
   })
 })
 
+describe('management section routes', () => {
+  beforeEach(() => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: {
+        ...baseSession, elevated: true, permissions: { ...baseSession.permissions, manage_resource_files: true },
+      } } as never
+      if (url === '/api/management/about/') return { status: 200, content: {
+        about: { title: '关于本站', content: '<p>本站介绍</p>', update_time: '2026-10-08T00:00:00Z' },
+      } } as never
+      if (url === '/api/management/notifications/telegram/') return { status: 200, content: {
+        user_registration_enabled: true, guestbook_entry_enabled: false, course_review_enabled: true, reply_enabled: false,
+      } } as never
+      return { status: 200, content: { count: 0, results: [], page: 1, max_page: 1 } } as never
+    })
+  })
+
+  const assertSection = (section: string, label: string) => {
+    expect(findExactButton(label).getAttribute('aria-pressed')).toBe('true')
+    expect(container.querySelectorAll('nav[aria-label="管理功能"] button[aria-pressed="true"]')).toHaveLength(1)
+    if (section === 'uploads') expect(filter('审核状态')).not.toBeNull()
+    if (section === 'announcements') expect(filter('公告状态')).not.toBeNull()
+    if (section === 'files') expect(container.querySelector('[aria-label="资料维护工具"]')).not.toBeNull()
+    if (section === 'notifications') expect(container.querySelectorAll('[role="switch"]')).toHaveLength(4)
+    if (section === 'reports') expect(filter('举报状态')).not.toBeNull()
+    if (section === 'about') expect(container.querySelector<HTMLTextAreaElement>('textarea[aria-label="公告正文"]')?.value).toBe('<p>本站介绍</p>')
+  }
+
+  it.each([
+    ['uploads', '文件审核'], ['announcements', '公告管理'], ['files', '资料管理'],
+    ['notifications', 'Telegram 通知'], ['reports', '举报处理'], ['about', '关于本站'],
+  ])('opens the %s section from a direct link', async (section, label) => {
+    const router = await mountManage(`/${section}`)
+    expect(router.currentRoute.value.path).toBe(`/manage/${section}`)
+    expect(router.currentRoute.value.params.section).toBe(section)
+    expect(router.currentRoute.value.meta.isManagement).toBe(true)
+    assertSection(section, label)
+  })
+
+  it('adds menu navigation to history and restores sections on back, forward and refresh', async () => {
+    const router = await mountManage('/reports?next=%2Fadmin%2F&context=mail')
+    findExactButton('公告管理').click()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/announcements')
+      assertSection('announcements', '公告管理')
+    }, waitOptions)
+    findExactButton('资料管理').click()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/files')
+      assertSection('files', '资料管理')
+    }, waitOptions)
+    expect(router.currentRoute.value.query).toEqual({ next: '/admin/', context: 'mail' })
+    router.back()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/announcements')
+      assertSection('announcements', '公告管理')
+    }, waitOptions)
+    router.back()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/reports')
+      assertSection('reports', '举报处理')
+    }, waitOptions)
+    router.forward()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/announcements')
+      assertSection('announcements', '公告管理')
+    }, waitOptions)
+    expect(vi.mocked(api.get).mock.calls.filter(([request]) => request.url === '/api/management/session/')).toHaveLength(1)
+
+    const location = router.currentRoute.value.fullPath.slice('/manage'.length)
+    app!.unmount()
+    app = undefined
+    const refreshedRouter = await mountManage(location)
+    expect(refreshedRouter.currentRoute.value.path).toBe('/manage/announcements')
+    assertSection('announcements', '公告管理')
+  })
+
+  it.each([
+    ['', 'uploads', '文件审核'],
+    ['?tab=reports&next=%2Fadmin%2F&context=mail', 'reports', '举报处理'],
+    ['/files?tab=reports&next=%2Fadmin%2F&context=mail', 'files', '资料管理'],
+  ])('normalizes %s with replace, retains other queries and removes legacy tab', async (location, section, label) => {
+    const router = await mountManage(location, '/notifications')
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(`/manage/${section}`), waitOptions)
+    expect(router.currentRoute.value.query.tab).toBeUndefined()
+    if (location) expect(router.currentRoute.value.query).toEqual({ next: '/admin/', context: 'mail' })
+    assertSection(section, label)
+    findExactButton('关于本站').click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/manage/about'), waitOptions)
+    router.back()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe(`/manage/${section}`)
+      expect(router.currentRoute.value.query.tab).toBeUndefined()
+      assertSection(section, label)
+    }, waitOptions)
+    router.back()
+    await vi.waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/manage/notifications')
+      assertSection('notifications', 'Telegram 通知')
+    }, waitOptions)
+  })
+
+  it.each(['/files?next=%2Fadmin%2F&context=mail', '?tab=files&next=%2Fadmin%2F&context=mail'])('replaces unauthorized %s with the first permitted section', async location => {
+    vi.mocked(api.get).mockImplementation(async ({ url }) => (url === '/api/management/session/'
+      ? { status: 200, content: { ...baseSession, elevated: true, permissions: {
+        ...baseSession.permissions, review_resource_uploads: false, manage_resource_files: false,
+      } } } : { status: 200, content: { count: 0, results: [], page: 1, max_page: 1 } }) as never)
+    const router = await mountManage(location)
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/manage/announcements'), waitOptions)
+    expect(router.currentRoute.value.query).toEqual({ next: '/admin/', context: 'mail' })
+    assertSection('announcements', '公告管理')
+    expect(findExactButton('资料管理')).toBeUndefined()
+    expect(fileManagerSetup).not.toHaveBeenCalled()
+    expect(vi.mocked(api.get).mock.calls.some(([request]) => request.url.startsWith('/api/management/resources/'))).toBe(false)
+  })
+
+  it('defers section requests until Passkey verification and then loads the current route', async () => {
+    let elevated = false
+    vi.mocked(api.get).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/session/') return { status: 200, content: { ...baseSession, elevated } } as never
+      return { status: 200, content: { count: 0, results: [], page: 1, max_page: 1 } } as never
+    })
+    const router = await mountManage('/uploads?context=mail')
+    await router.push('/manage/reports?context=mail')
+    await flush()
+    expect(container.textContent).toContain('使用 Passkey 继续')
+    expect(vi.mocked(api.get).mock.calls.map(([request]) => request.url)).toEqual(['/api/management/session/'])
+    vi.mocked(startAuthentication).mockResolvedValueOnce({ id: 'credential' } as never)
+    vi.mocked(api.post).mockImplementation(async ({ url }) => {
+      if (url === '/api/management/passkeys/authentication/verify/') elevated = true
+      return { status: 200, content: {} } as never
+    })
+    findExactButton('验证 Passkey').click()
+    await flush()
+    expect(router.currentRoute.value.path).toBe('/manage/reports')
+    assertSection('reports', '举报处理')
+    expect(api.get).toHaveBeenCalledWith({
+      url: '/api/management/reports/', query: { status: 'pending', board: undefined, page: 1, pageSize: 10 },
+    })
+    expect(router.currentRoute.value.query).toEqual({ context: 'mail' })
+  })
+})
+
 describe('resource blacklist navigation and permissions', () => {
-  const settings = () => container.querySelector<HTMLElement>('[aria-label="投稿文件夹黑名单设置"]')
-  const settingsToggle = () => settings()!.querySelector<HTMLButtonElement>('button')!
+  const tools = () => container.querySelector<HTMLElement>('[aria-label="资料维护工具"]')
+  const blacklistTab = () => [...container.querySelectorAll<HTMLButtonElement>('nav[aria-label="资料维护"] button')]
+    .find(button => button.textContent?.trim() === '投稿文件夹黑名单')
   const blacklistButton = (label: string) => container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)
   const blacklistRequests = () => vi.mocked(api.get).mock.calls.map(([request]) => request)
     .filter(request => request.url === '/api/management/uploads/blacklist/' || request.url === '/api/management/uploads/directories/')
@@ -388,24 +541,26 @@ describe('resource blacklist navigation and permissions', () => {
     })
   }
 
-  it('offers blacklist settings in resource management and loads them only when expanded', async () => {
+  it('offers the blacklist in resource tools and loads it only when selected', async () => {
     mockResourceSession(true, true)
-    await mountManage()
+    const router = await mountManage()
     expect(findExactButton('文件审核').getAttribute('aria-pressed')).toBe('true')
-    expect(settings()).toBeNull()
+    expect(tools()).toBeNull()
     expect(container.textContent).not.toContain('投稿文件夹黑名单')
     expect(blacklistRequests()).toHaveLength(0)
 
     findExactButton('资料管理').click()
     await flush()
-    expect(container.querySelector('[aria-label="资料文件管理"]')?.contains(settings())).toBe(true)
-    expect(settingsToggle().getAttribute('aria-expanded')).toBe('false')
+    expect(container.querySelector('[aria-label="资料文件管理"]')?.contains(tools())).toBe(true)
+    expect(blacklistTab()!.getAttribute('aria-pressed')).toBe('false')
+    expect(container.querySelectorAll('nav[aria-label="资料维护"] button[aria-pressed="true"]')).toHaveLength(0)
     expect(container.querySelector('[aria-label="禁止投稿的文件夹"]')).toBeNull()
     expect(blacklistRequests()).toHaveLength(0)
 
-    settingsToggle().click()
+    blacklistTab()!.click()
     await flush()
-    expect(settingsToggle().getAttribute('aria-expanded')).toBe('true')
+    expect(router.currentRoute.value.query.tool).toBe('blacklist')
+    expect(blacklistTab()!.getAttribute('aria-pressed')).toBe('true')
     expect(container.querySelector('[aria-label="禁止投稿的文件夹"]')).not.toBeNull()
     expect(blacklistRequests()).toEqual(expect.arrayContaining([
       { url: '/api/management/uploads/blacklist/' },
@@ -413,27 +568,30 @@ describe('resource blacklist navigation and permissions', () => {
     ]))
     expect(blacklistRequests()).toHaveLength(2)
 
-    settingsToggle().click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="关闭资料维护"]')!.click()
     await flush()
+    expect(router.currentRoute.value.query.tool).toBeUndefined()
+    expect(blacklistTab()!.getAttribute('aria-pressed')).toBe('false')
     expect(container.querySelector('[aria-label="禁止投稿的文件夹"]')).toBeNull()
     expect(blacklistRequests()).toHaveLength(2)
     findExactButton('文件审核').click()
     await flush()
-    expect(settings()).toBeNull()
+    expect(tools()).toBeNull()
   })
 
   it('lets upload reviewers configure the blacklist without mounting file management', async () => {
     mockResourceSession(false, true)
-    const router = await mountManage('?tab=files')
-    expect(router.currentRoute.value.query.tab).toBe('files')
+    const router = await mountManage('/files')
+    expect(router.currentRoute.value.path).toBe('/manage/files')
     expect(findExactButton('资料管理').getAttribute('aria-pressed')).toBe('true')
-    expect(settings()).not.toBeNull()
+    expect([...container.querySelectorAll('nav[aria-label="资料维护"] button')].map(button => button.textContent?.trim())).toEqual(['投稿文件夹黑名单'])
+    expect(findExactButton('添加目录说明')).toBeUndefined()
     expect(fileManagerSetup).not.toHaveBeenCalled()
     expect(container.querySelector('[aria-label="资料文件管理"]')).toBeNull()
     expect(fileRequests()).toHaveLength(0)
     expect(blacklistRequests()).toHaveLength(0)
 
-    settingsToggle().click()
+    blacklistTab()!.click()
     await flush()
     vi.mocked(api.post).mockResolvedValueOnce({ status: 200, content: { paths: ['/courses'] } } as never)
     blacklistButton('拉黑 /courses')!.click()
@@ -457,12 +615,14 @@ describe('resource blacklist navigation and permissions', () => {
 
   it('keeps blacklist settings unavailable to file managers without upload review permission', async () => {
     mockResourceSession(true, false)
-    await mountManage('?tab=files')
+    await mountManage('/files?tool=blacklist')
     expect(findExactButton('资料管理').getAttribute('aria-pressed')).toBe('true')
     expect(findExactButton('文件审核')).toBeUndefined()
     expect(fileManagerSetup).toHaveBeenCalledOnce()
     expect(container.querySelector('[aria-label="资料文件管理"]')).not.toBeNull()
-    expect(settings()).toBeNull()
+    expect(tools()).not.toBeNull()
+    expect(blacklistTab()).toBeUndefined()
+    expect(container.querySelector('[aria-label="禁止投稿的文件夹"]')).toBeNull()
     expect(container.textContent).not.toContain('投稿文件夹黑名单')
     expect(blacklistRequests()).toHaveLength(0)
     expect(api.post).not.toHaveBeenCalled()
@@ -470,8 +630,8 @@ describe('resource blacklist navigation and permissions', () => {
 
   it.each([false, true])('reloads the session when blacklist authorization expires with file management %s', async files => {
     mockResourceSession(files, true)
-    await mountManage('?tab=files')
-    settingsToggle().click()
+    await mountManage('/files')
+    blacklistTab()!.click()
     await flush()
     const initialSessionRequests = vi.mocked(api.get).mock.calls.filter(([request]) => request.url === '/api/management/session/')
     expect(initialSessionRequests).toHaveLength(1)
@@ -487,7 +647,7 @@ describe('resource blacklist navigation and permissions', () => {
     expect(vi.mocked(api.get).mock.calls.filter(([request]) => request.url === '/api/management/session/')).toHaveLength(2)
     expect(container.textContent).toContain('使用 Passkey 继续')
     expect(findExactButton('验证 Passkey')).toBeDefined()
-    expect(settings()).toBeNull()
+    expect(tools()).toBeNull()
     expect(container.querySelector('[aria-label="资料文件管理"]')).toBeNull()
   })
 })

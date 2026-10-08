@@ -79,10 +79,8 @@
         </nav>
 
         <section v-if="tab === 'files' && (session.permissions.manage_resource_files || session.permissions.review_resource_uploads)" class="space-y-4">
-          <ResourceFileManager v-if="session.permissions.manage_resource_files" @session-expired="loadSession">
-            <template #settings><ResourceBlacklistSettings v-if="session.permissions.review_resource_uploads" @session-expired="loadSession" /></template>
-          </ResourceFileManager>
-          <ResourceBlacklistSettings v-else-if="session.permissions.review_resource_uploads" @session-expired="loadSession" />
+          <ResourceFileManager v-if="session.permissions.manage_resource_files" :can-review-uploads="session.permissions.review_resource_uploads" @session-expired="loadSession" />
+          <ResourceTools v-else-if="session.permissions.review_resource_uploads" path="/" :can-manage-files="false" :can-review-uploads="true" @session-expired="loadSession" />
         </section>
         <section v-else-if="!availableTabs.length" class="surface-card p-8 text-center text-zinc-500">当前账号没有管理功能权限。</section>
 
@@ -256,7 +254,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import { CheckCircle2, CircleAlert, KeyRound, LoaderCircle, ShieldCheck } from 'lucide-vue-next'
 import { SwitchRoot, SwitchThumb } from 'reka-ui'
@@ -265,7 +263,7 @@ import { useShadcnDialog } from '@/lib/useShadcnDialog'
 import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
-import ResourceBlacklistSettings from '@/components/manage/ResourceBlacklistSettings.vue'
+import ResourceTools from '@/components/manage/ResourceTools.vue'
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 import { toSafeExternalUrl } from '@/lib/security'
@@ -276,6 +274,7 @@ import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 type Tab = 'about' | 'reports' | 'announcements' | 'uploads' | 'files' | 'notifications'
 
 const route = useRoute()
+const router = useRouter()
 const message = useShadcnToast()
 const dialog = useShadcnDialog()
 const loading = ref(true)
@@ -287,8 +286,12 @@ const webAuthnSupported = browserSupportsWebAuthn()
 const enrollmentCode = ref('')
 const deviceName = ref('')
 const showEnrollmentForm = ref(false)
-const requestedTab = typeof route.query.tab === 'string' ? route.query.tab : ''
-const tab = ref<Tab>((['about', 'reports', 'announcements', 'uploads', 'files', 'notifications'] as const).includes(requestedTab as Tab) ? requestedTab as Tab : 'uploads')
+const tabNames: Tab[] = ['uploads', 'announcements', 'files', 'notifications', 'reports', 'about']
+const requestedTab = () => {
+  const value = route.params.section || route.query.tab
+  return typeof value === 'string' && tabNames.includes(value as Tab) ? value as Tab : undefined
+}
+const tab = ref<Tab>(requestedTab() || 'uploads')
 const sectionLoading = ref(false)
 const sectionError = ref('')
 const hasPendingReports = ref(false)
@@ -312,6 +315,27 @@ const availableTabs = computed<Tab[]>(() => {
     permissions.publish_announcements && 'about',
   ].filter((value): value is Tab => Boolean(value))
 })
+
+const navigateToTab = (value: Tab, replace = false) => {
+  const query = { ...route.query }
+  delete query.tab
+  if (value !== 'files') {
+    delete query.tool; delete query.path; delete query.trash; delete query.readme; delete query.view
+  }
+  const destination = { path: `/manage/${value}`, query }
+  return replace ? router.replace(destination) : router.push(destination)
+}
+
+const syncTabFromRoute = async () => {
+  const requested = requestedTab() || 'uploads'
+  const permitted = session.value && availableTabs.value.length
+    ? availableTabs.value.includes(requested) ? requested : availableTabs.value[0]!
+    : requested
+  tab.value = permitted
+  if (session.value && availableTabs.value.length && (route.path !== `/manage/${permitted}` || route.query.tab !== undefined)) {
+    await navigateToTab(permitted, true)
+  }
+}
 
 const refreshPendingIndicators = async (kinds: PendingKind[] = ['reports', 'uploads']) => {
   const currentSession = session.value
@@ -402,7 +426,7 @@ const loadSession = async () => {
     if (response.status === 404) { notFound.value = true; return }
     if (response.status !== 200) throw new Error()
     session.value = response.content
-    if (!availableTabs.value.includes(tab.value)) tab.value = availableTabs.value[0] || 'uploads'
+    await syncTabFromRoute()
   } catch { notFound.value = true } finally { loading.value = false }
 }
 
@@ -763,7 +787,9 @@ const reviewUpload = async (upload: ResourceUploadRequest, action: 'approve' | '
   await Promise.allSettled([loadUploads(uploadPage.value), refreshPendingIndicators(['uploads'])])
 }
 
-const selectTab = (value: Tab) => { tab.value = value }
+const selectTab = (value: Tab) => {
+  if (session.value?.elevated && availableTabs.value.includes(value)) void navigateToTab(value)
+}
 const tabClass = (value: Tab) => [
   'relative inline-flex min-h-9 shrink-0 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2',
   tab.value === value
@@ -779,12 +805,14 @@ watch(tab, value => {
   if (value !== 'uploads') uploadRequestVersion += 1
   if (value !== 'about') aboutRequestVersion += 1
   if (value !== 'announcements') announcementRequestVersion += 1
+  if (!session.value?.elevated) return
   if (value === 'about') void loadAbout()
   if (value === 'reports') void loadReports()
   if (value === 'announcements') void loadAnnouncements()
   if (value === 'uploads') void loadUploads()
   if (value === 'notifications') void loadTelegramSettings()
 })
+watch([() => route.params.section, () => route.query.tab], () => { void syncTabFromRoute() })
 watch(() => session.value?.elevated, elevated => { if (elevated && tab.value === 'about') void loadAbout(); if (elevated && tab.value === 'reports') void loadReports(); if (elevated && tab.value === 'announcements') void loadAnnouncements(); if (elevated && tab.value === 'uploads') void loadUploads(); if (elevated && tab.value === 'notifications') void loadTelegramSettings() })
 watch(session, () => {
   pendingRequestVersions.reports += 1; pendingRequestVersions.uploads += 1

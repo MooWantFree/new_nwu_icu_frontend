@@ -27,9 +27,9 @@ describe('application theme scope', () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [
       { path: '/', component },
       { path: '/500', component },
-      { path: '/manage', component, meta: { isManagement: true } },
+      { path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?', component, meta: { isManagement: true } },
     ] })
-    await router.push('/manage')
+    await router.push('/manage/files')
     host = document.createElement('div')
     document.body.append(host)
     app = createApp(App).use(router)
@@ -42,7 +42,7 @@ describe('application theme scope', () => {
     expect(document.documentElement.dataset.uiTheme).toBe('shadcn')
     expect(host.querySelector('.home-shell.bg-zinc-50')).not.toBeNull()
 
-    await router.push('/manage')
+    await router.push('/manage/reports')
     await nextTick()
     expect(document.documentElement.dataset.uiTheme).toBe('management')
     await router.push('/')

@@ -1,10 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick, type App } from 'vue'
+import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 import ResourceFileManager from './ResourceFileManager.vue'
 import { api } from '@/lib/requests'
 
 vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn() } }))
-vi.mock('./ResourceTools.vue', () => ({ default: { render: () => null } }))
+const editor = vi.hoisted(() => ({ open: vi.fn() }))
+const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => toast }))
+vi.mock('./ResourceTools.vue', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({
+    props: { path: String, canReviewUploads: Boolean, active: { type: Boolean, default: true } },
+    setup(props) {
+      return () => props.active ? h('div', { 'data-review-uploads': String(props.canReviewUploads) }, '维护工具') : null
+    },
+  }) }
+})
+vi.mock('./ResourceReadmeEditor.vue', async () => {
+  const { defineComponent } = await import('vue')
+  return { default: defineComponent({
+    props: { path: String },
+    setup(_, { expose }) { expose({ open: editor.open }); return () => null },
+  }) }
+})
 let app: App
 let host: HTMLDivElement
 const expired = vi.fn()
@@ -19,7 +38,11 @@ const click = async (label: string, scope: ParentNode = document.body) => {
 }
 const file = { name: 'readme.md', path: '/readme.md', version: 'current-version', size: 10, type: 'file', modified_at: '2026-09-07T00:00:00Z' }
 const folder = { name: '目标', path: '/目标', version: 'folder-version', size: null, type: 'directory', modified_at: '2026-09-07T00:00:00Z' }
-const mount = async () => { app = createApp(ResourceFileManager, { onSessionExpired: expired }); app.mount(host); await flush() }
+const mount = async (props: { canReviewUploads?: boolean } = {}, router?: Router) => {
+  app = createApp(ResourceFileManager, { ...props, onSessionExpired: expired })
+  if (router) app.use(router)
+  app.mount(host); await flush()
+}
 
 beforeEach(() => {
   vi.resetAllMocks()
@@ -36,21 +59,245 @@ beforeEach(() => {
 afterEach(() => { app?.unmount(); host.remove(); vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('resource file management', () => {
-  it('shows README as editable metadata and uploads to the selected directory', async () => {
+  it('removes direct uploads and opens the README editor from the case-insensitive file row', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [{ ...file, name: 'README.MD' }], max_file_size: 100, max_files: 20 } } as never)
     await mount()
     expect(host.textContent).toContain('目录说明')
-    await click('目标')
-    const input = host.querySelector('input[type="file"]') as HTMLInputElement
-    Object.defineProperty(input, 'files', { value: [new File(['# 新说明'], 'README.md')] })
-    input.dispatchEvent(new Event('change')); await flush()
-    vi.mocked(api.post).mockResolvedValueOnce({ status: 201, content: { uploaded: 1 } } as never)
-    await click('上传并发布 1 个文件')
-    const call = vi.mocked(api.post).mock.calls[0][0]
-    expect(call.url).toBe('/api/management/resources/upload/')
-    const data = call.query as unknown as FormData
-    expect(data.get('path')).toBe('/目标')
-    expect((data.get('files') as File).name).toBe('README.md')
-    expect(host.textContent).toContain('已发布 1 个文件')
+    expect(host.querySelector('input[type="file"]')).toBeNull()
+    expect(host.textContent).not.toContain('上传到当前目录')
+    expect(editor.open).not.toHaveBeenCalled()
+    await click('编辑 README.MD')
+    expect(editor.open).toHaveBeenCalledTimes(1)
+    expect(api.post).not.toHaveBeenCalled()
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    expect(host.querySelector('h2')).toBeNull()
+  })
+
+  it('forwards upload review permission to the maintenance tools', async () => {
+    await mount({ canReviewUploads: true })
+    await click('资料维护')
+    expect(host.querySelector('[data-review-uploads]')?.getAttribute('data-review-uploads')).toBe('true')
+    expect(host.textContent).not.toContain('选择本页文件')
+    expect(host.textContent).not.toContain('readme.md')
+    expect(api.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('offers README creation and uses a toast when a case-insensitive README file already exists', async () => {
+    await mount()
+    await click('新建 README.md')
+    expect(toast.info).toHaveBeenCalledExactlyOnceWith('当前目录已存在 README.md。')
+    expect(editor.open).not.toHaveBeenCalled()
+    expect(api.get).toHaveBeenCalledTimes(1)
+    expect(api.post).not.toHaveBeenCalled()
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('creates README.md for an empty directory and opens its editor', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', content: '', version: '', warning: '' } } as never)
+    vi.mocked(api.post).mockResolvedValueOnce({ status: 200, content: { path: '/', content: '', version: 'created-version', warning: '' } } as never)
+    await mount(); await click('新建 README.md')
+    expect(editor.open).toHaveBeenCalledTimes(1)
+    expect(toast.info).not.toHaveBeenCalled()
+    expect(api.post).toHaveBeenCalledExactlyOnceWith({ url: '/api/management/resources/readme/', query: { path: '/', version: '', content: '' } })
+    expect(toast.success).toHaveBeenCalledWith('README.md 已创建。')
+    expect(api.get).toHaveBeenCalledTimes(3)
+  })
+
+  it('reports an invalid README path from the pre-create check without writing to it', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+      .mockResolvedValueOnce({ status: 409, errors: [{ err_msg: 'README 路径不是文件。' }] } as never)
+    await mount(); await click('新建 README.md')
+    expect(api.post).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith('README 路径不是文件。')
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(editor.open).not.toHaveBeenCalled()
+  })
+
+  it('reports a README found during the pre-create check without overwriting or opening it', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+    await mount(); await click('新建 README.md')
+    expect(api.get).toHaveBeenCalledWith({ url: '/api/management/resources/readme/', query: { path: '/' } })
+    expect(api.post).not.toHaveBeenCalled()
+    expect(editor.open).not.toHaveBeenCalled()
+    expect(toast.info).toHaveBeenCalledExactlyOnceWith('当前目录已存在 README.md。')
+    expect(api.get).toHaveBeenCalledTimes(3)
+  })
+
+  it('turns a create conflict into an already-exists toast after refreshing the directory', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', content: '', version: '', warning: '' } } as never)
+    vi.mocked(api.post).mockResolvedValueOnce({ status: 409, errors: [{ err_msg: '目录说明已被修改，请重新加载后再保存。' }] } as never)
+    await mount(); await click('新建 README.md')
+    expect(api.post).toHaveBeenCalledTimes(1)
+    expect(toast.info).toHaveBeenCalledExactlyOnceWith('当前目录已存在 README.md。')
+    expect(toast.error).not.toHaveBeenCalled()
+    expect(editor.open).not.toHaveBeenCalled()
+    expect(api.get).toHaveBeenCalledTimes(3)
+  })
+
+  it('shows a create conflict without a new README as an error instead of claiming it exists', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', content: '', version: '', warning: '' } } as never)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+    vi.mocked(api.post).mockResolvedValueOnce({ status: 409, errors: [{ err_msg: '目录说明已被修改，请重新加载后再保存。' }] } as never)
+    await mount(); await click('新建 README.md')
+    expect(toast.error).toHaveBeenCalledWith('目录说明已被修改，请重新加载后再保存。')
+    expect(toast.info).not.toHaveBeenCalled()
+    expect(editor.open).not.toHaveBeenCalled()
+  })
+
+  it('reports a creation failure and requests revalidation when the management session has expired', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', entries: [] } } as never)
+      .mockResolvedValueOnce({ status: 200, content: { path: '/', content: '', version: '', warning: '' } } as never)
+    vi.mocked(api.post).mockResolvedValueOnce({ status: 403, errors: [{ err_msg: '请重新验证 Passkey' }] } as never)
+    await mount(); await click('新建 README.md')
+    expect(expired).toHaveBeenCalledTimes(1)
+    expect(toast.error).toHaveBeenCalledWith('请重新验证 Passkey')
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(editor.open).not.toHaveBeenCalled()
+  })
+
+  it('keeps README creation unavailable while a directory is loading and after its load fails', async () => {
+    let resolve!: (value: unknown) => void
+    vi.mocked(api.get).mockImplementationOnce(() => new Promise(done => { resolve = done }) as never)
+    await mount()
+    const button = [...host.querySelectorAll<HTMLButtonElement>('button')].find(item => item.textContent?.trim() === '新建 README.md')!
+    expect(button.matches(':disabled')).toBe(true)
+    button.click(); await flush()
+    expect(editor.open).not.toHaveBeenCalled()
+    resolve({ status: 500, errors: [{ err_msg: '目录读取失败' }] }); await flush()
+    expect(button.matches(':disabled')).toBe(true)
+    expect(host.textContent).toContain('目录读取失败')
+    button.click(); await flush()
+    expect(editor.open).not.toHaveBeenCalled()
+    expect(toast.info).not.toHaveBeenCalled()
+  })
+
+  it('loads local directories and the recycle bin when no router is provided', async () => {
+    await mount(); await click('目标')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+    await click('回收站')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/trash/' })
+    await click('当前目录')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+  })
+
+  it('keeps directory and recycle-bin navigation in browser history while preserving other query fields', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/manage/files', component: { render: () => null } }] })
+    await router.push({ path: '/manage/files', query: { path: '/目标', next: '/upload' }, hash: '#directory' })
+    await router.isReady(); await mount({}, router)
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+    await click('根目录')
+    expect(router.currentRoute.value.query).toEqual({ path: '/', next: '/upload' })
+    expect(router.currentRoute.value.hash).toBe('#directory')
+    router.back(); await flush()
+    expect(router.currentRoute.value.query.path).toBe('/目标')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+    await click('刷新')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+    await click('回收站')
+    expect(router.currentRoute.value.query).toEqual({ path: '/目标', next: '/upload', trash: '1' })
+    expect(router.currentRoute.value.hash).toBe('#directory')
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/trash/' })
+    router.back(); await flush()
+    expect(router.currentRoute.value.query.trash).toBeUndefined()
+    expect(host.textContent).toContain('当前目录')
+    router.forward(); await flush()
+    expect(router.currentRoute.value.query.trash).toBe('1')
+    expect(host.textContent).toContain('回收站占用')
+  })
+
+  it('loads a deep-linked recycle bin and retains its directory when returning to files', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/manage/files', component: { render: () => null } }] })
+    await router.push('/manage/files?path=/目标&trash=1&next=/upload')
+    await router.isReady(); await mount({}, router)
+    expect(api.get).toHaveBeenCalledExactlyOnceWith({ url: '/api/management/resources/trash/' })
+    await click('当前目录')
+    expect(router.currentRoute.value.query).toEqual({ path: '/目标', next: '/upload' })
+    expect(api.get).toHaveBeenLastCalledWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+  })
+
+  it('restores the maintenance menu from a deep link without loading directory files', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/manage/files', component: { render: () => null } }] })
+    await router.push('/manage/files?path=/目标&view=maintenance&tool=statistics&next=/upload#directory')
+    await router.isReady(); await mount({ canReviewUploads: true }, router)
+    expect(host.textContent).toContain('维护工具')
+    expect(host.querySelector('[data-review-uploads]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="筛选管理文件"]')).toBeNull()
+    expect(host.textContent).not.toContain('回收站占用')
+    expect(api.get).not.toHaveBeenCalled()
+    await click('当前目录')
+    expect(router.currentRoute.value.query).toEqual({ path: '/目标', next: '/upload' })
+    expect(router.currentRoute.value.hash).toBe('#directory')
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    expect(api.get).toHaveBeenCalledExactlyOnceWith({ url: '/api/management/resources/', query: { path: '/目标' } })
+    router.back(); await flush()
+    expect(router.currentRoute.value.query.view).toBe('maintenance')
+    expect(router.currentRoute.value.query.tool).toBe('statistics')
+    expect(host.querySelector('[aria-label="筛选管理文件"]')).toBeNull()
+    expect(api.get).toHaveBeenCalledTimes(1)
+    router.forward(); await flush()
+    expect(router.currentRoute.value.query.view).toBeUndefined()
+    expect(host.querySelector('[aria-label="筛选管理文件"]')).not.toBeNull()
+    expect(api.get).toHaveBeenCalledTimes(2)
+  })
+
+  it('recognizes older maintenance links and clears the selected tool when opening the recycle bin', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/manage/files', component: { render: () => null } }] })
+    await router.push('/manage/files?path=/目标&tool=access&next=/upload#directory')
+    await router.isReady(); await mount({}, router)
+    expect(host.querySelector('[data-review-uploads]')).not.toBeNull()
+    expect(api.get).not.toHaveBeenCalled()
+    await click('回收站')
+    expect(router.currentRoute.value.query).toEqual({ path: '/目标', next: '/upload', trash: '1' })
+    expect(router.currentRoute.value.hash).toBe('#directory')
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    expect(api.get).toHaveBeenCalledExactlyOnceWith({ url: '/api/management/resources/trash/' })
+    expect(host.textContent).toContain('回收站占用')
+    router.back(); await flush()
+    expect(router.currentRoute.value.query.tool).toBe('access')
+    expect(host.querySelector('[data-review-uploads]')).not.toBeNull()
+    expect(api.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('switches between three exclusive menus without creating a directory request for maintenance', async () => {
+    await mount()
+    expect(host.querySelector('[aria-label="筛选管理文件"]')).not.toBeNull()
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    await click('资料维护')
+    expect(host.querySelector('[data-review-uploads]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="筛选管理文件"]')).toBeNull()
+    expect(api.get).toHaveBeenCalledTimes(1)
+    await click('回收站')
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    expect(host.textContent).toContain('回收站占用')
+    expect(host.textContent).not.toContain('选择本页文件')
+    await click('当前目录')
+    expect(host.querySelector('[data-review-uploads]')).toBeNull()
+    expect(host.textContent).toContain('选择本页文件')
+    expect(api.get).toHaveBeenCalledTimes(3)
+  })
+
+  it('ignores a directory response that arrives after history navigates to another path', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/manage/files', component: { render: () => null } }] })
+    await router.push('/manage/files')
+    await router.isReady()
+    let resolve!: (value: unknown) => void
+    vi.mocked(api.get).mockImplementationOnce(() => new Promise(done => { resolve = done }) as never)
+    await mount({}, router)
+    await router.push('/manage/files?path=/目标'); await flush()
+    expect(router.currentRoute.value.query.path).toBe('/目标')
+    resolve({ status: 200, content: { path: '/', entries: [file], max_files: 20, max_file_size: 100 } })
+    await flush()
+    expect(host.textContent).not.toContain('readme.md')
+    expect(host.querySelector<HTMLAnchorElement>('a[target="_blank"]')!.getAttribute('href')).toBe('/disk/%E7%9B%AE%E6%A0%87')
+    expect(editor.open).not.toHaveBeenCalled()
   })
 
   it('requires deletion confirmation and sends the displayed file revision', async () => {

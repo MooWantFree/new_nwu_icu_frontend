@@ -1,32 +1,42 @@
 <template>
-  <section class="overflow-hidden rounded-xl border border-zinc-200 bg-white text-zinc-950" aria-label="资料维护工具">
-    <div class="border-b border-zinc-200 p-4 sm:p-5">
-      <h3 class="text-base font-semibold tracking-tight">资料维护</h3>
-      <div class="mt-4 inline-flex max-w-full flex-wrap gap-1 rounded-lg bg-zinc-100 p-1" role="tablist" aria-label="资料维护">
-        <button v-for="item in tabs" :id="`resource-tools-tab-${item.id}`" :key="item.id" type="button" role="tab" :aria-selected="tab === item.id" :aria-controls="`resource-tools-panel-${item.id}`" :disabled="busy" class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40" :class="tab === item.id ? 'bg-white text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-950'" @click="selectTab(item.id)">{{ item.label }}</button>
-      </div>
+  <section v-if="active && availableTabs.length" class="overflow-hidden rounded-xl border border-zinc-200 bg-white text-zinc-950" aria-label="资料维护工具">
+    <div class="p-4 sm:p-5" :class="{ 'border-b border-zinc-200': tab }">
+      <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="text-base font-semibold tracking-tight">资料维护</h3><button v-if="tab" type="button" :disabled="busy" aria-label="关闭资料维护" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-40" @click="selectTab(null)"><X class="h-4 w-4" aria-hidden="true" /></button></div>
+      <nav class="mt-4 inline-flex max-w-full flex-wrap gap-1 rounded-lg bg-zinc-100 p-1" aria-label="资料维护">
+        <button v-for="item in availableTabs" :id="`resource-tools-tab-${item.id}`" :key="item.id" type="button" :aria-pressed="tab === item.id" :aria-controls="tab === item.id ? `resource-tools-panel-${item.id}` : undefined" :disabled="busy" class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40" :class="tab === item.id ? 'bg-white text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-950'" @click="selectTab(item.id)">{{ item.label }}</button>
+      </nav>
     </div>
-    <div class="p-4 sm:p-5">
+    <div v-if="tab" class="p-4 sm:p-5">
       <div v-if="error" role="alert" class="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ error }}</p></div>
       <div v-if="message" role="status" class="mb-4 flex items-start gap-2.5 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700"><CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p>{{ message }}</p></div>
       <p v-if="busy" role="status" class="mb-4 flex items-center gap-2 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在处理…</p>
-      <fieldset :id="`resource-tools-panel-${tab}`" role="tabpanel" :aria-labelledby="`resource-tools-tab-${tab}`" :disabled="busy" class="min-w-0 space-y-5 disabled:opacity-60">
-        <template v-if="tab === 'readme' && readme">
-          <div class="flex flex-wrap items-center gap-2 text-sm"><span class="min-w-0 break-all text-zinc-500">目录说明：{{ readme.path }}</span><span v-if="dirty" class="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">尚未保存</span></div>
-          <p v-if="readme.warning" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{{ readme.warning }} 请通过文件管理处理原文件，避免覆盖未加载的内容。</p>
-          <p v-if="readme.path !== path" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">当前保留的是 {{ readme.path }} 的草稿。保存或放弃后再加载新目录。</p>
-          <div class="grid gap-4 xl:grid-cols-2">
-            <label class="text-sm font-medium">Markdown 源码<textarea v-model="draft" :disabled="!!readme.warning" rows="12" :class="inputClass" class="mt-2 block min-h-64 w-full resize-y py-3 font-mono font-normal" aria-label="目录说明 Markdown" /></label>
-            <div class="min-w-0"><p class="text-sm font-medium">预览</p><div class="resource-tools-preview prose prose-sm prose-zinc mt-2 min-h-64 max-w-none overflow-auto rounded-md border border-zinc-200 bg-zinc-50/50 p-4" v-html="preview" /></div>
+      <fieldset :id="`resource-tools-panel-${tab}`" :aria-labelledby="`resource-tools-tab-${tab}`" :disabled="busy" class="min-w-0 space-y-5 disabled:opacity-60">
+        <template v-if="tab === 'access'">
+          <div class="grid gap-5 lg:grid-cols-2">
+            <section class="overflow-hidden rounded-lg border border-zinc-200 bg-white" aria-label="访问权限目录">
+              <div class="border-b border-zinc-200 px-4 py-3"><h4 class="text-sm font-medium">浏览目录</h4></div>
+              <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50/50 p-3">
+                <button type="button" :class="ghostButtonClass" :disabled="busy || accessPath === '/'" @click="navigateAccess('/')"><House class="h-4 w-4" aria-hidden="true" />根目录</button>
+                <button type="button" :class="ghostButtonClass" :disabled="busy || accessPath === '/'" @click="navigateAccess(accessParent)"><CornerLeftUp class="h-4 w-4" aria-hidden="true" />上一级</button>
+                <span class="min-w-0 flex-1 break-all px-1 text-xs leading-5 text-zinc-500">{{ accessPath }}</span>
+                <button type="button" :class="outlineButtonClass" :disabled="busy" aria-label="刷新访问权限" @click="load"><RefreshCw class="h-4 w-4" aria-hidden="true" />刷新</button>
+              </div>
+              <p v-if="busy && !access" role="status" class="flex min-h-32 items-center justify-center gap-2 p-6 text-sm text-zinc-500"><LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />正在读取目录与权限…</p>
+              <ul v-else-if="access && accessDirectories.length" class="max-h-80 divide-y divide-zinc-100 overflow-y-auto overscroll-contain">
+                <li v-for="directory in accessDirectories" :key="directory.path"><button type="button" :disabled="busy" :aria-label="`进入目录 ${directory.name}`" class="flex min-h-12 w-full items-center gap-2.5 px-4 py-3 text-left text-sm text-zinc-700 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 disabled:opacity-40" @click="navigateAccess(directory.path)"><Folder class="h-4 w-4 shrink-0 fill-zinc-100 text-zinc-500" aria-hidden="true" /><span class="min-w-0 flex-1 break-all">{{ directory.name }}</span><ChevronRight class="h-4 w-4 shrink-0 text-zinc-400" aria-hidden="true" /></button></li>
+              </ul>
+              <p v-else-if="access" class="p-8 text-center text-sm text-zinc-500">当前目录下没有子文件夹。</p>
+              <div v-else class="p-6 text-center"><button type="button" :class="outlineButtonClass" @click="load">重新加载目录</button></div>
+            </section>
+            <section v-if="access" class="space-y-4 rounded-lg border border-zinc-200 bg-white p-4" aria-label="当前目录访问权限">
+              <div><h4 class="text-sm font-medium">当前目录权限</h4><p class="mt-2 break-all text-xs leading-5 text-zinc-500">{{ access.path }}（含全部子目录与文件）</p></div>
+              <div class="space-y-2"><label for="resource-access-mode" class="block text-sm font-medium">目录规则</label><ShadcnSelect id="resource-access-mode" :value="mode" :options="accessOptions" :disabled="busy" aria-label="目录规则" @update:value="updateMode" /></div>
+              <p class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600">当前实际权限：{{ effectiveModeLabels[access.effective] }}。子目录不能放宽上级限制；浏览、搜索和下载使用相同规则。</p>
+              <button type="button" :class="primaryButtonClass" :disabled="busy || mode === access.mode" @click="saveAccess">保存访问权限</button>
+            </section>
           </div>
-          <div class="flex flex-wrap gap-2"><button type="button" :disabled="!dirty || !!readme.warning" :class="primaryButtonClass" @click="saveReadme">保存目录说明</button><button type="button" :class="outlineButtonClass" @click="reloadReadme">{{ dirty ? '放弃草稿并重新加载' : '重新加载' }}</button></div>
-        </template>
-        <template v-if="tab === 'access' && access">
-          <p class="break-all text-sm text-zinc-500">访问权限：{{ access.path }}（含全部子目录与文件）</p>
-          <div class="max-w-sm space-y-2"><label for="resource-access-mode" class="block text-sm font-medium">目录规则</label><ShadcnSelect id="resource-access-mode" :value="mode" :options="accessOptions" :disabled="busy" aria-label="目录规则" @update:value="updateMode" /></div>
-          <p class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600">当前实际权限：{{ modeLabels[access.effective] }}。子目录不能放宽上级限制；浏览、搜索和下载使用相同规则。</p>
-          <button type="button" :class="primaryButtonClass" :disabled="mode === access.mode" @click="saveAccess">保存访问权限</button>
-          <details class="rounded-lg border border-zinc-200 text-sm"><summary class="cursor-pointer px-4 py-3 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">已设置的限制（{{ access.rules.length }}）</summary><ul v-if="access.rules.length" class="divide-y divide-zinc-100 border-t border-zinc-200"><li v-for="rule in access.rules" :key="rule.path" class="flex flex-wrap items-center justify-between gap-2 px-4 py-3"><span class="min-w-0 break-all text-zinc-600">{{ rule.path }}</span><span class="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs">{{ modeLabels[rule.mode] }}</span></li></ul><p v-else class="border-t border-zinc-200 px-4 py-4 text-zinc-500">所有目录目前均公开。</p></details>
+          <p class="text-xs leading-5 text-zinc-500">点击文件夹可查看下级目录，并设置该目录的访问权限。修改后点击保存才会生效。</p>
+          <details v-if="access" class="rounded-lg border border-zinc-200 text-sm"><summary class="cursor-pointer px-4 py-3 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">已设置的限制（{{ access.rules.length }}）</summary><ul v-if="access.rules.length" class="divide-y divide-zinc-100 border-t border-zinc-200"><li v-for="rule in access.rules" :key="rule.path" class="flex flex-wrap items-center justify-between gap-2 px-4 py-3"><button type="button" :disabled="busy" :aria-label="`查看权限 ${rule.path}`" :class="linkClass" class="min-w-0 break-all" @click="navigateAccess(rule.path)">{{ rule.path }}</button><span class="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs">{{ modeLabels[rule.mode] }}</span></li></ul><p v-else class="border-t border-zinc-200 px-4 py-4 text-zinc-500">所有目录目前均公开。</p></details>
         </template>
         <template v-if="tab === 'index'">
           <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4"><div class="flex items-center gap-2"><Database class="h-4 w-4 text-zinc-500" aria-hidden="true" /><h4 class="text-sm font-medium">目录索引</h4></div><p class="mt-2 text-sm leading-6 text-zinc-600">搜索使用目录索引。通过本站修改会自动更新；在服务器或 Dropbox 中增删资料后，可在这里重新扫描。</p><template v-if="index"><p class="mt-4 text-sm text-zinc-700">索引更新时间：{{ index.updated_at ? date(index.updated_at) : '尚未建立' }}</p><p v-if="index.summary" class="mt-2 text-sm text-zinc-500">{{ index.summary.directory_count }} 个目录 · {{ index.summary.file_count }} 个文件 · {{ formatResourceSize(index.summary.total_file_size) }}</p></template></div>
@@ -64,44 +74,54 @@
             <section aria-label="下载记录明细" class="overflow-hidden rounded-lg border border-zinc-200"><div class="border-b border-zinc-200 px-4 py-3"><h4 class="text-sm font-medium">下载明细 · {{ statistics.events.count }} 条</h4><p class="mt-1 text-xs leading-5 text-zinc-500">用户名为下载时的记录；排行按用户 ID 合并。点击排行可进一步筛选。</p></div><ul class="divide-y divide-zinc-100"><li v-for="item in statistics.events.results" :key="item.id" class="space-y-2 px-4 py-4 text-sm"><div class="flex flex-wrap items-center justify-between gap-2"><span class="font-medium">{{ item.authenticated ? (item.user_id ? `${item.username} #${item.user_id}` : '登录用户（历史未关联）') : '游客' }}</span><time class="text-xs text-zinc-400">{{ date(item.created_at) }}</time></div><p class="break-all text-zinc-700">{{ item.path }}</p><p class="break-all text-xs text-zinc-500">IP：{{ item.ip_address || '未记录' }}</p><details class="text-xs text-zinc-500"><summary class="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">User-Agent</summary><p class="mt-2 break-all">{{ item.user_agent || '未记录' }}</p></details></li></ul><p v-if="!statistics.events.count" class="py-8 text-center text-sm text-zinc-500">没有匹配的下载记录。</p><ReviewPagination v-if="statistics.events.count > statistics.events.page_size" class="border-t border-zinc-200 px-4 py-4" :page="statistics.events.page" :page-count="Math.ceil(statistics.events.count / statistics.events.page_size)" @update:page="loadStatisticsPage" /></section>
           </template>
         </template>
+        <ResourceUploadBlacklist v-if="tab === 'blacklist'" @session-expired="emit('session-expired')" />
       </fieldset>
     </div>
-    <ShadcnModal v-model:show="showDiscardConfirm" :busy="busy" title="放弃目录说明草稿" description="尚未保存的修改将被丢弃，并重新加载当前目录的说明。">
-      <div class="w-[calc(100vw-2rem)] max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-lg">
-        <div class="flex items-start justify-between gap-3"><div><h3 class="text-lg font-semibold tracking-tight">放弃目录说明草稿？</h3><p class="mt-2 text-sm leading-6 text-zinc-500">尚未保存的修改将被丢弃，并重新加载当前目录的说明。</p></div><button type="button" :disabled="busy" aria-label="关闭确认弹窗" class="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-40" @click="showDiscardConfirm = false"><X class="h-4 w-4" aria-hidden="true" /></button></div>
-        <div class="mt-6 flex justify-end gap-2"><button type="button" :class="outlineButtonClass" :disabled="busy" @click="showDiscardConfirm = false">保留草稿</button><button type="button" :class="primaryButtonClass" :disabled="busy" @click="discardAndReload"><LoaderCircle v-if="busy" class="h-4 w-4 animate-spin" aria-hidden="true" />{{ busy ? '正在加载…' : '放弃并重新加载' }}</button></div>
-      </div>
-    </ShadcnModal>
   </section>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { AlertCircle, CheckCircle2, Database, LoaderCircle, RefreshCw, Search, X } from 'lucide-vue-next'
-import ShadcnModal from '@/components/common/ShadcnModal.vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
+import { routeLocationKey, routerKey } from 'vue-router'
+import { AlertCircle, CheckCircle2, ChevronRight, CornerLeftUp, Database, Folder, House, LoaderCircle, RefreshCw, Search, X } from 'lucide-vue-next'
 import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
+import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
 import { api } from '@/lib/requests'
-import { formatResourceSize, renderResourceReadme } from '@/lib/resourceBrowser'
-import type { AccessData, AccessMode, AuditData, IndexData, ReadmeData, StatisticsData, StatisticsQuery } from '@/types/api/resourceTools'
-const props = defineProps<{ path: string }>()
+import { formatResourceSize } from '@/lib/resourceBrowser'
+import type { AccessData, AccessMode, AuditData, IndexData, StatisticsData, StatisticsQuery } from '@/types/api/resourceTools'
+import type { ManagedResourceFile } from '@/types/api/management'
+
+const props = withDefaults(defineProps<{ path: string; canManageFiles?: boolean; canReviewUploads?: boolean; active?: boolean }>(), { canManageFiles: true, canReviewUploads: false, active: true })
 const emit = defineEmits<{ (event: 'session-expired'): void; (event: 'changed'): void }>()
-const tabs = [{ id: 'readme', label: '目录说明' }, { id: 'access', label: '访问权限' }, { id: 'index', label: '目录索引' }, { id: 'audit', label: '操作记录' }, { id: 'statistics', label: '下载统计' }] as const
+const router = inject(routerKey, undefined)
+const route = inject(routeLocationKey, undefined)
+const tabs = [{ id: 'access', label: '访问权限' }, { id: 'index', label: '目录索引' }, { id: 'audit', label: '操作记录' }, { id: 'statistics', label: '下载统计' }, { id: 'blacklist', label: '投稿文件夹黑名单' }] as const
 type Tab = typeof tabs[number]['id']
-const tab = ref<Tab>('readme')
-const showDiscardConfirm = ref(false)
+const availableTabs = computed(() => tabs.filter(item => item.id === 'blacklist' ? props.canReviewUploads : props.canManageFiles))
+const localTab = ref<Tab | null>(null)
+const usesRoute = computed(() => Boolean(router && route?.path === '/manage/files'))
+const allowedTab = (value: unknown): Tab | null => availableTabs.value.find(item => item.id === value)?.id ?? null
+const tab = computed(() => props.active ? allowedTab(usesRoute.value ? route?.query.tool : localTab.value) : null)
+const localAccessPath = ref(props.path)
+const accessPath = computed(() => usesRoute.value ? (typeof route?.query.path === 'string' && route.query.path.startsWith('/') ? route.query.path : props.path) : localAccessPath.value)
+const accessParent = computed(() => accessPath.value.slice(0, accessPath.value.lastIndexOf('/')) || '/')
+const selectedPath = computed(() => tab.value === 'access' ? accessPath.value : props.path)
 const buttonClass = 'inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40'
 const primaryButtonClass = `${buttonClass} bg-zinc-900 text-white hover:bg-zinc-800`
 const outlineButtonClass = `${buttonClass} border border-zinc-200 bg-white text-zinc-700 shadow-sm hover:bg-zinc-100`
+const ghostButtonClass = `${buttonClass} text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950`
 const inputClass = 'rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-950 shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40'
 const linkClass = 'rounded-sm text-left text-zinc-700 underline underline-offset-4 decoration-zinc-300 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400'
 const tableClass = 'w-full text-left text-sm [&_thead]:bg-zinc-50 [&_th]:px-4 [&_th]:py-3 [&_th]:text-xs [&_th]:font-medium [&_th]:text-zinc-500 [&_td]:px-4 [&_td]:py-3 [&_tbody_tr]:border-t [&_tbody_tr]:border-zinc-100 [&_tbody_tr]:hover:bg-zinc-50'
-const busy = ref(false), error = ref(''), message = ref(''), draft = ref(''), preview = ref('')
-const readme = ref<ReadmeData>(), access = ref<AccessData>(), index = ref<IndexData>(), auditData = ref<AuditData>(), statistics = ref<StatisticsData>()
+const busy = ref(false), error = ref(''), message = ref('')
+const access = ref<AccessData>(), index = ref<IndexData>(), auditData = ref<AuditData>(), statistics = ref<StatisticsData>()
+const accessDirectories = ref<ManagedResourceFile[]>([])
 const mode = ref<AccessMode>('public'), search = ref(''), actionFilter = ref(''), days = ref(30)
 const statsIp = ref(''), statsUser = ref(''), statsUa = ref(''), statsPath = ref('')
 const statisticsFilters = ref<Omit<StatisticsQuery, 'days' | 'page'>>({})
 const statisticsFilterLabel = computed(() => Object.entries(statisticsFilters.value).map(([key, value]) => `${({ ip: 'IP', user_id: '用户 ID', ua: 'UA', search: '路径' } as Record<string, string>)[key]}：${value}`).join('；'))
 const modeLabels: Record<AccessMode, string> = { public: '公开 / 继承上级', login: '仅登录用户', admin: '仅资料管理员' }
+const effectiveModeLabels: Record<AccessMode, string> = { public: '公开', login: '仅登录用户', admin: '仅资料管理员' }
 const actionLabels: Record<string, string> = { upload: '上传', rename: '重命名', move: '移动', delete: '移入回收站', restore: '恢复', mkdir: '新建目录', readme: '编辑目录说明', access: '修改权限', reindex: '刷新索引', purge: '永久删除', purge_requested: '请求永久删除' }
 const accessOptions = Object.entries(modeLabels).map(([value, label]) => ({ value, label }))
 const auditOptions = [{ value: '', label: '全部操作' }, ...Object.entries(actionLabels).map(([value, label]) => ({ value, label }))]
@@ -109,63 +129,78 @@ const dayOptions = [7, 30, 90].map(value => ({ value, label: `近 ${value} 天` 
 function updateMode(value: string | number | null) { if (value === 'public' || value === 'login' || value === 'admin') mode.value = value }
 function updateActionFilter(value: string | number | null) { if (typeof value === 'string') actionFilter.value = value }
 function updateDays(value: string | number | null) { if (typeof value === 'number' && [7, 30, 90].includes(value)) { days.value = value; void load() } }
-const dirty = computed(() => !!readme.value && draft.value !== readme.value.content)
 const date = (value: string) => new Date(value).toLocaleString('zh-CN')
-let generation = 0, previewGeneration = 0
+let generation = 0, pendingLoad = false
 function check(result: { status: number; errors?: { err_msg: string }[] }) {
   if ([401, 403].includes(result.status)) emit('session-expired')
   if (result.status !== 200) throw new Error(result.errors?.[0]?.err_msg || '操作失败，请刷新后重试。')
 }
-async function run(operation: () => Promise<void>) {
+async function run(operation: () => Promise<void>, current = generation) {
   if (busy.value) return
   busy.value = true; error.value = ''; message.value = ''
-  try { await operation() } catch (cause) { error.value = cause instanceof Error ? cause.message : '操作失败。' }
-  finally { busy.value = false }
+  try { await operation() } catch (cause) { if (current === generation) error.value = cause instanceof Error ? cause.message : '操作失败。' }
+  finally { busy.value = false; if (pendingLoad) { pendingLoad = false; void load() } }
 }
 async function load() {
-  if (tab.value === 'readme' && dirty.value) return
-  const current = ++generation, path = props.path, selected = tab.value
+  const selected = tab.value
+  if (!selected || selected === 'blacklist') return
+  if (busy.value) { pendingLoad = true; return }
+  const current = ++generation, path = selectedPath.value
+  if (selected === 'access') { access.value = undefined; accessDirectories.value = [] }
   await run(async () => {
-    if (selected === 'readme') {
-      const r = await api.get({ url: '/api/management/resources/readme/', query: { path } }); check(r)
-      if (current === generation) { readme.value = r.content; draft.value = r.content.content }
-    } else if (selected === 'access') {
-      const r = await api.get({ url: '/api/management/resources/access/', query: { path } }); check(r)
-      if (current === generation) { access.value = r.content; mode.value = r.content.mode }
+    if (selected === 'access') {
+      const [permission, directory] = await Promise.all([
+        api.get({ url: '/api/management/resources/access/', query: { path } }),
+        api.get({ url: '/api/management/resources/', query: { path } }),
+      ])
+      check(permission); check(directory)
+      if (current === generation) {
+        access.value = permission.content; mode.value = permission.content.mode
+        accessDirectories.value = directory.content.entries.filter(entry => entry.type === 'directory')
+      }
     } else if (selected === 'index') {
       const r = await api.get({ url: '/api/management/resources/index/' }); check(r); if (current === generation) index.value = r.content
-    } else if (selected === 'audit') { await fetchAudit(1) }
-    else {
-      await fetchStatistics(1, current)
-    }
-  })
-  if (path !== props.path && !dirty.value) await load()
+    } else if (selected === 'audit') { await fetchAudit(1, current) }
+    else { await fetchStatistics(1, current) }
+  }, current)
 }
-function selectTab(value: Tab) { tab.value = value; void load() }
-async function reloadReadme() {
-  if (busy.value) return
-  if (dirty.value) { showDiscardConfirm.value = true; return }
-  await discardAndReload()
-}
-async function discardAndReload() {
-  if (busy.value) return
-  readme.value = undefined; draft.value = ''; await load()
-  showDiscardConfirm.value = false
-}
-async function saveReadme() {
-  if (!readme.value || readme.value.warning) return
-  const query = { path: readme.value.path, version: readme.value.version, content: draft.value }
-  await run(async () => { const r = await api.post({ url: '/api/management/resources/readme/', query }); check(r); readme.value = r.content; draft.value = r.content.content; message.value = '目录说明已保存。'; emit('changed') })
+function selectTab(value: Tab | null) {
+  if (!props.active || busy.value || (value && !allowedTab(value))) return
+  if (usesRoute.value && router && route) {
+    const query = { ...route.query }
+    query.view = 'maintenance'
+    delete query.trash
+    if (value) query.tool = value
+    else delete query.tool
+    void router.push({ path: route.path, query, hash: route.hash })
+  } else { localTab.value = value }
 }
 async function saveAccess() {
-  if (!access.value) return
+  if (!props.canManageFiles || !access.value || busy.value) return
+  const current = generation
   const query = { path: access.value.path, mode: mode.value }
-  await run(async () => { const r = await api.post({ url: '/api/management/resources/access/', query }); check(r); const fresh = await api.get({ url: '/api/management/resources/access/', query: { path: query.path } }); check(fresh); access.value = fresh.content; mode.value = fresh.content.mode; message.value = '访问权限已保存。' })
+  await run(async () => {
+    const r = await api.post({ url: '/api/management/resources/access/', query }); check(r)
+    if (current !== generation) return
+    const fresh = await api.get({ url: '/api/management/resources/access/', query: { path: query.path } }); check(fresh)
+    if (current === generation) { access.value = fresh.content; mode.value = fresh.content.mode; message.value = '访问权限已保存。' }
+  }, current)
+}
+function navigateAccess(path: string) {
+  if (busy.value || !props.canManageFiles || tab.value !== 'access') return
+  if (path === accessPath.value) { void load(); return }
+  if (usesRoute.value && router && route) {
+    const query = { ...route.query }
+    query.path = path; query.view = 'maintenance'; query.tool = 'access'
+    delete query.trash
+    void router.push({ path: route.path, query, hash: route.hash })
+  } else { localAccessPath.value = path }
 }
 async function reindex() {
+  if (!props.canManageFiles) return
   await run(async () => { const r = await api.post({ url: '/api/management/resources/index/' }); check(r); index.value = r.content; message.value = '目录索引已更新。'; emit('changed') })
 }
-async function fetchAudit(page: number) { const r = await api.get({ url: '/api/management/resources/audit/', query: { page, action: actionFilter.value, search: search.value } }); check(r); auditData.value = r.content }
+async function fetchAudit(page: number, current = generation) { const r = await api.get({ url: '/api/management/resources/audit/', query: { page, action: actionFilter.value, search: search.value } }); check(r); if (current === generation) auditData.value = r.content }
 function loadAudit(page: number) { return run(() => fetchAudit(page)) }
 async function fetchStatistics(page: number, current = generation) {
   const r = await api.get({ url: '/api/management/resources/statistics/', query: { days: days.value, ...statisticsFilters.value, ...(page > 1 ? { page } : {}) } }); check(r)
@@ -190,16 +225,7 @@ function filterDimension(key: 'ip' | 'user_id' | 'ua', value: string | number) {
 }
 const daily = computed(() => statistics.value?.daily || [])
 const maxDaily = computed(() => Math.max(1, ...daily.value.map(item => item.count)))
-watch([draft, () => readme.value?.path], async () => { const current = ++previewGeneration; const html = await renderResourceReadme(draft.value, readme.value?.path || props.path); if (current === previewGeneration) preview.value = html })
-watch(() => props.path, () => { if (!busy.value) void load() }, { immediate: true })
-function warnUnsaved(event: BeforeUnloadEvent) { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
-window.addEventListener('beforeunload', warnUnsaved)
-onBeforeUnmount(() => { generation++; previewGeneration++; window.removeEventListener('beforeunload', warnUnsaved) })
+watch(() => props.path, path => { localAccessPath.value = path })
+watch([tab, selectedPath], () => { generation++; error.value = ''; message.value = ''; if (tab.value && tab.value !== 'blacklist') void load() }, { immediate: true })
+onBeforeUnmount(() => { generation++; pendingLoad = false })
 </script>
-
-<style scoped>
-.resource-tools-preview { overflow-wrap: anywhere; }
-.resource-tools-preview :deep(pre) { overflow-x: auto; }
-.resource-tools-preview :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
-.resource-tools-preview :deep(img) { max-width: 100%; height: auto; }
-</style>
