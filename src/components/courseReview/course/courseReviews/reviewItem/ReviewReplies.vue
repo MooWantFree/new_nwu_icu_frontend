@@ -1,9 +1,9 @@
 <template>
-  <section ref="replySection" class="mt-4 min-w-0 border-t border-zinc-100 pt-4" aria-label="评价回复">
+  <section v-show="expanded" :id="`review-replies-${review.id}`" ref="replySection" class="mt-4 min-w-0" aria-label="评价回复">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
         <h3 class="text-sm font-semibold text-zinc-900">回复 <span class="ml-1 text-xs font-normal text-zinc-500">{{ review.reply_count }}</span></h3>
-        <button v-if="isLoggedIn && !review.is_deleted" type="button" class="rounded-sm text-xs text-zinc-600 underline-offset-4 hover:text-zinc-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
+        <button v-if="!review.is_deleted" type="button" class="rounded-sm text-xs text-zinc-600 underline-offset-4 hover:text-zinc-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
           {{ replyTarget === 0 ? '取消回复' : '回复评价' }}
         </button>
       </div>
@@ -13,16 +13,18 @@
     </div>
     <ReviewReplyInput v-if="isLoggedIn && userInfo && !review.is_deleted && replyTarget === 0" :review="review" :reply-to="0" :user-id="userInfo.id" class="mb-4"
       @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
-    <div class="space-y-3">
+    <div :id="`review-reply-list-${review.id}`" class="space-y-3">
       <ReviewReplyThreadNode v-for="node in thread.roots" :key="node.reply.id" :node="node" :review="review"
         :depth="0" :collapsed-ids="collapsedIds" :reply-target="replyTarget" :user-id="isLoggedIn ? userInfo?.id : undefined"
-        :deleting-ids="deletingIds" @toggle-collapse="toggleCollapse" @reply="toggleReply" @delete="handleDeleteReply"
+        :deleting-ids="deletingIds" :visible-ids="visibleIds" @toggle-collapse="toggleCollapse" @reply="toggleReply" @delete="handleDeleteReply"
         @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     </div>
-    <button v-if="nextCursor !== null" type="button" class="mt-4 inline-flex min-h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50" :disabled="loadingMore" @click="loadMoreReplies">
+    <button v-if="hasMoreLoadedReplies" type="button" class="mt-3 inline-flex min-h-9 items-center rounded-md px-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :aria-expanded="showAllReplies" :aria-controls="`review-reply-list-${review.id}`" @click="showAllReplies = !showAllReplies">
+      {{ showAllReplies ? '收起多余回复' : `展开更多回复（另 ${thread.byId.size - visibleReplyLimit} 条）` }}
+    </button>
+    <button v-if="nextCursor !== null && (showAllReplies || !hasMoreLoadedReplies)" type="button" class="mt-3 inline-flex min-h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50" :disabled="loadingMore" @click="loadMoreReplies">
       {{ loadingMore ? '加载中…' : `加载更多（已显示 ${review.reply.length}/${review.reply_count}）` }}
     </button>
-    <p v-if="!isLoggedIn" class="mt-3 text-xs text-zinc-500">登录以后才能回复</p>
   </section>
 </template>
 
@@ -40,6 +42,7 @@ import ReviewReplyInput from './ReviewReplyInput.vue'
 import ReviewReplyThreadNode from './ReviewReplyThreadNode.vue'
 
 const { review } = defineProps<{ review: Review }>()
+const expanded = defineModel<boolean>('expanded', { default: false })
 const emit = defineEmits<{ (e: 'replyDeleted', reviewId: number, replyId: number): void }>()
 const { userInfo, isLoggedIn } = useUser()
 const message = useShadcnToast()
@@ -53,6 +56,20 @@ const reverseReplies = ref(false)
 const nextCursor = ref<number | null>(review.reply_next_cursor)
 const loadingMore = ref(false)
 const thread = computed(() => buildReviewReplyThread(review.reply, reverseReplies.value))
+const visibleReplyLimit = 5
+const showAllReplies = ref(false)
+const hasMoreLoadedReplies = computed(() => thread.value.byId.size > visibleReplyLimit)
+const visibleIds = computed(() => {
+  if (showAllReplies.value) return undefined
+  const ids = new Set<number>()
+  const pending = [...thread.value.roots].reverse()
+  while (pending.length && ids.size < visibleReplyLimit) {
+    const node = pending.pop()!
+    ids.add(node.reply.id)
+    pending.push(...[...node.children].reverse())
+  }
+  return ids
+})
 
 const appendReplies = (replies: Review['reply']) => {
   const existingIds = new Set(review.reply.map((item) => item.id))
@@ -71,6 +88,7 @@ const loadReplies = async (query: { after?: number; target?: number }) => {
 const loadMoreReplies = async () => {
   if (nextCursor.value === null || loadingMore.value) return
   loadingMore.value = true
+  showAllReplies.value = true
   try {
     const content = await loadReplies({ after: nextCursor.value })
     nextCursor.value = content.next_cursor
@@ -81,7 +99,22 @@ const loadMoreReplies = async () => {
   }
 }
 
-const toggleReply = (id: number) => { replyTarget.value = replyTarget.value === id ? null : id }
+const requireLogin = () => {
+  if (isLoggedIn.value && userInfo.value) return true
+  message.error('请先登录后再回复')
+  return false
+}
+const startReply = () => {
+  if (review.is_deleted || !requireLogin()) return
+  expanded.value = true
+  replyTarget.value = 0
+}
+const toggleReply = (id: number) => {
+  if ((id === 0 && review.is_deleted) || !requireLogin()) return
+  replyTarget.value = replyTarget.value === id ? null : id
+  if (replyTarget.value !== null && id !== 0 && visibleIds.value && !visibleIds.value.has(id)) showAllReplies.value = true
+}
+defineExpose({ startReply })
 const toggleCollapse = (id: number) => {
   if (collapsedIds.value.has(id)) collapsedIds.value.delete(id)
   else collapsedIds.value.add(id)
@@ -126,6 +159,8 @@ const onReplySubmitted = (content: string, parent: number, id: number) => {
     like: { like: 0, dislike: 0, user_option: 0 },
     is_deleted: false,
   })
+  review.reply_count += 1
+  if (visibleIds.value && !visibleIds.value.has(id)) showAllReplies.value = true
   let ancestor: number | undefined = parent
   while (ancestor !== undefined) {
     collapsedIds.value.delete(ancestor)
@@ -136,8 +171,10 @@ const onReplySubmitted = (content: string, parent: number, id: number) => {
 // Keep incoming notification/profile links usable; replies have no in-thread jump controls.
 const linkedReplyId = computed(() => Number(/^#reply-(\d+)$/.exec(route.hash)?.[1]) || null)
 let stopFocusAnimation: (() => void) | undefined
-watch([linkedReplyId, () => thread.value.byId.has(linkedReplyId.value ?? -1)], async ([id, exists]) => {
+watch([linkedReplyId, () => thread.value.byId.has(linkedReplyId.value ?? -1)], async ([id, exists], _, onCleanup) => {
   if (!id) return
+  let canceled = false
+  onCleanup(() => { canceled = true })
   if (!exists) {
     try {
       await loadReplies({ target: id })
@@ -145,12 +182,16 @@ watch([linkedReplyId, () => thread.value.byId.has(linkedReplyId.value ?? -1)], a
       return
     }
   }
+  if (canceled || linkedReplyId.value !== id || !thread.value.byId.has(id)) return
+  expanded.value = true
+  if (visibleIds.value && !visibleIds.value.has(id)) showAllReplies.value = true
   let ancestor: number | undefined = id
   while (ancestor !== undefined) {
     collapsedIds.value.delete(ancestor)
     ancestor = thread.value.parents.get(ancestor)
   }
   await nextTick()
+  if (canceled || linkedReplyId.value !== id) return
   const element = replySection.value?.querySelector<HTMLElement>(`[data-reply-card="${id}"]`)
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'center' })

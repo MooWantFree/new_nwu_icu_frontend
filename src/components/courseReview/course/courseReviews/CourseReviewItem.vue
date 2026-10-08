@@ -9,13 +9,19 @@
         v-else
         :review="review"
         :is-author="isAuthor"
+      />
+      <ReviewContent v-if="!review.is_deleted" :review="review" />
+      <ReviewBottom
+        v-if="!review.is_deleted || review.reply_count > 0"
+        :review="review"
+        :is-author="isAuthor"
+        :reply-expanded="repliesExpanded"
+        @toggle-replies="toggleReplies"
         @review-edit="handleEdit"
         @review-delete="handleDeleteReview"
       />
-      <ReviewContent v-if="!review.is_deleted" :review="review" />
-      <ReviewBottom v-if="!review.is_deleted" :review="review" />
     </div>
-    <ReviewReplies :review="review" @reply-deleted="handleReplyDeleted" />
+    <ReviewReplies ref="reviewReplies" v-model:expanded="repliesExpanded" :review="review" @reply-deleted="handleReplyDeleted" />
   </article>
 </template>
 
@@ -54,9 +60,27 @@ const message = useShadcnToast()
 const dialog = useShadcnDialog()
 const deleting = ref(false)
 const route = useRoute()
-const { userInfo } = useUser()
+const { userInfo, isLoggedIn } = useUser()
 const courseReviewItem = useTemplateRef('courseReviewItem')
+const reviewReplies = useTemplateRef('reviewReplies')
+const repliesExpanded = ref(review.reply_count > 0)
 let stopFocusAnimation: (() => void) | undefined
+
+const toggleReplies = async () => {
+  if (repliesExpanded.value) {
+    repliesExpanded.value = false
+    return
+  }
+  if (!review.is_deleted && review.reply_count === 0 && !isLoggedIn.value) {
+    message.error('请先登录后再回复')
+    return
+  }
+  repliesExpanded.value = true
+  if (!review.is_deleted && review.reply_count === 0) {
+    await nextTick()
+    reviewReplies.value?.startReply()
+  }
+}
 
 const focusReview = () => {
   const element = courseReviewItem.value
