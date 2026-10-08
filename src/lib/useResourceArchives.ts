@@ -1,6 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, reactive, watch, type Ref } from 'vue'
-import { createDiscreteApi } from 'naive-ui'
-import { themeOverrides } from '@/theme'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { api } from '@/lib/requests'
 import type { ResourceEntry } from '@/lib/resourceBrowser'
 import type { ArchiveConfig, ArchiveTask } from '@/types/api/resourceArchives'
@@ -14,7 +13,7 @@ export function archiveLabel(task: ArchiveTask): string {
 }
 
 export function useResourceArchives(entries: Ref<ResourceEntry[]>, context: Ref<string>) {
-  let selectionMessages: ReturnType<typeof createDiscreteApi<'message'>> | undefined
+  const selectionMessages = useShadcnToast()
   const state = reactive({
     selecting: false, panel: false, busy: false, loading: false, selected: [] as ResourceEntry[],
     tasks: [] as ArchiveTask[], error: '', message: '',
@@ -64,16 +63,7 @@ export function useResourceArchives(entries: Ref<ResourceEntry[]>, context: Ref<
     const cfg = state.config
     if (!cfg) return false
     if (files.length > cfg.max_files || files.reduce((sum, f) => sum + (f.size || 0), 0) > cfg.max_bytes) {
-      selectionMessages ??= createDiscreteApi(['message'], {
-        configProviderProps: { themeOverrides },
-        messageProviderProps: {
-          max: 1,
-          containerClass: 'archive-selection-toast',
-          containerStyle: { top: '50%', height: 'auto', transform: 'translateY(-50%)' },
-          themeOverrides: { maxWidth: 'calc(100vw - 32px)' },
-        },
-      })
-      selectionMessages.message.warning(`每次最多 ${cfg.max_files} 个文件、${cfg.max_bytes / 1024 ** 2} MiB，请分批选择。`, { duration: 4000 })
+      selectionMessages.warning(`每次最多 ${cfg.max_files} 个文件、${cfg.max_bytes / 1024 ** 2} MiB，请分批选择。`, { duration: 4000 })
       return false
     }
     return true
@@ -151,7 +141,7 @@ export function useResourceArchives(entries: Ref<ResourceEntry[]>, context: Ref<
   onMounted(() => {
     document.addEventListener('visibilitychange', visibility)
   })
-  onBeforeUnmount(() => { disposed = true; clearTimeout(poll); selectionMessages?.unmount(); document.removeEventListener('visibilitychange', visibility) })
+  onBeforeUnmount(() => { disposed = true; clearTimeout(poll); document.removeEventListener('visibilitychange', visibility) })
   return reactive({ state, selectedBytes, pageSelected, pagePartiallySelected, running, startSelection, toggle, selectPage, submit, cancel, download, refresh })
 }
 export type ArchiveController = ReturnType<typeof useResourceArchives>

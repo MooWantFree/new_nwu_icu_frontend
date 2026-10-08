@@ -4,8 +4,8 @@ import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-
 import Disk from './Disk.vue'
 import { resourcePageUrl, type ResourceContents } from '@/lib/resourceBrowser'
 
-const warning = vi.hoisted(() => vi.fn())
-vi.mock('naive-ui', () => ({ createDiscreteApi: () => ({ message: { warning }, unmount: vi.fn() }) }))
+const toast = vi.hoisted(() => ({ warning: vi.fn(), success: vi.fn(), error: vi.fn() }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => toast }))
 
 const folder = (path = '/', readme = '# 目录说明'): ResourceContents => ({
   name: '资料', path, type: 'directory', size: null, modified_at: '2026-09-07T00:00:00Z', readme, readme_warning: '',
@@ -23,7 +23,7 @@ let router: Router
 const fetchMock = vi.fn()
 
 beforeEach(() => {
-  warning.mockReset()
+  Object.values(toast).forEach(mock => mock.mockReset())
   localStorage.removeItem('nwuicu:resource-readme-collapsed')
   fetchMock.mockReset().mockResolvedValue(response(folder()))
   vi.stubGlobal('fetch', fetchMock)
@@ -53,18 +53,18 @@ describe('resource browser page', () => {
       return response(path === target.path ? { ...folder(path), ...target } : folder(path))
     })
     await mount('/disk/课程.2026?q=试卷&sort=size&direction=asc&page=2')
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('试卷')
     expect(host.querySelector('[data-sort="size"]')!.getAttribute('aria-label')).toContain('正序')
-    expect(host.textContent).toContain('2 / 3')
+    expect(host.querySelector('[aria-label="分页"] [aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     host.querySelector<HTMLAnchorElement>(`a[href="${resourcePageUrl(target.path)}"]`)!.click(); await flush()
     expect(router.currentRoute.value.path).toBe(resourcePageUrl(target.path))
     expect(router.currentRoute.value.query.q).toBeUndefined()
     router.back(); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('试卷')
     expect(host.querySelector('[data-sort="size"]')!.getAttribute('aria-label')).toContain('正序')
-    expect(host.textContent).toContain('2 / 3')
+    expect(host.querySelector('[aria-label="分页"] [aria-current="page"]')?.getAttribute('aria-label')).toBe('第 2 页')
     expect(host.querySelector<HTMLAnchorElement>(`a[href="${resourcePageUrl(target.path)}"]`)).not.toBeNull()
     const search = [...fetchMock.mock.calls].reverse().find(([url]) => url.startsWith('/api/resources/search/'))!
     const params = new URL(search[0], 'http://localhost').searchParams
@@ -82,6 +82,19 @@ describe('resource browser page', () => {
     router.back(); await flush()
     expect(router.currentRoute.value.path).toBe('/disk')
     expect(host.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe('')
+  })
+  it('waits for an idle interval after typing or backspacing before searching', async () => {
+    await mount(); vi.useFakeTimers()
+    fetchMock.mockClear().mockResolvedValue({ ok: true, json: async () => ({ contents: { entries: [], total_count: 0 } }) })
+    const input = host.querySelector<HTMLInputElement>('[aria-label="全局搜索资料"]')!
+    input.value = '高数'; input.dispatchEvent(new Event('input')); await flush()
+    await vi.advanceTimersByTimeAsync(400); await flush()
+    input.value = '高'; input.dispatchEvent(new Event('input')); await flush()
+    await vi.advanceTimersByTimeAsync(599); await flush()
+    expect(fetchMock).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1); await flush()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(new URL(fetchMock.mock.lastCall![0], 'http://localhost').searchParams.get('q')).toBe('高')
   })
   it('toggles each header direction while keeping directories first', async () => {
     const data = folder()
@@ -116,12 +129,12 @@ describe('resource browser page', () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ contents: { entries: [], total_count: 101 } }) })
     const input = host.querySelector<HTMLInputElement>('input[type="search"]')!
     input.value = '试卷'; input.dispatchEvent(new Event('input')); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
-    ;[...host.querySelectorAll('button')].find(b => b.textContent === '下一页')!.click(); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
+    host.querySelector<HTMLButtonElement>('[aria-label="下一页"]')!.click(); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     expect(new URL(fetchMock.mock.lastCall![0], 'http://localhost').searchParams.get('page')).toBe('2')
     host.querySelector<HTMLButtonElement>('[data-sort="name"]')!.click(); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     const params = new URL(fetchMock.mock.lastCall![0], 'http://localhost').searchParams
     expect(params.get('page')).toBe('1')
     expect(params.get('sort')).toBe('name')
@@ -143,7 +156,8 @@ describe('resource browser page', () => {
     ;[...host.querySelectorAll('button')].find(b => b.textContent === '批量下载')!.click()
     await flush()
     const selectAll = host.querySelector<HTMLInputElement>('[aria-label="全选本页文件"]')!
-    expect(selectAll.nextElementSibling?.textContent).toBe('名称')
+    const nameHeading = host.querySelector('[data-sort="name"]')!
+    expect(selectAll.compareDocumentPosition(nameHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(selectAll.closest('[aria-hidden="true"]')).toBeNull()
     host.querySelector<HTMLButtonElement>('[data-sort="name"]')!.click(); await flush()
     expect(selectAll.checked).toBe(false)
@@ -176,13 +190,13 @@ describe('resource browser page', () => {
     const checkbox = host.querySelector<HTMLInputElement>('[aria-label="选择 试卷 #1%.pdf"]')!
     checkbox.click(); await flush()
     expect(checkbox.checked).toBe(false)
-    expect(warning).toHaveBeenCalledWith(expect.stringContaining('请分批选择'), { duration: 4000 })
+    expect(toast.warning).toHaveBeenCalledWith(expect.stringContaining('请分批选择'), { duration: 4000 })
     expect(host.textContent).not.toContain('请分批选择')
     expect(host.textContent).toContain('已选 0 个')
     const selectAll = host.querySelector<HTMLInputElement>('[aria-label="全选本页文件"]')!
     selectAll.click(); await flush()
     expect(selectAll.checked).toBe(false)
-    expect(warning).toHaveBeenCalledTimes(2)
+    expect(toast.warning).toHaveBeenCalledTimes(2)
     expect(host.textContent).toContain('已选 0 个')
   })
   it('sets distinct file metadata and replaces it when navigating between resources', async () => {
@@ -308,6 +322,50 @@ describe('resource browser page', () => {
     expect(preview.opener).toBeNull()
     expect(preview.location.href).toBe('/api/resources/file/?access=signed')
   })
+  it('keeps file details available and closes the blank preview after a failed authorization', async () => {
+    document.cookie = 'csrftoken=test-token; path=/'
+    const path = '/课程/试卷.pdf'
+    fetchMock
+      .mockResolvedValueOnce(response({ ...folder(path, ''), name: '试卷.pdf', type: 'file', size: 20, download_gate_enabled: true }))
+      .mockResolvedValueOnce({
+        status: 403, statusText: 'Forbidden',
+        text: async () => JSON.stringify({ errors: [{ err_msg: '资料授权暂时不可用' }], contents: {} }),
+      })
+    const failedPreview = { opener: window, location: { href: '' }, close: vi.fn() }
+    const retryPreview = { opener: window, location: { href: '' }, close: vi.fn() }
+    vi.spyOn(window, 'open').mockReturnValueOnce(failedPreview as unknown as Window).mockReturnValueOnce(retryPreview as unknown as Window)
+    await mount(resourcePageUrl(path))
+    const previewButton = () => [...host.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('打开预览'))!
+    previewButton().click(); await flush()
+    expect(failedPreview.close).toHaveBeenCalledOnce()
+    expect(toast.error).toHaveBeenCalledWith('资料授权暂时不可用')
+    expect(host.querySelector('[aria-label="文件详情"]')?.textContent).toContain('试卷.pdf')
+    expect(host.querySelector('[role="alert"]')).toBeNull()
+    fetchMock.mockResolvedValueOnce({
+      status: 200, statusText: 'OK',
+      text: async () => JSON.stringify({ errors: [], contents: { url: '/api/resources/file/?access=retry', expires_in: 600, gate_enabled: true } }),
+    })
+    previewButton().click(); await flush()
+    expect(retryPreview.location.href).toBe('/api/resources/file/?access=retry')
+    expect(retryPreview.opener).toBeNull()
+    expect(retryPreview.close).not.toHaveBeenCalled()
+  })
+  it.each([true, false])('reports clipboard success=%s in a toast while retaining the file details', async (succeeds) => {
+    const writeText = vi.fn()
+    if (succeeds) writeText.mockResolvedValue(undefined)
+    else writeText.mockRejectedValue(new Error('Clipboard unavailable'))
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    const path = '/课程/试卷.pdf'
+    fetchMock.mockResolvedValue(response({ ...folder(path, ''), name: '试卷.pdf', type: 'file', size: 20 }))
+    await mount(resourcePageUrl(path))
+    ;[...host.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('复制链接'))!.click()
+    await flush()
+    expect(writeText).toHaveBeenCalledWith(window.location.href)
+    if (succeeds) expect(toast.success).toHaveBeenCalledWith('链接已复制')
+    else expect(toast.error).toHaveBeenCalledWith('复制失败，请复制浏览器地址栏中的链接。')
+    expect(host.querySelector('[aria-label="文件详情"]')?.textContent).toContain('试卷.pdf')
+    expect(host.querySelector('[role="alert"]')).toBeNull()
+  })
   it('displays a recoverable missing-path error', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 })
     await mount()
@@ -332,7 +390,7 @@ describe('resource browser page', () => {
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ contents: { entries: [target], total_count: 1 } }) })
     const input = host.querySelector<HTMLInputElement>('[aria-label="全局搜索资料"]')!
     input.value = '全局'; input.dispatchEvent(new Event('input')); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     const url = new URL(fetchMock.mock.lastCall![0], 'http://localhost')
     expect(url.pathname).toBe('/api/resources/search/')
     expect(url.searchParams.get('path')).toBe('/课程.2026')
@@ -351,7 +409,7 @@ describe('resource browser page', () => {
     fetchMock.mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
     const input = host.querySelector<HTMLInputElement>('input[type="search"]')!
     input.value = '旧搜索'; input.dispatchEvent(new Event('input')); await flush()
-    await vi.advanceTimersByTimeAsync(250); await flush()
+    await vi.advanceTimersByTimeAsync(600); await flush()
     input.value = ''; input.dispatchEvent(new Event('input')); await flush()
     finish({ ok: true, json: async () => ({ contents: { entries: [{ ...folder('/旧结果'), name: '旧搜索结果' }], total_count: 1 } }) }); await flush()
     expect(host.textContent).not.toContain('旧搜索结果')

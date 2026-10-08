@@ -51,6 +51,7 @@ const isShadcnPage = computed(() =>
   || /^\/user\/(activate|forget-password|bind-college-email|bind-college-mail)\/?$/.test(route.path)
   || /^\/(announcements|blog|guestbook)(?:\/\d+)?\/?$/.test(route.path)
   || isMessagePage.value
+  || /^\/disk(?:\/|$)/.test(route.path)
   || route.path.replace(/\/+$/, '') === '/about',
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))

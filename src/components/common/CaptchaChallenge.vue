@@ -1,10 +1,10 @@
 <template>
-  <NModal :show="visible" :mask-closable="!submitting" @update:show="cancel">
+  <NModal :show="visible" :mask-closable="!submitting" :theme-overrides="{ color: '#ffffff', textColor: '#18181b' }" @update:show="cancel">
     <!-- vueuc's focus trap locates a DIV slot root; a SECTION traps focus on its sentinel. -->
-    <div role="dialog" aria-modal="true" aria-labelledby="captcha-challenge-title" class="w-[calc(100vw-2rem)] max-w-md rounded-xl bg-white p-6 shadow-xl">
-      <h2 id="captcha-challenge-title" class="text-lg font-semibold text-gray-900">请完成人机验证</h2>
-      <p class="mt-1 text-sm text-gray-500">操作较为频繁，验证后会自动重试刚才的操作。</p>
-      <div class="mt-5">
+    <div role="dialog" aria-modal="true" aria-labelledby="captcha-challenge-title" class="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 text-zinc-950 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.25)] outline-none sm:p-6">
+      <h2 id="captcha-challenge-title" class="text-lg font-semibold tracking-tight">请完成人机验证</h2>
+      <p class="mt-1.5 text-sm leading-6 text-zinc-500">操作较为频繁，验证后会自动重试刚才的操作。</p>
+      <div class="captcha-challenge-field mt-5">
         <CaptchaInput
           id="step-up-captcha"
           v-model="value"
@@ -18,9 +18,10 @@
           @error="error = '验证码加载失败，请稍后重试'"
         />
       </div>
-      <div class="mt-5 flex justify-end gap-3">
-        <button type="button" class="rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" :disabled="submitting" @click="cancel()">取消</button>
-        <button type="button" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50" :disabled="submitting || !value.trim() || !key" @click="verify">
+      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-950 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" :disabled="submitting" @click="cancel()">取消</button>
+        <button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" :disabled="submitting || !value.trim() || !key" @click="verify">
+          <LoaderCircle v-if="submitting" class="h-4 w-4 animate-spin" aria-hidden="true" />
           {{ submitting ? '验证中…' : '验证并继续' }}
         </button>
       </div>
@@ -31,6 +32,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { NModal } from 'naive-ui'
+import { LoaderCircle } from 'lucide-vue-next'
 import CaptchaInput from '@/components/user/loginNRegister/CaptchaInput.vue'
 import { api } from '@/lib/requests'
 import { registerCaptchaChallengeHandler, type CaptchaScope } from '@/lib/captchaChallenge'
@@ -115,3 +117,16 @@ onBeforeUnmount(() => {
   settle?.(null)
 })
 </script>
+
+<style scoped>
+.captcha-challenge-field :deep(#step-up-captcha-error) {
+  margin-top: 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  padding: 0.75rem;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+</style>

@@ -7,7 +7,7 @@ import ResourceArchivePanel from '@/components/disk/ResourceArchivePanel.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), warning: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: mocks }))
-vi.mock('naive-ui', () => ({ createDiscreteApi: () => ({ message: { warning: mocks.warning }, unmount: vi.fn() }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ warning: mocks.warning }) }))
 const file = (name: string, size = 10): ResourceEntry => ({ name, path: '/' + name, type: 'file', size, modified_at: '' })
 const task = (status: ArchiveTask['status'] = 'queued'): ArchiveTask => ({
   id: 'receipt', status, file_count: 2, paths: ['/a', '/b'], source_bytes: 20, zip_bytes: 200,

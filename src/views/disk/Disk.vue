@@ -1,112 +1,114 @@
 <template>
-  <AppPageLayout title="资料下载" description="前人栽树，后人乘凉。把知识与经验留给后来者。" :class="{ 'pb-28': archives.state.selecting }">
+  <AppPageLayout title="资料下载" appearance="shadcn" :class="{ 'pb-28': archives.state.selecting }">
     <template #actions>
-      <RouterLink to="/upload" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-        <Upload class="h-4 w-4" />分享资料
+      <RouterLink to="/upload" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2">
+        <Upload class="h-4 w-4" aria-hidden="true" />分享资料
       </RouterLink>
     </template>
     <nav aria-label="资料目录" class="mb-5 flex items-start justify-between gap-3">
       <ol class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 text-sm">
-        <li><RouterLink to="/disk" class="inline-flex items-center gap-1.5 text-blue-700 hover:underline"><House class="h-4 w-4" />全部资料</RouterLink></li>
+        <li><RouterLink to="/disk" class="inline-flex items-center gap-1.5 rounded-sm text-zinc-500 transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"><House class="h-4 w-4" aria-hidden="true" />全部资料</RouterLink></li>
         <li v-for="(crumb, index) in breadcrumbs" :key="crumb.path" class="flex min-w-0 items-center gap-2">
-          <ChevronRight class="h-4 w-4 shrink-0 text-gray-400" />
-          <span v-if="index === breadcrumbs.length - 1" aria-current="page" class="break-all text-gray-700">{{ crumb.name }}</span>
-          <RouterLink v-else :to="resourcePageUrl(crumb.path)" class="break-all text-blue-700 hover:underline">{{ crumb.name }}</RouterLink>
+          <ChevronRight class="h-4 w-4 shrink-0 text-zinc-400" />
+          <span v-if="index === breadcrumbs.length - 1" aria-current="page" class="break-all text-zinc-700">{{ crumb.name }}</span>
+          <RouterLink v-else :to="resourcePageUrl(crumb.path)" class="break-all rounded-sm text-zinc-500 transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">{{ crumb.name }}</RouterLink>
         </li>
       </ol>
-      <button type="button" class="shrink-0 rounded-lg p-2 text-gray-500 hover:bg-gray-200 disabled:opacity-50" aria-label="刷新目录" :disabled="loading" @click="loadContents">
+      <button type="button" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" aria-label="刷新目录" :disabled="loading" @click="loadContents">
         <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
       </button>
     </nav>
-    <div v-if="loading" role="status" class="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-500">正在加载资料…</div>
-    <section v-else-if="error" role="alert" class="rounded-xl border border-red-100 bg-white p-10 text-center">
-      <p class="text-red-700">{{ error }}</p>
-      <div class="mt-5 flex justify-center gap-5 text-sm text-blue-700">
-        <RouterLink v-if="loginRequired" :to="{ path: '/login', query: { redirect: route.fullPath } }">登录后访问</RouterLink>
-        <button type="button" @click="loadContents">重新加载</button>
-        <RouterLink to="/disk">返回全部资料</RouterLink>
+    <div v-if="loading" role="status" class="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white text-sm text-zinc-500">
+      <LoaderCircle class="h-5 w-5 animate-spin" aria-hidden="true" />正在加载资料…
+    </div>
+    <section v-else-if="error" role="alert" class="rounded-xl border border-zinc-200 bg-white px-5 py-14 text-center shadow-sm">
+      <CircleAlert class="mx-auto h-6 w-6 text-red-500" aria-hidden="true" />
+      <p class="mt-4 text-sm font-medium text-zinc-950">{{ error }}</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+        <RouterLink v-if="loginRequired" :to="{ path: '/login', query: { redirect: route.fullPath } }" class="inline-flex h-10 items-center justify-center rounded-md bg-zinc-950 px-4 font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2">登录后访问</RouterLink>
+        <button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 font-medium shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="loadContents"><RefreshCw class="h-4 w-4" aria-hidden="true" />重新加载</button>
+        <RouterLink to="/disk" class="inline-flex h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 font-medium shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2">返回全部资料</RouterLink>
       </div>
     </section>
     <template v-else-if="contents">
-      <section v-if="readmeHtml" aria-label="目录说明" class="mb-6 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:px-7 sm:py-5">
+      <section v-if="readmeHtml" aria-label="目录说明" class="mb-6 rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm sm:px-7 sm:py-5">
         <div class="flex items-center justify-between gap-3">
-          <h2 class="text-sm font-medium text-gray-700">目录说明</h2>
-          <button type="button" :aria-expanded="!readmeCollapsed" aria-controls="resource-readme-content" class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500" @click="toggleReadme">
+          <h2 class="inline-flex items-center gap-2 text-sm font-medium text-zinc-900"><BookOpen class="h-4 w-4 text-zinc-500" aria-hidden="true" />目录说明</h2>
+          <button type="button" :aria-expanded="!readmeCollapsed" aria-controls="resource-readme-content" class="inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400" @click="toggleReadme">
             {{ readmeCollapsed ? '展开' : '收起' }}
             <ChevronDown aria-hidden="true" class="h-4 w-4 transition-transform" :class="{ 'rotate-180': !readmeCollapsed }" />
           </button>
         </div>
-        <div v-show="!readmeCollapsed" id="resource-readme-content" class="resource-readme prose prose-slate mt-4 max-w-none prose-a:text-blue-600" v-html="readmeHtml" @click="followReadmeLink" />
+        <div v-show="!readmeCollapsed" id="resource-readme-content" class="resource-readme prose prose-sm prose-zinc mt-4 max-w-none prose-headings:font-semibold prose-a:text-zinc-900 prose-a:underline-offset-4" v-html="readmeHtml" @click="followReadmeLink" />
       </section>
-      <p v-if="contents.readme_warning" role="status" class="mb-4 text-sm text-amber-700">{{ contents.readme_warning }}</p>
-      <section v-if="contents.type === 'directory'" aria-label="文件列表" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:px-5">
+      <p v-if="contents.readme_warning" role="status" class="mb-4 rounded-md border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-700">{{ contents.readme_warning }}</p>
+      <section v-if="contents.type === 'directory'" aria-label="文件列表" class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 p-4 sm:px-5">
           <div class="flex flex-wrap items-center gap-3 text-sm">
-            <span class="text-gray-500">{{ directoryCount }} 个文件夹 · {{ fileCount }} 个文件</span>
+            <span class="text-zinc-500">{{ directoryCount }} 个文件夹 · {{ fileCount }} 个文件</span>
             <template v-if="archives.state.selecting">
-              <button type="button" :disabled="archives.state.busy" class="inline-flex h-[38px] w-[104px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 focus-visible:outline-gray-500 disabled:opacity-50" @click="archives.state.selecting = false; archives.state.selected = []"><X aria-hidden="true" class="h-4 w-4 shrink-0" />取消选择</button>
+              <button type="button" :disabled="archives.state.busy" class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" @click="archives.state.selecting = false; archives.state.selected = []"><X aria-hidden="true" class="h-4 w-4 shrink-0" />取消选择</button>
             </template>
-            <button v-else type="button" class="inline-flex h-[38px] w-[104px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-blue-500" @click="archives.startSelection()"><Download aria-hidden="true" class="h-4 w-4 shrink-0" />批量下载</button>
+            <button v-else type="button" class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="archives.startSelection()"><Download aria-hidden="true" class="h-4 w-4 shrink-0" />批量下载</button>
           </div>
           <div class="flex w-full items-center gap-2 sm:w-auto">
             <div class="relative min-w-0 flex-1 sm:w-60">
-              <Search class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <input :value="filter" type="search" maxlength="200" aria-label="全局搜索资料" placeholder="全局搜索资料…" class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" @input="updateFilter" @keydown.enter.prevent="queueSearch(0)" />
+              <Search class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+              <input :value="filter" type="search" maxlength="200" aria-label="全局搜索资料" placeholder="搜索资料…" class="h-9 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @input="updateFilter" @keydown.enter.prevent="queueSearch(0)" />
             </div>
           </div>
         </div>
-        <div class="resource-row min-h-12 border-b border-gray-100 px-4 py-1 text-xs font-medium text-gray-500 sm:px-5">
+        <div class="resource-row min-h-11 border-b border-zinc-200 bg-zinc-50/70 px-4 text-xs font-medium text-zinc-500 sm:px-5">
           <div v-for="column in sortColumns" :key="column.key" class="flex min-w-0 items-center gap-2" :class="{ 'justify-end': column.key === 'size' }">
-            <input v-if="column.key === 'name' && archives.state.selecting" type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" aria-label="全选本页文件" :checked="archives.pageSelected" :indeterminate="archives.pagePartiallySelected" :disabled="archives.state.busy || !pagedEntries.some(entry => entry.type === 'file')" @change="toggleArchivePage" />
-            <button type="button" :data-sort="column.key" :aria-label="sortLabel(column.key, column.label)" class="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded focus-visible:outline-blue-500 hover:text-blue-600" :class="{ 'text-blue-600': sort === column.key }" @click="toggleSort(column.key)">
-              {{ column.label }}<component :is="sort === column.key ? (sortDirection === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown" aria-hidden="true" class="h-3 w-3 shrink-0" :class="{ 'text-gray-400': sort !== column.key }" />
+            <input v-if="column.key === 'name' && archives.state.selecting" type="checkbox" class="h-4 w-4 shrink-0 rounded border-zinc-300 accent-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" aria-label="全选本页文件" :checked="archives.pageSelected" :indeterminate="archives.pagePartiallySelected" :disabled="archives.state.busy || !pagedEntries.some(entry => entry.type === 'file')" @change="toggleArchivePage" />
+            <button type="button" :data-sort="column.key" :aria-label="sortLabel(column.key, column.label)" class="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400" :class="{ 'text-zinc-950': sort === column.key }" @click="toggleSort(column.key)">
+              {{ column.label }}<component :is="sort === column.key ? (sortDirection === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown" aria-hidden="true" class="h-3 w-3 shrink-0" :class="{ 'text-zinc-400': sort !== column.key }" />
             </button>
           </div><span />
         </div>
-        <RouterLink v-if="currentPath !== '/'" :to="resourcePageUrl(parentPath)" class="flex items-center gap-3 border-b border-gray-50 px-4 py-3 text-sm text-gray-500 hover:bg-blue-50 sm:px-5">
+        <RouterLink v-if="currentPath !== '/'" :to="resourcePageUrl(parentPath)" class="flex items-center gap-3 border-b border-zinc-100 px-4 py-3 text-sm text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 sm:px-5">
           <CornerLeftUp class="h-5 w-5" />返回上一级
         </RouterLink>
-        <p v-if="searching" class="border-b border-gray-100 px-5 py-3 text-xs text-gray-500">搜索全部可访问资料，当前目录下的文件和文件夹优先。</p>
-        <p v-if="searching && searchLoading" role="status" class="px-5 py-8 text-center text-sm text-gray-500">正在搜索全部资料…</p>
-        <div v-else-if="searching && searchError" role="alert" class="px-5 py-8 text-center text-sm text-red-700">{{ searchError }} <button class="ml-2 text-blue-700 hover:underline" @click="queueSearch(0)">重试搜索</button></div>
+        <p v-if="searching && searchLoading" role="status" class="px-5 py-8 text-center text-sm text-zinc-500">正在搜索全部资料…</p>
+        <div v-else-if="searching && searchError" role="alert" class="px-5 py-8 text-center text-sm text-red-600">{{ searchError }} <button type="button" class="ml-2 rounded-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400" @click="queueSearch(0)">重试搜索</button></div>
         <ul v-else>
-          <li v-for="entry in pagedEntries" :key="entry.path" class="resource-row group border-b border-gray-50 px-4 py-3 hover:bg-blue-50/60 sm:px-5">
-            <label v-if="archives.state.selecting && entry.type === 'file'" class="flex min-h-11 min-w-0 cursor-pointer items-center gap-3 text-sm text-gray-800">
-              <input type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" :aria-label="`选择 ${entry.name}`" :checked="archives.state.selected.some(item => item.path === entry.path)" :disabled="archives.state.busy" @change="toggleArchiveFile($event, entry)" />
-              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-gray-500">{{ entryParent(entry.path) }}</span></span>
+          <li v-for="entry in pagedEntries" :key="entry.path" class="resource-row resource-entry group border-b border-zinc-100 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-50 sm:px-5">
+            <label v-if="archives.state.selecting && entry.type === 'file'" class="resource-entry-name flex min-h-9 min-w-0 cursor-pointer items-center gap-3 text-sm text-zinc-900">
+              <input type="checkbox" class="h-4 w-4 shrink-0 rounded border-zinc-300 accent-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :aria-label="`选择 ${entry.name}`" :checked="archives.state.selected.some(item => item.path === entry.path)" :disabled="archives.state.busy" @change="toggleArchiveFile($event, entry)" />
+              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-zinc-500">{{ entryParent(entry.path) }}</span></span>
             </label>
-            <RouterLink v-else :to="resourcePageUrl(entry.path)" class="flex min-w-0 items-center gap-3 text-sm text-gray-800 group-hover:text-blue-700">
-              <component :is="entry.type === 'directory' ? Folder : FileText" class="h-6 w-6 shrink-0" :class="entry.type === 'directory' ? 'fill-blue-100 text-blue-500' : 'text-gray-400'" />
-              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-gray-500">{{ entryParent(entry.path) === currentPath ? '当前目录' : entryParent(entry.path) }}</span></span>
+            <RouterLink v-else :to="resourcePageUrl(entry.path)" class="resource-entry-name flex min-h-9 min-w-0 items-center gap-3 rounded-sm text-sm text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100"><component :is="entry.type === 'directory' ? Folder : FileText" class="h-4 w-4 text-zinc-500" aria-hidden="true" /></span>
+              <span class="min-w-0 break-all">{{ entry.name }}<span v-if="searching" class="mt-1 block text-xs text-zinc-500">{{ entryParent(entry.path) === currentPath ? '当前目录' : entryParent(entry.path) }}</span></span>
             </RouterLink>
-            <time :datetime="entry.modified_at" class="text-[10px] text-gray-400 sm:text-xs">{{ formatDate(entry.modified_at) }}</time>
-            <span class="text-right text-xs tabular-nums text-gray-500">{{ formatResourceSize(entry.size) }}</span>
-            <button v-if="entry.type === 'file'" type="button" :aria-label="`下载 ${entry.name}`" class="rounded-md p-1 text-gray-400 hover:bg-blue-100 hover:text-blue-700" @click="openResource(entry.path, false)"><Download class="h-4 w-4" /></button>
-            <ChevronRight v-else class="h-4 w-4 text-gray-300" />
+            <div class="resource-entry-meta" :class="{ 'resource-selection-meta': archives.state.selecting && entry.type === 'file' }">
+              <time :datetime="entry.modified_at" class="text-xs text-zinc-500">{{ formatDate(entry.modified_at) }}</time>
+              <span class="text-right text-xs tabular-nums text-zinc-500">{{ formatResourceSize(entry.size) }}</span>
+            </div>
+            <button v-if="entry.type === 'file'" type="button" :aria-label="`下载 ${entry.name}`" class="resource-entry-action inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400" @click="openResource(entry.path, false)"><Download class="h-4 w-4" aria-hidden="true" /></button>
+            <ChevronRight v-else class="resource-entry-action h-4 w-4 justify-self-center text-zinc-400" aria-hidden="true" />
           </li>
         </ul>
-        <div v-if="!totalEntries && !searchLoading && !searchError" role="status" class="px-5 py-12 text-center text-sm text-gray-500">
-          {{ filter ? '没有找到匹配的资料，试试其他关键词。' : '这个目录还没有资料。' }}
+        <div v-if="!totalEntries && !searchLoading && !searchError" role="status" class="flex flex-col items-center justify-center px-5 py-14 text-sm text-zinc-500">
+          <FolderOpen class="mb-3 h-6 w-6 text-zinc-400" aria-hidden="true" />{{ filter ? '没有找到匹配的资料，试试其他关键词。' : '这个目录还没有资料。' }}
         </div>
-        <div class="flex items-center justify-between gap-3 px-5 py-4 text-xs text-gray-400">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-5 py-4 text-xs text-zinc-500">
           <span>{{ searching ? (searchLoading ? '搜索中…' : searchError ? '搜索未完成' : `全局找到 ${totalEntries} 项`) : '资料仅供学习交流，请勿用于商业用途。' }}</span>
-          <div v-if="pageCount > 1" class="flex shrink-0 items-center gap-3 text-gray-600">
-            <button :disabled="page === 1" class="disabled:opacity-30" @click="changePage(page - 1)">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page === pageCount" class="disabled:opacity-30" @click="changePage(page + 1)">下一页</button>
-          </div>
         </div>
       </section>
-      <section v-else aria-label="文件详情" class="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-12">
-        <FileText class="mx-auto h-20 w-20 text-blue-500" />
-        <h2 class="mt-5 break-all text-xl font-semibold text-gray-900">{{ contents.name }}</h2>
-        <p class="mt-3 text-sm text-gray-500">{{ formatResourceSize(contents.size) }} · {{ formatDate(contents.modified_at) }}</p>
+      <div v-if="contents.type === 'directory' && pageCount > 1" class="mt-8 flex justify-center"><ReviewPagination :page="page" :page-count="pageCount" @update:page="changePage" /></div>
+      <section v-if="contents.type === 'file'" aria-label="文件详情" class="rounded-xl border border-zinc-200 bg-white p-6 text-center shadow-sm sm:p-12">
+        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50"><FileText class="h-7 w-7 text-zinc-500" aria-hidden="true" /></span>
+        <h2 class="mt-5 break-all text-xl font-semibold text-zinc-900">{{ contents.name }}</h2>
+        <p class="mt-3 text-sm text-zinc-500">{{ formatResourceSize(contents.size) }} · {{ formatDate(contents.modified_at) }}</p>
         <div class="mt-7 flex flex-wrap justify-center gap-3">
-          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700" @click="openResource(contents.path, false)"><Download class="h-4 w-4" />下载文件</button>
-          <button v-if="canPreview" type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50" @click="openResource(contents.path, true)"><ExternalLink class="h-4 w-4" />打开预览</button>
-          <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50" @click="copyLink"><Link class="h-4 w-4" />复制链接</button>
+          <button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="openResource(contents.path, false)"><Download class="h-4 w-4" aria-hidden="true" />下载文件</button>
+          <button v-if="canPreview" type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="openResource(contents.path, true)"><ExternalLink class="h-4 w-4" aria-hidden="true" />打开预览</button>
+          <button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="copyLink"><Link class="h-4 w-4" aria-hidden="true" />复制链接</button>
         </div>
-        <p role="status" class="mt-3 text-sm text-gray-500">{{ copyMessage }}</p>
-        <p v-if="!canPreview" class="mt-5 text-sm text-gray-400">此格式请下载后使用相应软件打开。</p>
-        <img v-if="isImage && imagePreviewUrl" :src="imagePreviewUrl" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-lg object-contain" />
+        <p v-if="previewError" role="status" class="mx-auto mt-5 max-w-lg rounded-md border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-700">{{ previewError }}</p>
+        <p v-if="!canPreview" class="mt-5 text-sm text-zinc-400">此格式请下载后使用相应软件打开。</p>
+        <img v-if="isImage && imagePreviewUrl" :src="imagePreviewUrl" :alt="contents.name" class="mx-auto mt-8 max-h-[70vh] max-w-full rounded-md object-contain" />
       </section>
     </template>
     <ResourceArchivePanel :control="archives" />
@@ -116,16 +118,19 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, CornerLeftUp, Download, ExternalLink, FileText, Folder, House, Link, RefreshCw, Search, Upload, X } from 'lucide-vue-next'
+import { ArrowDown, ArrowUp, ArrowUpDown, BookOpen, ChevronDown, ChevronRight, CircleAlert, CornerLeftUp, Download, ExternalLink, FileText, Folder, FolderOpen, House, Link, LoaderCircle, RefreshCw, Search, Upload, X } from 'lucide-vue-next'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 import ResourceArchivePanel from '@/components/disk/ResourceArchivePanel.vue'
 import { useResourceArchives } from '@/lib/useResourceArchives'
 import { formatResourceSize, renderResourceReadme, resourceFileUrl, resourcePageUrl, resourceMetadata, takeResourceBootstrap, type ResourceContents, type ResourceEntry } from '@/lib/resourceBrowser'
 import { setPageMetadata } from '@/lib/pageMetadata'
 import { api } from '@/lib/requests'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useShadcnToast()
 const currentPath = computed(() => {
   const parts = route.params.path
   return '/' + (Array.isArray(parts) ? parts.join('/') : parts || '')
@@ -185,7 +190,7 @@ function changePage(value: number) {
   page.value = value
   saveListingLocation()
 }
-const copyMessage = ref('')
+const previewError = ref('')
 const imagePreviewUrl = ref('')
 let controller: AbortController | undefined
 let loadVersion = 0
@@ -207,7 +212,7 @@ function resetSearch() {
   searchLoading.value = searching.value
   return version
 }
-function queueSearch(delay = 250) {
+function queueSearch(delay = 600) {
   const version = resetSearch()
   if (!searching.value) return
   searchTimer = setTimeout(async () => {
@@ -234,7 +239,7 @@ async function loadContents() {
   error.value = ''
   loginRequired.value = false
   readmeHtml.value = ''
-  copyMessage.value = ''
+  previewError.value = ''
   imagePreviewUrl.value = ''
   contents.value = null
   setPageMetadata({ title: '资料下载' })
@@ -264,7 +269,7 @@ async function loadContents() {
         imagePreviewUrl.value = previewUrl
       } catch {
         if (version !== loadVersion) return
-        copyMessage.value = '图片预览暂不可用，可点击打开预览重试。'
+        previewError.value = '图片预览暂不可用，可点击打开预览重试。'
       }
     }
     if (searching.value) queueSearch(0)
@@ -342,16 +347,16 @@ async function openResource(path: string, inline: boolean) {
     else window.location.assign(url)
   } catch (cause) {
     previewWindow?.close()
-    error.value = cause instanceof Error ? cause.message : '资料访问失败，请稍后重试'
+    toast.error(cause instanceof Error ? cause.message : '资料访问失败，请稍后重试')
   }
 }
 
 async function copyLink() {
   try {
     await navigator.clipboard.writeText(window.location.href)
-    copyMessage.value = '链接已复制'
+    toast.success('链接已复制')
   } catch {
-    copyMessage.value = '复制失败，请复制浏览器地址栏中的链接。'
+    toast.error('复制失败，请复制浏览器地址栏中的链接。')
   }
 }
 function followReadmeLink(event: MouseEvent) {
@@ -373,15 +378,23 @@ watch(() => route.fullPath, (_fullPath, previous) => {
     resetSearch()
     void loadContents()
   } else {
-    queueSearch(queryText('page') ? 0 : 250)
+    queueSearch(queryText('page') ? 0 : 600)
   }
 }, { immediate: true })
 onBeforeUnmount(() => { loadVersion++; controller?.abort(); searchVersion++; searchController?.abort(); clearTimeout(searchTimer) })
 </script>
 
 <style scoped>
-.resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 56px 24px; align-items: center; gap: 8px; }
-@media (min-width: 640px) { .resource-row { grid-template-columns: minmax(0, 1fr) 110px 85px 24px; gap: 20px; } }
+.resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 56px 32px; align-items: center; gap: 8px; }
+.resource-entry-meta { display: contents; }
+@media (max-width: 639px) {
+  .resource-entry { grid-template-columns: minmax(0, 1fr) 32px; gap: 4px 12px; }
+  .resource-entry-name { grid-column: 1; grid-row: 1; }
+  .resource-entry-meta { display: flex; grid-column: 1; grid-row: 2; flex-wrap: wrap; gap: 4px 12px; padding-left: 48px; }
+  .resource-selection-meta { padding-left: 28px; }
+  .resource-entry-action { grid-column: 2; grid-row: 1 / span 2; }
+}
+@media (min-width: 640px) { .resource-row { grid-template-columns: minmax(0, 1fr) 110px 85px 32px; gap: 20px; } }
 .resource-readme { overflow-wrap: anywhere; }
 .resource-readme :deep(pre) { overflow-x: auto; }
 .resource-readme :deep(table) { display: block; max-width: 100%; overflow-x: auto; }
