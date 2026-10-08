@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme-overrides="themeOverrides">
     <n-loading-bar-provider>
-      <n-message-provider>
+      <n-message-provider :placement="isShadcnPage ? 'bottom-right' : 'top'" :max="3">
         <n-notification-provider>
           <n-modal-provider>
             <n-dialog-provider>
@@ -45,7 +45,8 @@ const route = useRoute()
 const isShadcnPage = computed(() =>
   ['/', '/home', '/login', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path)
   || /^\/review\/(course|teacher)\/\d+$/.test(route.path)
-  || /^\/user\/(me|\d+)$/.test(route.path),
+  || /^\/user\/(me|\d+)$/.test(route.path)
+  || /^\/user\/settings(?:\/|$)/.test(route.path),
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
