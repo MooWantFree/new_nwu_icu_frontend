@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { UserRound } from 'lucide-vue-next'
 import type { APIUserProfile, APIUserProfileGivenId } from '@/types/api/user/profilePage'
 import UserInfo from '@/components/user/profilePage/UserInfo.vue'
@@ -30,7 +30,7 @@ const { id } = defineProps<{
   id: string
 }>()
 
-const message = useMessage()
+const message = useShadcnToast()
 const userInfo = ref<APIUserProfile['response'] | APIUserProfileGivenId['response'] | null>(null)
 
 const realId = computed(() => {

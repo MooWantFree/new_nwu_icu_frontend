@@ -27,9 +27,11 @@ import {
   computed,
   useTemplateRef,
   nextTick,
+  ref,
 } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMessage, useDialog } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
+import { useShadcnDialog } from '@/lib/useShadcnDialog'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
 import { focusCourseReviewTarget } from '@/lib/focusCourseReviewTarget'
@@ -48,8 +50,9 @@ const emit = defineEmits<{
   (e: 'replyDeleted', reviewId: number, replyId: number): void
 }>()
 
-const message = useMessage()
-const dialog = useDialog()
+const message = useShadcnToast()
+const dialog = useShadcnDialog()
+const deleting = ref(false)
 const route = useRoute()
 const { userInfo } = useUser()
 const courseReviewItem = useTemplateRef('courseReviewItem')
@@ -83,37 +86,31 @@ const handleEdit = () => {
   emit('reviewEdit')
 }
 
-const handleDeleteReview = () => {
-  dialog.warning({
-    title: '确认删除',
-    content: '你确定你想要删除这条评价吗？删除以后不可恢复！',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        const response = await api.delete({
-          url: '/api/assessment/review/',
-          query: {
-            review_id: review.id,
-          },
-        })
-        if (response.status === 200) {
-          message.success('评价已成功删除')
-          emit('reviewDeleted', review.id)
-        } else {
-          throw new Error(
-            response.errors?.reduce(
-              (acc, cur) => acc + cur.field + ': ' + cur.err_msg + '\n',
-              ''
-            )
-          )
-        }
-      } catch (error) {
-        console.error('Error deleting review:', error)
-        message.error('删除评价失败，请稍后重试\n' + error)
-      }
-    },
-  })
+const handleDeleteReview = async () => {
+  if (deleting.value) return
+  deleting.value = true
+  try {
+    if (!(await dialog.confirm({
+      title: '删除评价',
+      description: '你确定要删除这条评价吗？删除以后不可恢复。',
+      confirmText: '删除评价',
+      destructive: true,
+    }))) return
+    const response = await api.delete({
+      url: '/api/assessment/review/',
+      query: { review_id: review.id },
+    })
+    if (response.status !== 200) {
+      throw new Error(response.errors?.map(error => error.err_msg).filter(Boolean).join('；') || '删除失败')
+    }
+    message.success('评价已成功删除')
+    emit('reviewDeleted', review.id)
+  } catch (error) {
+    console.error('Error deleting review:', error)
+    message.error('删除评价失败，请稍后重试\n' + error)
+  } finally {
+    deleting.value = false
+  }
 }
 
 const isAuthor = computed(() => review.author.id === userInfo.value?.id)

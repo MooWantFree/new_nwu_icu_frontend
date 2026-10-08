@@ -73,8 +73,8 @@ describe('global search with the real modal and nested course dialog', () => {
   it('focuses the search field, traps focus, and restores the trigger and scroll lock on Escape', async () => {
     const { close, trigger } = await mount()
     expect(document.activeElement).toBe(searchInput())
-    expect(document.documentElement.style.overflow).toBe('hidden')
-    expect(document.body.style.overflow).toBe('auto')
+    expect(document.documentElement.style.overflow).toBe('scroll')
+    expect(document.body.style.overflow).toBe('hidden')
     trigger.focus()
     expect(dialog('全局搜索').contains(document.activeElement)).toBe(true)
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }))
@@ -89,7 +89,7 @@ describe('global search with the real modal and nested course dialog', () => {
   it.each(['关闭搜索', '背景遮罩'])('closes through %s and restores focus', async (action) => {
     const { close, trigger } = await mount()
     if (action === '关闭搜索') button(dialog('全局搜索'), action).click()
-    else document.body.querySelector<HTMLElement>('.n-modal-mask')!.click()
+    else document.body.querySelector<HTMLElement>('[data-shadcn-modal-overlay]')!.click()
     await settle()
     expect(close).toHaveBeenCalledOnce()
     expect(dialog('全局搜索')).toBeUndefined()
@@ -122,7 +122,7 @@ describe('global search with the real modal and nested course dialog', () => {
     expect(search.getAttribute('aria-hidden')).not.toBe('true')
     expect(search.hasAttribute('inert')).toBe(false)
     expect(document.activeElement).toBe(addCourse)
-    expect(document.documentElement.style.overflow).toBe('hidden')
+    expect(document.body.style.overflow).toBe('hidden')
     expect(mocks.post).toHaveBeenCalledOnce()
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }))
     await settle()

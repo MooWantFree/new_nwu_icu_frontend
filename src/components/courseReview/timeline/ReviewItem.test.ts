@@ -8,6 +8,13 @@ vi.mock('@/components/common/UserAvatar.vue', () => ({ default: { render: () => 
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => h('time') } }))
 vi.mock('@/components/tinyComponents/ReviewPlainText.vue', () => ({ default: { render: () => h('p') } }))
 
+vi.mock('@/components/common/ShadcnTooltip.vue', () => ({ default: defineComponent({
+    setup: (_, { slots }) => () => h('div', [
+      slots.trigger?.(),
+      h('span', { class: 'tooltip-content' }, slots.default?.()),
+    ]),
+  }) }))
+
 const review: ReviewTimeline = {
   id: 1,
   author: { id: 2, nickname: '测试用户', avatar_uuid: '', is_student: false },
@@ -40,13 +47,6 @@ const mount = async (author: ReviewTimeline['author']) => {
   container = document.createElement('div')
   document.body.append(container)
   app = createApp(ReviewItem, { review: { ...review, author } }).use(router)
-  app.component('NTooltip', defineComponent({
-    setup: (_, { slots }) => () => h('div', [
-      slots.trigger?.(),
-      h('span', { class: 'tooltip-content' }, slots.default?.()),
-    ]),
-  }))
-  app.component('NAvatar', defineComponent({ setup: () => () => h('span') }))
   app.mount(container)
   return container
 }

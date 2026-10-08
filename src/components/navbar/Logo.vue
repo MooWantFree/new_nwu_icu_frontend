@@ -2,10 +2,10 @@
   <button
     type="button"
     aria-label="返回主页"
-    class="flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
     @click="handleLogoClick"
   >
-    <img alt="NWU.ICU logo" src="@/assets/logo.png" class="h-9 w-9 object-contain" />
+    <img alt="NWU.ICU logo" src="@/assets/logo.png" class="h-8 w-8 object-contain" />
   </button>
 </template>
 

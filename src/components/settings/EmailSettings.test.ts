@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, ref, Teleport, type App, type Ref } from 'vue'
+import { createApp, nextTick, ref, type App, type Ref } from 'vue'
 import type { APIUserProfile } from '@/types/api/user/profilePage'
 import type { APIUnreadMessageCount } from '@/types/api/messages/messages'
 import EmailSettings from './EmailSettings.vue'
@@ -11,18 +11,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/requests', () => ({ api: { post: mocks.post } }))
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ success: mocks.success, warning: mocks.warning, error: mocks.error }) }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({ userInfo: mocks.sharedUser, login: mocks.login, fetchUserInfo: mocks.fetchUserInfo }) }))
-vi.mock('naive-ui', async importOriginal => {
-  const actual = await importOriginal<typeof import('naive-ui')>()
-  return {
-    ...actual,
-    NModal: defineComponent({
-      inheritAttrs: false,
-      props: ['show', 'maskClosable', 'closeOnEsc'],
-      emits: ['update:show'],
-      setup: (props, { slots }) => () => props.show ? h(Teleport, { to: 'body' }, slots.default?.() ?? []) : null,
-    }),
-  }
-})
 
 const profile: APIUserProfile['response'] = {
   id: 1, username: 'tester', email: 'tester@example.com', date_joined: '2026-01-01T00:00:00Z',

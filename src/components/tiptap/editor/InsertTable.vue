@@ -1,95 +1,42 @@
 <template>
-  <div
-    class="table-insert p-4 bg-white border border-gray-200 rounded-lg shadow-lg"
-  >
-    <div class="flex flex-col gap-4">
-      <div class="flex gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-gray-600">行数</label>
-          <input
-            type="number"
-            v-model="rows"
-            min="1"
-            max="10"
-            class="w-20 px-2 py-1 border border-gray-300 rounded"
-          />
-        </div>
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-gray-600">列数</label>
-          <input
-            type="number"
-            v-model="cols"
-            min="1"
-            max="10"
-            class="w-20 px-2 py-1 border border-gray-300 rounded"
-          />
-        </div>
+  <form class="w-60 space-y-4" novalidate @submit.stop.prevent="insertTable">
+    <h3 class="text-sm font-semibold text-zinc-950">插入表格</h3>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-2">
+        <label :for="rowsId" class="block text-sm font-medium text-zinc-950">行数</label>
+        <input :id="rowsId" ref="rowsInput" v-model="rows" type="number" min="1" max="10" step="1" :aria-invalid="!validCount(rows)" :aria-describedby="error ? errorId : undefined" :class="inputClass" />
       </div>
-      <button
-        @click="insertTable"
-        class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-      >
-        插入表格
-      </button>
+      <div class="space-y-2">
+        <label :for="colsId" class="block text-sm font-medium text-zinc-950">列数</label>
+        <input :id="colsId" ref="colsInput" v-model="cols" type="number" min="1" max="10" step="1" :aria-invalid="!validCount(cols)" :aria-describedby="error ? errorId : undefined" :class="inputClass" />
+      </div>
     </div>
-  </div>
+    <p v-if="error" :id="errorId" role="alert" class="text-sm text-red-600">{{ error }}</p>
+    <button type="submit" class="inline-flex h-9 w-full items-center justify-center rounded-md bg-zinc-950 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2">插入表格</button>
+  </form>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-
-const emit = defineEmits<{
-  (e: 'insert', rows: number, cols: number): void
-}>()
-
-const rows = ref(3)
-const cols = ref(3)
-
+import { ref, useId, useTemplateRef } from 'vue'
+const emit = defineEmits<{ (event: 'insert', rows: number, cols: number): void }>()
+const id = useId()
+const rowsId = 'table-rows-' + id
+const colsId = 'table-cols-' + id
+const errorId = 'table-error-' + id
+const rowsInput = useTemplateRef<HTMLInputElement>('rowsInput')
+const colsInput = useTemplateRef<HTMLInputElement>('colsInput')
+const rows = ref<number | string>(3)
+const cols = ref<number | string>(3)
+const error = ref('')
+const inputClass = 'h-9 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 aria-[invalid=true]:border-red-300'
+const validCount = (value: number | string) => typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 10
 const insertTable = () => {
-  emit('insert', rows.value, cols.value)
-}
-
-const updatePosition = () => {
-  const insert = document.querySelector('.table-insert') as HTMLElement
-  if (!insert) return
-
-  const button = insert.parentElement?.querySelector('button')
-  if (!button) return
-
-  const rect = button.getBoundingClientRect()
-  const insertHeight = insert.offsetHeight
-  const insertWidth = insert.offsetWidth
-
-  // Check if there's enough space below
-  let top = rect.bottom + 8
-  if (top + insertHeight > window.innerHeight) {
-    top = rect.top - insertHeight - 8
+  if (!validCount(rows.value) || !validCount(cols.value)) {
+    error.value = '行数和列数需要填写 1–10 之间的整数。'
+    ;(!validCount(rows.value) ? rowsInput.value : colsInput.value)?.focus()
+    return
   }
-
-  // Check horizontal position
-  let left = rect.left
-  if (left + insertWidth > window.innerWidth) {
-    left = window.innerWidth - insertWidth - 16
-  }
-
-  insert.style.top = `${Math.max(8, top)}px`
-  insert.style.left = `${Math.max(8, left)}px`
+  error.value = ''
+  emit('insert', Number(rows.value), Number(cols.value))
 }
-
-onMounted(() => {
-  updatePosition()
-  window.addEventListener('resize', updatePosition)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updatePosition)
-})
 </script>
-
-<style scoped>
-.table-insert {
-  position: fixed;
-  z-index: 50;
-  max-width: min(300px, calc(100vw - 2rem));
-}
-</style>

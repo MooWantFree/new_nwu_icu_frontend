@@ -76,11 +76,12 @@
       <button v-else type="button" :class="primaryButton" :disabled="isBusy" @click="openVerification">验证邮箱</button>
     </footer>
 
-    <NModal
+    <ShadcnModal
       :show="verificationOpen"
+      title="验证你的 NWU 邮箱"
+      :busy="isBusy"
       :mask-closable="!isBusy"
       :close-on-esc="!isBusy"
-      :theme-overrides="{ color: '#ffffff', textColor: '#18181b' }"
       @update:show="handleModalVisibility"
     >
       <section role="dialog" aria-modal="true" :aria-labelledby="dialogTitleId" :aria-busy="isBusy" class="w-[calc(100vw-2rem)] max-w-[420px] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_20px_60px_-12px_rgba(0,0,0,0.25)]">
@@ -111,13 +112,13 @@
           </button>
         </footer>
       </section>
-    </NModal>
+    </ShadcnModal>
   </form>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
-import { NModal } from 'naive-ui'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import { Check, LoaderCircle, RotateCw, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { useShadcnToast } from '@/lib/useShadcnToast'

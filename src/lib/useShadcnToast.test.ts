@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, type App } from 'vue'
-import { NMessageProvider, type MessageApi } from 'naive-ui'
+import ShadcnFeedbackProvider from '@/components/common/ShadcnFeedbackProvider.vue'
+import type { MessageApi } from './useShadcnToast'
 import { useShadcnToast } from './useShadcnToast'
 
 let app: App | undefined
@@ -27,7 +28,7 @@ const mountProvider = async () => {
       return () => null
     },
   })
-  app = createApp({ render: () => h(NMessageProvider, { placement: 'bottom-right', max: 3 }, { default: () => h(Consumer) }) })
+  app = createApp({ render: () => h(ShadcnFeedbackProvider, { max: 3 }, { default: () => h(Consumer) }) })
   app.mount(host)
   await flush()
   return toast
@@ -48,6 +49,24 @@ afterEach(() => {
 })
 
 describe('useShadcnToast', () => {
+  it('pauses expiry until both hover and keyboard focus leave the toast', async () => {
+    const toast = await mountProvider()
+    toast.info('交互中的通知', { duration: 1000 })
+    await flush()
+    const target = notification('交互中的通知')!
+    const wrapper = target.parentElement!
+    wrapper.dispatchEvent(new MouseEvent('mouseenter'))
+    const close = target.querySelector<HTMLButtonElement>('button')!
+    close.focus()
+    wrapper.dispatchEvent(new MouseEvent('mouseleave'))
+    await vi.advanceTimersByTimeAsync(1500)
+    await flush()
+    expect(notification('交互中的通知')).toBeDefined()
+    close.blur()
+    await vi.advanceTimersByTimeAsync(1100)
+    await flush()
+    expect(notification('交互中的通知')).toBeUndefined()
+  })
   it('closes only the chosen toast through the provider lifecycle and keeps remaining messages usable', async () => {
     const toast = await mountProvider()
     const onClose = vi.fn(), onLeave = vi.fn(), onAfterLeave = vi.fn()

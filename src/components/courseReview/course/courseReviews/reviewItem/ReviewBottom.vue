@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useUser } from '@/lib/useUser'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { api } from '@/lib/requests'
 import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import { Review } from '@/types/courseReview'
@@ -63,7 +63,7 @@ const { review } = defineProps<{
 
 const isLikeNDislikeButtonDisabled = ref(false)
 const { isLoggedIn } = useUser()
-const message = useMessage()
+const message = useShadcnToast()
 enum LikeOption {
   Like = '1',
   Dislike = '-1',

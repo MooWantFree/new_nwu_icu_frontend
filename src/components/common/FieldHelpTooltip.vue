@@ -1,20 +1,12 @@
 <template>
   <span class="inline-flex align-middle">
     <span :id="id" class="sr-only">{{ content }}</span>
-    <NTooltip
-      :id="tooltipId"
-      role="tooltip"
+    <ShadcnTooltip
       trigger="manual"
       placement="top"
-      to="body"
-      :show="open"
+      :open="open"
       :disabled="disabled"
-      :animated="false"
-      :show-arrow="false"
-      :theme-overrides="themeOverrides"
-      :content-style="contentStyle"
-      @update:show="setOpen"
-      @clickoutside="closeTooltip"
+      @update:open="setOpen"
       @mouseenter="showTooltip"
       @mouseleave="scheduleClose"
     >
@@ -46,13 +38,13 @@
         </button>
       </template>
       {{ content }}
-    </NTooltip>
+    </ShadcnTooltip>
   </span>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, useId, watch, type CSSProperties } from 'vue'
-import { NTooltip, type TooltipProps } from 'naive-ui'
+import { onBeforeUnmount, ref, watch } from 'vue'
+import ShadcnTooltip from './ShadcnTooltip.vue'
 import { CircleHelp } from 'lucide-vue-next'
 
 const props = withDefaults(defineProps<{
@@ -66,21 +58,6 @@ const props = withDefaults(defineProps<{
 }>(), { disabled: false, ariaDisabled: false, badge: false })
 
 const open = ref(false)
-const tooltipId = `field-help-tooltip-${useId()}`
-const themeOverrides: TooltipProps['themeOverrides'] = {
-  color: '#18181b',
-  textColor: '#ffffff',
-  borderRadius: '6px',
-  padding: '6px 10px',
-  boxShadow: '0 4px 12px rgb(0 0 0 / 12%)',
-  peers: { Popover: { fontSize: '12px', space: '6px' } },
-}
-const contentStyle: CSSProperties = {
-  maxWidth: 'min(16rem, calc(100vw - 3.5rem))',
-  whiteSpace: 'normal',
-  overflowWrap: 'anywhere',
-  lineHeight: '1.5',
-}
 
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 const clearCloseTimer = () => {

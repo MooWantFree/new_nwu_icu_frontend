@@ -118,7 +118,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { z } from 'zod'
-import type { MessageReactive } from 'naive-ui'
+import type { MessageReactive } from '@/lib/useShadcnToast'
 import { Camera, CircleAlert, LoaderCircle } from 'lucide-vue-next'
 import { APIUpdateProfileBody, type APIUserProfile } from '@/types/api/user/profilePage'
 import { api } from '@/lib/requests'

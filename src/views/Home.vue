@@ -80,7 +80,6 @@
             <ChevronDown class="ml-auto h-4 w-4 text-zinc-400 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
           </summary>
           <div class="border-t border-zinc-100 px-4 pb-4 pt-3 sm:px-5">
-            <p class="px-2 pb-3 text-xs leading-5 text-zinc-500">教务、图书馆与校园服务，一键直达。</p>
             <div class="grid grid-cols-2 gap-1">
               <a
                 v-for="service in campusServices"

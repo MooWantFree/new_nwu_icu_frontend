@@ -1,6 +1,5 @@
 <template>
-  <NModal :show="visible" :mask-closable="!submitting" :theme-overrides="{ color: '#ffffff', textColor: '#18181b' }" @update:show="cancel">
-    <!-- vueuc's focus trap locates a DIV slot root; a SECTION traps focus on its sentinel. -->
+  <ShadcnModal :show="visible" title="请完成人机验证" :busy="submitting" :mask-closable="!submitting" @update:show="cancel">
     <div role="dialog" aria-modal="true" aria-labelledby="captcha-challenge-title" class="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 text-zinc-950 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.25)] outline-none sm:p-6">
       <h2 id="captcha-challenge-title" class="text-lg font-semibold tracking-tight">请完成人机验证</h2>
       <p class="mt-1.5 text-sm leading-6 text-zinc-500">操作较为频繁，验证后会自动重试刚才的操作。</p>
@@ -26,12 +25,12 @@
         </button>
       </div>
     </div>
-  </NModal>
+  </ShadcnModal>
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { NModal } from 'naive-ui'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import { LoaderCircle } from 'lucide-vue-next'
 import CaptchaInput from '@/components/user/loginNRegister/CaptchaInput.vue'
 import { api } from '@/lib/requests'

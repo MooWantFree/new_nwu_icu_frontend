@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: mocks.checkLoginStatus }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({ fetchUserInfo: mocks.fetchUserInfo }) }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ success: mocks.success }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ success: mocks.success }) }))
 vi.mock('@/components/user/loginNRegister/LoginForm.vue', () => ({
   default: defineComponent({
     emits: ['login-success'],

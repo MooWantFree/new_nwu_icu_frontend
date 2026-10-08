@@ -72,6 +72,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUser } from '@/lib/useUser'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { APILogin } from '@/types/api/user/user'
 import { Search } from 'lucide-vue-next'
 
@@ -86,6 +87,7 @@ import SearchModal from '@/components/search/SearchModal.vue'
 
 type UserProfile = APILogin['response']
 const route = useRoute()
+const toast = useShadcnToast()
 const isReviewRoute = computed(() => route.path === '/review' || route.path.startsWith('/review/'))
 
 // User state
@@ -109,30 +111,8 @@ const handleLoginSuccess = async (data: UserProfile) => {
   showLoginPopup.value = false
 }
 
-// Custom message handler (replacing NaiveUI message)
 const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
-  // This is a simple implementation - in a real app, you might want to use a toast library
-  // or implement a custom toast component
-  const toast = document.createElement('div')
-  toast.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md shadow-md z-50 transition-opacity duration-300 ${
-    type === 'success' ? 'bg-green-500' : 
-    type === 'error' ? 'bg-red-500' : 'bg-blue-600'
-  } text-white`
-  toast.textContent = text
-  document.body.appendChild(toast)
-  toast.style.opacity = '0'
-  // Fade in
-  setTimeout(() => {
-    toast.style.opacity = '1'
-  }, 10)
-  
-  // Remove after 3 seconds
-  setTimeout(() => {
-    toast.style.opacity = '0'
-    setTimeout(() => {
-      document.body.removeChild(toast)
-    }, 300)
-  }, 3000)
+  toast[type](text)
 }
 
 // Menu Options
@@ -217,12 +197,6 @@ onUnmounted(() => {
   margin-left: 0;
 }
 
-.app-nav :deep(nav .text-gray-700),
-.app-nav :deep(.app-mobile .text-gray-700),
-.app-nav :deep(.text-gray-600) {
-  color: #71717a;
-}
-
 .app-nav :deep(nav a:hover),
 .app-nav :deep(nav button:hover),
 .app-nav :deep(nav li > div:hover),
@@ -240,18 +214,6 @@ onUnmounted(() => {
 .app-nav :deep(.app-mobile a.router-link-exact-active) {
   color: #18181b;
   background-color: #f4f4f5;
-}
-
-.app-nav :deep(.app-account > button) {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  color: #fafafa;
-  background-color: #18181b;
-}
-
-.app-nav :deep(.app-account > button:hover) {
-  background-color: #3f3f46;
 }
 
 .app-nav :deep(button:focus-visible),

@@ -1,25 +1,20 @@
 <template>
-  <div
-    class="min-h-screen bg-gray-100 flex flex-col justify-center items-center"
-  >
-    <div class="text-center">
-      <h1 class="mb-4 text-6xl font-bold text-gray-900">403</h1>
-      <p class="text-2xl text-gray-600 mb-8">访问被拒绝</p>
-      <p class="text-lg text-gray-500 mb-8">抱歉，你没有权限访问此页面。</p>
-      <p class="text-lg text-gray-500 mb-8">请尝试登录后重试。</p>
-      <p v-if="message" class="text-lg text-red-500 mb-8">{{ message }}</p>
-      <router-link
-        to="/"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-      >
-        返回主页
-      </router-link>
-    </div>
-  </div>
+  <ErrorStatePage
+    code="403"
+    title="访问被拒绝"
+    description="你没有权限访问此页面。请尝试登录后重试。"
+    :icon="ShieldAlert"
+    :message="message"
+  />
 </template>
 
 <script lang="ts" setup>
-const { message = '' } = defineProps<{
+import { ShieldAlert } from 'lucide-vue-next'
+import ErrorStatePage from './ErrorStatePage.vue'
+
+withDefaults(defineProps<{
   message?: string
-}>()
+}>(), {
+  message: '',
+})
 </script>

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref, type App } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import naive from 'naive-ui'
 import AddCourseModal from './AddCourseModal.vue'
 import AddTeacherModal from './AddTeacherModal.vue'
 
@@ -32,20 +31,20 @@ const dialog = (title: string) => [...document.body.querySelectorAll<HTMLElement
   .find(candidate => candidate.querySelector('h2')?.textContent === title && candidate.style.display !== 'none')!
 const button = (target: HTMLElement, label: string) => [...target.querySelectorAll<HTMLButtonElement>('button')]
   .find(candidate => candidate.textContent?.trim() === label)!
-const visibleMenu = () => [...document.body.querySelectorAll<HTMLElement>('.n-base-select-menu')]
+const visibleMenu = () => [...document.body.querySelectorAll<HTMLElement>('[data-shadcn-select-menu]')]
   .find(candidate => candidate.style.display !== 'none')
-const option = (label: string) => [...visibleMenu()!.querySelectorAll<HTMLElement>('.n-base-select-option')]
+const option = (label: string) => [...visibleMenu()!.querySelectorAll<HTMLElement>('[role="option"]')]
   .find(candidate => candidate.textContent?.trim() === label)!
 const key = async (target: HTMLElement, value: string) => {
   target.dispatchEvent(new KeyboardEvent('keydown', { key: value, code: value, bubbles: true, cancelable: true }))
   await settle()
 }
-const select = (target: HTMLElement, index = 0) => target.querySelectorAll<HTMLElement>('.n-base-selection')[index]!
+const select = (target: HTMLElement, index = 0) => target.querySelectorAll<HTMLElement>('[role="combobox"]')[index]!
 const expectMenuScope = (target: HTMLElement) => {
   const menu = visibleMenu()!
   expect(menu).toBeDefined()
-  // Menus remain in the modal focus trap, outside the form's scrolling content.
-  expect(menu.closest('[role="dialog"]')).toBe(target)
+  // Portalled menus can extend beyond the dialog without being clipped.
+  expect(target.contains(menu)).toBe(false)
   expect(target.querySelector('form')!.parentElement!.contains(menu)).toBe(false)
 }
 const mount = async (type: 'teacher' | 'course') => {
@@ -63,7 +62,7 @@ const mount = async (type: 'teacher' | 'course') => {
     modelValue: open.value,
     'onUpdate:modelValue': (value: boolean) => { open.value = value },
     initValue: { name: '数学分析', teacher: { id: 9, name: '原教师', school: '数学学院' } },
-  }) }).use(router).use(naive)
+  }) }).use(router)
   app.mount(host)
   await flush()
   open.value = true
@@ -80,6 +79,7 @@ beforeEach(() => {
     addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => true,
   }))
   Object.defineProperty(Element.prototype, 'scrollTo', { configurable: true, value: () => {} })
+  Element.prototype.scrollIntoView = vi.fn()
   mocks.checkLoginStatus.mockResolvedValue(true)
   mocks.get.mockResolvedValue({ status: 200, data: { contents: { schools: [
     { id: 1, name: '数学学院' }, { id: 2, name: '物理学院' },
@@ -111,7 +111,7 @@ describe('creation select menus with real modal and select components', () => {
     expectMenuScope(teacher)
     option('物理学院').click()
     await settle()
-    expect(school.textContent).toContain('物理学院')
+    expect((school as HTMLInputElement).value).toBe('物理学院')
     expect(open.value).toBe(true)
 
     school.click()
@@ -124,7 +124,7 @@ describe('creation select menus with real modal and select components', () => {
     expectMenuScope(teacher)
     await key(school, 'ArrowUp')
     await key(school, 'Enter')
-    expect(school.textContent).toContain('数学学院')
+    expect((school as HTMLInputElement).value).toBe('数学学院')
     expect(open.value).toBe(true)
 
     button(teacher, '添加教师').click()
@@ -146,7 +146,7 @@ describe('creation select menus with real modal and select components', () => {
     const classification = select(course, 1)
     await key(classification, 'ArrowDown')
     expectMenuScope(course)
-    await key(classification, 'Enter')
+    await key(document.activeElement as HTMLElement, 'Enter')
     expect(classification.textContent).toContain('通识课')
     expect(open.value).toBe(true)
     expect(mocks.post).not.toHaveBeenCalled()

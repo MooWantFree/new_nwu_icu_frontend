@@ -37,7 +37,7 @@
           </div>
           <div class="mt-1 flex flex-wrap items-center gap-2">
             <div class="flex items-center">
-              <n-rate readonly allow-half :default-value="review.rating" :size="16" />
+              <ShadcnRating readonly allow-half :default-value="review.rating" :size="16" />
             </div>
             <span class="text-xs text-zinc-500">{{ review.semester }}</span>
           </div>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import ShadcnRating from '@/components/common/ShadcnRating.vue'
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { EllipsisVertical, Pencil, Trash2 } from 'lucide-vue-next'

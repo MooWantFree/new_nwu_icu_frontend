@@ -21,9 +21,8 @@ vi.mock('@/lib/useUser', async () => {
   const isLoggedIn = ref(false)
   return { useUser: () => ({ userInfo, isLoggedIn }) }
 })
-vi.mock('naive-ui', () => ({
-  useMessage: () => ({ error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() }),
-  NModal: { props: ['show'], emits: ['update:show'], setup: (_props: unknown, context: any) => () => context.slots.default() },
+vi.mock('@/components/common/ShadcnModal.vue', () => ({
+  default: { inheritAttrs: false, props: ['show', 'title', 'busy', 'suspended'], emits: ['update:show'], setup: (_props: unknown, context: any) => () => context.slots.default() },
 }))
 vi.mock('./GuestbookEditor.vue', async () => {
   const { h } = await import('vue')

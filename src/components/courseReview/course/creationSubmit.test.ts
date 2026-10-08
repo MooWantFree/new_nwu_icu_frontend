@@ -10,6 +10,10 @@ vi.mock('@/lib/logins', () => ({ checkLoginStatus: mocks.checkLoginStatus }))
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error, success: mocks.success }) }))
 vi.mock('./_component/TeacherSelector.vue', () => ({ default: { render: () => null } }))
 
+vi.mock('@/components/common/ShadcnSelect.vue', () => ({ default: defineComponent({
+    props: ['value'], setup: props => () => h('span', { 'data-school': '' }, props.value),
+  }) }))
+
 let app: App | undefined
 let container: HTMLDivElement
 
@@ -34,9 +38,6 @@ const mountModal = async (kind: 'course' | 'teacher') => {
     ...(kind === 'teacher' ? { onAdd: (value: unknown) => added.push(value) } : {}),
   }
   app = createApp({ render: () => kind === 'course' ? h(AddCourseModal, props) : h(AddTeacherModal, props) }).use(router)
-  app.component('NSelect', defineComponent({
-    props: ['value'], setup: props => () => h('span', { 'data-school': '' }, props.value),
-  }))
   app.mount(container)
   await settle()
   return { router, closed, added }

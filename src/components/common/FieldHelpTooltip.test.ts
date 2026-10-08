@@ -117,6 +117,8 @@ describe('FieldHelpTooltip', () => {
     trigger().click()
     await flush()
     expect(tooltip()).not.toBeNull()
+    await vi.advanceTimersByTimeAsync(0)
+    mouse(input(), 'pointerdown')
     mouse(input(), 'mousedown')
     mouse(input(), 'mouseup')
     input().click()

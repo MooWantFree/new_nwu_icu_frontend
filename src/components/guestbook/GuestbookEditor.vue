@@ -38,7 +38,7 @@
     </div>
     <EditorContent :editor="editor" class="guestbook-editor p-3" :class="{ 'guestbook-editor--shadcn': isShadcn }" />
     <ImageUpload v-if="allowImages && showImageUpload" @close="showImageUpload = false" @upload="insertImage" />
-    <InsertLink v-model="showLinkModal" :initial-text="selectedLinkText" @submit="insertLink" />
+    <InsertLink v-model="showLinkModal" :initial-text="selectedLinkText" :appearance="isShadcn ? 'shadcn' : 'default'" @submit="insertLink" />
   </div>
 </template>
 

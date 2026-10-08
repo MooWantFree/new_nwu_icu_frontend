@@ -1,30 +1,35 @@
 <template>
-  <div
-    class="min-h-screen bg-gray-100 flex flex-col justify-center items-center"
+  <ErrorStatePage
+    code="404"
+    title="哎呀！页面不见了"
+    description="这个页面可能已被移除，或链接地址有误。"
+    :icon="FileQuestion"
   >
-    <div class="text-center">
-      <h1 class="mb-4 text-6xl font-bold text-gray-900">404</h1>
-      <p class="text-2xl text-gray-600 mb-8">哎呀！页面不见了</p>
-      <div class="space-x-4">
-        <button
-          @click="goBack"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-        >
-          上一页
-        </button>
-        <button
-          @click="goHome"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-        >
-          回到主页
-        </button>
-      </div>
-    </div>
-  </div>
+    <template #actions>
+      <button
+        type="button"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+        @click="goBack"
+      >
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
+        上一页
+      </button>
+      <button
+        type="button"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+        @click="goHome"
+      >
+        <House class="h-4 w-4" aria-hidden="true" />
+        回到主页
+      </button>
+    </template>
+  </ErrorStatePage>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { ArrowLeft, FileQuestion, House } from 'lucide-vue-next'
+import ErrorStatePage from './ErrorStatePage.vue'
 
 const router = useRouter()
 

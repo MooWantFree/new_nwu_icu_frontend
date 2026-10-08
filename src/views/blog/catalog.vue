@@ -59,17 +59,11 @@
       </div>
 
       <div v-if="totalPages > 1" class="mt-12 flex justify-center">
-        <n-pagination
-          v-model:page="currentPage"
+        <ReviewPagination
+          :page="currentPage"
           :page-count="totalPages"
-          :on-update:page="handlePageChange"
-          :page-slot="5"
-          show-quick-jumper
-        >
-          <template #prefix>
-            {{ currentPage }}/{{ totalPages }}
-          </template>
-        </n-pagination>
+          @update:page="handlePageChange"
+        />
       </div>
     </template>
   </AppPageLayout>
@@ -83,6 +77,7 @@ import { api } from '@/lib/requests'
 import Viewer from '@/components/tiptap/viewer/Viewer.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import Time from '@/components/tinyComponents/Time.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
 const currentPage = ref(1)
 const totalPages = ref(1)

@@ -260,7 +260,7 @@
 import { computed, defineComponent, h, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import GuestbookEditor from '@/components/guestbook/GuestbookEditor.vue'
 import ResourceUploadBlacklist from '@/components/upload/ResourceUploadBlacklist.vue'
 import ResourceFileManager from '@/components/manage/ResourceFileManager.vue'
@@ -285,7 +285,7 @@ const Pager = defineComponent({
 })
 
 const route = useRoute()
-const message = useMessage()
+const message = useShadcnToast()
 const loading = ref(true)
 const notFound = ref(false)
 const session = ref<ManagementSession | null>(null)

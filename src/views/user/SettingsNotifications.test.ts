@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, type App } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import naive from 'naive-ui'
 import RootApp from '@/App.vue'
 import Settings from './Settings.vue'
 import PasswordSettings from '@/components/settings/PasswordSettings.vue'
@@ -75,7 +74,7 @@ describe('settings notifications', () => {
     })
     await router.push('/user/settings/password')
     await router.isReady()
-    app = createApp(RootApp).use(router).use(naive)
+    app = createApp(RootApp).use(router)
     app.mount(host)
     await flush()
     vi.mocked(api.post).mockResolvedValue({ status: 200, content: {}, errors: [] } as never)

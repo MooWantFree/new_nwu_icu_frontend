@@ -106,10 +106,9 @@
               <div class="grid gap-4 border-t border-zinc-200 p-4 sm:grid-cols-2 sm:p-5">
                 <label class="block text-sm font-medium text-zinc-700">
                   授课学期
-                  <n-select
+                  <ShadcnSelect
                     v-model:value="selectedSemester"
                     :options="semesterOptions"
-                    :theme-overrides="reviewSelectTheme"
                     placeholder="选择学期"
                     class="mt-2"
                   />
@@ -188,7 +187,8 @@ import Editor from '@/components/tiptap/editor/Editor.vue'
 import ReviewMetricScale from './ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
 import { useCourseReviewDraft } from '@/lib/useCourseReviewDraft'
-import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
+import { useShadcnDialog } from '@/lib/useShadcnDialog'
 
 const props = defineProps<{
   courseData: CourseData
@@ -205,6 +205,8 @@ const emit = defineEmits<{
 }>()
 
 const step = ref<1 | 2>(1)
+const dialog = useShadcnDialog()
+const confirmingClose = ref(false)
 const initialDraft = {
   content: props.initContent?.content || '',
   anonymous: props.initContent?.anonymous ?? false,
@@ -289,12 +291,22 @@ const submitReview = () => {
   })
 }
 
-const closeModal = () => {
-  const saved = persist()
-  if (isContentValid.value && isDirty.value) {
-    if (confirm(saved ? '草稿已自动保存。确定要关闭评价编辑器吗？' : '草稿保存失败，关闭可能丢失内容。确定关闭吗？')) emit('update:modelValue', false)
-  } else {
+const closeModal = async () => {
+  if (confirmingClose.value) return
+  confirmingClose.value = true
+  try {
+    const saved = persist()
+    if (isContentValid.value && isDirty.value) {
+      if (!(await dialog.confirm({
+        title: '关闭评价编辑器',
+        description: saved ? '草稿已自动保存。确定要关闭评价编辑器吗？' : '草稿保存失败，关闭可能丢失内容。确定关闭吗？',
+        confirmText: '关闭编辑器',
+        cancelText: '继续编辑',
+      }))) return
+    }
     emit('update:modelValue', false)
+  } finally {
+    confirmingClose.value = false
   }
 }
 

@@ -45,7 +45,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { MessageSquareText } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
@@ -65,7 +65,7 @@ const props = defineProps({
   },
 })
 
-const message = useMessage()
+const message = useShadcnToast()
 const router = useRouter()
 const route = useRoute()
 

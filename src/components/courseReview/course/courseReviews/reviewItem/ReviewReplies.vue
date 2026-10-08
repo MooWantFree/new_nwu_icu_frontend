@@ -29,7 +29,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
+import { useShadcnDialog } from '@/lib/useShadcnDialog'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
 import { buildReviewReplyThread } from '@/lib/reviewReplyThread'
@@ -41,7 +42,8 @@ import ReviewReplyThreadNode from './ReviewReplyThreadNode.vue'
 const { review } = defineProps<{ review: Review }>()
 const emit = defineEmits<{ (e: 'replyDeleted', reviewId: number, replyId: number): void }>()
 const { userInfo, isLoggedIn } = useUser()
-const message = useMessage()
+const message = useShadcnToast()
+const dialog = useShadcnDialog()
 const route = useRoute()
 const replySection = useTemplateRef('replySection')
 const replyTarget = ref<number | null>(null)
@@ -86,9 +88,15 @@ const toggleCollapse = (id: number) => {
 }
 
 const handleDeleteReply = async (id: number) => {
-  if (deletingIds.value.has(id) || !confirm('删除后将保留“回复已删除”的占位，下级回复不会被删除。确定删除吗？')) return
+  if (deletingIds.value.has(id)) return
   deletingIds.value.add(id)
   try {
+    if (!(await dialog.confirm({
+      title: '删除回复',
+      description: '删除后将保留“回复已删除”的占位，下级回复不会被删除。确定删除吗？',
+      confirmText: '删除回复',
+      destructive: true,
+    }))) return
     const response = await api.delete({ url: '/api/assessment/reply/', query: { reply_id: id, review_id: review.id } })
     if (response.status !== 200) throw new Error('删除回复失败')
     const reply = review.reply.find((item) => item.id === id)

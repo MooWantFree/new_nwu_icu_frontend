@@ -15,24 +15,20 @@
         <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center" aria-label="教师筛选">
           <label class="min-w-0 sm:w-60">
             <span class="sr-only">选择学院</span>
-            <n-select
+            <ShadcnSelect
               :value="schoolFilter"
               :options="schoolOptions"
               :loading="schoolOptions.length === 1"
-              :theme-overrides="reviewSelectTheme"
               filterable
-              size="large"
               aria-label="选择学院"
               @update:value="handleFilterChange('school', $event)"
             />
           </label>
           <label class="min-w-0 sm:w-36">
             <span class="sr-only">排序方式</span>
-            <n-select
+            <ShadcnSelect
               :value="orderBy"
               :options="orderByOptions"
-              :theme-overrides="reviewSelectTheme"
-              size="large"
               aria-label="排序方式"
               @update:value="handleFilterChange('order', $event)"
             />
@@ -98,18 +94,18 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { api } from '@/lib/requests'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 import { ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
 import AddTeacherModal from '@/components/courseReview/course/AddTeacherModal.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
-import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 
 const router = useRouter()
 const route = useRoute()
-const message = useMessage()
+const message = useShadcnToast()
 const { checkingLogin, requireLogin } = useCreationLogin()
 
 enum OrderBy {
@@ -233,7 +229,7 @@ onMounted(() => {
 const totalPages = computed(() => data.value?.max_page || 1)
 
 const handlePageChange = (page: number) => router.push({ query: { ...route.query, page: String(page) } })
-const handleFilterChange = (key: 'school' | 'order', value: string) => router.push({
-  query: { ...route.query, [key]: value || undefined, page: '1' },
+const handleFilterChange = (key: 'school' | 'order', value: string | number | null) => router.push({
+  query: { ...route.query, [key]: value === null || value === '' ? undefined : String(value), page: '1' },
 })
 </script>

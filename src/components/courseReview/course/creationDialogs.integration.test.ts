@@ -8,6 +8,15 @@ vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: mocks.checkLoginStatus }))
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error, success: mocks.success }) }))
 
+vi.mock('@/components/common/ShadcnSelect.vue', () => ({ default: defineComponent({
+    props: ['value', 'options', 'disabled'],
+    emits: ['update:value'],
+    setup: (props, { emit, attrs }) => () => h('select', {
+      ...attrs, value: props.value ?? '', disabled: props.disabled,
+      onChange: (event: Event) => emit('update:value', Number((event.target as HTMLSelectElement).value)),
+    }, [h('option', { value: '' }, '请选择学院'), ...props.options.map((school: { id: number; name: string }) => h('option', { value: school.id }, school.name))]),
+  }) }))
+
 let app: App | undefined
 let host: HTMLDivElement
 const flush = async () => {
@@ -43,14 +52,6 @@ const mount = async () => {
     'onUpdate:modelValue': (value: boolean) => { open.value = value },
     initValue: { name: '数学分析', school: 1, classification: 'required', teacher: { id: 9, name: '原教师', school: '数学学院' } },
   }) }).use(router)
-  app.component('NSelect', defineComponent({
-    props: ['value', 'options', 'disabled'],
-    emits: ['update:value'],
-    setup: (props, { emit, attrs }) => () => h('select', {
-      ...attrs, value: props.value ?? '', disabled: props.disabled,
-      onChange: (event: Event) => emit('update:value', Number((event.target as HTMLSelectElement).value)),
-    }, [h('option', { value: '' }, '请选择学院'), ...props.options.map((school: { id: number; name: string }) => h('option', { value: school.id }, school.name))]),
-  }))
   app.mount(host)
   await flush()
   open.value = true

@@ -12,14 +12,14 @@
             <span class="text-sm text-zinc-400">/ 5</span>
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <n-rate readonly :allow-half="true" :value="Number(courseData.rating_avg)" :size="18" />
+            <ShadcnRating readonly :allow-half="true" :value="Number(courseData.rating_avg)" :size="18" />
             <span class="text-xs text-zinc-500">{{ courseData.total_review_count }} 人评价</span>
           </div>
         </div>
         <div>
           <div class="flex items-center gap-1.5 text-sm text-zinc-500">
             <span>归一化平均分</span>
-            <n-tooltip trigger="click" placement="top">
+            <ShadcnTooltip trigger="click" placement="top">
               <template #trigger>
                 <button
                   type="button"
@@ -32,14 +32,14 @@
             <p class="m-0 max-w-48 whitespace-normal text-sm leading-6 sm:max-w-64">
                 归一化平均分是经过统计调整的评分，可以更公平地比较不同课程
               </p>
-            </n-tooltip>
+            </ShadcnTooltip>
           </div>
           <div class="mt-2 flex items-baseline gap-1.5">
             <span class="text-3xl font-semibold tracking-tight text-zinc-950">{{ courseData.normalized_rating_avg }}</span>
             <span class="text-sm text-zinc-400">/ 5</span>
           </div>
           <div class="mt-2">
-            <n-rate readonly :allow-half="true" :value="Number(courseData.normalized_rating_avg)" :size="18" />
+            <ShadcnRating readonly :allow-half="true" :value="Number(courseData.normalized_rating_avg)" :size="18" />
           </div>
         </div>
       </div>
@@ -111,10 +111,12 @@ import { ref } from 'vue'
 import { ThumbsDown, ThumbsUp, CircleHelp } from 'lucide-vue-next'
 import { useUser } from '@/lib/useUser'
 import type { CourseData } from '@/types/courseReview'
-import { useMessage, NRate } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
+import ShadcnRating from '@/components/common/ShadcnRating.vue'
+import ShadcnTooltip from '@/components/common/ShadcnTooltip.vue'
 import { api } from '@/lib/requests'
 
-const message = useMessage()
+const message = useShadcnToast()
 const { isLoggedIn } = useUser()
 const props = defineProps<{
   courseData: CourseData

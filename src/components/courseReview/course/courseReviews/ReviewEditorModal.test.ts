@@ -4,8 +4,9 @@ import ReviewEditorModal from './ReviewEditorModal.vue'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import { loadCourseReviewDraft, saveCourseReviewDraft } from '@/lib/courseReviewDraft'
 
-const mocks = vi.hoisted(() => ({ get: vi.fn() }))
+const mocks = vi.hoisted(() => ({ get: vi.fn(), confirm: vi.fn(), close: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
+vi.mock('@/lib/useShadcnDialog', () => ({ useShadcnDialog: () => ({ confirm: mocks.confirm }) }))
 vi.mock('@/components/tiptap/editor/Editor.vue', () => ({ default: defineComponent({
   props: ['modelValue'], emits: ['update:modelValue'],
   setup: (props, { emit }) => () => h('textarea', {
@@ -14,14 +15,14 @@ vi.mock('@/components/tiptap/editor/Editor.vue', () => ({ default: defineCompone
   }),
 }) }))
 
-const SelectStub = defineComponent({
+vi.mock('@/components/common/ShadcnSelect.vue', () => ({ default: defineComponent({
   props: ['value', 'options'], emits: ['update:value'],
   setup: (props, { emit }) => () => h('select', {
     value: props.value ?? '',
     onChange: (event: Event) => emit('update:value', Number((event.target as HTMLSelectElement).value)),
   }, [h('option', { value: '' }, '选择学期'), ...props.options.map((option: { value: number; label: string }) =>
     h('option', { value: option.value }, option.label))]),
-})
+}) }))
 const review = (semester: number): ReviewDataBase => ({
   course: 42, semester, content: '<p>existing review</p>', anonymous: false,
   rating: 4, difficulty: 3, grade: 3, homework: 3, reward: 3,
@@ -38,8 +39,8 @@ const mount = async (initContent: ReviewDataBase | null) => {
   app = createApp({ render: () => h(ReviewEditorModal, {
     courseData: { id: 42 } as CourseData, initContent, modelValue: true, submitting: false, userId: 1,
     reviewId: initContent ? 9 : null, onSubmit: submit,
+    'onUpdate:modelValue': mocks.close,
   }) })
-  app.component('NSelect', SelectStub)
   app.mount(container)
   await flush()
 }
@@ -48,6 +49,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
   mocks.get.mockResolvedValue({ status: 200, content: { 7: '2026-2027 秋', 9: '2026-2027 春' } })
+  mocks.confirm.mockResolvedValue(true)
   container = document.createElement('div')
   document.body.append(container)
 })
@@ -57,6 +59,27 @@ afterEach(() => {
 })
 
 describe('review semester initialization', () => {
+  it('keeps the edited draft when Shadcn close confirmation is canceled and closes only after acceptance', async () => {
+    await mount(null)
+    const editor = container.querySelector('textarea')!
+    editor.value = '尚未发布的评价'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+
+    mocks.confirm.mockResolvedValueOnce(false)
+    button('取消').click()
+    await flush()
+    expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '关闭评价编辑器', cancelText: '继续编辑' }))
+    expect(mocks.close).not.toHaveBeenCalled()
+    expect(loadCourseReviewDraft(1, 42, null)?.content).toBe('尚未发布的评价')
+    expect(editor.value).toBe('尚未发布的评价')
+
+    button('取消').click()
+    await flush()
+    expect(mocks.close).toHaveBeenCalledWith(false)
+    expect(loadCourseReviewDraft(1, 42, null)?.content).toBe('尚未发布的评价')
+  })
+
   it('restores and submits the semester ID independently of its year-based label', async () => {
     await mount(review(7))
     button('继续').click()

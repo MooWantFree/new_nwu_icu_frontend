@@ -7,7 +7,7 @@ import ReviewTimeline from './ReviewTimeline.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: vi.fn() }))
 vi.mock('@/components/courseReview/course/AddCourseModal.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/ReviewDirectoryNav.vue', () => ({ default: { render: () => null } }))
@@ -56,7 +56,6 @@ const mount = async (path: string) => {
   ] })
   await router.push(path)
   app = createApp(RouterView).use(router)
-  app.component('NRate', { render: () => null })
   app.mount(container)
   await flush()
   return router

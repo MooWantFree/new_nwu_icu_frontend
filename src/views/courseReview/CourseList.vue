@@ -128,7 +128,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { api } from '@/lib/requests'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
@@ -137,7 +137,7 @@ import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
-const message = useMessage()
+const message = useShadcnToast()
 const route = useRoute()
 const router = useRouter()
 const { checkingLogin, requireLogin } = useCreationLogin()

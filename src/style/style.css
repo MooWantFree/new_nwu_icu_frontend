@@ -4,20 +4,52 @@
 
 @layer base {
   :root {
-    --ui-background: #f5f5f7;
+    --ui-background: #fafafa;
     --ui-surface: #ffffff;
-    --ui-surface-muted: #f2f2f7;
-    --ui-text-primary: #1d1d1f;
-    --ui-text-secondary: #48484a;
-    --ui-text-tertiary: #6e6e73;
-    --ui-text-muted: #8e8e93;
-    --ui-border: #e5e5ea;
-    --ui-border-strong: #d1d1d6;
-    --ui-accent: #0071e3;
-    --ui-link: #0066cc;
-    --ui-accent-hover: #0066cc;
-    color: #1d1d1f;
-    background: #f5f5f7;
+    --ui-surface-muted: #f4f4f5;
+    --ui-text-primary: #09090b;
+    --ui-text-secondary: #52525b;
+    --ui-text-tertiary: #71717a;
+    --ui-text-muted: #a1a1aa;
+    --ui-border: #e4e4e7;
+    --ui-border-strong: #d4d4d8;
+    --ui-accent: #18181b;
+    --ui-link: #18181b;
+    --ui-accent-hover: #27272a;
+    --ui-focus: #a1a1aa;
+    --ui-accent-rgb: 24 24 27;
+    --ui-link-rgb: 24 24 27;
+    --ui-tertiary-rgb: 113 113 122;
+    --ui-custom-border-rgb: 228 228 231;
+    --ui-custom-gray-rgb: 161 161 170;
+    --ui-table-border-width: 1px;
+    --ui-table-heading-weight: 500;
+    --ui-table-selection: rgb(161 161 170 / 0.18);
+    --ui-table-resize-handle: #a1a1aa;
+    --ui-neutral-50: 250 250 250;
+    --ui-neutral-100: 244 244 245;
+    --ui-neutral-200: 228 228 231;
+    --ui-neutral-300: 212 212 216;
+    --ui-neutral-400: 161 161 170;
+    --ui-neutral-500: 113 113 122;
+    --ui-neutral-600: 82 82 91;
+    --ui-neutral-700: 63 63 70;
+    --ui-neutral-800: 39 39 42;
+    --ui-neutral-900: 24 24 27;
+    --ui-neutral-950: 9 9 11;
+    --ui-blue-50: 239 246 255;
+    --ui-blue-100: 219 234 254;
+    --ui-blue-200: 191 219 254;
+    --ui-blue-300: 147 197 253;
+    --ui-blue-400: 96 165 250;
+    --ui-blue-500: 59 130 246;
+    --ui-blue-600: 37 99 235;
+    --ui-blue-700: 29 78 216;
+    --ui-blue-800: 30 64 175;
+    --ui-blue-900: 30 58 138;
+    --ui-blue-950: 23 37 84;
+    color: var(--ui-text-primary);
+    background: var(--ui-background);
     font-family:
       -apple-system,
       BlinkMacSystemFont,
@@ -32,16 +64,62 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Keep the management surface on its existing palette and controls. */
+  :root[data-ui-theme="management"] {
+    --ui-background: #f5f5f7;
+    --ui-surface-muted: #f2f2f7;
+    --ui-text-primary: #1d1d1f;
+    --ui-text-secondary: #48484a;
+    --ui-text-tertiary: #6e6e73;
+    --ui-text-muted: #8e8e93;
+    --ui-border: #e5e5ea;
+    --ui-border-strong: #d1d1d6;
+    --ui-accent: #0071e3;
+    --ui-link: #0066cc;
+    --ui-accent-hover: #0066cc;
+    --ui-focus: #0071e3;
+    --ui-accent-rgb: 0 113 227;
+    --ui-link-rgb: 0 102 204;
+    --ui-tertiary-rgb: 110 110 115;
+    --ui-custom-border-rgb: 221 221 221;
+    --ui-custom-gray-rgb: 153 153 153;
+    --ui-table-border-width: 2px;
+    --ui-table-heading-weight: bold;
+    --ui-table-selection: rgba(10, 132, 255, 0.18);
+    --ui-table-resize-handle: #dceeff;
+    --ui-neutral-50: 245 245 247;
+    --ui-neutral-100: 242 242 247;
+    --ui-neutral-200: 229 229 234;
+    --ui-neutral-300: 209 209 214;
+    --ui-neutral-400: 174 174 178;
+    --ui-neutral-500: 142 142 147;
+    --ui-neutral-600: 110 110 115;
+    --ui-neutral-700: 72 72 74;
+    --ui-neutral-800: 44 44 46;
+    --ui-neutral-900: 29 29 31;
+    --ui-neutral-950: 17 17 19;
+    --ui-blue-50: 240 247 255;
+    --ui-blue-100: 220 238 255;
+    --ui-blue-200: 185 220 255;
+    --ui-blue-300: 138 197 255;
+    --ui-blue-400: 74 163 255;
+    --ui-blue-500: 10 132 255;
+    --ui-blue-600: 0 113 227;
+    --ui-blue-700: 0 102 204;
+    --ui-blue-800: 0 85 173;
+    --ui-blue-900: 0 63 128;
+    --ui-blue-950: 0 43 87;
+  }
   html {
-    background: #f5f5f7;
+    background: var(--ui-background);
     scrollbar-gutter: stable;
   }
 
   body {
     min-width: min(320px, 100%);
     min-height: 100vh;
-    background: #f5f5f7;
-    color: #1d1d1f;
+    background: var(--ui-background);
+    color: var(--ui-text-primary);
   }
 
   button,
@@ -57,37 +135,60 @@
   }
 
   :focus-visible {
-    outline: 2px solid #0071e3;
+    outline: 2px solid var(--ui-focus);
     outline-offset: 2px;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-100;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-950 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-sm font-medium text-blue-700 transition-colors duration-200 hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2;
   }
 
   .btn-danger {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .surface-card {
-    @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+    @apply rounded-xl border border-zinc-200 bg-white shadow-sm;
   }
 
   .text-link {
-    @apply text-blue-700 underline-offset-4 transition-colors hover:text-blue-800 hover:underline;
+    @apply text-zinc-950 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline;
+  }
+
+  :where(:root[data-ui-theme="management"]) .btn-primary {
+    @apply rounded-[10px] bg-blue-600 duration-200 hover:bg-blue-700 focus-visible:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:opacity-100;
+  }
+
+  :where(:root[data-ui-theme="management"]) .btn-secondary {
+    @apply rounded-[10px] border-gray-300 text-gray-700 duration-200 hover:bg-gray-50 focus-visible:ring-blue-500;
+  }
+
+  :where(:root[data-ui-theme="management"]) .btn-ghost {
+    @apply rounded-[10px] text-blue-700 duration-200 hover:bg-blue-50 hover:text-blue-800 focus-visible:ring-blue-500;
+  }
+
+  :where(:root[data-ui-theme="management"]) .btn-danger {
+    @apply rounded-[10px] duration-200;
+  }
+
+  :where(:root[data-ui-theme="management"]) .surface-card {
+    @apply rounded-2xl border-gray-200;
+  }
+
+  :where(:root[data-ui-theme="management"]) .text-link {
+    @apply text-blue-700 hover:text-blue-800;
   }
 }
-
 .animate__animated {
   animation-duration: 1s;
   animation-fill-mode: both;

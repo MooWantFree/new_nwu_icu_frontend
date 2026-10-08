@@ -1,10 +1,12 @@
 <template>
-  <NModal
+  <ShadcnModal
     :show="show"
+    :title="title"
+    :busy="busy"
+    :suspended="suspended"
     :mask-closable="!busy && !suspended"
     :close-on-esc="!busy && !suspended"
     :auto-focus="false"
-    :theme-overrides="{ color: '#ffffff', textColor: '#18181b' }"
     @update:show="handleVisibility"
     @after-enter="focusFirstField"
   >
@@ -35,12 +37,12 @@
         <slot name="footer" />
       </footer>
     </div>
-  </NModal>
+  </ShadcnModal>
 </template>
 
 <script setup lang="ts">
 import { nextTick, useId, useTemplateRef, watch } from 'vue'
-import { NModal } from 'naive-ui'
+import ShadcnModal from './ShadcnModal.vue'
 import { X } from 'lucide-vue-next'
 
 const props = withDefaults(defineProps<{
@@ -59,7 +61,8 @@ const close = () => {
 const handleVisibility = (show: boolean) => { if (!show) close() }
 const focusFirstField = () => {
   if (!props.show || props.suspended) return
-  const field = panel.value?.querySelector<HTMLElement>('input:not(:disabled), [role="combobox"], select:not(:disabled), textarea:not(:disabled)')
+  const field = [...(panel.value?.querySelectorAll<HTMLElement>('input:not(:disabled):not([type="hidden"]):not([type="file"]), [role="combobox"]:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]') ?? [])]
+    .find(candidate => !candidate.closest('[hidden], .hidden, [inert]'))
   ;(field ?? panel.value)?.focus({ preventScroll: true })
 }
 watch([panel, () => props.show], async ([target, show]) => {

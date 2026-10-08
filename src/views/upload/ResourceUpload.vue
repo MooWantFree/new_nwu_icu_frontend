@@ -1,216 +1,122 @@
 <template>
-  <AppPageLayout title="资料投稿" description="分享一份资料，让后来者少走一点弯路。">
-      <section class="mx-auto max-w-4xl">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="text-sm font-semibold text-blue-700">第一步</p>
-              <h2 class="mt-1 text-xl font-bold text-slate-900">选择投稿文件</h2>
-              <p class="mt-1 text-sm text-slate-500">可拖入文件或整个文件夹，文件夹结构会被保留。</p>
-            </div>
-            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-              {{ selectedFiles.length }} / {{ maxFileCount }}
-            </span>
+  <AppPageLayout title="分享资料" description="上传学习资料，审核通过后会发布到资料站。" appearance="shadcn" width="reading">
+    <template #actions>
+      <a href="/disk" target="_blank" rel="noopener noreferrer" :class="secondaryButtonClass">
+        <ArrowUpRight class="h-4 w-4" aria-hidden="true" />浏览资料
+      </a>
+    </template>
+
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <section class="min-w-0 rounded-xl border border-zinc-200 bg-white shadow-sm" aria-labelledby="upload-files-title">
+        <header class="flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
+          <div>
+            <h2 id="upload-files-title" class="flex items-center gap-2.5 text-base font-semibold tracking-tight">
+              <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-xs text-zinc-600" aria-hidden="true">1</span>
+              选择文件
+            </h2>
+            <p class="mt-2 text-sm leading-6 text-zinc-500">支持文件夹上传，保留原有目录结构。</p>
           </div>
+          <span class="shrink-0 rounded-md border border-zinc-200 px-2 py-0.5 text-xs tabular-nums text-zinc-500">{{ selectedFiles.length }} / {{ maxFileCount }}</span>
+        </header>
 
-          <input
-            ref="fileInput"
-            class="hidden"
-            type="file"
-            multiple
-            :accept="acceptExtensions"
-            @change="handleFileInput"
-          />
-          <input
-            ref="folderInput"
-            class="hidden"
-            type="file"
-            multiple
-            webkitdirectory
-            @change="handleFileInput"
-          />
-
+        <div class="p-5 sm:p-6">
+          <input ref="fileInput" class="hidden" type="file" multiple :accept="acceptExtensions" :disabled="isSubmitting" @change="handleFileInput" />
+          <input ref="folderInput" class="hidden" type="file" multiple webkitdirectory :disabled="isSubmitting" @change="handleFileInput" />
           <div
-            class="mt-6 flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-5 py-10 text-center outline-none transition"
-            :class="isDragging
-              ? 'border-blue-500 bg-blue-50 ring-4 ring-blue-100'
-              : 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/40 focus-visible:border-blue-500 focus-visible:ring-4 focus-visible:ring-blue-100'"
-            role="button"
-            tabindex="0"
-            aria-label="选择要投稿的文件"
-            @click="fileInput?.click()"
-            @keydown.enter.prevent="fileInput?.click()"
-            @keydown.space.prevent="fileInput?.click()"
-            @dragenter.prevent="isDragging = true"
-            @dragover.prevent="isDragging = true"
-            @dragleave.prevent="handleDragLeave"
-            @drop.prevent="handleDrop"
+            class="flex min-h-60 flex-col items-center justify-center rounded-lg border border-dashed px-4 py-8 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+            :class="[isDragging ? 'border-zinc-500 bg-zinc-100' : 'border-zinc-300 bg-zinc-50/50', isSubmitting ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-zinc-400 hover:bg-zinc-50']"
+            role="button" :tabindex="isSubmitting ? -1 : 0" :aria-disabled="isSubmitting" aria-label="选择要投稿的文件"
+            @click="chooseFiles()" @keydown.enter.self.prevent="chooseFiles()" @keydown.space.self.prevent="chooseFiles()"
+            @dragenter.prevent="isDragging = !isSubmitting" @dragover.prevent="isDragging = !isSubmitting" @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop"
           >
-            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
-              <Upload class="h-8 w-8" />
-            </div>
-            <p class="mt-5 text-base font-semibold text-slate-900">拖放文件或文件夹到这里</p>
-            <p class="mt-2 text-sm text-slate-500">图片、PDF、Office、文本与常见压缩包</p>
-            <div class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs leading-5 text-slate-500">
-              <span>单个文件不超过 {{ formatBytes(maxFileSize) }}</span>
-              <span class="hidden text-slate-300 sm:inline">·</span>
-              <span>每次最多 {{ maxFileCount }} 个文件</span>
-              <span class="hidden text-slate-300 sm:inline">·</span>
-              <span>支持常见资料与压缩格式</span>
-            </div>
-            <p class="mt-2 text-xs" :class="totalSize > quotaRemaining ? 'text-red-600' : 'text-slate-500'">
-              个人上传额度：已用 {{ formatBytes(quotaUsed) }} / {{ formatBytes(quotaLimit) }}，剩余 {{ formatBytes(quotaRemaining) }}
-            </p>
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-              <button
-                type="button"
-                class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                @click.stop="fileInput?.click()"
-              >
-                选择文件
-              </button>
-              <button
-                type="button"
-                class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
-                @click.stop="folderInput?.click()"
-              >
-                选择文件夹
-              </button>
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 shadow-sm"><Upload class="h-5 w-5" aria-hidden="true" /></span>
+            <p class="mt-4 text-sm font-medium text-zinc-950">拖放文件或文件夹到这里</p>
+            <p class="mt-1.5 text-xs leading-5 text-zinc-500">图片、PDF、Office、文本与常见压缩文件</p>
+            <div class="mt-5 flex flex-wrap justify-center gap-2">
+              <button type="button" :class="primaryButtonClass" :disabled="isSubmitting" @click.stop="chooseFiles()">选择文件</button>
+              <button type="button" :class="secondaryButtonClass" :disabled="isSubmitting" @click.stop="chooseFiles(true)"><Folder class="h-4 w-4" aria-hidden="true" />选择文件夹</button>
             </div>
           </div>
-
-          <div
-            v-if="fileError"
-            class="mt-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
-            role="alert"
-          >
-            <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{{ fileError }}</span>
+          <p class="mt-3 text-xs leading-5 text-zinc-500">单个文件不超过 {{ formatBytes(maxFileSize) }}，每次最多 {{ maxFileCount }} 个文件。</p>
+          <div v-if="fileError" role="alert" class="mt-4 flex items-start gap-2 rounded-md border border-red-200 bg-red-50/40 p-3 text-sm leading-5 text-red-600">
+            <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="min-w-0 break-words">{{ fileError }}</p>
           </div>
 
           <div v-if="selectedFiles.length" class="mt-6">
-            <div class="mb-3 flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-slate-800">已选择的文件</h3>
-              <button
-                type="button"
-                class="text-xs font-medium text-slate-500 transition hover:text-red-600"
-                @click="clearFiles"
-              >
-                清空全部
-              </button>
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-medium">已选择的文件</h3>
+              <button type="button" class="inline-flex h-8 items-center justify-center rounded-md px-2 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" :disabled="isSubmitting" @click="clearFiles">清空全部</button>
             </div>
-            <ul class="max-h-80 space-y-2 overflow-y-auto pr-1">
-              <li
-                v-for="item in selectedFiles"
-                :key="item.id"
-                class="group flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3"
-              >
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-                  <component :is="getFileIcon(item.file.name)" class="h-5 w-5" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-sm font-medium text-slate-800" :title="item.relativePath">
-                    {{ item.relativePath }}
-                  </p>
-                  <p class="mt-0.5 text-xs text-slate-500">{{ formatBytes(item.file.size) }}</p>
-                </div>
-                <button
-                  type="button"
-                  class="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-100"
-                  :aria-label="`移除 ${item.relativePath}`"
-                  @click="removeFile(item.id)"
-                >
-                  <X class="h-4 w-4" />
-                </button>
+            <ul class="max-h-80 divide-y divide-zinc-100 overflow-y-auto overscroll-contain rounded-lg border border-zinc-200" aria-label="已选择的文件">
+              <li v-for="item in selectedFiles" :key="item.id" class="flex items-center gap-3 px-3 py-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-500"><component :is="getFileIcon(item.file.name)" class="h-4 w-4" aria-hidden="true" /></span>
+                <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium" :title="item.relativePath">{{ item.relativePath }}</p><p class="mt-0.5 text-xs tabular-nums text-zinc-500">{{ formatBytes(item.file.size) }}</p></div>
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" :disabled="isSubmitting" :aria-label="`移除 ${item.relativePath}`" @click="removeFile(item.id)"><X class="h-4 w-4" aria-hidden="true" /></button>
               </li>
             </ul>
-            <div class="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
-              <span class="text-slate-500">合计</span>
-              <span class="font-semibold text-slate-800">
-                {{ selectedFiles.length }} 个文件 · {{ formatBytes(totalSize) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="mt-7 border-t border-slate-200 pt-6">
-            <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <div class="min-w-0">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">目标目录</p>
-                <p
-                  class="mt-1 break-all text-sm font-semibold"
-                  :class="targetConfirmed ? 'text-slate-900' : 'text-slate-500'"
-                >
-                  {{ targetConfirmed ? finalTargetPath : '尚未选择目录' }}
-                </p>
-                <p class="mt-1 text-xs text-slate-500">
-                  {{ targetConfirmed ? '资料审核通过后会归档到此位置。' : '添加文件后请选择资料最终归档的位置。' }}
-                </p>
-              </div>
-              <button
-                type="button"
-                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="isSubmitting || !selectedFiles.length"
-                @click="openDirectoryModal"
-              >
-                <Folder class="h-4 w-4" />
-                {{ targetConfirmed ? '更改目录' : '选择目录' }}
-              </button>
-            </div>
-
-            <div
-              v-if="submitError"
-              class="mt-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{{ submitError }}</span>
-            </div>
-
-            <button
-              type="button"
-              class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
-              :disabled="!canSubmit"
-              @click="submitUpload"
-            >
-              <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
-              <Upload v-else class="h-5 w-5" />
-              {{ submitButtonText }}
-            </button>
-
-            <div v-if="isSubmitting" class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div
-                class="h-full rounded-full bg-blue-600 transition-all duration-300"
-                :style="{ width: `${uploadProgress}%` }"
-              ></div>
-            </div>
-            <p class="mt-3 text-center text-xs leading-5 text-slate-400">
-              提交即表示你确认资料不含隐私信息，并同意由管理员审核后公开。
-            </p>
           </div>
         </div>
       </section>
 
-      <NModal
+      <aside class="min-w-0 space-y-4 lg:sticky lg:top-24">
+        <section class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="upload-submit-title" :aria-busy="isSubmitting">
+          <h2 id="upload-submit-title" class="flex items-center gap-2.5 text-base font-semibold tracking-tight"><span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-xs text-zinc-600" aria-hidden="true">2</span>提交审核</h2>
+          <div class="mt-5">
+            <p class="text-xs font-medium text-zinc-500">目标目录</p>
+            <div class="mt-2 flex items-start gap-2.5 rounded-md border border-zinc-200 bg-zinc-50/50 px-3 py-3">
+              <Folder class="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" aria-hidden="true" />
+              <p class="min-w-0 break-all text-sm" :class="targetConfirmed ? 'font-medium text-zinc-950' : 'text-zinc-500'">{{ targetConfirmed ? finalTargetPath : '尚未选择目录' }}</p>
+            </div>
+            <button type="button" :class="[secondaryButtonClass, 'mt-2 w-full']" :disabled="isSubmitting || !selectedFiles.length" @click="openDirectoryModal">{{ targetConfirmed ? '更改目录' : '选择目录' }}</button>
+          </div>
+          <dl class="mt-5 space-y-2.5 border-t border-zinc-100 pt-4 text-sm">
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">已选文件</dt><dd class="font-medium tabular-nums">{{ selectedFiles.length }} 个</dd></div>
+            <div class="flex items-baseline justify-between gap-3"><dt class="text-zinc-500">合计大小</dt><dd class="font-medium tabular-nums">{{ formatBytes(totalSize) }}</dd></div>
+          </dl>
+          <div v-if="totalSize > quotaRemaining" role="alert" class="mt-4 rounded-md border border-red-200 bg-red-50/40 px-3 py-2 text-xs leading-5 text-red-600">所选文件超过剩余上传额度，请减少文件后重试。</div>
+          <div v-if="submitError" role="alert" class="mt-4 flex items-start gap-2 rounded-md border border-red-200 bg-red-50/40 p-3 text-sm leading-5 text-red-600"><AlertCircle class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="min-w-0 break-words">{{ submitError }}</p></div>
+          <button type="button" :class="[primaryButtonClass, 'mt-5 min-h-10 h-auto w-full py-2.5']" :disabled="!canSubmit" @click="submitUpload"><Loader2 v-if="isSubmitting" class="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /><span class="min-w-0">{{ submitButtonText }}</span></button>
+          <div v-if="isSubmitting" class="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-100" role="progressbar" :aria-valuenow="uploadProgress" :aria-valuemin="0" :aria-valuemax="100" aria-label="文件上传进度"><div class="h-full rounded-full bg-zinc-950 transition-all duration-300" :style="{ width: `${uploadProgress}%` }"></div></div>
+          <p class="mt-3 text-xs leading-5 text-zinc-500">提交后由管理员审核。请确认资料不含隐私信息，并可公开分享。</p>
+        </section>
+        <section class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm" aria-labelledby="upload-quota-title">
+          <h2 id="upload-quota-title" class="text-sm font-medium">上传额度</h2>
+          <div class="mt-3 flex items-baseline justify-between gap-2 text-xs tabular-nums"><span class="text-zinc-500">已用 {{ formatBytes(quotaUsed) }}</span><span class="text-zinc-500">共 {{ formatBytes(quotaLimit) }}</span></div>
+          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-100" role="meter" :aria-valuenow="quotaUsed" :aria-valuemin="0" :aria-valuemax="quotaLimit" aria-label="已使用上传额度"><div class="h-full rounded-full bg-zinc-500" :style="{ width: `${quotaLimit > 0 ? Math.min(100, quotaUsed / quotaLimit * 100) : 0}%` }"></div></div>
+          <p class="mt-3 text-xs text-zinc-500">剩余 <span class="font-medium tabular-nums text-zinc-950">{{ formatBytes(quotaRemaining) }}</span></p>
+        </section>
+      </aside>
+    </div>
+
+    <section v-if="lastSubmittedRequest" role="status" class="mt-6 flex items-start gap-3 rounded-lg border border-zinc-200 bg-white p-4 text-sm shadow-sm">
+      <CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0 text-zinc-600" aria-hidden="true" />
+      <div class="min-w-0"><p class="font-medium text-zinc-950">投稿 #{{ lastSubmittedRequest.id }} 已提交</p><p class="mt-1 break-words text-sm leading-6 text-zinc-500">共 {{ lastSubmittedRequest.files.length }} 个文件，将归档到 <span class="break-all text-zinc-700">{{ lastSubmittedRequest.target_path }}</span>。审核结果会通过站内信和邮件告知，待审核期间可在下方编辑。</p></div>
+    </section>
+
+    <ResourceUploadHistory class="mt-8" :records="uploadHistory" :loading="historyLoading" :error="historyError" v-model:filter="selectedHistoryFilter" :highlighted-request-id="highlightedRequestId" :expanded-record-ids="expandedRecordIds" @refresh="loadUploadHistory" @toggle-files="toggleRecordFiles" @edit="openEditDialog" />
+
+      <ShadcnModal
         :show="directoryModalOpen"
         :mask-closable="!isSubmitting"
         :close-on-esc="!isSubmitting"
+        title="选择目标目录"
         @update:show="handleDirectoryModalShow"
       >
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="directory-modal-title"
-          class="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]"
+          class="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-2xl flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]"
         >
-          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6">
+          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-200 px-4 py-4 sm:px-6">
             <div>
-              <p class="text-xs font-semibold text-blue-700">第二步</p>
-              <h2 id="directory-modal-title" class="mt-1 text-xl font-bold text-slate-900">选择目标目录</h2>
-              <p class="mt-1 text-sm text-slate-500">确认后还可以在提交前再次更改。</p>
+
+              <h2 id="directory-modal-title" class="text-lg font-semibold tracking-tight text-zinc-950">选择目标目录</h2>
+              <p class="mt-1 text-sm text-zinc-500">确认后还可以在提交前再次更改。</p>
             </div>
             <button
               type="button"
-              class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200"
+              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50"
               aria-label="关闭目录选择窗口"
               :disabled="isSubmitting"
               @click="cancelDirectorySelection"
@@ -224,15 +130,15 @@
               v-model:path="directoryDraftPath"
               v-model:create-new-folder="directoryDraftCreateNewFolder"
               v-model:new-folder-name="directoryDraftNewFolderName"
-              :preview-relative-paths="selectedRelativePaths"
+              :preview-relative-paths="selectedRelativePaths" :disabled="isSubmitting"
               input-id="submission-new-folder-name"
             />
           </div>
 
-          <div class="flex shrink-0 items-center justify-end gap-3 border-t border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+          <div class="flex shrink-0 items-center justify-end gap-3 border-t border-zinc-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
             <button
               type="button"
-              class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200"
+              :class="secondaryButtonClass"
               :disabled="isSubmitting"
               @click="cancelDirectorySelection"
             >
@@ -240,7 +146,7 @@
             </button>
             <button
               type="button"
-              class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-300"
+              :class="primaryButtonClass"
               :disabled="!canConfirmDirectory || isSubmitting"
               @click="confirmDirectorySelection"
             >
@@ -248,192 +154,27 @@
             </button>
           </div>
         </div>
-      </NModal>
+      </ShadcnModal>
 
-      <section
-        v-if="lastSubmittedRequest"
-        class="mt-7 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:p-6"
+      <ShadcnModal
+        :show="Boolean(editingRequest)"
+        :mask-closable="!editSubmitting"
+        :close-on-esc="!editSubmitting"
+        title="编辑投稿"
+        @update:show="show => { if (!show) closeEditDialog() }"
       >
-        <div class="flex items-start gap-3">
-          <CheckCircle2 class="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" />
-          <div>
-            <h2 class="font-bold text-emerald-950">投稿 #{{ lastSubmittedRequest.id }} 已提交</h2>
-            <p class="mt-1 text-sm leading-6 text-emerald-800">
-              共 {{ lastSubmittedRequest.files.length }} 个文件，将提交到
-              <span class="break-all font-semibold">{{ lastSubmittedRequest.target_path }}</span>。
-              管理员审核后会通过站内信和邮件告知结果；待审核期间仍可在下方编辑。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xl font-bold text-slate-900">我的投稿记录</h2>
-            <p class="mt-1 text-sm text-slate-500">查看审核进度与退回原因。</p>
-          </div>
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
-            :disabled="historyLoading"
-            @click="loadUploadHistory"
-          >
-            <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': historyLoading }" />
-            刷新
-          </button>
-        </div>
-
-        <div class="mt-5 grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1" aria-label="投稿记录筛选">
-          <button
-            v-for="option in historyFilterOptions"
-            :key="option.value"
-            type="button"
-            class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-300 sm:gap-2 sm:px-3"
-            :class="selectedHistoryFilter === option.value
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'"
-            :aria-pressed="selectedHistoryFilter === option.value"
-            @click="selectedHistoryFilter = option.value"
-          >
-            {{ option.label }}
-            <span class="font-normal text-slate-400">{{ historyFilterCounts[option.value] }}</span>
-          </button>
-        </div>
-
-        <div v-if="historyLoading && !uploadHistory.length" class="flex min-h-40 items-center justify-center text-sm text-slate-500">
-          <Loader2 class="mr-2 h-5 w-5 animate-spin text-blue-700" />
-          正在加载投稿记录…
-        </div>
-        <div v-else-if="historyError" class="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          {{ historyError }}
-        </div>
-        <div v-else-if="!filteredUploadHistory.length" class="mt-6 flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
-          <Archive class="h-8 w-8 text-slate-300" />
-          <p class="mt-3 text-sm font-medium text-slate-600">
-            {{ uploadHistory.length ? '当前筛选条件下没有投稿' : '还没有投稿记录' }}
-          </p>
-          <p class="mt-1 text-xs text-slate-400">
-            {{ uploadHistory.length ? '可以重新选择上方状态筛选' : '你的第一份分享会显示在这里' }}
-          </p>
-        </div>
-        <div v-else class="mt-6 divide-y divide-slate-200 border-y border-slate-200">
-          <article
-            v-for="record in filteredUploadHistory"
-            :key="record.id"
-            :id="`upload-record-${record.id}`"
-            class="px-1 py-5 transition sm:px-3"
-            :class="highlightedRequestId === record.id ? 'bg-blue-50/60' : ''"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="break-all text-sm font-semibold text-slate-900" :title="record.target_path">
-                  {{ record.target_path }}
-                </p>
-                <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                  <span>投稿 #{{ record.id }}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{{ record.files.length }} 个文件</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{{ record.total_size_display }}</span>
-                </div>
-              </div>
-              <span
-                class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600"
-              >
-                <span class="h-1.5 w-1.5 rounded-full" :class="statusMeta[record.status].dotClass"></span>
-                {{ statusMeta[record.status].label }}
-              </span>
-            </div>
-            <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-              <span>
-                提交 <Time :time="record.created_at" />
-              </span>
-              <template v-if="record.reviewed_at">
-                <span aria-hidden="true">·</span>
-                <span>审核 <Time :time="record.reviewed_at" /></span>
-              </template>
-            </div>
-            <div
-              v-if="record.status === 'rejected' && record.rejection_reason"
-              class="mt-3 rounded-r-lg border-l-2 border-red-300 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700"
-            >
-              退回原因：{{ record.rejection_reason }}
-            </div>
-            <div v-if="record.status === 'publish_failed' && record.publish_error" class="mt-3 rounded-r-lg border-l-2 border-orange-300 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700">
-              发布异常：{{ record.publish_error }}
-            </div>
-            <div v-if="record.files_deleted_at" class="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs leading-5 text-slate-600">
-              暂存文件已清理，投稿记录仅供查看。
-            </div>
-            <div v-else-if="record.files_expires_at" class="mt-3 text-xs text-slate-500">
-              暂存文件将在 <Time :time="record.files_expires_at" /> 后清理。
-            </div>
-            <div class="mt-4 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-                @click="toggleRecordFiles(record.id)"
-              >
-                <ChevronRight
-                  class="h-3.5 w-3.5 transition"
-                  :class="expandedRecordIds.includes(record.id) ? 'rotate-90' : ''"
-                />
-                {{ expandedRecordIds.includes(record.id) ? '收起文件' : '查看文件' }}
-              </button>
-              <button
-                v-if="record.can_edit"
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-                @click="openEditDialog(record)"
-              >
-                <Pencil class="h-3.5 w-3.5" />
-                编辑投稿
-              </button>
-              <a
-                v-if="record.status === 'approved' && toSafeExternalUrl(record.resource_url)"
-                :href="toSafeExternalUrl(record.resource_url) ?? undefined"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
-              >
-                <ExternalLink class="h-3.5 w-3.5" />
-                在资料站查看
-              </a>
-            </div>
-            <ul
-              v-if="expandedRecordIds.includes(record.id)"
-              class="mt-3 max-h-48 space-y-2 overflow-y-auto rounded-lg bg-slate-50 p-3"
-            >
-              <li v-for="file in record.files" :key="file.id" class="flex items-start justify-between gap-3 text-xs">
-                <span class="min-w-0 break-all font-medium text-slate-700">{{ file.relative_path }}</span>
-                <span class="shrink-0 text-slate-400">{{ file.size_display }}</span>
-              </li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <div
-        v-if="editingRequest"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="edit-upload-title"
-        @click.self="closeEditDialog"
-      >
-        <div class="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-          <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
+        <div v-if="editingRequest" class="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-4xl flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]" :aria-busy="editSubmitting">
+          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
             <div>
-              <p class="text-xs font-semibold text-blue-700">投稿 #{{ editingRequest.id }}</p>
-              <h2 id="edit-upload-title" class="mt-1 text-xl font-bold text-slate-900">编辑投稿</h2>
-              <p class="mt-1 text-sm text-slate-500">
+              <p class="text-xs text-zinc-500">投稿 #{{ editingRequest.id }}</p>
+              <h2 id="edit-upload-title" class="mt-1 text-lg font-semibold tracking-tight text-zinc-950">编辑投稿</h2>
+              <p class="mt-1 text-sm text-zinc-500">
                 {{ editingRequest.status === 'rejected' ? '保存后将重新进入待审核状态。' : '保存后会更新当前待审核内容。' }}
               </p>
             </div>
             <button
               type="button"
-              class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50"
               aria-label="关闭编辑窗口"
               :disabled="editSubmitting"
               @click="closeEditDialog"
@@ -442,14 +183,14 @@
             </button>
           </div>
 
-          <div class="grid gap-7 p-5 sm:p-7 lg:grid-cols-2">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6"><fieldset :disabled="editSubmitting" class="grid min-w-0 gap-6 lg:grid-cols-2 disabled:opacity-70">
             <section>
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <h3 class="font-bold text-slate-900">之前上传的文件</h3>
-                  <p class="mt-1 text-xs text-slate-500">点击删除可将文件标记为移除，再次点击可以撤销。</p>
+                  <h3 class="text-sm font-medium text-zinc-950">之前上传的文件</h3>
+                  <p class="mt-1 text-xs text-zinc-500">点击删除可将文件标记为移除，再次点击可以撤销。</p>
                 </div>
-                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                <span class="shrink-0 rounded-md border border-zinc-200 px-2 py-0.5 text-xs tabular-nums text-zinc-500">
                   保留 {{ keptExistingFileCount }}
                 </span>
               </div>
@@ -458,28 +199,28 @@
                 <li
                   v-for="file in editingRequest.files"
                   :key="file.id"
-                  class="flex items-center gap-3 rounded-xl border px-3 py-3 transition"
+                  class="flex items-center gap-3 rounded-md border px-3 py-3 transition"
                   :class="removedExistingFileIds.includes(file.id)
                     ? 'border-red-100 bg-red-50/70 opacity-65'
-                    : 'border-slate-200 bg-white'"
+                    : 'border-zinc-200 bg-white'"
                 >
-                  <component :is="getFileIcon(file.original_name)" class="h-5 w-5 shrink-0 text-slate-500" />
+                  <component :is="getFileIcon(file.original_name)" class="h-5 w-5 shrink-0 text-zinc-500" />
                   <div class="min-w-0 flex-1">
                     <p
                       class="truncate text-sm font-medium"
-                      :class="removedExistingFileIds.includes(file.id) ? 'text-red-500 line-through' : 'text-slate-800'"
+                      :class="removedExistingFileIds.includes(file.id) ? 'text-red-500 line-through' : 'text-zinc-800'"
                       :title="file.relative_path"
                     >
                       {{ file.relative_path }}
                     </p>
-                    <p class="mt-0.5 text-xs text-slate-400">{{ file.size_display }}</p>
+                    <p class="mt-0.5 text-xs text-zinc-400">{{ file.size_display }}</p>
                   </div>
                   <button
                     type="button"
-                    class="rounded-lg p-2 transition"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50"
                     :class="removedExistingFileIds.includes(file.id)
-                      ? 'text-slate-500 hover:bg-white hover:text-blue-700'
-                      : 'text-slate-400 hover:bg-red-50 hover:text-red-600'"
+                      ? 'text-zinc-500 hover:bg-white hover:text-zinc-800'
+                      : 'text-zinc-400 hover:bg-red-50 hover:text-red-600'"
                     :aria-label="removedExistingFileIds.includes(file.id) ? `撤销删除 ${file.relative_path}` : `删除 ${file.relative_path}`"
                     @click="toggleExistingFileRemoval(file.id)"
                   >
@@ -491,10 +232,10 @@
 
               <div class="mt-6 flex items-center justify-between gap-3">
                 <div>
-                  <h3 class="font-bold text-slate-900">追加新文件</h3>
-                  <p class="mt-1 text-xs text-slate-500">可选择文件或整个文件夹。</p>
+                  <h3 class="text-sm font-medium text-zinc-950">追加新文件</h3>
+                  <p class="mt-1 text-xs text-zinc-500">可选择文件或整个文件夹。</p>
                 </div>
-                <span class="text-xs font-semibold text-slate-500">{{ editResultFileCount }} / {{ maxFileCount }}</span>
+                <span class="text-xs font-semibold text-zinc-500">{{ editResultFileCount }} / {{ maxFileCount }}</span>
               </div>
 
               <input
@@ -513,19 +254,19 @@
                 webkitdirectory
                 @change="handleEditFileInput"
               />
-              <div class="mt-3 grid grid-cols-2 gap-3">
+              <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-                  @click="editFileInput?.click()"
+                  :class="secondaryButtonClass"
+                  @click="chooseEditFiles()"
                 >
                   <Plus class="h-4 w-4" />
                   添加文件
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  @click="editFolderInput?.click()"
+                  :class="secondaryButtonClass"
+                  @click="chooseEditFiles(true)"
                 >
                   <FolderPlus class="h-4 w-4" />
                   添加文件夹
@@ -536,65 +277,67 @@
                 <li
                   v-for="item in editSelectedFiles"
                   :key="item.id"
-                  class="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2.5"
+                  class="flex items-center gap-3 rounded-md border border-zinc-100 bg-zinc-50/50 px-3 py-2.5"
                 >
-                  <component :is="getFileIcon(item.file.name)" class="h-4 w-4 shrink-0 text-blue-700" />
+                  <component :is="getFileIcon(item.file.name)" class="h-4 w-4 shrink-0 text-zinc-800" />
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-slate-800" :title="item.relativePath">{{ item.relativePath }}</p>
-                    <p class="text-xs text-slate-400">{{ formatBytes(item.file.size) }}</p>
+                    <p class="truncate text-sm font-medium text-zinc-800" :title="item.relativePath">{{ item.relativePath }}</p>
+                    <p class="text-xs text-zinc-400">{{ formatBytes(item.file.size) }}</p>
                   </div>
                   <button
                     type="button"
-                    class="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-red-600"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-white hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50" :aria-label="`移除 ${item.relativePath}`"
                     @click="removeEditFile(item.id)"
                   >
                     <X class="h-4 w-4" />
                   </button>
                 </li>
               </ul>
-              <p v-if="editFileError" class="mt-3 text-sm text-red-600">{{ editFileError }}</p>
+              <p v-if="editFileError" role="alert" class="mt-3 rounded-md border border-red-200 px-3 py-2 text-sm leading-5 text-red-600">{{ editFileError }}</p>
             </section>
 
             <section>
-              <h3 class="font-bold text-slate-900">修改上传目录</h3>
-              <p class="mt-1 text-xs text-slate-500">请选择资料审核通过后要归档的位置。</p>
+              <h3 class="text-sm font-medium text-zinc-950">修改上传目录</h3>
+              <p class="mt-1 text-xs text-zinc-500">请选择资料审核通过后要归档的位置。</p>
               <div class="mt-4">
                 <ResourceDirectoryPicker
                   v-model:path="editCurrentPath"
                   v-model:create-new-folder="editCreateNewFolder"
-                  v-model:new-folder-name="editNewFolderName"
+                  v-model:new-folder-name="editNewFolderName" :disabled="editSubmitting"
                   compact
                   input-id="edit-new-folder-name"
                 />
               </div>
 
-              <div class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm">
-                <div class="flex items-center justify-between">
-                  <span class="text-slate-500">保存后文件</span>
-                  <span class="font-semibold text-slate-800">{{ editResultFileCount }} 个 · {{ editTotalSizeDisplay }}</span>
+              <div class="mt-5 rounded-md border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-zinc-500">保存后文件</span>
+                  <span class="font-medium tabular-nums text-zinc-950">{{ editResultFileCount }} 个 · {{ editTotalSizeDisplay }}</span>
                 </div>
-                <div class="mt-2 grid grid-cols-2 gap-2 border-t border-slate-200 pt-2 text-xs">
-                  <span class="text-slate-500">删除 {{ removedExistingFileIds.length }} 个</span>
-                  <span class="text-right text-slate-500">新增 {{ editSelectedFiles.length }} 个</span>
+                <div class="mt-2 grid grid-cols-2 gap-2 border-t border-zinc-200 pt-2 text-xs">
+                  <span class="text-zinc-500">删除 {{ removedExistingFileIds.length }} 个</span>
+                  <span class="text-right text-zinc-500">新增 {{ editSelectedFiles.length }} 个</span>
                 </div>
-                <div class="mt-2 border-t border-slate-200 pt-2 text-xs">
-                  <p class="text-slate-400">目录变更</p>
-                  <p class="mt-1 break-all text-slate-600">{{ editingRequest.target_path }}</p>
-                  <p class="my-1 text-slate-400">↓</p>
-                  <p class="break-all font-semibold text-slate-800">{{ editFinalTargetPath }}</p>
+                <div class="mt-2 border-t border-zinc-200 pt-2 text-xs">
+                  <p class="text-zinc-400">目录变更</p>
+                  <p class="mt-1 break-all text-zinc-600">{{ editingRequest.target_path }}</p>
+                  <p class="my-1 text-zinc-400">↓</p>
+                  <p class="break-all font-medium text-zinc-950">{{ editFinalTargetPath }}</p>
                 </div>
-                <p v-if="editingRequest.status === 'rejected'" class="mt-2 border-t border-slate-200 pt-2 text-xs font-medium text-amber-700">
+                <p v-if="editingRequest.status === 'rejected'" class="mt-2 border-t border-zinc-200 pt-2 text-xs font-medium text-amber-700">
                   保存后将清除原退回原因，并重新进入待审核状态。
                 </p>
               </div>
-              <p v-if="editSubmitError" class="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ editSubmitError }}</p>
+              <p v-if="editTotalSize > editQuotaRemaining" role="alert" class="mt-3 rounded-md border border-red-200 px-3 py-2 text-sm leading-5 text-red-600">修改后文件超过可用上传额度，请减少文件后重试。</p>
+              <p v-if="editSubmitError" role="alert" class="mt-3 rounded-md border border-red-200 px-3 py-2 text-sm leading-5 text-red-600">{{ editSubmitError }}</p>
             </section>
+          </fieldset>
           </div>
 
-          <div class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:px-7">
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-zinc-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
             <button
               type="button"
-              class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              :class="secondaryButtonClass"
               :disabled="editSubmitting"
               @click="closeEditDialog"
             >
@@ -602,7 +345,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              :class="[primaryButtonClass, 'min-h-10 h-auto py-2']"
               :disabled="!canSaveEdit"
               @click="saveEdit"
             >
@@ -612,30 +355,26 @@
             </button>
           </div>
         </div>
-      </div>
+      </ShadcnModal>
   </AppPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { toSafeExternalUrl } from '@/lib/security'
-import { NModal, useMessage } from 'naive-ui'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import {
   AlertCircle,
-  Archive,
+  ArrowUpRight,
   CheckCircle2,
-  ChevronRight,
   FileArchive,
   FileImage,
   FileSpreadsheet,
   FileText,
   Folder,
   FolderPlus,
-  ExternalLink,
   Loader2,
-  Pencil,
   Plus,
-  RefreshCw,
   RotateCcw,
   Save,
   Trash2,
@@ -644,11 +383,13 @@ import {
 } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import type { ResourceUploadRequest, ResourceUploadFile } from '@/types/api/resourceUpload'
-import Time from '@/components/tinyComponents/Time.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import ResourceDirectoryPicker from '@/components/upload/ResourceDirectoryPicker.vue'
+import ResourceUploadHistory from '@/components/upload/ResourceUploadHistory.vue'
 
-const message = useMessage()
+const message = useShadcnToast()
+const primaryButtonClass = 'inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+const secondaryButtonClass = 'inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-950 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 const DEFAULT_MAX_FILE_COUNT = 20
 const DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024
 const DEFAULT_ALLOWED_EXTENSIONS = new Set([
@@ -764,29 +505,6 @@ const submitButtonText = computed(() => {
   if (uploadStage.value === 'confirming') return '文件已上传，正在创建投稿记录…'
   return `正在上传 ${uploadProgress.value}%`
 })
-const historyFilterOptions: { value: UploadHistoryFilter; label: string }[] = [
-  { value: 'all', label: '全部' },
-  { value: 'processing', label: '处理中' },
-  { value: 'approved', label: '已通过' },
-  { value: 'issues', label: '异常' },
-]
-const matchesHistoryFilter = (record: ResourceUploadRequest, filter: UploadHistoryFilter) => {
-  if (filter === 'all') return true
-  if (filter === 'processing') return record.status === 'pending' || record.status === 'publishing'
-  if (filter === 'approved') return record.status === 'approved'
-  return record.status === 'rejected' || record.status === 'publish_failed'
-}
-const filteredUploadHistory = computed(() =>
-  uploadHistory.value
-    .filter((record) => matchesHistoryFilter(record, selectedHistoryFilter.value))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-)
-const historyFilterCounts = computed<Record<UploadHistoryFilter, number>>(() => ({
-  all: uploadHistory.value.length,
-  processing: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'processing')).length,
-  approved: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'approved')).length,
-  issues: uploadHistory.value.filter((record) => matchesHistoryFilter(record, 'issues')).length,
-}))
 const editFinalTargetPath = computed(() => {
   if (!editCreateNewFolder.value || !editNewFolderName.value) return editCurrentPath.value
   return `${editCurrentPath.value === '/' ? '' : editCurrentPath.value}/${editNewFolderName.value}`
@@ -800,6 +518,7 @@ const editTotalSize = computed(() =>
   keptExistingFiles.value.reduce((total, file) => total + file.size, 0)
   + editSelectedFiles.value.reduce((total, item) => total + item.file.size, 0),
 )
+const editQuotaRemaining = computed(() => quotaRemaining.value + (editingRequest.value?.total_size || 0))
 const editFolderNameInvalid = computed(() =>
   editCreateNewFolder.value
   && (
@@ -817,36 +536,14 @@ const canSaveEdit = computed(
     && editResultFileCount.value > 0
     && editResultFileCount.value <= maxFileCount.value
     && !editFolderNameInvalid.value
-    && !editRootUploadBlocked.value,
+    && !editRootUploadBlocked.value
+    && editTotalSize.value <= editQuotaRemaining.value,
 )
 const editSubmitButtonText = computed(() => {
   if (!editSubmitting.value) return '保存修改'
   if (editUploadStage.value === 'confirming') return '文件已上传，正在保存修改…'
   return `正在上传 ${editUploadProgress.value}%`
 })
-
-const statusMeta = {
-  pending: {
-    label: '待审核',
-    dotClass: 'bg-amber-500',
-  },
-  publishing: {
-    label: '发布中',
-    dotClass: 'bg-blue-500',
-  },
-  publish_failed: {
-    label: '发布异常',
-    dotClass: 'bg-orange-500',
-  },
-  approved: {
-    label: '已通过',
-    dotClass: 'bg-emerald-500',
-  },
-  rejected: {
-    label: '已退回',
-    dotClass: 'bg-red-500',
-  },
-}
 
 const formatBytes = (bytes: number) => {
   if (!bytes) return '0 B'
@@ -875,6 +572,7 @@ const getErrorMessage = (errors: { err_msg: string }[] | undefined, fallback: st
   errors?.map((error) => error.err_msg).filter(Boolean).join('；') || fallback
 
 const addFiles = (incoming: { file: File; relativePath?: string }[]) => {
+  if (isSubmitting.value) return 0
   fileError.value = ''
   const next = [...selectedFiles.value]
   const initialCount = next.length
@@ -934,13 +632,17 @@ const handleDirectoryModalShow = (show: boolean) => {
 }
 
 const confirmDirectorySelection = () => {
-  if (!canConfirmDirectory.value) return
+  if (!canConfirmDirectory.value || isSubmitting.value) return
   currentPath.value = directoryDraftPath.value
   createNewFolder.value = directoryDraftCreateNewFolder.value
   newFolderName.value = directoryDraftNewFolderName.value.trim()
   targetConfirmed.value = true
   submitError.value = ''
   directoryModalOpen.value = false
+}
+
+const chooseFiles = (folder = false) => {
+  if (!isSubmitting.value) (folder ? folderInput : fileInput).value?.click()
 }
 
 const handleFileInput = (event: Event) => {
@@ -982,6 +684,7 @@ const readEntry = async (entry: FileSystemEntryLike, parentPath = ''): Promise<{
 
 const handleDrop = async (event: DragEvent) => {
   isDragging.value = false
+  if (isSubmitting.value) return
   const items = Array.from(event.dataTransfer?.items || [])
   const entries = items
     .map((item) => {
@@ -1007,6 +710,7 @@ const handleDragLeave = (event: DragEvent) => {
 }
 
 const removeFile = (id: string) => {
+  if (isSubmitting.value) return
   selectedFiles.value = selectedFiles.value.filter((item) => item.id !== id)
   if (!selectedFiles.value.length) {
     targetConfirmed.value = false
@@ -1017,13 +721,17 @@ const removeFile = (id: string) => {
   fileError.value = ''
 }
 
-const clearFiles = () => {
+const resetSelectedFiles = () => {
   selectedFiles.value = []
   fileError.value = ''
   targetConfirmed.value = false
   createNewFolder.value = false
   newFolderName.value = ''
   directoryModalOpen.value = false
+}
+
+const clearFiles = () => {
+  if (!isSubmitting.value) resetSelectedFiles()
 }
 
 const toggleRecordFiles = (requestId: number) => {
@@ -1069,6 +777,7 @@ const openEditDialog = (record: ResourceUploadRequest) => {
 }
 
 const toggleExistingFileRemoval = (fileId: number) => {
+  if (editSubmitting.value) return
   removedExistingFileIds.value = removedExistingFileIds.value.includes(fileId)
     ? removedExistingFileIds.value.filter((id) => id !== fileId)
     : [...removedExistingFileIds.value, fileId]
@@ -1076,6 +785,7 @@ const toggleExistingFileRemoval = (fileId: number) => {
 }
 
 const addEditFiles = (incoming: { file: File; relativePath?: string }[]) => {
+  if (editSubmitting.value) return
   editFileError.value = ''
   const next = [...editSelectedFiles.value]
   const existingPaths = new Set([
@@ -1130,7 +840,12 @@ const handleEditFileInput = (event: Event) => {
   input.value = ''
 }
 
+const chooseEditFiles = (folder = false) => {
+  if (!editSubmitting.value) (folder ? editFolderInput : editFileInput).value?.click()
+}
+
 const removeEditFile = (id: string) => {
+  if (editSubmitting.value) return
   editSelectedFiles.value = editSelectedFiles.value.filter((item) => item.id !== id)
   editFileError.value = ''
 }
@@ -1194,6 +909,7 @@ const completeSubmission = async (uploadRequest: ResourceUploadRequest) => {
 }
 
 const submitUpload = async () => {
+  if (isSubmitting.value) return
   submitError.value = ''
   if (!selectedFiles.value.length) {
     submitError.value = '请先选择要投稿的文件'
@@ -1214,6 +930,11 @@ const submitUpload = async () => {
   }
   if (newFolderName.value === '.' || newFolderName.value === '..' || /[\\/]/.test(newFolderName.value)) {
     submitError.value = '文件夹名称不能包含斜杠，也不能是 . 或 ..'
+    return
+  }
+
+  if (totalSize.value > quotaRemaining.value) {
+    submitError.value = '所选文件超过剩余上传额度，请减少文件后重试。'
     return
   }
 
@@ -1246,7 +967,7 @@ const submitUpload = async () => {
       return
     }
     uploadProgress.value = 100
-    clearFiles()
+    resetSelectedFiles()
     createNewFolder.value = false
     newFolderName.value = ''
     await completeSubmission(response.content.upload_request)
@@ -1259,7 +980,7 @@ const submitUpload = async () => {
     )
     if (recoveredRequest) {
       uploadProgress.value = 100
-      clearFiles()
+      resetSelectedFiles()
       createNewFolder.value = false
       newFolderName.value = ''
       await completeSubmission(recoveredRequest)
@@ -1276,7 +997,7 @@ const submitUpload = async () => {
 }
 
 const saveEdit = async () => {
-  if (!editingRequest.value) return
+  if (!editingRequest.value || editSubmitting.value) return
   editSubmitError.value = ''
   if (!editResultFileCount.value) {
     editSubmitError.value = '请至少保留或新上传一个文件'
@@ -1292,6 +1013,10 @@ const saveEdit = async () => {
   }
   if (editRootUploadBlocked.value) {
     editSubmitError.value = '禁止直接投稿到根目录，请选择子目录或新建文件夹'
+    return
+  }
+  if (editTotalSize.value > editQuotaRemaining.value) {
+    editSubmitError.value = '修改后文件超过可用上传额度，请减少文件后重试。'
     return
   }
 

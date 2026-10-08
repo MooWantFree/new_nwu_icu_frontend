@@ -5,10 +5,12 @@ import { api } from '@/lib/requests'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'
 
 vi.mock('@/lib/requests', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() } }))
-vi.mock('naive-ui', () => ({
-  useMessage: () => ({ error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() }),
-  NModal: {
-    props: ['show', 'maskClosable', 'closeOnEsc'],
+vi.mock('@/lib/useShadcnToast', () => ({
+  useShadcnToast: () => ({ error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() }),
+}))
+vi.mock('@/components/common/ShadcnModal.vue', () => ({
+  default: {
+    props: ['show', 'maskClosable', 'closeOnEsc', 'title'],
     emits: ['update:show'],
     setup: (props: { show: boolean }, context: any) => () => props.show ? context.slots.default?.() : null,
   },
@@ -67,14 +69,17 @@ const setInputFiles = (input: HTMLInputElement, files: File[]) => {
 let app: App | undefined
 let container: HTMLDivElement
 
-const mockApi = (history: ResourceUploadRequest[] = []) => {
+const mockApi = (
+  history: ResourceUploadRequest[] = [],
+  quota = { limit: 1024 ** 3, used: 0, remaining: 1024 ** 3 },
+) => {
   vi.mocked(api.get).mockImplementation(async ({ url, query }: any) => {
     if (url === '/api/upload/config/') {
       return { status: 200, content: {
         max_file_count: 20,
         max_file_size: 100 * 1024 * 1024,
         allowed_extensions: ['.pdf'],
-        quota: { limit: 1024 ** 3, used: 0, remaining: 1024 ** 3 },
+        quota,
       } } as any
     }
     if (url === '/api/upload/request/') {
@@ -96,6 +101,26 @@ const mount = async () => {
   app = createApp(ResourceUpload)
   app.mount(container)
   await flush()
+}
+
+const buttonWithText = (label: string) => {
+  const button = [...container.querySelectorAll<HTMLButtonElement>('button')]
+    .find(item => item.textContent?.trim() === label)
+  expect(button, `button with text ${label}`).toBeDefined()
+  return button!
+}
+
+const confirmCourseDirectory = async () => {
+  buttonWithText('课程资料').click()
+  await flush()
+  buttonWithText('确认目录').click()
+  await flush()
+}
+
+const pendingResponse = () => {
+  let resolve!: (value: any) => void
+  const promise = new Promise<any>((resolvePromise) => { resolve = resolvePromise })
+  return { promise, resolve }
 }
 
 beforeEach(() => {
@@ -228,5 +253,111 @@ describe('resource upload simplified flow', () => {
       .toEqual(['upload-record-4', 'upload-record-2'])
     expect(container.textContent).toContain('发布异常：同步失败')
     expect(container.textContent).toContain('退回原因：目录不合适')
+  })
+
+  it('keeps submitted files fixed while uploading and clears them after success', async () => {
+    mockApi()
+    const response = pendingResponse()
+    vi.mocked(api.post).mockReturnValue(response.promise)
+    await mount()
+    const fileInput = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    setInputFiles(fileInput, [file()])
+    await flush()
+    await confirmCourseDirectory()
+
+    buttonWithText('提交审核').click()
+    await flush()
+    const removeButton = container.querySelector<HTMLButtonElement>('[aria-label="移除 资料.pdf"]')!
+    expect(fileInput.disabled).toBe(true)
+    expect(buttonWithText('选择文件').disabled).toBe(true)
+    expect(buttonWithText('清空全部').disabled).toBe(true)
+    expect(removeButton.disabled).toBe(true)
+
+    // A picker or drag operation started before upload can still deliver its event.
+    setInputFiles(fileInput, [file('上传中追加.pdf')])
+    const drop = new Event('drop', { bubbles: true, cancelable: true })
+    Object.defineProperty(drop, 'dataTransfer', { value: { items: [], files: [file('拖放追加.pdf')] } })
+    container.querySelector<HTMLElement>('[aria-label="选择要投稿的文件"]')!.dispatchEvent(drop)
+    buttonWithText('清空全部').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    removeButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flush()
+    const selectedList = container.querySelector('[aria-label="已选择的文件"]')!
+    expect(selectedList.querySelectorAll('li')).toHaveLength(1)
+    expect(selectedList.textContent).toContain('资料.pdf')
+    expect(selectedList.textContent).not.toContain('追加.pdf')
+    const formData = vi.mocked(api.post).mock.calls[0]![0].query as unknown as FormData
+    expect(formData.getAll('relative_paths')).toEqual(['资料.pdf'])
+
+    response.resolve({ status: 201, content: {
+      upload_request: makeRequest(9, 'pending', '/课程资料', '2026-09-05T08:00:00Z'),
+    } })
+    await flush()
+    expect(container.querySelector('[aria-label="已选择的文件"]')).toBeNull()
+    expect(container.textContent).toContain('尚未选择目录')
+    expect(buttonWithText('提交审核').disabled).toBe(true)
+    expect(container.querySelector('#upload-record-9')).not.toBeNull()
+  })
+
+  it('counts only added file size against the remaining quota when editing', async () => {
+    const request = makeRequest(1, 'pending', '/课程资料', '2026-09-05T08:00:00Z')
+    mockApi([request], { limit: 2048, used: 2044, remaining: 4 })
+    await mount()
+    buttonWithText('编辑投稿').click()
+    await flush()
+    const editFileInput = container.querySelectorAll<HTMLInputElement>('input[type="file"]')[2]!
+    expect(buttonWithText('保存修改').disabled).toBe(false)
+
+    setInputFiles(editFileInput, [new File(['12345'], '超额.pdf', { type: 'application/pdf' })])
+    await flush()
+    expect(buttonWithText('保存修改').disabled).toBe(true)
+    container.querySelector('p[title="超额.pdf"]')!.closest('li')!.querySelector('button')!.click()
+    await flush()
+
+    setInputFiles(editFileInput, [new File(['1234'], '额度内.pdf', { type: 'application/pdf' })])
+    await flush()
+    expect(buttonWithText('保存修改').disabled).toBe(false)
+    expect(api.put).not.toHaveBeenCalled()
+  })
+
+  it('keeps edit files fixed while saving and closes the edit dialog after success', async () => {
+    const request = makeRequest(1, 'pending', '/课程资料', '2026-09-05T08:00:00Z')
+    mockApi([request])
+    const response = pendingResponse()
+    vi.mocked(api.put).mockReturnValue(response.promise)
+    await mount()
+    buttonWithText('编辑投稿').click()
+    await flush()
+    const editFileInput = container.querySelectorAll<HTMLInputElement>('input[type="file"]')[2]!
+    setInputFiles(editFileInput, [file('补充.pdf')])
+    await flush()
+    buttonWithText('保存修改').click()
+    await flush()
+
+    const existingRemove = container.querySelector<HTMLButtonElement>('[aria-label="删除 资料.pdf"]')!
+    const addedRemove = container.querySelector('p[title="补充.pdf"]')!
+      .closest('li')!.querySelector<HTMLButtonElement>('button')!
+    expect(editFileInput.matches(':disabled')).toBe(true)
+    expect(buttonWithText('添加文件').matches(':disabled')).toBe(true)
+    expect(buttonWithText('添加文件夹').matches(':disabled')).toBe(true)
+    expect(existingRemove.matches(':disabled')).toBe(true)
+    expect(addedRemove.matches(':disabled')).toBe(true)
+    setInputFiles(editFileInput, [file('保存中追加.pdf')])
+    existingRemove.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    addedRemove.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flush()
+    expect(container.querySelector('p[title="补充.pdf"]')).not.toBeNull()
+    expect(container.querySelector('p[title="保存中追加.pdf"]')).toBeNull()
+    expect(container.querySelector('[aria-label="撤销删除 资料.pdf"]')).toBeNull()
+    const formData = vi.mocked(api.put).mock.calls[0]![0].query as unknown as FormData
+    expect(formData.get('expected_revision')).toBe('1')
+    expect(formData.getAll('relative_paths')).toEqual(['补充.pdf'])
+    expect(formData.getAll('remove_file_ids')).toEqual([])
+
+    response.resolve({ status: 200, content: {
+      upload_request: { ...request, revision: 2, updated_at: '2026-09-05T09:00:00Z' },
+    } })
+    await flush()
+    expect(container.querySelector('#edit-upload-title')).toBeNull()
+    expect(container.querySelector('#upload-record-1')).not.toBeNull()
   })
 })

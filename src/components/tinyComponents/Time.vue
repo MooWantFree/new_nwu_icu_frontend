@@ -1,19 +1,23 @@
 <template>
-  <n-tooltip placement="bottom" trigger="hover">
+  <ShadcnTooltip placement="bottom" trigger="hover">
     <template #trigger>
-      <span class="app-time" :class="{ 'whitespace-nowrap': mode === 'message' }" v-bind="$attrs">
-        <n-time v-if="mode === 'message'" :time="parsedTime" :format="messageFormat" />
-        <n-time v-else :time="parsedTime" type="relative" />
+      <span class="app-time" tabindex="0" :class="{ 'whitespace-nowrap': mode === 'message' }" v-bind="$attrs">
+        {{ displayTime }}
       </span>
     </template>
-    <n-time :time="parsedTime" :format="mode === 'message' ? 'yyyy年M月d日 HH:mm' : 'yyyy-MM-dd hh:mm:ss'" />
-  </n-tooltip>
+    {{ fullTime }}
+  </ShadcnTooltip>
 </template>
 
 <script lang="ts" setup>
-import { NTime } from 'naive-ui'
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useNow } from '@vueuse/core'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+import ShadcnTooltip from '@/components/common/ShadcnTooltip.vue'
+
+dayjs.extend(relativeTime)
 
 defineOptions({ inheritAttrs: false })
 
@@ -22,20 +26,19 @@ const props = defineProps<{
   mode?: 'relative' | 'message'
 }>()
 
-const parsedTime = computed(() => new Date(props.time))
-const { now, pause, resume } = useNow({ controls: true, interval: 60_000 })
-watch(() => props.mode, mode => {
-  if (mode === 'message') resume()
-  else pause()
-}, { immediate: true })
-const messageFormat = computed(() => parsedTime.value.toDateString() === now.value.toDateString()
-  ? '今天 HH:mm'
-  : 'yyyy年M月d日 HH:mm')
+const parsedTime = computed(() => dayjs(props.time).locale('zh-cn'))
+const now = useNow({ interval: 60_000 })
+const fullTime = computed(() => parsedTime.value.isValid() ? parsedTime.value.format(props.mode === 'message' ? 'YYYY年M月D日 HH:mm' : 'YYYY-MM-DD HH:mm:ss') : '时间未知')
+const displayTime = computed(() => {
+  if (!parsedTime.value.isValid()) return '时间未知'
+  if (props.mode !== 'message') return parsedTime.value.from(dayjs(now.value))
+  return parsedTime.value.format(parsedTime.value.isSame(now.value, 'day') ? '[今天] HH:mm' : 'YYYY年M月D日 HH:mm')
+})
 </script>
 
 <style scoped>
 .app-time {
-  color: #64748b;
+  color: #71717a;
   cursor: help;
   font-size: 0.75rem;
   line-height: 1rem;
@@ -43,6 +46,12 @@ const messageFormat = computed(() => parsedTime.value.toDateString() === now.val
 }
 
 .app-time:hover {
-  color: #334155;
+  color: #3f3f46;
+}
+
+.app-time:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #a1a1aa;
+  outline-offset: 2px;
 }
 </style>

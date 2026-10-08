@@ -1,7 +1,7 @@
 <template>
   <article class="px-5 py-5 transition-colors hover:bg-zinc-50 sm:px-6">
     <div class="flex items-start gap-3 sm:gap-4">
-      <n-tooltip trigger="hover">
+      <ShadcnTooltip trigger="hover">
         <template #trigger>
           <div
             class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100"
@@ -25,7 +25,7 @@
           </div>
         </template>
         <span>{{ review.author.id <= 0 ? '匿名用户' : review.author.is_student ? '认证用户' : '普通用户' }}</span>
-      </n-tooltip>
+      </ShadcnTooltip>
 
       <div class="min-w-0 flex-1">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -80,6 +80,7 @@
 
 <script setup lang="ts">
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import ShadcnTooltip from '@/components/common/ShadcnTooltip.vue'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import type { ReviewTimeline } from '@/types/courseReview'

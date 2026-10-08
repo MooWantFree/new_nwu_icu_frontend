@@ -8,7 +8,13 @@ import ReplyList from '@/components/user/profilePage/ReplyList.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ error: mocks.error }), NRate: { render: () => null } }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
+vi.mock('@/components/common/ShadcnRating.vue', () => ({ default: { render: () => null } }))
+vi.mock('@/components/common/ShadcnSelect.vue', () => ({ default: defineComponent({
+  props: ['value', 'options'], emits: ['update:value'],
+  setup: (props, { emit }) => () => h('select', { value: props.value, onChange: (event: Event) => emit('update:value', (event.target as HTMLSelectElement).value) },
+    props.options.map((option: { value: string; label: string }) => h('option', { value: option.value }, option.label))),
+}) }))
 vi.mock('@/components/user/profilePage/UserInfo.vue', () => ({ default: defineComponent({
   props: ['userInfo'], setup: props => () => h('p', { 'data-user': '' }, props.userInfo?.nickname),
 }) }))
@@ -54,11 +60,6 @@ const mount = async (path: string, component: Component, routePath: string, prop
   ] })
   await router.push(path)
   app = createApp(RouterView).use(router)
-  app.component('NSelect', defineComponent({
-    props: ['value', 'options'], emits: ['update:value'],
-    setup: (props, { emit }) => () => h('select', { value: props.value, onChange: (event: Event) => emit('update:value', (event.target as HTMLSelectElement).value) },
-      props.options.map((option: { value: string; label: string }) => h('option', { value: option.value }, option.label))),
-  }))
   app.mount(container)
   await flush()
   return router

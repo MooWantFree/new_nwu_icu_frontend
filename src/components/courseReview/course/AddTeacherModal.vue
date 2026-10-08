@@ -36,7 +36,7 @@
             重新加载
           </button>
         </div>
-        <n-select
+        <ShadcnSelect
           v-else
           v-model:value="teacherSchool"
           :options="schools"
@@ -44,9 +44,7 @@
           value-field="id"
           placeholder="请选择学院"
           filterable
-          size="large"
           :status="errorMessage.teacherSchool ? 'error' : undefined"
-          :theme-overrides="reviewSelectTheme"
           :aria-labelledby="schoolLabelId"
           aria-label="所属学院"
           :aria-invalid="!!errorMessage.teacherSchool"
@@ -85,7 +83,7 @@
 import { onBeforeUnmount, ref, useId, watch } from 'vue'
 import { LoaderCircle } from 'lucide-vue-next'
 import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
-import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 import { api } from '@/lib/requests'
 import { isLoginRequiredResponse, useCreationLogin } from '@/lib/useCreationLogin'
 import { useShadcnToast } from '@/lib/useShadcnToast'

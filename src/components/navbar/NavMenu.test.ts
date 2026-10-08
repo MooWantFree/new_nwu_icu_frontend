@@ -73,4 +73,42 @@ describe('NavMenu', () => {
     expect(toggle?.getAttribute('aria-expanded')).toBe('false')
     expect(submenu?.style.display).toBe('none')
   })
+
+  it('supports keyboard navigation, Escape focus return and actual outside clicks', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: { render: () => null } },
+        { path: '/review/timeline', component: { render: () => null } },
+        { path: '/review/course', component: { render: () => null } },
+      ],
+    })
+    await router.push('/')
+    await router.isReady()
+    app = createApp({ render: () => h(NavMenu, { menuItems }) }).use(router)
+    app.mount(container)
+    const trigger = container.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')!
+    trigger.focus()
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    await flush()
+    const items = [...container.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+    expect(document.activeElement).toBe(items[0])
+    items[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    await flush()
+    expect(document.activeElement).toBe(items[1])
+    items[1]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    await flush()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(trigger)
+
+    trigger.click()
+    await flush()
+    const outside = document.createElement('button')
+    outside.className = 'group relative'
+    container.append(outside)
+    outside.click()
+    await flush()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(router.currentRoute.value.path).toBe('/')
+  })
 })

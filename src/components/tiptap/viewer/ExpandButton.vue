@@ -3,7 +3,7 @@
     type="button"
     :aria-expanded="expanded"
     @click="handleExpandClick"
-    class="group inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-blue-200/70 bg-white/95 px-4 py-2 text-sm font-medium leading-5 text-blue-700 shadow-sm backdrop-blur-sm transition-colors duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 motion-reduce:transition-none"
+    class="group inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white/95 px-4 py-2 text-sm font-medium leading-5 text-zinc-950 shadow-sm backdrop-blur-sm transition-colors duration-200 hover:bg-zinc-100 active:bg-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 motion-reduce:transition-none"
   >
     <template v-if="expandButtonText">
       {{ expandButtonText }}

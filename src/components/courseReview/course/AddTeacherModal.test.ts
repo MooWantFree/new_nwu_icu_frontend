@@ -23,6 +23,15 @@ const deferred = <T,>() => {
   const promise = new Promise<T>(finish => { resolve = finish })
   return { promise, resolve }
 }
+vi.mock('@/components/common/ShadcnSelect.vue', () => ({ default: defineComponent({
+    props: { value: Number, options: Array as PropType<{ id: number; name: string }[]>, disabled: Boolean },
+    emits: ['update:value'],
+    setup: (props, { emit }) => () => h('select', {
+      value: props.value ?? '', disabled: props.disabled,
+      onChange: (event: Event) => emit('update:value', Number((event.target as HTMLSelectElement).value) || null),
+    }, [h('option', { value: '' }, '请选择学院'), ...props.options!.map(school => h('option', { value: school.id }, school.name))]),
+  }) }))
+
 let app: App | undefined
 let host: HTMLDivElement
 const button = (label: string) => [...host.querySelectorAll<HTMLButtonElement>('button')].find(candidate => candidate.textContent?.trim() === label)!
@@ -34,14 +43,6 @@ const mount = async (initValue?: { name?: string; school?: number }, initiallyOp
     'onUpdate:modelValue': (value: boolean) => { mocks.close(value); show.value = value },
     onAdd: mocks.add,
   }) })
-  app.component('NSelect', defineComponent({
-    props: { value: Number, options: Array as PropType<{ id: number; name: string }[]>, disabled: Boolean },
-    emits: ['update:value'],
-    setup: (props, { emit }) => () => h('select', {
-      value: props.value ?? '', disabled: props.disabled,
-      onChange: (event: Event) => emit('update:value', Number((event.target as HTMLSelectElement).value) || null),
-    }, [h('option', { value: '' }, '请选择学院'), ...props.options!.map(school => h('option', { value: school.id }, school.name))]),
-  }))
   app.mount(host)
   await flush()
   return show

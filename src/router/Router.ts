@@ -218,7 +218,7 @@ const resourceUploadRoutes = [
     name: 'resourceUpload',
     component: () => import('@/views/upload/ResourceUpload.vue'),
     meta: {
-      pageTitle: '资料投稿',
+      pageTitle: '分享资料',
       requiresAuth: true,
       loginReason: '请先登录或注册，再继续投稿资料',
       loginSuccessMessage: '登录成功，正在继续投稿',

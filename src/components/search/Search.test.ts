@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, type App } from 'vue'
 import { createMemoryHistory, createRouter, type Router } from 'vue-router'
-import { NTooltip } from 'naive-ui'
 import SearchComponent from './Search.vue'
 import { api } from '@/lib/requests'
 import { resourcePageUrl } from '@/lib/resourceBrowser'
@@ -21,7 +20,6 @@ async function mount(path = '/disk/课程') {
   ] })
   await router.push(path); await router.isReady()
   app = createApp({ render: () => h(SearchComponent, { onClose: close }) }).use(router)
-  app.component('NTooltip', NTooltip)
   app.mount(host); await flush()
 }
 async function submit(keyword = '资料') {

@@ -57,12 +57,12 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, useTemplateRef } from 'vue'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { Review } from '@/types/courseReview'
 import { api } from '@/lib/requests'
 import { useCourseReviewReplyDraft } from '@/lib/useCourseReviewReplyDraft'
 
-const message = useMessage()
+const message = useShadcnToast()
 
 const props = defineProps<{
   review: Review

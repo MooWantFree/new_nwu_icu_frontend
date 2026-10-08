@@ -1,187 +1,90 @@
 <template>
-  <div
-    v-if="modelValue"
-    class="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0"
-  >
-    <!-- 背景遮罩 -->
-    <div
-      class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      @click="handleClose"
-    ></div>
-
-    <!-- 模态框 -->
-    <div class="relative w-full max-w-md p-5 sm:p-6 bg-white rounded-lg shadow-xl animate-fadeIn">
-      <button
-        type="button"
-        @click="handleClose"
-        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
-        aria-label="关闭"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
-      </button>
-      
-      <h3 class="mb-5 text-xl font-semibold text-gray-900">添加链接</h3>
-
-      <form @submit.prevent="handleSubmit" class="space-y-5">
-        <div>
-          <label
-            for="linkUrl"
-            class="block mb-1.5 text-sm font-medium text-gray-700"
-            >链接地址</label
-          >
-          <input
-            id="linkUrl"
-            v-model="url"
-            type="text"
-            inputmode="url"
-            placeholder="https://example.com 或 /announcements"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            required
-            autocomplete="url"
-          />
-          <p v-if="urlError" class="mt-1.5 text-sm text-red-700">{{ urlError }}</p>
+  <ShadcnModal :show="modelValue" title="添加链接" :auto-focus="false" @after-enter="focusUrl" @update:show="handleVisibility">
+    <section :aria-labelledby="titleId" class="w-[calc(100vw-2rem)] max-w-md bg-white p-5 outline-none sm:p-6" :class="isShadcn ? 'rounded-xl border border-zinc-200 text-zinc-950 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.25)]' : 'rounded-lg text-gray-900 shadow-xl'">
+      <header class="mb-5 flex items-start justify-between gap-4">
+        <h2 :id="titleId" class="text-lg font-semibold tracking-tight">添加链接</h2>
+        <button type="button" aria-label="关闭添加链接窗口" class="-mr-1 -mt-1 inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2" :class="isShadcn ? 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-zinc-400' : 'text-gray-400 hover:text-gray-600 focus-visible:ring-blue-500'" @click="handleClose"><X class="h-4 w-4" aria-hidden="true" /></button>
+      </header>
+      <form class="space-y-5" novalidate @submit.stop.prevent="handleSubmit">
+        <div class="space-y-2">
+          <label :for="urlId" class="block text-sm font-medium" :class="isShadcn ? 'text-zinc-950' : 'text-gray-700'">链接地址</label>
+          <input :id="urlId" ref="urlInput" v-model="url" type="text" inputmode="url" placeholder="https://example.com 或 /announcements" :class="inputClass" required autocomplete="url" :aria-invalid="Boolean(urlError)" :aria-describedby="urlError ? errorId : undefined" />
+          <p v-if="urlError" :id="errorId" role="alert" class="text-sm text-red-600">{{ urlError }}</p>
         </div>
-
-        <div>
-          <label
-            for="linkText"
-            class="block mb-1.5 text-sm font-medium text-gray-700"
-            >链接文本</label
-          >
-          <input
-            id="linkText"
-            v-model="text"
-            type="text"
-            placeholder="显示文本"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
+        <div class="space-y-2">
+          <label :for="textId" class="block text-sm font-medium" :class="isShadcn ? 'text-zinc-950' : 'text-gray-700'">链接文本</label>
+          <input :id="textId" v-model="text" type="text" placeholder="显示文本" :class="inputClass" />
         </div>
-
-        <div class="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            @click="handleClose"
-            class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors"
-          >
-            添加链接
-          </button>
-        </div>
+        <footer class="flex justify-end gap-2 pt-1">
+          <button type="button" class="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2" :class="isShadcn ? 'border border-zinc-200 bg-white text-zinc-950 shadow-sm hover:bg-zinc-100 focus-visible:ring-zinc-400' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-500'" @click="handleClose">取消</button>
+          <button type="submit" class="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2" :class="isShadcn ? 'bg-zinc-950 hover:bg-zinc-800 focus-visible:ring-zinc-400' : 'bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-500'">添加链接</button>
+        </footer>
       </form>
-    </div>
-  </div>
+    </section>
+  </ShadcnModal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-
+import { computed, ref, useId, useTemplateRef, watch } from 'vue'
+import { X } from 'lucide-vue-next'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import { hasUnsafeUrlCharacters } from '@/lib/security'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   initialText?: string
-}>()
-
+  appearance?: 'default' | 'shadcn'
+}>(), { appearance: 'shadcn' })
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   submit: [{ url: string; text: string }]
 }>()
-
+const id = useId()
+const titleId = 'insert-link-title-' + id
+const urlId = 'insert-link-url-' + id
+const textId = 'insert-link-text-' + id
+const errorId = 'insert-link-error-' + id
+const urlInput = useTemplateRef<HTMLInputElement>('urlInput')
+const isShadcn = computed(() => props.appearance === 'shadcn')
+const inputClass = computed(() => isShadcn.value
+  ? 'h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-950 shadow-sm placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus-visible:ring-red-400'
+  : 'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors')
 const url = ref('')
-const text = ref('')
+const text = ref(props.initialText || '')
 const urlError = ref('')
-
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue) {
-      text.value = props.initialText || ''
-      urlError.value = ''
-      // Focus the url input when modal opens
-      setTimeout(() => {
-        document.getElementById('linkUrl')?.focus()
-      }, 100)
-    }
-  }
-)
-
-watch(
-  () => props.initialText,
-  (newValue) => {
-    if (newValue) {
-      text.value = newValue
-    }
-  },
-  { immediate: true }
-)
-
+const focusUrl = () => urlInput.value?.focus({ preventScroll: true })
+watch(() => props.modelValue, open => {
+  if (open) { text.value = props.initialText || ''; urlError.value = '' }
+}, { immediate: true })
+watch(() => props.initialText, value => { if (value) text.value = value })
 const handleClose = () => {
-  url.value = ''
-  text.value = ''
-  urlError.value = ''
+  url.value = ''; text.value = ''; urlError.value = ''
   emit('update:modelValue', false)
 }
-
+const handleVisibility = (show: boolean) => { if (!show) handleClose() }
+const invalidUrl = () => {
+  urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
+  focusUrl()
+}
 const handleSubmit = () => {
   let formattedUrl = url.value.trim()
-  if (!formattedUrl || formattedUrl.length > 2048 || hasUnsafeUrlCharacters(formattedUrl)) {
-    urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
-    return
-  }
+  if (!formattedUrl || formattedUrl.length > 2048 || hasUnsafeUrlCharacters(formattedUrl)) { invalidUrl(); return }
   if (formattedUrl.startsWith('/') && !formattedUrl.startsWith('//')) {
     try {
       const target = new URL(formattedUrl, window.location.origin)
-      formattedUrl = `${target.pathname}${target.search}${target.hash}`
-    } catch {
-      urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
-      return
-    }
+      formattedUrl = target.pathname + target.search + target.hash
+    } catch { invalidUrl(); return }
   } else {
-    if (formattedUrl && !/^[a-z][a-z\d+.-]*:/i.test(formattedUrl)) formattedUrl = `https://${formattedUrl}`
+    if (!/^[a-z][a-z\d+.-]*:/i.test(formattedUrl)) formattedUrl = 'https://' + formattedUrl
     try {
       const target = new URL(formattedUrl)
       if (!['http:', 'https:'].includes(target.protocol)) throw new Error('unsupported protocol')
       formattedUrl = target.toString()
-    } catch {
-      urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
-      return
-    }
+    } catch { invalidUrl(); return }
   }
-
-  if (formattedUrl.length > 2048) {
-    urlError.value = '请输入有效的站内路径或 HTTP(S) 链接。'
-    return
-  }
-
+  if (formattedUrl.length > 2048) { invalidUrl(); return }
   urlError.value = ''
-  emit('submit', {
-    url: formattedUrl,
-    text: text.value.trim() || formattedUrl,
-  })
+  emit('submit', { url: formattedUrl, text: text.value.trim() || formattedUrl })
   handleClose()
 }
 </script>
-
-<style scoped>
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-</style>

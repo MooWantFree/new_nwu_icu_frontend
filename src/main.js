@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import Router from './router/Router'
-import naive from 'naive-ui'
 import * as Sentry from '@sentry/vue'
 import '@/style/style.css'
 import { captureActionTokenFromUrl } from '@/lib/actionTokens'
@@ -12,7 +11,6 @@ import { initializeStatistics } from '@/lib/analytics'
 captureActionTokenFromUrl()
 const app = createApp(App)
 app.use(Router)
-app.use(naive)
 
 const redactSentryEvent = (event) => {
   if (event.request?.url) event.request.url = redactSensitiveUrl(event.request.url)

@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { computed, type VNodeChild } from 'vue'
-import type { MessageType } from 'naive-ui'
+import type { MessageType } from '@/lib/useShadcnToast'
 import { Check, CircleAlert, Info, LoaderCircle, TriangleAlert, X } from 'lucide-vue-next'
 
 const props = withDefaults(defineProps<{

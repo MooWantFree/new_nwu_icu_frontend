@@ -1,5 +1,5 @@
 <template>
-  <NModal :show="true" @update:show="close">
+  <ShadcnModal :show="true" :title="isReply ? '添加回复' : `添加${itemLabel}`" :busy="submitting" :suspended="confirmingLeave" @update:show="close">
     <div role="dialog" aria-modal="true" :aria-labelledby="titleId" class="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto overscroll-contain rounded-xl border border-zinc-200 bg-white p-4 text-zinc-950 shadow-[0_20px_70px_-20px_rgba(0,0,0,0.25)] sm:p-6">
       <div class="mb-5 flex items-center justify-between gap-3">
         <h2 :id="titleId" class="text-lg font-semibold tracking-tight">{{ isReply ? '添加回复' : `添加${itemLabel}` }}</h2>
@@ -33,13 +33,13 @@
         </div>
       </form>
     </div>
-  </NModal>
+  </ShadcnModal>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { NModal } from 'naive-ui'
+import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import { X } from 'lucide-vue-next'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { useShadcnDialog } from '@/lib/useShadcnDialog'

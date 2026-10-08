@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
 import type { CourseData, ReviewDataBase } from '@/types/courseReview'
@@ -135,7 +135,7 @@ enum SortMethods {
   LowestRated = 'lowest',
 }
 
-const message = useMessage()
+const message = useShadcnToast()
 const { isLoggedIn, userInfo } = useUser()
 const route = useRoute()
 const router = useRouter()

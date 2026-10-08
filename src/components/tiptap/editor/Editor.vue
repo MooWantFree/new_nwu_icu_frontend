@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue'
+import { onBeforeUnmount, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -19,7 +19,7 @@ import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import FileHandler from '@tiptap/extension-file-handler'
 import { useFileUpload } from '@/lib/fileUploads'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import EditorToolbar from './EditorToolbar.vue'
 import { AllowedMimeTypes } from './vars'
 import 'prosemirror-view/style/prosemirror.css'
@@ -49,7 +49,9 @@ const content = defineModel<string>()
 if (defaultContent) {
   content.value = defaultContent
 }
-const message = useMessage()
+const message = useShadcnToast()
+let mounted = true
+onBeforeUnmount(() => { mounted = false })
 
 const editor = useEditor({
   extensions: [
@@ -97,7 +99,7 @@ const editor = useEditor({
     Link.configure({
       openOnClick: false,
       HTMLAttributes: {
-        class: 'text-blue-700 hover:text-blue-700',
+        class: 'text-zinc-950 underline underline-offset-4 hover:text-zinc-700',
       },
       defaultProtocol: 'https',
     }),
@@ -134,20 +136,19 @@ const handleFile = async (currentEditor: any, file: File, pos: number) => {
 
   await uploadFile(file)
 
-  if (succeed.value) {
-    if (succeed.value && imageUrl.value) {
-      currentEditor
-        .chain()
-        .insertContentAt(pos, {
-          type: 'image',
-          attrs: {
-            src: imageUrl.value,
-          },
-        })
-        .run()
-    } else if (errors.value.length > 0) {
-      message.error(`上传文件失败: ${errors.value.join(', ')}`)
-    }
+  if (!mounted || currentEditor.isDestroyed) return
+  if (succeed.value && imageUrl.value) {
+    currentEditor
+      .chain()
+      .insertContentAt(pos, {
+        type: 'image',
+        attrs: {
+          src: imageUrl.value,
+        },
+      })
+      .run()
+  } else {
+    message.error(`上传文件失败: ${errors.value.join(', ') || '请稍后重试'}`)
   }
 }
 
@@ -164,7 +165,7 @@ const focusEditorFromBlankArea = (event: MouseEvent) => {
 /* Share the text baseline with the empty paragraph's caret. Absolute positioning
    and floats create a separate line box, whose font fallback metrics can differ. */
 .tiptap p.is-editor-empty:first-child::before {
-  color: #8e8e93;
+  color: var(--ui-text-muted);
   content: attr(data-placeholder);
   display: inline-block;
   font: inherit;
@@ -192,7 +193,7 @@ const focusEditorFromBlankArea = (event: MouseEvent) => {
 
 .ProseMirror td,
 .ProseMirror th {
-  border: 2px solid #d1d1d6;
+  border: var(--ui-table-border-width) solid var(--ui-border-strong);
   box-sizing: border-box;
   min-width: 1em;
   padding: 8px;
@@ -201,13 +202,13 @@ const focusEditorFromBlankArea = (event: MouseEvent) => {
 }
 
 .ProseMirror th {
-  background-color: #f5f5f7;
-  font-weight: bold;
+  background-color: var(--ui-background);
+  font-weight: var(--ui-table-heading-weight);
   text-align: left;
 }
 
 .ProseMirror .selectedCell:after {
-  background: rgba(10, 132, 255, 0.18);
+  background: var(--ui-table-selection);
   content: '';
   left: 0;
   right: 0;
@@ -219,7 +220,7 @@ const focusEditorFromBlankArea = (event: MouseEvent) => {
 }
 
 .ProseMirror .column-resize-handle {
-  background-color: #dceeff;
+  background-color: var(--ui-table-resize-handle);
   bottom: -2px;
   position: absolute;
   right: -2px;

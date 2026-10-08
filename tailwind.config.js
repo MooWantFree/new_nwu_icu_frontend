@@ -1,3 +1,10 @@
+import typography from '@tailwindcss/typography'
+
+const themePalette = (name) => Object.fromEntries(
+  [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(shade =>
+    [shade, `rgb(var(--ui-${name}-${shade}) / <alpha-value>)`],
+  ),
+)
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
@@ -11,7 +18,7 @@ export default {
         7: '7 7 0%',
       },
       borderColor: {
-        customGray: '#DDDDDD',
+        customGray: 'rgb(var(--ui-custom-border-rgb) / <alpha-value>)',
       },
       height: {
         37.5: '37.5rem',
@@ -21,49 +28,13 @@ export default {
         '23/24': '95.833333%', // 添加自定义的 23/24 宽度
       },
       colors: {
-        customGray: '#999999',
-        customBlue: '#0071E3',
-        contentGray: '#6E6E73',
-        hrefBlue: '#0066CC',
-        blue: {
-          50: '#F0F7FF',
-          100: '#DCEEFF',
-          200: '#B9DCFF',
-          300: '#8AC5FF',
-          400: '#4AA3FF',
-          500: '#0A84FF',
-          600: '#0071E3',
-          700: '#0066CC',
-          800: '#0055AD',
-          900: '#003F80',
-          950: '#002B57',
-        },
-        gray: {
-          50: '#F5F5F7',
-          100: '#F2F2F7',
-          200: '#E5E5EA',
-          300: '#D1D1D6',
-          400: '#AEAEB2',
-          500: '#8E8E93',
-          600: '#6E6E73',
-          700: '#48484A',
-          800: '#2C2C2E',
-          900: '#1D1D1F',
-          950: '#111113',
-        },
-        slate: {
-          50: '#F5F5F7',
-          100: '#F2F2F7',
-          200: '#E5E5EA',
-          300: '#D1D1D6',
-          400: '#AEAEB2',
-          500: '#8E8E93',
-          600: '#6E6E73',
-          700: '#48484A',
-          800: '#2C2C2E',
-          900: '#1D1D1F',
-          950: '#111113',
-        },
+        customGray: 'rgb(var(--ui-custom-gray-rgb) / <alpha-value>)',
+        customBlue: 'rgb(var(--ui-accent-rgb) / <alpha-value>)',
+        contentGray: 'rgb(var(--ui-tertiary-rgb) / <alpha-value>)',
+        hrefBlue: 'rgb(var(--ui-link-rgb) / <alpha-value>)',
+        blue: themePalette('blue'),
+        gray: themePalette('neutral'),
+        slate: themePalette('neutral'),
       },
       fontFamily: {
         sans: [
@@ -86,26 +57,26 @@ export default {
       typography: {
         DEFAULT: {
           css: {
-            '--tw-prose-body': '#48484A',
-            '--tw-prose-headings': '#1D1D1F',
-            '--tw-prose-lead': '#6E6E73',
-            '--tw-prose-links': '#0066CC',
-            '--tw-prose-bold': '#1D1D1F',
-            '--tw-prose-counters': '#6E6E73',
-            '--tw-prose-bullets': '#8E8E93',
-            '--tw-prose-hr': '#E5E5EA',
-            '--tw-prose-quotes': '#1D1D1F',
-            '--tw-prose-quote-borders': '#D1D1D6',
-            '--tw-prose-captions': '#6E6E73',
-            '--tw-prose-code': '#1D1D1F',
-            '--tw-prose-pre-code': '#F2F2F7',
-            '--tw-prose-pre-bg': '#1D1D1F',
-            '--tw-prose-th-borders': '#D1D1D6',
-            '--tw-prose-td-borders': '#E5E5EA',
+            '--tw-prose-body': 'var(--ui-text-secondary)',
+            '--tw-prose-headings': 'var(--ui-text-primary)',
+            '--tw-prose-lead': 'var(--ui-text-tertiary)',
+            '--tw-prose-links': 'var(--ui-link)',
+            '--tw-prose-bold': 'var(--ui-text-primary)',
+            '--tw-prose-counters': 'var(--ui-text-tertiary)',
+            '--tw-prose-bullets': 'var(--ui-text-muted)',
+            '--tw-prose-hr': 'var(--ui-border)',
+            '--tw-prose-quotes': 'var(--ui-text-primary)',
+            '--tw-prose-quote-borders': 'var(--ui-border-strong)',
+            '--tw-prose-captions': 'var(--ui-text-tertiary)',
+            '--tw-prose-code': 'var(--ui-text-primary)',
+            '--tw-prose-pre-code': 'var(--ui-surface-muted)',
+            '--tw-prose-pre-bg': 'var(--ui-text-primary)',
+            '--tw-prose-th-borders': 'var(--ui-border-strong)',
+            '--tw-prose-td-borders': 'var(--ui-border)',
           },
         },
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [typography],
 }

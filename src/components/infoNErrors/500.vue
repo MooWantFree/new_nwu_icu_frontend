@@ -1,28 +1,42 @@
 <template>
-  <div
-    class="min-h-screen bg-gray-100 flex flex-col justify-center items-center px-4"
-  >
-    <h1 class="text-6xl font-bold text-red-600 mb-4">500</h1>
-    <h2 class="mb-4 text-3xl font-semibold text-gray-900">服务器内部错误</h2>
-    <p class="text-xl text-gray-600 mb-8">抱歉!我们的服务器出现了问题。</p>
-    <p v-if="message" class="text-lg text-red-500 mb-6">{{ message }}</p>
-    <router-link
-      to="/"
-      class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-    >
-      返回主页
-    </router-link>
-  </div>
+  <ErrorStatePage
+    code="500"
+    title="服务器内部错误"
+    description="服务器暂时遇到了一些问题，请稍后重试。"
+    :icon="ServerCrash"
+    :message="message"
+  />
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { ServerCrash } from 'lucide-vue-next'
+import ErrorStatePage from './ErrorStatePage.vue'
+
+const props = withDefaults(defineProps<{
+  message?: string
+  detail?: string
+}>(), {
+  message: '',
+  detail: '',
+})
 
 const route = useRoute()
+const decodeMessage = (value: string) => {
+  try {
+    return decodeURI(value)
+  } catch {
+    return value
+  }
+}
 const message = computed(() => {
-  let message = route.query.message || ''
-  if (Array.isArray(message)) message = message.join('\n')
-  return decodeURI(message)
+  if (props.message || props.detail) return props.message || props.detail
+  const queryMessage = route.query.message
+  const parts = Array.isArray(queryMessage) ? queryMessage : [queryMessage]
+  return parts
+    .filter((value): value is string => typeof value === 'string')
+    .map(decodeMessage)
+    .join('\n')
 })
 </script>

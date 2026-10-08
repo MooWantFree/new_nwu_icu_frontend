@@ -1,95 +1,66 @@
 <template>
-  <div
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 overflow-y-auto"
-    @click.self="attemptCloseModal"
-  >
-    <div class="bg-white p-5 sm:p-8 rounded-xl shadow-2xl w-full max-w-[480px] animate-fade-in">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-900 sm:text-2xl">上传文件</h2>
-        <button 
-          @click="confirmClose"
-          class="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-          aria-label="关闭"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+  <ShadcnFormDialog :show="true" title="上传文件" :suspended="confirmingClose" max-width="max-w-[480px]" @close="confirmClose">
+    <div class="space-y-5">
+      <div
+        class="relative cursor-pointer rounded-lg border border-dashed p-6 text-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:p-8"
+        :class="isDragging ? 'border-zinc-950 bg-zinc-100' : 'border-zinc-300 bg-zinc-50 hover:bg-zinc-100'"
+        role="button"
+        tabindex="0"
+        aria-label="选择要上传的文件"
+        :aria-disabled="loading"
+        @dragover.prevent="isDragging = !loading"
+        @dragleave.prevent="isDragging = false"
+        @drop.prevent="handleDrop"
+        @click="openFilePicker"
+        @keydown.enter.prevent="openFilePicker"
+        @keydown.space.prevent="openFilePicker"
+      >
+        <template v-if="!selectedFile">
+          <CloudUpload class="mx-auto mb-4 h-10 w-10 text-zinc-400" aria-hidden="true" />
+          <p class="text-sm font-medium text-zinc-950">{{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}</p>
+          <p class="mt-2 text-xs leading-5 text-zinc-500">支持所有文件类型，最大 25MB</p>
+        </template>
+        <div v-else class="flex flex-col items-center">
+          <File class="mb-4 h-10 w-10 text-zinc-500" aria-hidden="true" />
+          <span class="break-all text-sm font-medium text-zinc-950">{{ selectedFile.name }}</span>
+          <span class="mt-1 text-xs text-zinc-500">{{ formatFileSize(selectedFile.size) }}</span>
+          <button type="button" :disabled="loading" @click.stop="selectedFile = null"
+            class="mt-3 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50">
+            重新选择
+          </button>
+        </div>
+        <input ref="fileInput" type="file" :disabled="loading" @change="handleFileUpload" class="hidden" />
       </div>
-      
-      <div class="space-y-5">
-        <div
-          class="border-2 border-dashed border-gray-300 p-6 sm:p-8 rounded-xl text-center cursor-pointer relative transition-all duration-300 ease-in-out"
-          :class="{
-            'bg-blue-50/70 border-blue-500': selectedFile || isDragging,
-            'hover:bg-gray-50': !selectedFile && !isDragging
-          }"
-          @dragover.prevent="isDragging = true"
-          @dragleave.prevent="isDragging = false"
-          @drop.prevent="handleDrop"
-          @click="openFilePicker"
-        >
-          <template v-if="!selectedFile">
-            <CloudUpload class="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <p class="text-lg font-medium text-gray-700">
-              {{ isDragging ? '松开以上传文件' : '将文件拖放到此处或点击选择' }}
-            </p>
-            <p class="mt-2 text-sm text-gray-500">支持所有文件类型，最大 25MB</p>
-          </template>
-          <div v-else class="flex flex-col items-center">
-            <File class="w-12 h-12 text-blue-700 mb-4" />
-            <span class="text-lg font-medium text-gray-700 break-all">{{ selectedFile.name }}</span>
-            <span class="mt-1 text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
-            <button 
-              @click.stop="selectedFile = null" 
-              class="mt-3 px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors"
-            >
-              重新选择
-            </button>
-          </div>
-          <input
-            ref="fileInput"
-            type="file"
-            @change="handleFileUpload"
-            class="hidden"
-          />
+      <div v-if="loading || progress > 0" class="space-y-2" role="status" aria-live="polite">
+        <div class="flex items-center justify-between text-xs text-zinc-500">
+          <span>{{ loading ? '正在上传文件' : '上传进度' }}</span>
+          <span>{{ Math.round(progress) }}%</span>
         </div>
-        
-        <div v-if="progress > 0" class="w-full bg-gray-100 rounded-full h-5 overflow-hidden">
-          <div
-            class="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out flex items-center justify-center text-xs text-white font-semibold"
-            :style="{ width: `${progress}%` }"
-          >
-            {{ `${Math.round(progress)}%` }}
-          </div>
-        </div>
-        
-        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-4">
-          <button
-            @click="confirmClose"
-            class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
-          >
-            取消
-          </button>
-          <button
-            @click="submitFile"
-            class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            :disabled="!selectedFile || loading"
-          >
-            <span v-if="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-            {{ loading ? '上传中...' : '上传' }}
-          </button>
+        <div class="h-2 overflow-hidden rounded-full bg-zinc-100" role="progressbar" aria-label="文件上传进度" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100">
+          <div class="h-full rounded-full bg-zinc-950 transition-all duration-300" :style="{ width: progress + '%' }"></div>
         </div>
       </div>
     </div>
-  </div>
+    <template #footer>
+      <button type="button" :disabled="confirmingClose" @click="confirmClose"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-950 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50">
+        取消
+      </button>
+      <button type="button" @click="submitFile" :disabled="!selectedFile || loading || confirmingClose"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+        <Loader2 v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
+        {{ loading ? '上传中…' : '上传' }}
+      </button>
+    </template>
+  </ShadcnFormDialog>
 </template>
-
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
-import { useMessage, useDialog } from 'naive-ui'
+import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
+import { useShadcnToast } from '@/lib/useShadcnToast'
+import { useShadcnDialog } from '@/lib/useShadcnDialog'
+import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
 import { useFileUpload } from '@/lib/fileUploads'
-import { CloudUpload, File } from 'lucide-vue-next'
+import { CloudUpload, File, Loader2 } from 'lucide-vue-next'
 
 const {
   loading,
@@ -99,12 +70,15 @@ const {
   errors,
   progress,
 } = useFileUpload()
-const messageAPI = useMessage()
-const dialog = useDialog()
+const messageAPI = useShadcnToast()
+const dialog = useShadcnDialog()
+const confirmingClose = ref(false)
+let mounted = true
+onBeforeUnmount(() => { mounted = false })
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
-const openFilePicker = () => fileInput.value?.click()
+const openFilePicker = () => { if (!loading.value) fileInput.value?.click() }
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -117,17 +91,21 @@ const attemptCloseModal = () => {
   }
 }
 
-const confirmClose = () => {
+const confirmClose = async () => {
+  if (confirmingClose.value) return
   if (loading.value) {
-    dialog.warning({
-      title: '确认取消',
-      content: '正在上传文件，确定要取消吗？\n请注意，将无法撤销此操作。',
-      positiveText: '确定',
-      negativeText: '取消',
-      onPositiveClick: () => {
-        emit('close')
-      }
-    })
+    confirmingClose.value = true
+    try {
+      const confirmed = await dialog.confirm({
+        title: '确认取消',
+        description: '正在上传文件，确定要关闭窗口吗？关闭后将不会把文件插入编辑器。',
+        confirmText: '关闭窗口',
+        cancelText: '继续上传',
+      })
+      if (confirmed && mounted) emit('close')
+    } finally {
+      confirmingClose.value = false
+    }
   } else {
     emit('close')
   }
@@ -142,6 +120,7 @@ const handleFileUpload = (event: Event) => {
 
 const handleDrop = (event: DragEvent) => {
   isDragging.value = false
+  if (loading.value) return
   const files = event.dataTransfer?.files
   if (files && files.length > 0) {
     checkFileSize(files[0])
@@ -149,6 +128,7 @@ const handleDrop = (event: DragEvent) => {
 }
 
 const checkFileSize = (file: File) => {
+  if (loading.value) return
   if (file.size > 25 * 1024 * 1024) {
     messageAPI.error('文件大小不能超过25MB')
   } else {
@@ -161,24 +141,15 @@ const setSelectedFile = (file: File) => {
 }
 
 const submitFile = async () => {
-  if (selectedFile.value) {
-    uploadFile(selectedFile.value)
-
-    watch(
-      [loading],
-      ([newLoading]) => {
-        if (!newLoading && succeed.value) {
-          emit('upload', selectedFile.value!.name, uploadedFileUrl.value)
-          attemptCloseModal()
-          return
-        }
-        if (!newLoading && !succeed.value) {
-          messageAPI.error(errors.value.join(', '))
-          return
-        }
-      },
-      { once: true }
-    )
+  const file = selectedFile.value
+  if (!file || loading.value || confirmingClose.value) return
+  await uploadFile(file)
+  if (!mounted) return
+  if (succeed.value) {
+    emit('upload', file.name, uploadedFileUrl.value)
+    attemptCloseModal()
+  } else {
+    messageAPI.error(errors.value.join(', '))
   }
 }
 
@@ -190,14 +161,3 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
-
-<style scoped>
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
-</style>

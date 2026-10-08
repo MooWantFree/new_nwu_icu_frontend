@@ -6,12 +6,19 @@ import { api } from '@/lib/requests'
 import type { Review } from '@/types/courseReview'
 import { loadCourseReviewReplyDraft, saveCourseReviewReplyDraft } from '@/lib/courseReviewDraft'
 
+const mocks = vi.hoisted(() => ({ confirm: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { post: vi.fn(), delete: vi.fn() } }))
 vi.mock('@/lib/useUser', () => ({ useUser: () => ({
   userInfo: ref({ id: 2, nickname: '同学', username: 'student', avatar: '' }), isLoggedIn: ref(true),
 }) }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ success: vi.fn(), error: vi.fn() }), useDialog: () => ({ warning: vi.fn() }) }))
-vi.mock('./ReviewHeader.vue', () => ({ default: { render: () => h('header', '主评价作者') } }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ success: vi.fn(), error: vi.fn(), warning: vi.fn() }) }))
+vi.mock('@/lib/useShadcnDialog', () => ({ useShadcnDialog: () => ({ confirm: mocks.confirm }) }))
+vi.mock('./ReviewHeader.vue', () => ({ default: {
+  emits: ['reviewDelete'],
+  setup: (_: unknown, { emit }: { emit: (event: string) => void }) => () => h('header', [
+    '主评价作者', h('button', { 'aria-label': '删除主评价', onClick: () => emit('reviewDelete') }, '删除主评价'),
+  ]),
+} }))
 vi.mock('./ReviewContent.vue', () => ({ default: { render: () => h('p', { 'data-main-review': '' }, '主评价正文') } }))
 vi.mock('./ReviewBottom.vue', () => ({ default: { render: () => h('div', '主评价操作') } }))
 vi.mock('@/components/tinyComponents/Time.vue', () => ({ default: { render: () => null } }))
@@ -51,7 +58,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
   Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scroll })
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  mocks.confirm.mockResolvedValue(true)
   container = document.createElement('div')
   document.body.append(container)
   review = reactive({
@@ -74,6 +81,23 @@ afterEach(() => {
 })
 
 describe('course review reply conversations', () => {
+  it('preserves the main review and replies when either Shadcn delete confirmation is canceled', async () => {
+    mocks.confirm.mockResolvedValue(false)
+    await mount()
+    button('button[aria-label="删除主评价"]').click()
+    await flush()
+    expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '删除评价', destructive: true }))
+    expect(api.delete).not.toHaveBeenCalled()
+    expect(review.is_deleted).toBe(false)
+
+    button('[data-reply-card="1"] button', '删除').click()
+    await flush()
+    expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '删除回复', destructive: true }))
+    expect(api.delete).not.toHaveBeenCalled()
+    expect(review.reply.find(item => item.id === 1)?.is_deleted).toBe(false)
+    expect(branch(1).contains(branch(3))).toBe(true)
+  })
+
   it('shows a deleted-review tombstone while preserving the reply tree', async () => {
     review.is_deleted = true
     review.content = '内容已被删除'

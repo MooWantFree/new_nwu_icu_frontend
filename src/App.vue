@@ -1,60 +1,44 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme-overrides="themeOverrides">
-    <n-loading-bar-provider>
-      <n-message-provider :placement="isShadcnPage ? 'bottom-right' : 'top'" :max="3">
-        <n-notification-provider>
-          <n-modal-provider>
-            <n-dialog-provider>
-              <n-layout class="min-h-screen">
-                <div class="flex min-h-screen flex-col">
-                  <NavBar v-if="!isManagement" />
-                  <div class="flex flex-1 flex-col" :class="isShadcnPage ? 'home-shell bg-zinc-50 text-zinc-950' : 'bg-gray-50 text-gray-900'">
-                    <div class="flex-1">
-                      <RouterView />
-                    </div>
-                    <footer v-if="!isManagement && !isMessagePage" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs" :class="isShadcnPage ? 'text-zinc-500' : 'text-gray-500'">
-                      <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
-                      <span aria-hidden="true">·</span>
-                      <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
-                      <span v-else :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
-                      <span aria-hidden="true">·</span>
-                      <a v-if="backendCommitUrl" :href="backendCommitUrl" :title="`后端完整提交：${backendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">后端 {{ shortCommit(backendCommit) }}</a>
-                      <span v-else :title="`后端完整提交：${backendCommit}`">后端 {{ shortCommit(backendCommit) }}</span>
-                    </footer>
-                  </div>
-                </div>
-              </n-layout>
-              <CaptchaChallenge />
-            </n-dialog-provider>
-          </n-modal-provider>
-        </n-notification-provider>
-      </n-message-provider>
-    </n-loading-bar-provider>
-  </n-config-provider>
+  <ShadcnFeedbackProvider>
+    <div class="flex min-h-screen flex-col">
+      <NavBar v-if="!isManagement" />
+      <div class="flex flex-1 flex-col" :class="isManagement ? 'bg-gray-50 text-gray-900' : 'home-shell bg-zinc-50 text-zinc-950'">
+        <div class="flex-1">
+          <RouterView />
+        </div>
+        <footer v-if="!isManagement && !isMessagePage" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs text-zinc-500">
+          <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
+          <span aria-hidden="true">·</span>
+          <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
+          <span v-else :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
+          <span aria-hidden="true">·</span>
+          <a v-if="backendCommitUrl" :href="backendCommitUrl" :title="`后端完整提交：${backendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">后端 {{ shortCommit(backendCommit) }}</a>
+          <span v-else :title="`后端完整提交：${backendCommit}`">后端 {{ shortCommit(backendCommit) }}</span>
+        </footer>
+      </div>
+    </div>
+    <CaptchaChallenge />
+  </ShadcnFeedbackProvider>
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { zhCN, dateZhCN } from 'naive-ui'
+import ShadcnFeedbackProvider from '@/components/common/ShadcnFeedbackProvider.vue'
 import NavBar from '@/components/NavBar.vue'
 import CaptchaChallenge from '@/components/common/CaptchaChallenge.vue'
-import { themeOverrides } from '@/theme'
 
 const route = useRoute()
 const isMessagePage = computed(() => /^\/message(?:\/|$)/.test(route.path))
-const isShadcnPage = computed(() =>
-  ['/', '/home', '/login', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path)
-  || /^\/review\/(course|teacher)\/\d+$/.test(route.path)
-  || /^\/user\/(me|\d+)$/.test(route.path)
-  || /^\/user\/settings(?:\/|$)/.test(route.path)
-  || /^\/user\/(activate|forget-password|bind-college-email|bind-college-mail)\/?$/.test(route.path)
-  || /^\/(announcements|blog|guestbook)(?:\/\d+)?\/?$/.test(route.path)
-  || isMessagePage.value
-  || /^\/disk(?:\/|$)/.test(route.path)
-  || route.path.replace(/\/+$/, '') === '/about',
-)
 const isManagement = computed(() => Boolean(route.meta.isManagement))
+const previousTheme = document.documentElement.getAttribute('data-ui-theme')
+watch(isManagement, (management) => {
+  document.documentElement.setAttribute('data-ui-theme', management ? 'management' : 'shadcn')
+}, { immediate: true, flush: 'sync' })
+onBeforeUnmount(() => {
+  if (previousTheme === null) document.documentElement.removeAttribute('data-ui-theme')
+  else document.documentElement.setAttribute('data-ui-theme', previousTheme)
+})
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT
 const backendCommit = import.meta.env.VITE_BACKEND_COMMIT
 const commitUrl = (repositoryUrl: string, commit: string) => {

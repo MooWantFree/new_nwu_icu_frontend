@@ -18,15 +18,14 @@
         <div class="mb-3 flex flex-wrap items-center gap-2">
           <span class="text-xs text-zinc-500">评分:</span>
           <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold tabular-nums text-amber-700">
+            <span class="text-sm font-semibold tabular-nums text-zinc-950">
               {{ review.rating.rating.toFixed(1) }}
             </span>
-            <n-rate
+            <ShadcnRating
               :value="review.rating.rating"
               :size="16"
               readonly
               allow-half
-              class="text-amber-400"
             />
           </div>
         </div>
@@ -127,7 +126,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ReviewMetricScale from '@/components/courseReview/course/courseReviews/ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
-import { NRate } from 'naive-ui'
+import ShadcnRating from '@/components/common/ShadcnRating.vue'
 import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'

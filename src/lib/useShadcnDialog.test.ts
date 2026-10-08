@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref, type App } from 'vue'
-import { NDialogProvider } from 'naive-ui'
+import ShadcnFeedbackProvider from '@/components/common/ShadcnFeedbackProvider.vue'
 import { useShadcnDialog } from './useShadcnDialog'
 
 let app: App | undefined
@@ -31,7 +31,7 @@ const mount = async () => {
   let api!: ReturnType<typeof useShadcnDialog>
   const opened = ref(true)
   const Consumer = defineComponent({ setup() { api = useShadcnDialog(); return () => null } })
-  app = createApp({ render: () => h(NDialogProvider, null, {
+  app = createApp({ render: () => h(ShadcnFeedbackProvider, null, {
     default: () => [h('button', { id: 'dialog-trigger' }, '打开'), opened.value ? h(Consumer) : null],
   }) })
   app.mount(container)
@@ -51,19 +51,15 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('Shadcn dialogs using the real Naive provider', () => {
-  it('applies Dialog CSS variables to the actual dialog root through its supported style option', async () => {
+describe('Shadcn dialogs using the real feedback provider', () => {
+  it('renders the shared Shadcn dialog panel', async () => {
     const { api } = await mount()
     const result = api.confirm({ title: '样式应用到弹窗', description: '保留现有交互。' })
     await settle()
     const target = dialog()!
-    for (const [property, value] of Object.entries({
-      '--n-color': '#ffffff', '--n-text-color': '#71717a', '--n-title-text-color': '#09090b',
-      '--n-border': '1px solid #e4e4e7', '--n-border-radius': '12px', '--n-title-font-size': '16px',
-      '--n-padding': '24px', '--n-close-icon-color': '#71717a', '--n-close-icon-color-hover': '#09090b',
-      '--n-close-icon-color-pressed': '#09090b', '--n-close-color-hover': '#f4f4f5', '--n-close-color-pressed': '#e4e4e7',
-    })) expect(target.style.getPropertyValue(property)).toBe(value)
-    expect(target.style.maxWidth).toBe('calc(100vw - 2rem)')
+    expect(target.classList.contains('bg-white')).toBe(true)
+    expect(target.classList.contains('border-zinc-200')).toBe(true)
+    expect(target.classList.contains('rounded-xl')).toBe(true)
     button('取消').click()
     expect(await result).toBe(false)
     await settle()
@@ -95,7 +91,7 @@ describe('Shadcn dialogs using the real Naive provider', () => {
     if (dismissal === 'cancel') button('取消').click()
     else if (dismissal === 'escape') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }))
     else {
-      const mask = document.body.querySelector<HTMLElement>('.n-modal-mask')!
+      const mask = document.body.querySelector<HTMLElement>('[data-shadcn-dialog-overlay]')!
       mask.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
       mask.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
       mask.click()
@@ -161,5 +157,23 @@ describe('Shadcn dialogs using the real Naive provider', () => {
     expect(await first).toBe(false)
     expect(await second).toBeNull()
     expect(document.body.querySelectorAll('[role="dialog"]')).toHaveLength(0)
+  })
+
+  it('keeps focus inside the remaining dialog when a simultaneous top dialog closes', async () => {
+    const { api, opened } = await mount()
+    button('打开').focus()
+    const first = api.confirm({ title: '底层确认', description: '仍在等待确认。' })
+    const second = api.prompt({ title: '上层说明', description: '先关闭这一层。' })
+    await settle()
+    const panels = [...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
+    const overlays = [...document.body.querySelectorAll<HTMLElement>('[data-shadcn-dialog-overlay]')]
+    expect(Number(overlays[1].style.zIndex)).toBeGreaterThan(Number(panels[0].style.zIndex))
+    panels[1].querySelector<HTMLButtonElement>('button[aria-label="关闭"]')!.click()
+    expect(await second).toBeNull()
+    await settle()
+    expect(dialog()?.contains(document.activeElement)).toBe(true)
+    opened.value = false
+    await settle()
+    expect(await first).toBe(false)
   })
 })

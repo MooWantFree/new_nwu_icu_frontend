@@ -18,7 +18,7 @@ vi.mock('@simplewebauthn/browser', () => ({
   startAuthentication: vi.fn(),
   startRegistration: vi.fn(),
 }))
-vi.mock('naive-ui', () => ({ useMessage: () => ({ success: messageSuccess }) }))
+vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ success: messageSuccess }) }))
 vi.mock('@/components/guestbook/GuestbookEditor.vue', () => ({
   default: {
     props: ['modelValue'],

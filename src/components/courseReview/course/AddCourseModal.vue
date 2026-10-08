@@ -19,15 +19,15 @@
       </div>
       <div class="space-y-2">
         <label :for="`${formId}-school`" class="block text-sm font-medium">所属学院</label>
-        <NSelect :id="`${formId}-school`" v-model:value="courseSchool" :options="schools" label-field="name" value-field="id" placeholder="请选择学院"
-          filterable size="large" :theme-overrides="reviewSelectTheme" aria-label="所属学院" :disabled="busy"
+        <ShadcnSelect :id="`${formId}-school`" v-model:value="courseSchool" :options="schools" label-field="name" value-field="id" placeholder="请选择学院"
+          filterable aria-label="所属学院" :disabled="busy"
           :status="errorMessage.courseSchool ? 'error' : undefined" :aria-invalid="Boolean(errorMessage.courseSchool)" :aria-describedby="errorMessage.courseSchool ? `${formId}-school-error` : undefined" />
         <p v-if="errorMessage.courseSchool" :id="`${formId}-school-error`" role="alert" class="text-sm text-red-600">{{ errorMessage.courseSchool }}</p>
       </div>
       <div class="space-y-2">
         <label :for="`${formId}-classification`" class="block text-sm font-medium">课程分类</label>
-        <NSelect :id="`${formId}-classification`" v-model:value="courseClassification" :options="courseTypeOptions" placeholder="请选择课程分类"
-          size="large" :theme-overrides="reviewSelectTheme" aria-label="课程分类" :disabled="busy"
+        <ShadcnSelect :id="`${formId}-classification`" v-model:value="courseClassification" :options="courseTypeOptions" placeholder="请选择课程分类"
+          aria-label="课程分类" :disabled="busy"
           :status="errorMessage.courseClassification ? 'error' : undefined" :aria-invalid="Boolean(errorMessage.courseClassification)" :aria-describedby="errorMessage.courseClassification ? `${formId}-classification-error` : undefined" />
         <p v-if="errorMessage.courseClassification" :id="`${formId}-classification-error`" role="alert" class="text-sm text-red-600">{{ errorMessage.courseClassification }}</p>
       </div>
@@ -69,11 +69,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
 import { CircleAlert, LoaderCircle, Plus, X } from 'lucide-vue-next'
-import { NSelect } from 'naive-ui'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 import { useRouter } from 'vue-router'
 import type { z } from 'zod'
 import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
-import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
 import { api } from '@/lib/requests'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { isLoginRequiredResponse, useCreationLogin } from '@/lib/useCreationLogin'

@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useShadcnToast } from '@/lib/useShadcnToast'
 import { ArrowLeft } from 'lucide-vue-next'
 import LoginForm from '@/components/user/loginNRegister/LoginForm.vue'
 import { checkLoginStatus } from '@/lib/logins'
@@ -33,7 +33,7 @@ import { useUser } from '@/lib/useUser'
 
 const router = useRouter()
 const route = useRoute()
-const message = useMessage()
+const message = useShadcnToast()
 const { fetchUserInfo } = useUser(false)
 const loginContext = computed(() => resolveLoginContext(
   router,

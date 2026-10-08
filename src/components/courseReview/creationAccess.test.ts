@@ -16,10 +16,6 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: mocks.checkLoginStatus }))
-vi.mock('naive-ui', async importOriginal => ({
-  ...await importOriginal<typeof import('naive-ui')>(),
-  useMessage: () => ({ error: mocks.error }),
-}))
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get, post: mocks.post } }))
 vi.mock('@/components/courseReview/course/AddCourseModal.vue', () => ({
@@ -89,8 +85,6 @@ const mount = async (entry: AccessCase): Promise<Router> => {
   app = createApp({ render: () => h(entry.component, {
     ...entry.props, ...(entry.component === Search ? { onClose: mocks.close } : {}),
   }) }).use(router)
-  app.component('NRate', { render: () => null })
-  app.component('NSelect', { render: () => null })
   app.mount(host)
   await settle()
 
