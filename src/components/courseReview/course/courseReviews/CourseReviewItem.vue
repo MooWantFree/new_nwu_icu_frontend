@@ -1,8 +1,8 @@
 <template>
-  <article class="min-w-0">
+  <article class="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
     <div ref="courseReviewItem">
-      <div v-if="review.is_deleted" class="mb-5 flex items-center gap-3 text-slate-500">
-        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100" aria-hidden="true">×</div>
+      <div v-if="review.is_deleted" class="mb-4 flex items-center gap-3 text-zinc-500">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-100" aria-hidden="true">×</div>
         <span class="font-medium">内容已被删除</span>
       </div>
       <ReviewHeader

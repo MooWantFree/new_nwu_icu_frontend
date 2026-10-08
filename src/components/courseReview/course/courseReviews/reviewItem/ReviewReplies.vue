@@ -1,13 +1,13 @@
 <template>
-  <section ref="replySection" class="mt-4 min-w-0" aria-label="评价回复">
+  <section ref="replySection" class="mt-4 min-w-0 border-t border-zinc-100 pt-4" aria-label="评价回复">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
-        <h3 class="text-base font-semibold text-gray-900">回复 <span class="text-sm font-normal text-gray-500">{{ review.reply_count }}</span></h3>
-        <button v-if="isLoggedIn && !review.is_deleted" type="button" class="text-sm text-blue-700 hover:text-blue-800" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
+        <h3 class="text-sm font-semibold text-zinc-900">回复 <span class="ml-1 text-xs font-normal text-zinc-500">{{ review.reply_count }}</span></h3>
+        <button v-if="isLoggedIn && !review.is_deleted" type="button" class="rounded-sm text-xs text-zinc-600 underline-offset-4 hover:text-zinc-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :aria-expanded="replyTarget === 0" @click="toggleReply(0)">
           {{ replyTarget === 0 ? '取消回复' : '回复评价' }}
         </button>
       </div>
-      <button v-if="thread.roots.length > 1 && nextCursor === null" type="button" class="text-xs text-gray-500 hover:text-blue-700" @click="reverseReplies = !reverseReplies">
+      <button v-if="thread.roots.length > 1 && nextCursor === null" type="button" class="rounded-sm text-xs text-zinc-500 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="reverseReplies = !reverseReplies">
         {{ reverseReplies ? '最新回复' : '最早回复' }}
       </button>
     </div>
@@ -19,10 +19,10 @@
         :deleting-ids="deletingIds" @toggle-collapse="toggleCollapse" @reply="toggleReply" @delete="handleDeleteReply"
         @close="replyTarget = null" @reply-submitted="onReplySubmitted" />
     </div>
-    <button v-if="nextCursor !== null" type="button" class="mt-4 text-sm text-blue-700 hover:text-blue-800 disabled:opacity-50" :disabled="loadingMore" @click="loadMoreReplies">
+    <button v-if="nextCursor !== null" type="button" class="mt-4 inline-flex min-h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50" :disabled="loadingMore" @click="loadMoreReplies">
       {{ loadingMore ? '加载中…' : `加载更多（已显示 ${review.reply.length}/${review.reply_count}）` }}
     </button>
-    <p v-if="!isLoggedIn" class="mt-3 text-sm text-gray-500">登录以后才能回复</p>
+    <p v-if="!isLoggedIn" class="mt-3 text-xs text-zinc-500">登录以后才能回复</p>
   </section>
 </template>
 

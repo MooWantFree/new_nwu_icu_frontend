@@ -1,7 +1,10 @@
 <template>
-  <div class="flex items-center pt-3 text-sm text-slate-500">
+  <div class="mt-4 flex flex-wrap items-center border-t border-zinc-100 pt-3 text-sm text-zinc-500">
       <div class="flex items-center space-x-2">
         <button
+          type="button"
+          aria-label="认同评价"
+          :aria-pressed="review.like.user_option === 1"
           @click="
             () => {
               handleLikeNDislike(LikeOption.Like)
@@ -9,19 +12,22 @@
           "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
-            'flex min-h-9 items-center rounded-lg border px-3 py-1 transition-colors text-sm',
+            'inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2',
             review.like.user_option === 1
-              ? 'bg-blue-600 text-white'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700',
+              ? 'border-zinc-950 bg-zinc-950 text-white'
+              : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950',
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsUp class="w-4 h-4 mr-1 inline-block" />
+          <ThumbsUp class="h-3.5 w-3.5" aria-hidden="true" />
           <span class="inline-block whitespace-nowrap">{{
             review.like.like
           }}</span>
         </button>
         <button
+          type="button"
+          aria-label="不认同评价"
+          :aria-pressed="review.like.user_option === -1"
           @click="
             () => {
               handleLikeNDislike(LikeOption.Dislike)
@@ -29,14 +35,14 @@
           "
           :disabled="isLikeNDislikeButtonDisabled"
           :class="[
-            'flex min-h-9 items-center rounded-lg border px-3 py-1 transition-colors text-sm',
+            'inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2',
             review.like.user_option === -1
-              ? 'bg-red-600 text-white'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700',
+              ? 'border-zinc-950 bg-zinc-950 text-white'
+              : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950',
             isLikeNDislikeButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
           ]"
         >
-          <ThumbsDown class="w-4 h-4 mr-1" />
+          <ThumbsDown class="h-3.5 w-3.5" aria-hidden="true" />
           <span>{{ review.like.dislike }}</span>
         </button>
       </div>

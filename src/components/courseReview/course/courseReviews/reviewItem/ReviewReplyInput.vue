@@ -1,9 +1,8 @@
 <template>
-  <div class="min-w-0 rounded-xl border border-blue-100 bg-blue-50/40 p-3">
-    <div class="flex items-start space-x-4">
-      <!-- <n-avatar round size="small" src="/path/to/user/avatar.jpg" /> -->
-      <div class="flex-grow">
-        <div class="mb-2 text-sm text-gray-600" v-if="props.replyTo">
+  <div class="min-w-0 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+    <div class="flex min-w-0 items-start">
+      <div class="min-w-0 flex-1">
+        <div class="mb-2 break-words text-xs text-zinc-600" v-if="props.replyTo">
           回复 {{ replyTargetName || '这条回复' }}
         </div>
         <textarea
@@ -12,7 +11,7 @@
           maxlength="2000"
           placeholder="写下你的回复..."
           :aria-label="replyTo ? `回复 ${replyTargetName || '这条回复'}` : '回复评价'"
-          class="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 focus:outline-none"
+          class="w-full min-w-0 resize-y rounded-md border border-zinc-200 bg-white p-3 text-sm leading-6 text-zinc-950 shadow-sm placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
           :class="{
             'cursor-not-allowed': loadingRef,
             'opacity-50': loadingRef,
@@ -21,27 +20,27 @@
           rows="2"
           @input="clearConfirmation = false"
         ></textarea>
-        <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
           <span>{{ replyContent.length }} / 2,000</span>
-          <span role="status" :class="saveState === 'failed' ? 'text-red-600' : 'text-gray-500'">
+          <span role="status" :class="saveState === 'failed' ? 'text-red-600' : 'text-zinc-500'">
             {{ saveState === 'failed' ? '草稿保存失败' : saveState === 'pending' ? '正在保存草稿…' : saveState === 'saved' ? '草稿已保存' : '草稿会自动保存' }}
           </span>
         </div>
         <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <button v-if="!clearConfirmation" type="button" class="text-sm text-gray-500 hover:text-gray-700" :disabled="loadingRef" @click="clearConfirmation = true">清空草稿</button>
+            <button v-if="!clearConfirmation" type="button" class="rounded-sm text-xs text-zinc-500 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :disabled="loadingRef" @click="clearConfirmation = true">清空草稿</button>
             <template v-else>
-              <button type="button" class="text-sm text-gray-500 hover:text-gray-700" :disabled="loadingRef" @click="clearConfirmation = false">取消清空</button>
-              <button type="button" class="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700" :disabled="loadingRef" @click="clearDraft">确认清空</button>
+              <button type="button" class="rounded-sm text-xs text-zinc-500 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :disabled="loadingRef" @click="clearConfirmation = false">取消清空</button>
+              <button type="button" class="rounded-md bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2" :disabled="loadingRef" @click="clearDraft">确认清空</button>
             </template>
           </div>
           <div class="flex items-center gap-3">
-            <button type="button" class="text-sm text-gray-500 hover:text-gray-700" :disabled="loadingRef" @click="emit('close')">取消</button>
+            <button type="button" class="rounded-sm text-xs text-zinc-500 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" :disabled="loadingRef" @click="emit('close')">取消</button>
             <button
               type="button"
               @click="submitReply"
               :disabled="!replyContent.trim() || loadingRef"
-              class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              class="inline-flex min-h-9 items-center justify-center rounded-md bg-zinc-950 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:opacity-50"
               :class="{
                 'cursor-not-allowed': !replyContent.trim() || loadingRef,
                 'opacity-50': loadingRef,

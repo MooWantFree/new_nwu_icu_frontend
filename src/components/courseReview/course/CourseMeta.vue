@@ -1,95 +1,107 @@
 <template>
-  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <div class="p-5 sm:p-7">
-      <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+  <section class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgb(0_0_0_/_0.025)]">
+    <header class="border-b border-zinc-100 px-5 py-4 sm:px-6">
+      <h2 class="text-base font-semibold text-zinc-950">课程信息</h2>
+    </header>
+    <div class="p-5 sm:p-6">
+      <div class="grid grid-cols-2 gap-5 border-b border-zinc-100 pb-5">
         <div>
-          <p class="text-sm font-medium text-slate-500">综合评分</p>
-          <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <n-rate
-            readonly
-            :allow-half="true"
-            :value="Number(courseData.rating_avg)"
-          />
-            <span class="text-2xl font-semibold tracking-tight text-slate-900">{{ courseData.rating_avg }}</span>
-            <span class="text-sm text-slate-500">{{ courseData.total_review_count }} 人评价</span>
+          <p class="text-sm text-zinc-500">综合评分</p>
+          <div class="mt-2 flex items-baseline gap-1.5">
+            <span class="text-3xl font-semibold tracking-tight text-zinc-950">{{ courseData.rating_avg }}</span>
+            <span class="text-sm text-zinc-400">/ 5</span>
+          </div>
+          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <n-rate readonly :allow-half="true" :value="Number(courseData.rating_avg)" :size="18" />
+            <span class="text-xs text-zinc-500">{{ courseData.total_review_count }} 人评价</span>
           </div>
         </div>
-        <div class="flex flex-wrap gap-2 text-sm text-slate-600">
-          <span v-for="semester in courseData.semester" :key="semester" class="rounded-full bg-slate-100 px-3 py-1">{{ semester }}</span>
+        <div>
+          <div class="flex items-center gap-1.5 text-sm text-zinc-500">
+            <span>归一化平均分</span>
+            <n-tooltip trigger="click" placement="top">
+              <template #trigger>
+                <button
+                  type="button"
+                  aria-label="了解归一化平均分"
+                  class="rounded-sm text-zinc-400 transition-colors hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+                >
+                  <CircleHelp class="size-4" aria-hidden="true" />
+                </button>
+              </template>
+            <p class="m-0 max-w-48 whitespace-normal text-sm leading-6 sm:max-w-64">
+                归一化平均分是经过统计调整的评分，可以更公平地比较不同课程
+              </p>
+            </n-tooltip>
+          </div>
+          <div class="mt-2 flex items-baseline gap-1.5">
+            <span class="text-3xl font-semibold tracking-tight text-zinc-950">{{ courseData.normalized_rating_avg }}</span>
+            <span class="text-sm text-zinc-400">/ 5</span>
+          </div>
+          <div class="mt-2">
+            <n-rate readonly :allow-half="true" :value="Number(courseData.normalized_rating_avg)" :size="18" />
+          </div>
         </div>
       </div>
-      <dl class="mt-6 grid gap-x-8 gap-y-4 border-t border-slate-200 pt-5 text-sm sm:grid-cols-2">
+
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 pt-5 text-sm">
         <div>
-          <dt class="text-slate-500">课程类别</dt>
-          <dd class="mt-1 font-medium text-slate-800">{{ courseData.category }}</dd>
+          <dt class="text-zinc-500">课程编号</dt>
+          <dd class="mt-1 break-words font-medium text-zinc-900">{{ courseData.code || '暂无' }}</dd>
         </div>
         <div>
-          <dt class="text-slate-500">开课单位</dt>
-          <dd class="mt-1 font-medium text-slate-800">{{ courseData.school }}</dd>
+          <dt class="text-zinc-500">课程类别</dt>
+          <dd class="mt-1 break-words font-medium text-zinc-900">{{ courseData.category }}</dd>
         </div>
         <div>
-          <dt class="text-slate-500">课程主页</dt>
-          <dd class="mt-1 text-slate-700">暂无（如果你知道，劳烦告诉我们！）</dd>
+          <dt class="text-zinc-500">开课单位</dt>
+          <dd class="mt-1 break-words font-medium text-zinc-900">{{ courseData.school }}</dd>
         </div>
         <div>
-          <dt class="text-slate-500">归一化平均分</dt>
-          <dd class="mt-1 flex items-center gap-1.5 font-medium text-slate-800">
-          <n-tooltip placement="top">
-            <template #trigger>
-              <n-button text class="p-0 text-blue-700">
-                <CircleHelp class="w-4 h-4" />
-              </n-button>
-            </template>
-            归一化平均分是经过统计调整的评分，可以更公平地比较不同课程
-          </n-tooltip>
-          <n-rate
-            readonly
-            :allow-half="true"
-            :value="Number(courseData.normalized_rating_avg)"
-            :size="12"
-          />
-          {{ courseData.normalized_rating_avg }}
+          <dt class="text-zinc-500">课程主页</dt>
+          <dd class="mt-1 text-zinc-500">暂无</dd>
+        </div>
+        <div class="col-span-2">
+          <dt class="text-zinc-500">开课学期</dt>
+          <dd v-if="courseData.semester.length" class="mt-2 flex flex-wrap gap-2">
+            <span v-for="semester in courseData.semester" :key="semester" class="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-600">{{ semester }}</span>
           </dd>
+          <dd v-else class="mt-1 text-zinc-500">暂无学期信息</dd>
         </div>
       </dl>
-      <div class="mt-6 flex flex-col gap-2 border-t border-slate-200 pt-5 sm:flex-row">
-        <button
-          @click="
-            () => {
-              handleLikeNDislike(LikeValue.Recommend)
-            }
-          "
-          :disabled="isButtonDisabled"
-          :class="[
-            'flex min-h-11 items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:w-auto',
-            courseData.like.user_option === 1
-              ? 'bg-blue-600 text-white'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700',
-            isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
-          ]"
-        >
-          <ThumbsUp class="w-5 h-5 mr-2" />
-          <span>推荐({{ courseData.like.like }})</span>
-        </button>
-        <button
-          @click="
-            () => {
-              handleLikeNDislike(LikeValue.DisRecommend)
-            }
-          "
-          :disabled="isButtonDisabled"
-          :class="[
-            'flex min-h-11 items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:w-auto',
-            courseData.like.user_option === -1
-              ? 'bg-red-600 text-white'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700',
-            isButtonDisabled ? 'opacity-50 cursor-not-allowed' : '',
-          ]"
-        >
-          <ThumbsDown class="w-5 h-5 mr-2" />
-          <span>不推荐({{ courseData.like.dislike }})</span>
-        </button>
-      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 border-t border-zinc-100 px-5 py-4 sm:px-6">
+      <button
+        type="button"
+        @click="handleLikeNDislike(LikeValue.Recommend)"
+        :disabled="isButtonDisabled"
+        :aria-pressed="courseData.like.user_option === 1"
+        :class="[
+          'flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          courseData.like.user_option === 1
+            ? 'border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800'
+            : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950',
+        ]"
+      >
+        <ThumbsUp class="size-4" aria-hidden="true" />
+        <span>推荐 ({{ courseData.like.like }})</span>
+      </button>
+      <button
+        type="button"
+        @click="handleLikeNDislike(LikeValue.DisRecommend)"
+        :disabled="isButtonDisabled"
+        :aria-pressed="courseData.like.user_option === -1"
+        :class="[
+          'flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          courseData.like.user_option === -1
+            ? 'border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800'
+            : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950',
+        ]"
+      >
+        <ThumbsDown class="size-4" aria-hidden="true" />
+        <span>不推荐 ({{ courseData.like.dislike }})</span>
+      </button>
     </div>
   </section>
 </template>

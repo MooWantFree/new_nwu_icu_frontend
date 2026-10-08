@@ -52,15 +52,12 @@ let app: App | undefined
 let container: HTMLDivElement
 const mount = async () => {
   const router = createRouter({ history: createMemoryHistory(), routes: [
+    { path: '/review/course', component: { render: () => h('p', 'course directory') } },
     { path: '/review/course/:id', component: Course },
     { path: '/review/teacher/:id', component: { render: () => h('p', 'teacher detail') } },
   ] })
   await router.push('/review/course/42')
   app = createApp(RouterView).use(router)
-  app.component('NPagination', defineComponent({
-    props: ['page'], emits: ['update:page'],
-    setup: (_props, { emit }) => () => h('button', { 'data-next-page': '', onClick: () => emit('update:page', 2) }, 'page 2'),
-  }))
   app.mount(container)
   await flush()
   return router
@@ -120,7 +117,7 @@ describe('course review query state', () => {
     expect(container.textContent).not.toContain('course missing')
     expect([...container.querySelectorAll('select')].map(element => element.value)).toEqual(['newest', '7', '5'])
     mocks.get.mockResolvedValueOnce(response(42, 2))
-    container.querySelector<HTMLButtonElement>('[data-next-page]')!.click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click()
     await flush()
     expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({
       page: 2, pageSize: 10, sort: 'newest', semester: 7, rating: 5,
@@ -175,7 +172,7 @@ describe('course review query state', () => {
     await select(1, '7')
     await select(2, '5')
     mocks.get.mockResolvedValue(response(42, 2))
-    container.querySelector<HTMLButtonElement>('[data-next-page]')!.click()
+    container.querySelector<HTMLButtonElement>('button[aria-label="下一页"]')!.click()
     await flush()
     expect(router.currentRoute.value.query).toEqual({ sort: 'highest', semester: '7', rating: '5', page: '2' })
     await router.push('/review/teacher/9')

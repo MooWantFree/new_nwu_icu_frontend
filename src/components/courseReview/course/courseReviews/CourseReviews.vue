@@ -1,76 +1,77 @@
 <template>
-  <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" :aria-busy="loading">
-    <header class="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+  <section class="mt-6 min-w-0" :aria-busy="loading">
+    <header class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-xl font-bold text-slate-900">同学评价</h2>
-        <p class="mt-1 text-sm text-slate-500">{{ courseData.total_review_count }} 条评价</p>
+        <h2 class="text-lg font-semibold tracking-tight text-zinc-950">同学评价</h2>
+        <p class="mt-1 text-sm text-zinc-500">{{ courseData.total_review_count }} 条评价</p>
       </div>
       <button
         v-if="!userReviewed"
-        class="btn-primary w-full sm:w-auto"
+        type="button"
+        class="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:w-auto"
         @click="handleNewReviewButtonClicked"
       >
         写下评价
       </button>
       <button
         v-else
-        class="btn-primary w-full sm:w-auto"
+        type="button"
+        class="inline-flex min-h-10 items-center justify-center rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 sm:w-auto"
         @click="handleEditReviewButtonClicked"
       >
         编辑评价
       </button>
     </header>
-    <div class="px-5 py-5 sm:px-7">
-      <div class="-mx-5 -mt-5 flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:-mx-7 sm:flex-row sm:flex-wrap sm:items-end sm:px-7">
-        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
-          排序
-          <select
-            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            v-model="sortSelectorValue"
+    <div class="grid grid-cols-2 gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+      <label class="col-span-2 flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600 sm:col-span-1">
+        排序
+        <select
+          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
+          v-model="sortSelectorValue"
+        >
+          <option
+            v-for="option in sortSelectorOptions"
+            :key="option.value"
+            :value="option.value"
           >
-            <option
-              v-for="option in sortSelectorOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </label>
-        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
-          学期
-          <select
-            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            v-model="semesterSelectorValue"
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+      <label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600">
+        学期
+        <select
+          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
+          v-model="semesterSelectorValue"
+        >
+          <option
+            v-for="option in semesterSelectorOptions"
+            :key="option.value"
+            :value="option.value"
           >
-            <option
-              v-for="option in semesterSelectorOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </label>
-        <label class="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700 sm:min-w-36">
-          评分
-          <select
-            class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            v-model="rankSelectorValue"
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+      <label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600">
+        评分
+        <select
+          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
+          v-model="rankSelectorValue"
+        >
+          <option
+            v-for="option in rankSelectorOptions"
+            :key="option.value"
+            :value="option.value"
           >
-            <option
-              v-for="option in rankSelectorOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </label>
-      </div>
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+    </div>
 
-    <div :key="reviewResultsGeneration" class="mt-5 divide-y divide-slate-200">
-      <div v-for="review in reviewsDisplayed" :key="review.id" class="py-6 first:pt-0 last:pb-0">
+    <div :key="reviewResultsGeneration" class="mt-4 space-y-4">
+      <div v-for="review in reviewsDisplayed" :key="review.id" class="min-w-0">
         <CourseReviewItem
           :review="review"
           @reviewDeleted="handleReviewDeleted"
@@ -78,17 +79,16 @@
           @review-edit="handleEditReviewButtonClicked"
         />
       </div>
-      <div v-if="reviewsDisplayed.length === 0" class="rounded-xl border border-dashed border-slate-300 py-12 text-center text-slate-500">
+      <div v-if="reviewsDisplayed.length === 0" class="rounded-xl border border-dashed border-zinc-200 bg-white px-4 py-12 text-center text-sm text-zinc-500">
         暂时没有符合筛选条件的评价。
       </div>
     </div>
     <div v-if="courseData.reviews.max_page > 1" class="mt-6 flex justify-center">
-      <n-pagination
+      <ReviewPagination
         :page="courseData.reviews.page"
         :page-count="courseData.reviews.max_page"
         @update:page="handlePageChange"
       />
-    </div>
     </div>
   </section>
   <ReviewEditorModal
@@ -114,6 +114,7 @@ import type { CourseData, ReviewDataBase } from '@/types/courseReview'
 import type { APICourseInfo } from '@/types/api/courseReview/course'
 import CourseReviewItem from '@/components/courseReview/course/courseReviews/CourseReviewItem.vue'
 import ReviewEditorModal from '@/components/courseReview/course/courseReviews/ReviewEditorModal.vue'
+import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
 const emit = defineEmits<{
   (e: 'reloadData'): void

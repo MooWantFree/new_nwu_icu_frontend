@@ -1,31 +1,34 @@
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-3 backdrop-blur-sm sm:p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-zinc-950/45 p-3 backdrop-blur-sm sm:p-4"
   >
     <div class="my-auto w-full max-w-4xl">
       <div
-        class="flex max-h-[calc(100dvh-1.5rem)] min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:max-h-[92vh]"
+        class="flex max-h-[calc(100dvh-1.5rem)] min-h-0 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl sm:max-h-[92vh]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="review-editor-heading"
       >
-        <header class="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
+        <header class="flex shrink-0 items-center justify-between border-b border-zinc-200 px-4 py-4 sm:px-6 sm:py-5">
           <div class="min-w-0">
-            <h3 class="text-lg font-bold text-slate-900 sm:text-xl">
+            <h3 id="review-editor-heading" class="text-lg font-semibold tracking-tight text-zinc-950 sm:text-xl">
               {{ initContent?.content ? '编辑评价' : '写下评价' }}
             </h3>
             <div class="mt-2 flex items-center gap-2 text-xs font-medium sm:text-sm">
-              <span :class="step === 1 ? 'text-blue-700' : 'text-slate-500'" class="flex items-center gap-1.5">
-                <span :class="step === 1 ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-slate-500'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">1</span>
+              <span :class="step === 1 ? 'text-zinc-950' : 'text-zinc-500'" class="flex items-center gap-1.5">
+                <span :class="step === 1 ? 'border-zinc-950 bg-zinc-950 text-white' : 'border-zinc-300 bg-white text-zinc-500'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">1</span>
                 写评价
               </span>
-              <span class="h-px w-5 bg-slate-300 sm:w-8" />
-              <span :class="step === 2 ? 'text-blue-700' : 'text-slate-400'" class="flex items-center gap-1.5">
-                <span :class="step === 2 ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-slate-400'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">2</span>
+              <span class="h-px w-5 bg-zinc-300 sm:w-8" />
+              <span :class="step === 2 ? 'text-zinc-950' : 'text-zinc-400'" class="flex items-center gap-1.5">
+                <span :class="step === 2 ? 'border-zinc-950 bg-zinc-950 text-white' : 'border-zinc-300 bg-white text-zinc-400'" class="flex h-5 w-5 items-center justify-center rounded-full border text-[11px]">2</span>
                 补充信息
               </span>
             </div>
           </div>
           <button
             type="button"
-            class="ml-4 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="ml-4 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
             aria-label="关闭评价编辑器"
             @click="closeModal"
           >
@@ -33,55 +36,55 @@
           </button>
         </header>
 
-        <div v-if="loading" class="flex min-h-72 flex-1 items-center justify-center bg-slate-50 p-6">
+        <div v-if="loading" class="flex min-h-72 flex-1 items-center justify-center bg-zinc-50 p-6">
           <div class="flex flex-col items-center">
-            <LoaderCircle class="h-10 w-10 animate-spin text-blue-600" />
-            <p class="mt-3 text-sm font-medium text-slate-600">加载中...</p>
+            <LoaderCircle class="h-10 w-10 animate-spin text-zinc-950" />
+            <p class="mt-3 text-sm font-medium text-zinc-600">加载中...</p>
           </div>
         </div>
 
-        <main v-else class="min-h-0 flex-1 overflow-y-auto bg-slate-50">
+        <main v-else class="min-h-0 flex-1 overflow-y-auto bg-zinc-50">
           <section v-if="step === 1" class="p-4 sm:p-6">
-            <p class="mb-4 text-sm leading-6 text-slate-500">
+            <p class="mb-4 text-sm leading-6 text-zinc-500">
               先写下你的真实学习体验；评分与发布信息将在下一步补充。
             </p>
             <Editor
               v-model="content"
               :allowEdit="true"
               :withToolbar="true"
-              class="min-h-[22rem] rounded-lg bg-white shadow-sm sm:min-h-[28rem]"
+              class="review-editor min-h-[22rem] min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm sm:min-h-[28rem]"
             />
-            <p class="mt-2 text-right text-xs" :class="content.length > 10000 ? 'text-red-600' : 'text-slate-500'">
+            <p class="mt-2 text-right text-xs" :class="content.length > 10000 ? 'text-red-600' : 'text-zinc-500'">
               {{ content.length.toLocaleString() }} / 10,000
             </p>
           </section>
 
           <section v-else class="p-4 sm:p-6">
-            <div class="rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3">
+            <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
               <div class="flex items-center justify-between gap-3">
-                <h4 class="text-sm font-semibold text-slate-800">你的评价内容</h4>
+                <h4 class="text-sm font-semibold text-zinc-800">你的评价内容</h4>
                 <button
                   type="button"
-                  class="shrink-0 text-sm font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  class="shrink-0 text-sm font-medium text-zinc-950 hover:text-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                   @click="step = 1"
                 >
                   返回修改
                 </button>
               </div>
-              <p class="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{{ contentPreview }}</p>
+              <p class="mt-2 line-clamp-2 text-sm leading-6 text-zinc-600">{{ contentPreview }}</p>
             </div>
 
-            <div class="mt-5 flex items-center gap-2">
-              <h4 class="text-base font-semibold text-slate-900">补充课程信息</h4>
-              <span class="text-sm text-slate-500">不确定时，保留中间值即可</span>
+            <div class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h4 class="text-base font-semibold text-zinc-900">补充课程信息</h4>
+              <span class="text-sm text-zinc-500">不确定时，保留中间值即可</span>
             </div>
 
-            <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
-              <div class="border-b border-slate-200 px-4 py-4 sm:px-5">
+            <div class="mt-4 overflow-hidden rounded-xl border border-zinc-200 bg-white">
+              <div class="border-b border-zinc-200 px-4 py-4 sm:px-5">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p class="font-medium text-slate-800">总体评分</p>
-                    <p class="mt-1 text-xs text-slate-500">你会愿意把这门课推荐给同学吗？</p>
+                    <p class="font-medium text-zinc-800">总体评分</p>
+                    <p class="mt-1 text-xs text-zinc-500">你会愿意把这门课推荐给同学吗？</p>
                   </div>
                   <ReviewMetricScale
                     v-model="rating"
@@ -91,35 +94,36 @@
                 </div>
               </div>
 
-              <div class="divide-y divide-slate-100 px-4 sm:px-5">
+              <div class="divide-y divide-zinc-100 px-4 sm:px-5">
                 <div v-for="metric in metrics" :key="metric.key" class="py-3.5">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-sm font-medium text-slate-700">{{ metric.label }}</p>
+                    <p class="text-sm font-medium text-zinc-700">{{ metric.label }}</p>
                     <ReviewMetricScale v-model="metric.value.value" :label="metric.label" :levels="metric.levels" :preference="metric.preference" />
                   </div>
                 </div>
               </div>
 
-              <div class="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 sm:p-5">
-                <label class="block text-sm font-medium text-slate-700">
+              <div class="grid gap-4 border-t border-zinc-200 p-4 sm:grid-cols-2 sm:p-5">
+                <label class="block text-sm font-medium text-zinc-700">
                   授课学期
                   <n-select
                     v-model:value="selectedSemester"
                     :options="semesterOptions"
+                    :theme-overrides="reviewSelectTheme"
                     placeholder="选择学期"
                     class="mt-2"
                   />
                 </label>
-                <label class="flex cursor-pointer items-start gap-3 rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                <label class="flex cursor-pointer items-start gap-3 rounded-lg bg-zinc-50 px-3 py-3 text-sm text-zinc-700">
                   <input
                     id="anonymous"
                     v-model="isAnonymous"
                     type="checkbox"
-                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    class="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-zinc-950 focus:ring-zinc-400"
                   />
                   <span>
                     <span class="block font-medium">匿名发布</span>
-                    <span class="mt-1 block text-xs leading-5 text-slate-500">开启后，不会在评价中展示你的名字和个人主页。</span>
+                    <span class="mt-1 block text-xs leading-5 text-zinc-500">开启后，不会在评价中展示你的名字和个人主页。</span>
                   </span>
                 </label>
               </div>
@@ -127,21 +131,21 @@
           </section>
         </main>
 
-        <footer class="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6 sm:py-4">
-          <p class="mb-2 text-xs" :class="saveState === 'failed' ? 'text-red-600' : 'text-slate-500'" role="status">
+        <footer class="shrink-0 border-t border-zinc-200 bg-white p-4 sm:px-6 sm:py-4">
+          <p class="mb-2 text-xs" :class="saveState === 'failed' ? 'text-red-600' : 'text-zinc-500'" role="status">
             {{ saveState === 'failed' ? '草稿保存失败，请复制内容后再离开。' : saveState === 'saved' ? '草稿已自动保存在当前浏览器。' : saveState === 'pending' ? '正在保存草稿…' : '草稿会自动保存在当前浏览器。' }}
           </p>
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div class="flex flex-wrap items-center gap-2">
               <button v-if="!clearConfirmation" type="button" :disabled="submitting || loading"
-                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+                class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:opacity-60"
                 @click="clearConfirmation = true">清空草稿</button>
               <template v-else>
-                <button type="button" :disabled="submitting || loading" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60" @click="clearConfirmation = false">取消清空</button>
+                <button type="button" :disabled="submitting || loading" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:opacity-60" @click="clearConfirmation = false">取消清空</button>
                 <button type="button" :disabled="submitting || loading" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60" @click="clearDraft">确认清空</button>
               </template>
               <button
-                class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-60"
                 type="button"
                 :disabled="submitting || loading"
                 @click="step === 1 ? closeModal() : (step = 1)"
@@ -149,16 +153,16 @@
                 {{ step === 1 ? '取消' : '上一步' }}
               </button>
             </div>
-            <div class="flex min-w-0 items-center gap-3">
+            <div class="flex w-full min-w-0 items-center justify-end gap-3 sm:w-auto">
               <p
                 v-if="(step === 1 && !isContentValid) || (step === 2 && !isFormValid)"
-                class="whitespace-nowrap text-right text-xs text-red-600"
+                class="min-w-0 break-words text-right text-xs leading-5 text-red-600"
                 aria-live="polite"
               >
                 {{ step === 1 ? '请先填写评价内容' : '请确认学期信息后再发布' }}
               </p>
               <button
-                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-300 sm:px-5"
+                class="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-300 sm:px-5"
                 type="button"
                 :disabled="submitting || loading || (step === 1 ? !isContentValid : !isFormValid)"
                 @click="step === 1 ? (step = 2) : submitReview()"
@@ -184,6 +188,7 @@ import Editor from '@/components/tiptap/editor/Editor.vue'
 import ReviewMetricScale from './ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
 import { useCourseReviewDraft } from '@/lib/useCourseReviewDraft'
+import { reviewSelectTheme } from '@/components/courseReview/reviewTheme'
 
 const props = defineProps<{
   courseData: CourseData
@@ -327,3 +332,13 @@ watch(() => props.modelValue, (visible) => {
   else window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 </script>
+
+<style scoped>
+.review-editor :deep(.border-gray-200) { border-color: #e4e4e7; }
+.review-editor :deep(.bg-gray-100) { background-color: #f4f4f5; }
+.review-editor :deep(.text-gray-700) { color: #3f3f46; }
+.review-editor :deep(.tiptap) { margin-left: 0; overflow-wrap: anywhere; }
+.review-editor :deep(.tiptap a) { color: #18181b; }
+.review-editor :deep(.tiptap pre) { max-width: 100%; overflow-x: auto; }
+.review-editor :deep(.tableWrapper) { max-width: 100%; overflow-x: auto; }
+</style>

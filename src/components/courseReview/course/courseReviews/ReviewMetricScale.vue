@@ -20,16 +20,16 @@
           :title="readonly ? undefined : `${label}：${levels[level - 1]}`"
           :class="[
             readonly ? 'h-1.5 w-3 rounded-full' : 'flex h-8 w-8 items-center',
-            readonly ? (level <= modelValue ? tone.fill : 'bg-slate-200') : 'group cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+            readonly ? (level <= modelValue ? tone.fill : 'bg-zinc-200') : 'group cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2',
           ]"
           @click="select(level)"
         >
-          <span v-if="!readonly" aria-hidden="true" class="h-2.5 w-full rounded-full transition-opacity group-hover:opacity-70" :class="level <= modelValue ? tone.fill : 'bg-slate-200'" />
+          <span v-if="!readonly" aria-hidden="true" class="h-2.5 w-full rounded-full transition-opacity group-hover:opacity-70" :class="level <= modelValue ? tone.fill : 'bg-zinc-200'" />
         </component>
       </div>
       <span class="whitespace-nowrap font-medium" :class="[tone.text, readonly ? 'text-[11px]' : 'text-sm']">{{ selectedLabel }}</span>
     </div>
-    <div v-if="!readonly" aria-hidden="true" class="flex w-44 justify-between text-[11px] leading-4 text-slate-500">
+    <div v-if="!readonly" aria-hidden="true" class="flex w-44 max-w-full justify-between text-[11px] leading-4 text-zinc-500">
       <span>{{ levels[0] }}</span>
       <span>{{ levels[levels.length - 1] }}</span>
     </div>
@@ -51,15 +51,15 @@ const props = withDefaults(defineProps<{
 
 const selectedLabel = computed(() => props.levels[props.modelValue - 1] || '未评价')
 const tone = computed(() => {
-  if (!props.levels[props.modelValue - 1]) return { fill: 'bg-slate-200', text: 'text-slate-500' }
-  if (!props.preference) return { fill: 'bg-blue-600', text: 'text-slate-600' }
+  if (!props.levels[props.modelValue - 1]) return { fill: 'bg-zinc-200', text: 'text-zinc-500' }
+  if (!props.preference) return { fill: 'bg-amber-500', text: 'text-amber-700' }
   const favorableLevel = props.preference === 'lower'
     ? props.levels.length + 1 - props.modelValue
     : props.modelValue
   const midpoint = (props.levels.length + 1) / 2
   if (favorableLevel > midpoint) return { fill: 'bg-teal-600', text: 'text-teal-700' }
   if (favorableLevel < midpoint) return { fill: 'bg-amber-500', text: 'text-amber-700' }
-  return { fill: 'bg-slate-400', text: 'text-slate-600' }
+  return { fill: 'bg-slate-400', text: 'text-zinc-600' }
 })
 
 const emit = defineEmits<{
@@ -70,3 +70,7 @@ const select = (level: number) => {
   if (!props.readonly) emit('update:modelValue', level)
 }
 </script>
+
+<style scoped>
+.bg-slate-400 { background-color: #a1a1aa; }
+</style>
