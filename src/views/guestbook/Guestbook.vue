@@ -1,30 +1,28 @@
 <template>
   <AppPageLayout
     :title="isAnnouncements ? '公告栏' : '留言板'"
-    :description="isAnnouncements ? undefined : '分享想法，也欢迎友善地参与讨论。'"
-    :appearance="isAnnouncements ? 'shadcn' : 'default'"
-    :width="isAnnouncements ? 'reading' : 'wide'"
+    appearance="shadcn"
+    width="reading"
   >
-    <template v-if="isAnnouncements && !loading && !loadFailed && totalEntries > 0" #meta>
-      共 {{ totalEntries }} 条公告
+    <template v-if="!loading && !loadFailed && totalEntries > 0" #meta>
+      共 {{ totalEntries }} 条{{ itemLabel }}
     </template>
     <template v-if="!isAnnouncements" #actions>
-      <button v-if="!isAnnouncements" class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-blue-700" @click="openComposer">添加留言</button>
+      <button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="openComposer">
+        <Plus class="h-4 w-4" aria-hidden="true" />添加留言
+      </button>
     </template>
 
-    <GuestbookComposerModal v-if="composerOpen && userInfo" :key="userInfo.id" :user-id="userInfo.id" :board="board" @close="composerOpen = false" @created="created" />
+    <GuestbookComposerModal v-if="composerOpen && userInfo && !isAnnouncements" :key="userInfo.id" :user-id="userInfo.id" :board="board" @close="composerOpen = false" @created="created" />
     <GuestbookListSkeleton v-if="loading" :board="board" />
-    <div v-else-if="loadFailed" role="alert" :class="isAnnouncements ? 'rounded-xl border border-zinc-200 bg-white px-5 py-14 text-center shadow-sm sm:px-6' : 'py-16 text-center text-gray-500'">
-      <template v-if="isAnnouncements">
-        <CircleAlert class="mx-auto h-6 w-6 text-red-500" aria-hidden="true" />
-        <p class="mt-3 text-sm font-medium text-zinc-950">公告加载失败</p>
-        <p class="mt-2 text-sm text-zinc-500">暂时无法获取公告，请稍后重试。</p>
-        <button type="button" class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="load">
-          <RefreshCw class="h-4 w-4" aria-hidden="true" />
-          重试
-        </button>
-      </template>
-      <template v-else>获取{{ itemLabel }}失败。<button class="ml-2 text-blue-700" @click="load">重试</button></template>
+    <div v-else-if="loadFailed" role="alert" class="rounded-xl border border-zinc-200 bg-white px-5 py-14 text-center shadow-sm sm:px-6">
+      <CircleAlert class="mx-auto h-6 w-6 text-red-500" aria-hidden="true" />
+      <p class="mt-3 text-sm font-medium text-zinc-950">{{ itemLabel }}加载失败</p>
+      <p class="mt-2 text-sm text-zinc-500">暂时无法获取{{ itemLabel }}，请稍后重试。</p>
+      <button type="button" class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2" @click="load">
+        <RefreshCw class="h-4 w-4" aria-hidden="true" />
+        重试
+      </button>
     </div>
     <div v-else-if="entries.length" class="space-y-4">
       <GuestbookThreadNode v-for="entry in entries" :key="entry.id" :entry-id="entry.id" :thread="thread" :level="0"
@@ -32,13 +30,12 @@
         @like="setLike" @reply="reply" @delete="remove" @report="report"
         @cancel-reply="replyTarget = null" @reply-created="replyCreated" />
     </div>
-    <div v-else :class="isAnnouncements ? 'rounded-xl border border-zinc-200 bg-white px-5 py-14 text-center shadow-sm sm:px-6' : 'rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center text-gray-500'">
-      <Megaphone v-if="isAnnouncements" class="mx-auto mb-3 h-6 w-6 text-zinc-400" aria-hidden="true" />
-      <p :class="isAnnouncements ? 'text-sm text-zinc-500' : undefined">{{ isAnnouncements ? '暂无公告。' : '还没有留言，来写下第一条吧。' }}</p>
+    <div v-else class="rounded-xl border border-zinc-200 bg-white px-5 py-14 text-center shadow-sm sm:px-6">
+      <component :is="isAnnouncements ? Megaphone : MessageSquare" class="mx-auto mb-3 h-6 w-6 text-zinc-400" aria-hidden="true" />
+      <p class="text-sm text-zinc-500">{{ isAnnouncements ? '暂无公告。' : '还没有留言，来写下第一条吧。' }}</p>
     </div>
-    <div v-if="pageCount > 1 && (!isAnnouncements || (!loading && !loadFailed))" class="mt-8 flex justify-center">
-      <ReviewPagination v-if="isAnnouncements" :page="page" :page-count="pageCount" @update:page="changePage" />
-      <n-pagination v-else :page="page" :page-count="pageCount" @update:page="changePage" />
+    <div v-if="pageCount > 1 && !loading && !loadFailed" class="mt-8 flex justify-center">
+      <ReviewPagination :page="page" :page-count="pageCount" @update:page="changePage" />
     </div>
   </AppPageLayout>
 </template>
@@ -51,7 +48,7 @@ import GuestbookListSkeleton from '@/components/guestbook/GuestbookListSkeleton.
 import GuestbookThreadNode from '@/components/guestbook/GuestbookThreadNode.vue'
 import AppPageLayout from '@/components/layout/AppPageLayout.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
-import { CircleAlert, Megaphone, RefreshCw } from 'lucide-vue-next'
+import { CircleAlert, Megaphone, MessageSquare, Plus, RefreshCw } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import { useUser } from '@/lib/useUser'
 import { useGuestbookActions } from '@/lib/useGuestbookActions'
@@ -126,6 +123,7 @@ const replyCreated = async (entry: GuestbookEntry) => {
   document.getElementById(`guestbook-${entry.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
+watch(board, () => { composerOpen.value = false; replyTarget.value = null })
 watch([page, board, () => userInfo.value?.id], () => { void load() }, { immediate: true })
 watch(() => [userInfo.value?.id, route.query.compose], async ([user, compose]) => {
   if (user && compose === '1' && !isAnnouncements.value) {

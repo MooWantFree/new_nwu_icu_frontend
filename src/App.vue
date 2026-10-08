@@ -48,7 +48,7 @@ const isShadcnPage = computed(() =>
   || /^\/user\/(me|\d+)$/.test(route.path)
   || /^\/user\/settings(?:\/|$)/.test(route.path)
   || /^\/user\/(activate|forget-password|bind-college-email|bind-college-mail)\/?$/.test(route.path)
-  || /^\/(announcements|blog)(?:\/\d+)?\/?$/.test(route.path)
+  || /^\/(announcements|blog|guestbook)(?:\/\d+)?\/?$/.test(route.path)
   || route.path.replace(/\/+$/, '') === '/about',
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))

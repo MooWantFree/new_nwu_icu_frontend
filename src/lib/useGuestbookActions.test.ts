@@ -6,11 +6,9 @@ import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
 const mocks = vi.hoisted(() => ({
   post: vi.fn(), put: vi.fn(), delete: vi.fn(), prompt: vi.fn(),
-  standard: { error: vi.fn(), success: vi.fn() },
   shadcn: { error: vi.fn(), success: vi.fn() },
 }))
 vi.mock('@/lib/requests', () => ({ api: { post: mocks.post, put: mocks.put, delete: mocks.delete } }))
-vi.mock('naive-ui', () => ({ useMessage: () => mocks.standard }))
 vi.mock('./useShadcnToast', () => ({ useShadcnToast: () => mocks.shadcn }))
 vi.mock('./useShadcnDialog', () => ({ useShadcnDialog: () => ({ prompt: mocks.prompt }) }))
 vi.mock('./useUser', async () => {
@@ -48,11 +46,12 @@ beforeEach(() => {
 afterEach(() => { app?.unmount(); app = undefined; container.remove(); vi.restoreAllMocks() })
 
 describe('discussion board actions', () => {
-  it('cancels an announcement report without posting and releases the entry lock', async () => {
+  it.each(['guestbook', 'announcements'] as const)('cancels a %s report without posting and releases the entry lock', async actionBoard => {
+    board.value = actionBoard
     mocks.prompt.mockResolvedValue(null)
     await mount()
     await actions.report(entry(), 'other')
-    expect(mocks.prompt).toHaveBeenCalledWith(expect.objectContaining({ maxLength: 500, confirmText: '提交举报' }))
+    expect(mocks.prompt).toHaveBeenCalledWith(expect.objectContaining({ title: actionBoard === 'guestbook' ? '举报留言内容' : '举报公告内容', maxLength: 500, confirmText: '提交举报' }))
     expect(mocks.post).not.toHaveBeenCalled()
     expect(actions.pending.size).toBe(0)
     expect(mocks.shadcn.success).not.toHaveBeenCalled()
@@ -76,7 +75,6 @@ describe('discussion board actions', () => {
       query: { reason: 'other', detail: '请管理员检查这条回复' },
     })
     expect(mocks.shadcn.success).toHaveBeenCalledWith('举报已提交')
-    expect(mocks.standard.success).not.toHaveBeenCalled()
     expect(actions.pending.size).toBe(0)
   })
 
@@ -92,14 +90,19 @@ describe('discussion board actions', () => {
     expect(actions.pending.size).toBe(0)
   })
 
-  it.each(['signed out', 'account changed', 'route changed'] as const)('cancels a pending report when %s', async change => {
+  it.each(['signed out', 'account changed', 'route changed', 'unmounted', 'entry deleted', 'entry changed'] as const)('cancels a pending guestbook report when %s', async change => {
+    board.value = 'guestbook'
     let resolve!: (detail: string) => void
     mocks.prompt.mockReturnValue(new Promise<string>(accept => { resolve = accept }))
     const router = await mount()
-    const report = actions.report(entry(), 'other')
+    const item = entry()
+    const report = actions.report(item, 'other')
     if (change === 'signed out') { isLoggedIn.value = false; userInfo.value = null }
     else if (change === 'account changed') userInfo.value = { id: 2 }
-    else await router.push('/announcements?focus=8')
+    else if (change === 'route changed') await router.push('/announcements?focus=8')
+    else if (change === 'unmounted') { app?.unmount(); app = undefined }
+    else if (change === 'entry deleted') item.is_deleted = true
+    else item.id = 8
     resolve('旧上下文的举报说明')
     await report
     expect(mocks.post).not.toHaveBeenCalled()
@@ -116,23 +119,39 @@ describe('discussion board actions', () => {
     expect(actions.pending.size).toBe(0)
   })
 
-  it('uses the current board and toast for later actions, preserving the native guestbook prompt', async () => {
+  it('uses the current board labels, endpoints, and Shadcn toast for later actions', async () => {
     mocks.post.mockResolvedValue({ status: 200, content: { created: false } })
-    const nativePrompt = vi.spyOn(window, 'prompt').mockReturnValue('留言说明')
+    const nativePrompt = vi.spyOn(window, 'prompt')
+    mocks.prompt.mockResolvedValue('留言说明')
     await mount()
     board.value = 'guestbook'
     await actions.report(entry(), 'other')
-    expect(nativePrompt).toHaveBeenCalledOnce()
-    expect(mocks.prompt).not.toHaveBeenCalled()
+    expect(nativePrompt).not.toHaveBeenCalled()
+    expect(mocks.prompt).toHaveBeenCalledWith(expect.objectContaining({ title: '举报留言内容' }))
     expect(mocks.post).toHaveBeenCalledWith({
       url: '/api/guestbook/:id/reports/', params: { id: 7 }, query: { reason: 'other', detail: '留言说明' },
     })
-    expect(mocks.standard.success).toHaveBeenCalledWith('你已经举报过此内容')
+    expect(mocks.shadcn.success).toHaveBeenCalledWith('你已经举报过此内容')
     board.value = 'announcements'
     await actions.report(entry(), 'spam')
     expect(mocks.post).toHaveBeenLastCalledWith({
       url: '/api/announcements/:id/reports/', params: { id: 7 }, query: { reason: 'spam', detail: '' },
     })
     expect(mocks.shadcn.success).toHaveBeenCalledWith('你已经举报过此内容')
+  })
+
+  it('uses the Shadcn error toast for failed guestbook likes and deletes without changing the entry', async () => {
+    board.value = 'guestbook'
+    mocks.put.mockRejectedValue(new Error('network'))
+    mocks.delete.mockResolvedValue({ status: 500 })
+    await mount()
+    const item = entry()
+    await actions.setLike(item)
+    await actions.remove(item)
+    expect(mocks.shadcn.error).toHaveBeenCalledWith('点赞失败，请稍后重试')
+    expect(mocks.shadcn.error).toHaveBeenCalledWith('删除失败，请稍后重试')
+    expect(item.liked_by_me).toBe(false)
+    expect(item.is_deleted).toBe(false)
+    expect(actions.pending.size).toBe(0)
   })
 })

@@ -7,7 +7,7 @@ import GuestbookComposerModal from './GuestbookComposerModal.vue'
 import GuestbookReplyComposer from './GuestbookReplyComposer.vue'
 import { api } from '@/lib/requests'
 import { loadGuestbookDraft, saveGuestbookDraft } from '@/lib/guestbook'
-import type { GuestbookEntry } from '@/types/api/guestbook'
+import type { DiscussionBoard, GuestbookEntry } from '@/types/api/guestbook'
 
 const dialogs = vi.hoisted(() => ({ confirm: vi.fn(), prompt: vi.fn() }))
 const shadcnToast = vi.hoisted(() => ({ error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() }))
@@ -37,29 +37,35 @@ vi.mock('./GuestbookEditor.vue', async () => {
   } }
 })
 
-describe('announcement reply safeguards', () => {
+describe.each(['guestbook', 'announcements'] as const)('%s reply safeguards', board => {
+  const routePath = `/${board}`
+  const otherBoard = board === 'guestbook' ? 'announcements' : 'guestbook'
+  const draftContent = '<p>尚未发布的回复</p>'
   const mountReply = async () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [
-      { path: '/announcements', component: { render: () => null } },
+      { path: routePath, component: { render: () => null } },
       { path: '/other', component: { render: () => null } },
     ] })
-    await router.push('/announcements')
+    await router.push(routePath)
     const opened = ref(true)
     const closed = vi.fn(() => { opened.value = false })
     const created = vi.fn(() => { opened.value = false })
+    const userId = ref(1)
+    const currentBoard = ref<DiscussionBoard>(board)
+    const parent = ref(entry(9, null))
     app = createApp({ render: () => opened.value ? h(GuestbookReplyComposer, {
-      userId: 1, parent: entry(9, null), board: 'announcements', onClose: closed, onCreated: created,
+      userId: userId.value, parent: parent.value, board: currentBoard.value, onClose: closed, onCreated: created,
     }) : null }).use(router)
     app.mount(container)
     await flush()
-    return { router, closed, created }
+    return { router, closed, created, userId, currentBoard, parent }
   }
   const saveReply = () => saveGuestbookDraft(1, 9, {
-    content: '<p>尚未发布的公告回复</p>', anonymous: false, updatedAt: '',
-  }, 'announcements')
+    content: draftContent, anonymous: false, updatedAt: '',
+  }, board)
   const closeButton = () => container.querySelector<HTMLButtonElement>('button[aria-label="关闭回复框"]')!
 
-  it('saves the announcement draft and keeps it open after cancelling the Shadcn close confirmation', async () => {
+  it('saves the draft and keeps it open after cancelling the Shadcn close confirmation', async () => {
     saveReply()
     dialogs.confirm.mockResolvedValue(false)
     const nativeConfirm = vi.spyOn(window, 'confirm')
@@ -71,8 +77,8 @@ describe('announcement reply safeguards', () => {
     }))
     expect(closed).not.toHaveBeenCalled()
     expect(nativeConfirm).not.toHaveBeenCalled()
-    expect(container.querySelector('textarea')?.value).toBe('<p>尚未发布的公告回复</p>')
-    expect(loadGuestbookDraft(1, 9, 'announcements')?.content).toBe('<p>尚未发布的公告回复</p>')
+    expect(container.querySelector('textarea')?.value).toBe(draftContent)
+    expect(loadGuestbookDraft(1, 9, board)?.content).toBe(draftContent)
   })
 
   it('opens only one close confirmation and emits close once after accepting it without deleting the saved draft', async () => {
@@ -91,7 +97,7 @@ describe('announcement reply safeguards', () => {
     await flush()
     expect(closed).toHaveBeenCalledOnce()
     expect(container.querySelector('form')).toBeNull()
-    expect(loadGuestbookDraft(1, 9, 'announcements')?.content).toBe('<p>尚未发布的公告回复</p>')
+    expect(loadGuestbookDraft(1, 9, board)?.content).toBe(draftContent)
   })
 
   it('lets the async confirmation block or accept route changes while retaining the board-specific draft', async () => {
@@ -99,13 +105,13 @@ describe('announcement reply safeguards', () => {
     dialogs.confirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
     const { router } = await mountReply()
     await router.push('/other')
-    expect(router.currentRoute.value.path).toBe('/announcements')
+    expect(router.currentRoute.value.path).toBe(routePath)
     expect(dialogs.confirm).toHaveBeenCalledOnce()
     await router.push('/other')
     expect(router.currentRoute.value.path).toBe('/other')
     expect(dialogs.confirm).toHaveBeenCalledTimes(2)
-    expect(loadGuestbookDraft(1, 9, 'announcements')?.content).toBe('<p>尚未发布的公告回复</p>')
-    expect(loadGuestbookDraft(1, 9)).toBeNull()
+    expect(loadGuestbookDraft(1, 9, board)?.content).toBe(draftContent)
+    expect(loadGuestbookDraft(1, 9, otherBoard)).toBeNull()
   })
 
   it('synchronously stops logout and keeps native refresh protection when saving a reply fails', async () => {
@@ -128,9 +134,9 @@ describe('announcement reply safeguards', () => {
     expect(dialogs.confirm).toHaveBeenCalledWith(expect.objectContaining({ description: expect.stringContaining('可能丢失') }))
   })
 
-  it('prevents duplicate announcement replies, blocks logout while posting, and clears only the published draft', async () => {
+  it('prevents duplicate replies, blocks logout while posting, and clears only the published draft', async () => {
     saveReply()
-    saveGuestbookDraft(1, 9, { content: '<p>独立留言草稿</p>', anonymous: false, updatedAt: '' })
+    saveGuestbookDraft(1, 9, { content: '<p>另一版块草稿</p>', anonymous: false, updatedAt: '' }, otherBoard)
     let complete!: (value: unknown) => void
     vi.mocked(api.post).mockReturnValueOnce(new Promise(resolve => { complete = resolve }) as never)
     const { created } = await mountReply()
@@ -139,8 +145,8 @@ describe('announcement reply safeguards', () => {
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     expect(api.post).toHaveBeenCalledOnce()
     expect(api.post).toHaveBeenCalledWith(expect.objectContaining({
-      url: '/api/announcements/:id/replies/', params: { id: 9 },
-      query: { content: '<p>尚未发布的公告回复</p>', submission_id: expect.any(String) },
+      url: `/api/${board}/:id/replies/`, params: { id: 9 },
+      query: { content: draftContent, submission_id: expect.any(String) },
     }))
     const logout = new Event('guestbook:before-logout', { cancelable: true })
     expect(window.dispatchEvent(logout)).toBe(false)
@@ -149,9 +155,27 @@ describe('announcement reply safeguards', () => {
     await flush()
     expect(created).toHaveBeenCalledOnce()
     expect(shadcnToast.success).toHaveBeenCalledWith('回复已发布')
-    expect(loadGuestbookDraft(1, 9, 'announcements')).toBeNull()
-    expect(loadGuestbookDraft(1, 9)?.content).toBe('<p>独立留言草稿</p>')
+    expect(loadGuestbookDraft(1, 9, board)).toBeNull()
+    expect(loadGuestbookDraft(1, 9, otherBoard)?.content).toBe('<p>另一版块草稿</p>')
     expect(window.dispatchEvent(new Event('guestbook:before-logout', { cancelable: true }))).toBe(true)
+  })
+
+  it.each(['account changed', 'board changed', 'target changed', 'unmounted'] as const)('ignores a late close confirmation after %s', async change => {
+    saveReply()
+    let accept!: (value: boolean) => void
+    dialogs.confirm.mockReturnValue(new Promise<boolean>(resolve => { accept = resolve }))
+    const { closed, userId, currentBoard, parent } = await mountReply()
+    closeButton().click()
+    await flush()
+    if (change === 'account changed') userId.value = 2
+    else if (change === 'board changed') currentBoard.value = otherBoard
+    else if (change === 'target changed') parent.value = entry(19, null)
+    else { app?.unmount(); app = undefined }
+    await flush()
+    accept(true)
+    await flush()
+    expect(closed).not.toHaveBeenCalled()
+    expect(loadGuestbookDraft(1, 9, board)?.content).toBe(draftContent)
   })
 })
 vi.mock('@/components/common/UserAvatar.vue', () => ({ default: { render: () => null } }))
@@ -177,7 +201,7 @@ beforeEach(() => {
   document.body.append(container)
   Element.prototype.scrollIntoView = vi.fn()
 })
-afterEach(() => { app?.unmount(); container.remove(); vi.restoreAllMocks() })
+afterEach(() => { app?.unmount(); app = undefined; container.remove(); vi.restoreAllMocks() })
 
 describe('guestbook rendered flows', () => {
   it('renders the complete discussion tree on the board without detail links', async () => {
@@ -247,15 +271,17 @@ describe('guestbook rendered flows', () => {
     app = createApp({ render: () => h(GuestbookComposerModal, { userId: 1 }) }).use(router)
     app.mount(container)
     const dialog = container.querySelector('[role="dialog"]')
-    expect(dialog?.classList.contains('mx-4')).toBe(false)
-    expect(dialog?.classList.contains('w-[calc(100vw-2rem)]')).toBe(true)
+    expect(document.getElementById(dialog!.getAttribute('aria-labelledby')!)?.textContent).toBe('添加留言')
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota') })
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const nativeConfirm = vi.spyOn(window, 'confirm')
+    dialogs.confirm.mockResolvedValue(false)
     await router.push('/other')
     expect(router.currentRoute.value.path).toBe('/edit')
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('保存失败'))
+    expect(dialogs.confirm).toHaveBeenCalledWith(expect.objectContaining({ description: expect.stringContaining('保存失败') }))
+    expect(nativeConfirm).not.toHaveBeenCalled()
     const logout = new Event('guestbook:before-logout', { cancelable: true })
     expect(window.dispatchEvent(logout)).toBe(false)
+    expect(shadcnToast.info).toHaveBeenCalledWith(expect.stringContaining('请先关闭编辑窗口'))
     const refresh = new Event('beforeunload', { cancelable: true })
     window.dispatchEvent(refresh)
     expect(refresh.defaultPrevented).toBe(true)
@@ -331,5 +357,125 @@ describe('guestbook rendered flows', () => {
     }))
     expect(container.querySelector('form')).toBeNull()
     expect(loadGuestbookDraft(1, 9)).toBeNull()
+  })
+})
+
+describe('guestbook modal safeguards', () => {
+  const draftContent = '<p>匿名留言草稿</p>'
+  const mountModal = async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [
+      { path: '/edit', component: { render: () => null } },
+      { path: '/other', component: { render: () => null } },
+    ] })
+    await router.push('/edit')
+    const opened = ref(true)
+    const userId = ref(1)
+    const board = ref<DiscussionBoard>('guestbook')
+    const parentId = ref<number | null>(null)
+    const closed = vi.fn(() => { opened.value = false })
+    const created = vi.fn(() => { opened.value = false })
+    app = createApp({ render: () => opened.value ? h(GuestbookComposerModal, {
+      userId: userId.value, board: board.value, parentId: parentId.value, onClose: closed, onCreated: created,
+    }) : null }).use(router)
+    app.mount(container)
+    await flush()
+    return { router, userId, board, parentId, closed, created }
+  }
+  const saveDraft = () => saveGuestbookDraft(1, null, { content: draftContent, anonymous: true, updatedAt: '' })
+  const closeButton = () => container.querySelector<HTMLButtonElement>('button[aria-label="关闭编辑窗口"]')!
+
+  it('opens one async confirmation, keeps anonymous content after cancellation, and retains the draft after closing', async () => {
+    saveDraft()
+    let decide!: (accepted: boolean) => void
+    dialogs.confirm.mockImplementation(() => new Promise<boolean>(resolve => { decide = resolve }))
+    const { closed } = await mountModal()
+    closeButton().click()
+    closeButton().click()
+    await flush()
+    expect(dialogs.confirm).toHaveBeenCalledOnce()
+    expect(dialogs.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '关闭编辑窗口', cancelText: '继续编辑' }))
+    expect(container.querySelector('textarea')?.disabled).toBe(true)
+    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.disabled).toBe(true)
+    expect(window.dispatchEvent(new Event('guestbook:before-logout', { cancelable: true }))).toBe(false)
+    expect(shadcnToast.info).toHaveBeenCalledWith(expect.stringContaining('请先关闭编辑窗口'))
+    decide(false)
+    await flush()
+    expect(closed).not.toHaveBeenCalled()
+    expect(container.querySelector('textarea')?.value).toBe(draftContent)
+    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked).toBe(true)
+    expect(loadGuestbookDraft(1, null)?.anonymous).toBe(true)
+    closeButton().click()
+    await flush()
+    decide(true)
+    await flush()
+    expect(closed).toHaveBeenCalledOnce()
+    expect(container.querySelector('form')).toBeNull()
+    expect(loadGuestbookDraft(1, null)?.content).toBe(draftContent)
+  })
+
+  it('retains anonymous content and the submission id for retry after a failed publish', async () => {
+    saveDraft()
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('连接失败'))
+      .mockResolvedValueOnce({ status: 201, content: { entry: entry(1, null) }, data: { message: '' } } as never)
+    const { created } = await mountModal()
+    const submit = () => container.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    submit()
+    await flush()
+    expect(shadcnToast.error).toHaveBeenCalledWith('连接失败')
+    expect(created).not.toHaveBeenCalled()
+    expect(loadGuestbookDraft(1, null)?.anonymous).toBe(true)
+    expect(container.querySelector('textarea')?.value).toBe(draftContent)
+    const firstRequest = vi.mocked(api.post).mock.calls[0]![0]
+    expect(firstRequest).toEqual({
+      url: '/api/guestbook/', query: { content: draftContent, anonymous: true, submission_id: expect.any(String) },
+    })
+    submit()
+    await flush()
+    expect(vi.mocked(api.post).mock.calls[1]![0]).toEqual(firstRequest)
+    expect(created).toHaveBeenCalledOnce()
+    expect(shadcnToast.success).toHaveBeenCalledWith('留言已发布')
+    expect(loadGuestbookDraft(1, null)).toBeNull()
+  })
+
+  it.each(['account changed', 'board changed', 'target changed', 'unmounted'] as const)('ignores a late close confirmation after %s', async change => {
+    saveDraft()
+    let accept!: (value: boolean) => void
+    dialogs.confirm.mockReturnValue(new Promise<boolean>(resolve => { accept = resolve }))
+    const { closed, userId, board, parentId } = await mountModal()
+    closeButton().click()
+    await flush()
+    if (change === 'account changed') userId.value = 2
+    else if (change === 'board changed') board.value = 'announcements'
+    else if (change === 'target changed') parentId.value = 9
+    else { app?.unmount(); app = undefined }
+    await flush()
+    accept(true)
+    await flush()
+    expect(closed).not.toHaveBeenCalled()
+    expect(loadGuestbookDraft(1, null)?.content).toBe(draftContent)
+  })
+
+  it.each([GuestbookComposerModal, GuestbookReplyComposer])('keeps the draft and ignores a late publish after its composer unmounts', async Composer => {
+    const parentId = Composer === GuestbookReplyComposer ? 9 : null
+    saveGuestbookDraft(1, parentId, { content: draftContent, anonymous: true, updatedAt: '' })
+    let complete!: (value: unknown) => void
+    vi.mocked(api.post).mockReturnValueOnce(new Promise(resolve => { complete = resolve }) as never)
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/edit', component: { render: () => null } }] })
+    await router.push('/edit')
+    const created = vi.fn()
+    app = createApp({ render: () => Composer === GuestbookReplyComposer
+      ? h(GuestbookReplyComposer, { userId: 1, parent: entry(9, null), onCreated: created })
+      : h(GuestbookComposerModal, { userId: 1, onCreated: created }) }).use(router)
+    app.mount(container)
+    await flush()
+    container.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    expect(api.post).toHaveBeenCalledOnce()
+    app.unmount()
+    app = undefined
+    complete({ status: 201, content: { entry: entry(10, parentId) }, data: { message: '' } })
+    await flush()
+    expect(created).not.toHaveBeenCalled()
+    expect(shadcnToast.success).not.toHaveBeenCalled()
+    expect(loadGuestbookDraft(1, parentId)?.content).toBe(draftContent)
   })
 })
