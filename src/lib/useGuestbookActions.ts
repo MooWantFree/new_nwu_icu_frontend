@@ -3,13 +3,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { api } from './requests'
 import { useUser } from './useUser'
+import { useShadcnToast } from './useShadcnToast'
+import { useShadcnDialog } from './useShadcnDialog'
 import type { DiscussionBoard, GuestbookEntry, APIReportGuestbook } from '../types/api/guestbook'
 
 export function useGuestbookActions(board: MaybeRefOrGetter<DiscussionBoard> = 'guestbook') {
   const router = useRouter()
   const route = useRoute()
-  const message = useMessage()
-  const { isLoggedIn } = useUser(false)
+  const defaultMessage = useMessage()
+  const shadcnMessage = useShadcnToast()
+  const dialog = useShadcnDialog()
+  const { isLoggedIn, userInfo } = useUser(false)
   const pending = reactive(new Set<number>())
 
   const requireLogin = (redirect = route.fullPath) => {
@@ -23,34 +27,43 @@ export function useGuestbookActions(board: MaybeRefOrGetter<DiscussionBoard> = '
     })
     return false
   }
-  const perform = async (entry: GuestbookEntry, action: () => Promise<void>, error: string) => {
+  const perform = async (entry: GuestbookEntry, action: (actionBoard: DiscussionBoard) => Promise<void>, error: string) => {
     if (!requireLogin() || pending.has(entry.id) || entry.is_deleted) return
+    const actionBoard = toValue(board)
     pending.add(entry.id)
-    try { await action() } catch { message.error(error) } finally { pending.delete(entry.id) }
+    try { await action(actionBoard) }
+    catch { (actionBoard === 'announcements' ? shadcnMessage : defaultMessage).error(error) }
+    finally { pending.delete(entry.id) }
   }
-  const setLike = (entry: GuestbookEntry) => perform(entry, async () => {
+  const setLike = (entry: GuestbookEntry) => perform(entry, async actionBoard => {
     const request = { params: { id: entry.id }, query: { liked: !entry.liked_by_me } }
-    const response = toValue(board) === 'announcements'
+    const response = actionBoard === 'announcements'
       ? await api.put({ url: '/api/announcements/:id/like/', ...request })
       : await api.put({ url: '/api/guestbook/:id/like/', ...request })
     if (response.status !== 200) throw new Error()
     entry.liked_by_me = response.content.liked
     entry.like_count = response.content.like_count
   }, '点赞失败，请稍后重试')
-  const remove = (entry: GuestbookEntry) => perform(entry, async () => {
-    const response = toValue(board) === 'announcements'
+  const remove = (entry: GuestbookEntry) => perform(entry, async actionBoard => {
+    const response = actionBoard === 'announcements'
       ? await api.delete({ url: '/api/announcements/:id/', params: { id: entry.id } })
       : await api.delete({ url: '/api/guestbook/:id/', params: { id: entry.id } })
     if (response.status !== 200) throw new Error()
     entry.is_deleted = true
     entry.content = '[内容已删除]'
   }, '删除失败，请稍后重试')
-  const report = (entry: GuestbookEntry, reason: APIReportGuestbook['query']['reason']) => perform(entry, async () => {
-    const detail = reason === 'other' ? prompt('请补充举报说明（可选，最多 500 字）：') : ''
+  const report = (entry: GuestbookEntry, reason: APIReportGuestbook['query']['reason']) => perform(entry, async actionBoard => {
+    const startingUserId = userInfo.value?.id
+    const startingRoute = route.fullPath
+    const message = actionBoard === 'announcements' ? shadcnMessage : defaultMessage
+    const detail = reason !== 'other' ? '' : actionBoard === 'announcements'
+      ? await dialog.prompt({ title: '举报公告内容', description: '请补充举报说明（可选，最多 500 字）。', placeholder: '说明需要管理员关注的问题', maxLength: 500, confirmText: '提交举报' })
+      : window.prompt('请补充举报说明（可选，最多 500 字）：')
     if (detail === null) return
+    if (!isLoggedIn.value || userInfo.value?.id !== startingUserId || toValue(board) !== actionBoard || route.fullPath !== startingRoute) return
     if (Array.from(detail).length > 500) { message.error('举报说明不能超过 500 字'); return }
     const request = { params: { id: entry.id }, query: { reason, detail } }
-    const response = toValue(board) === 'announcements'
+    const response = actionBoard === 'announcements'
       ? await api.post({ url: '/api/announcements/:id/reports/', ...request })
       : await api.post({ url: '/api/guestbook/:id/reports/', ...request })
     if (response.status !== 200 && response.status !== 201) throw new Error()

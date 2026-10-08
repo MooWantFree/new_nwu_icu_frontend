@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
-    <div class="flex items-center gap-1 border-b border-gray-200 p-2" aria-label="文字格式">
+  <div class="border bg-white" :class="isShadcn ? 'rounded-md border-zinc-200 focus-within:border-zinc-400 focus-within:ring-2 focus-within:ring-zinc-200' : 'rounded-lg border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100'">
+    <div class="flex items-center gap-1 border-b p-2" :class="isShadcn ? 'border-zinc-200' : 'border-gray-200'" aria-label="文字格式">
       <button
         v-for="button in buttons"
         :key="button.name"
@@ -9,29 +9,34 @@
         :aria-label="button.title"
         :aria-pressed="editor?.isActive(button.name) || false"
         :disabled="disabled"
-        class="rounded p-2 text-gray-700 hover:bg-gray-100"
-        :class="{ 'bg-blue-100 text-blue-700': editor?.isActive(button.name) }"
+        :class="[
+          isShadcn ? 'rounded-sm p-2 text-zinc-600 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50' : 'rounded p-2 text-gray-700 hover:bg-gray-100',
+          editor?.isActive(button.name) ? isShadcn ? 'bg-zinc-100 text-zinc-950' : 'bg-blue-100 text-blue-700' : '',
+        ]"
         @click="button.toggle"
       >
-        <component :is="button.icon" class="h-4 w-4" />
+        <component :is="button.icon" class="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
-    <div v-if="allowImages && editor?.isActive('image')" class="flex items-center gap-2 border-b border-gray-200 px-3 py-2" aria-label="图片大小">
-      <span class="text-xs font-medium text-gray-500">图片大小</span>
+    <div v-if="allowImages && editor?.isActive('image')" class="flex items-center gap-2 border-b px-3 py-2" :class="isShadcn ? 'flex-wrap border-zinc-200' : 'border-gray-200'" aria-label="图片大小">
+      <span class="text-xs font-medium" :class="isShadcn ? 'text-zinc-500' : 'text-gray-500'">图片大小</span>
       <button
         v-for="size in imageSizes"
         :key="size"
         type="button"
         :aria-pressed="editor?.isActive('image', { size }) || false"
         :disabled="disabled"
-        class="rounded px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        :class="{ 'bg-blue-100 text-blue-700': editor?.isActive('image', { size }) }"
+        class="rounded px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+        :class="[
+          isShadcn ? 'text-zinc-600 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400' : 'text-gray-700 hover:bg-gray-100',
+          editor?.isActive('image', { size }) ? isShadcn ? 'bg-zinc-100 text-zinc-950' : 'bg-blue-100 text-blue-700' : '',
+        ]"
         @click="setImageSize(size)"
       >
         {{ size }}%
       </button>
     </div>
-    <EditorContent :editor="editor" class="guestbook-editor p-3" />
+    <EditorContent :editor="editor" class="guestbook-editor p-3" :class="{ 'guestbook-editor--shadcn': isShadcn }" />
     <ImageUpload v-if="allowImages && showImageUpload" @close="showImageUpload = false" @upload="insertImage" />
     <InsertLink v-model="showLinkModal" :initial-text="selectedLinkText" @submit="insertLink" />
   </div>
@@ -57,9 +62,11 @@ import {
   type AnnouncementImageSize,
 } from '@/lib/guestbook'
 
-const props = withDefaults(defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean; allowImages?: boolean }>(), {
+const props = withDefaults(defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean; allowImages?: boolean; appearance?: 'default' | 'shadcn' }>(), {
   allowImages: false,
+  appearance: 'default',
 })
+const isShadcn = computed(() => props.appearance === 'shadcn')
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 const sanitize = (value: string) => props.allowImages ? sanitizeAnnouncementHtml(value) : sanitizeGuestbookHtml(value)
 const showImageUpload = ref(false)
@@ -189,4 +196,10 @@ onBeforeUnmount(() => editor.value?.destroy())
   white-space: nowrap;
   width: 0;
 }
+.guestbook-editor--shadcn .ProseMirror { color: #3f3f46; line-height: 1.75; }
+.guestbook-editor--shadcn .ProseMirror a { color: #18181b; }
+.guestbook-editor--shadcn .ProseMirror strong { color: #18181b; }
+.guestbook-editor--shadcn .ProseMirror .ProseMirror-selectednode { outline-color: #a1a1aa; }
+.guestbook-editor--shadcn .ProseMirror::selection { background: #e4e4e7; }
+.guestbook-editor--shadcn .ProseMirror p.is-editor-empty:first-child::before { color: #71717a; }
 </style>
