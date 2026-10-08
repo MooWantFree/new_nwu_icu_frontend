@@ -22,52 +22,63 @@
         编辑评价
       </button>
     </header>
-    <div class="grid grid-cols-2 gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-3">
-      <label class="col-span-2 flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600 sm:col-span-1">
-        排序
-        <select
-          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
-          v-model="sortSelectorValue"
-        >
-          <option
-            v-for="option in sortSelectorOptions"
-            :key="option.value"
-            :value="option.value"
+    <div class="flex flex-wrap items-center gap-2" role="group" aria-label="评价筛选与排序">
+      <div class="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto">
+        <div class="min-w-0 sm:w-40">
+          <ShadcnSelect
+            :value="semesterSelectorValue"
+            :options="semesterSelectorOptions"
+            aria-label="学期"
+            class="min-w-0 text-zinc-700 [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:truncate [&>span:first-child]:text-left"
+            @update:value="updateSemester"
+          />
+        </div>
+        <div class="min-w-0 sm:w-36">
+          <ShadcnSelect
+            :value="rankSelectorValue"
+            :options="rankSelectorOptions"
+            aria-label="评分"
+            class="min-w-0 text-zinc-700 [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:truncate [&>span:first-child]:text-left"
+            @update:value="updateRating"
+          />
+        </div>
+      </div>
+      <div class="ml-auto">
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger
+            type="button"
+            class="inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 data-[state=open]:bg-zinc-100 data-[state=open]:text-zinc-950"
+            :aria-label="`排序: ${sortSelectorLabel}`"
           >
-            {{ option.label }}
-          </option>
-        </select>
-      </label>
-      <label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600">
-        学期
-        <select
-          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
-          v-model="semesterSelectorValue"
-        >
-          <option
-            v-for="option in semesterSelectorOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-      </label>
-      <label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-zinc-600">
-        评分
-        <select
-          class="min-h-10 w-full min-w-0 rounded-md border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-700 shadow-sm transition-colors hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:ring-offset-2"
-          v-model="rankSelectorValue"
-        >
-          <option
-            v-for="option in rankSelectorOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-      </label>
+            <ArrowDownUp class="h-4 w-4" aria-hidden="true" />
+            {{ sortSelectorLabel }}
+            <ChevronDown class="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent
+              align="end"
+              :side-offset="4"
+              :collision-padding="8"
+              aria-label="评价排序方式"
+              class="z-50 min-w-44 rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md outline-none"
+            >
+              <DropdownMenuRadioGroup :model-value="sortSelectorValue" @update:model-value="updateSort">
+                <DropdownMenuRadioItem
+                  v-for="option in sortSelectorOptions"
+                  :key="option.value"
+                  :value="option.value"
+                  class="relative flex min-h-9 cursor-default select-none items-center rounded-sm py-2 pl-8 pr-3 text-sm outline-none data-[highlighted]:bg-zinc-100"
+                >
+                  <DropdownMenuItemIndicator class="absolute left-2">
+                    <Check class="h-4 w-4" aria-hidden="true" />
+                  </DropdownMenuItemIndicator>
+                  {{ option.label }}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+      </div>
     </div>
 
     <div :key="reviewResultsGeneration" class="mt-4 space-y-4">
@@ -107,6 +118,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
+import { ArrowDownUp, Check, ChevronDown } from 'lucide-vue-next'
+import { DropdownMenuContent, DropdownMenuItemIndicator, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
+import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { useUser } from '@/lib/useUser'
 import { api } from '@/lib/requests'
@@ -166,6 +180,11 @@ const sortSelectorOptions = [
     value: SortMethods.LowestRated,
   },
 ]
+const sortSelectorLabel = computed(() => sortSelectorOptions.find(option => option.value === sortSelectorValue.value)?.label ?? '最多点赞')
+const updateSort = (value: unknown) => {
+  const option = sortSelectorOptions.find(option => option.value === value)
+  if (option) sortSelectorValue.value = option.value
+}
 
 // - semester
 const semesterSelectorValue = computed({
@@ -174,7 +193,7 @@ const semesterSelectorValue = computed({
 })
 const semesterSelectorOptions = computed(() => [
   {
-    label: `全部 (${props.courseData.total_review_count})`,
+    label: '全部学期',
     value: 'all',
   },
   ...props.courseData.reviews.facets.semesters.map((it) => ({
@@ -182,6 +201,9 @@ const semesterSelectorOptions = computed(() => [
     value: String(it.semester_id),
   })),
 ])
+const updateSemester = (value: string | number | null) => {
+  if (typeof value === 'string') semesterSelectorValue.value = value
+}
 
 // - rank filter
 enum Rank {
@@ -199,30 +221,33 @@ const rankSelectorValue = computed({
 })
 const rankSelectorOptions = computed(() => [
   {
-    label: `全部 (${props.courseData.total_review_count})`,
+    label: '全部评分',
     value: Rank.All,
   },
   {
-    label: `★★★★★ (${ratingFacetCount(5)})`,
+    label: `5 星 (${ratingFacetCount(5)})`,
     value: Rank.Five,
   },
   {
-    label: `★★★★ (${ratingFacetCount(4)})`,
+    label: `4 星 (${ratingFacetCount(4)})`,
     value: Rank.Four,
   },
   {
-    label: `★★★ (${ratingFacetCount(3)})`,
+    label: `3 星 (${ratingFacetCount(3)})`,
     value: Rank.Three,
   },
   {
-    label: `★★ (${ratingFacetCount(2)})`,
+    label: `2 星 (${ratingFacetCount(2)})`,
     value: Rank.Two,
   },
   {
-    label: `★ (${ratingFacetCount(1)})`,
+    label: `1 星 (${ratingFacetCount(1)})`,
     value: Rank.One,
   },
 ])
+const updateRating = (value: string | number | null) => {
+  if (typeof value === 'number') rankSelectorValue.value = value
+}
 
 // - calculate result
 const ratingFacetCount = (rating: number) =>
