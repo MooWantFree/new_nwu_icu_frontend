@@ -3,8 +3,9 @@
     type="button"
     aria-label="刷新验证码"
     :aria-busy="busy"
-    :disabled="busy"
-    class="relative h-10 flex-shrink-0 cursor-pointer overflow-hidden border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-wait"
+    :disabled="busy || disabled"
+    class="relative h-10 flex-shrink-0 cursor-pointer overflow-hidden border focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-wait"
+    :class="appearance === 'shadcn' ? 'focus:ring-zinc-400' : 'focus:ring-blue-500'"
     @click="refresh"
   >
     <img
@@ -24,10 +25,10 @@
       aria-label="正在刷新"
       class="absolute inset-0 flex items-center justify-center"
     >
-      <LoaderCircle aria-hidden="true" class="h-5 w-5 animate-spin text-blue-700" />
+      <LoaderCircle aria-hidden="true" class="h-5 w-5 animate-spin" :class="appearance === 'shadcn' ? 'text-zinc-500' : 'text-blue-700'" />
     </span>
     <span v-else-if="!imageLoaded" class="absolute inset-0 flex items-center justify-center">
-      <RefreshCw aria-hidden="true" class="h-5 w-5 text-gray-500" />
+      <RefreshCw aria-hidden="true" class="h-5 w-5" :class="appearance === 'shadcn' ? 'text-zinc-500' : 'text-gray-500'" />
     </span>
     <slot v-else />
   </button>
@@ -41,9 +42,13 @@ const props = withDefaults(defineProps<{
   imageUrl: string
   loading?: boolean
   imageFit?: 'cover' | 'contain'
+  appearance?: 'default' | 'shadcn'
+  disabled?: boolean
 }>(), {
   loading: false,
   imageFit: 'contain',
+  appearance: 'default',
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -81,6 +86,6 @@ function handleError(event: Event) {
 }
 
 function refresh() {
-  if (!busy.value) emit('refresh')
+  if (!busy.value && !props.disabled) emit('refresh')
 }
 </script>

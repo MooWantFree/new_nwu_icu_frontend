@@ -6,6 +6,8 @@ type ImageProps = {
   imageUrl: string
   loading?: boolean
   imageFit?: 'cover' | 'contain'
+  appearance?: 'default' | 'shadcn'
+  disabled?: boolean
 }
 
 let app: App | undefined
@@ -78,6 +80,25 @@ function expectBusy(busy: boolean) {
 }
 
 describe('CaptchaImage refresh lifecycle', () => {
+  it('prevents refreshing while its parent is submitting without changing the loaded image', async () => {
+    const { update, refresh } = mountImage({ imageUrl: '/captcha-loaded.png', appearance: 'shadcn' })
+    image().dispatchEvent(new Event('load'))
+    await nextTick()
+    expectBusy(false)
+
+    await update({ disabled: true })
+    expect(button().disabled).toBe(true)
+    expect(button().getAttribute('aria-busy')).toBe('false')
+    expectHidden(image(), false)
+    button().dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(refresh).not.toHaveBeenCalled()
+
+    await update({ disabled: false })
+    expectBusy(false)
+    button().click()
+    expect(refresh).toHaveBeenCalledOnce()
+  })
+
   it('keeps the animation through the API response until the replacement image loads', async () => {
     const { update, refresh } = mountImage({ imageUrl: '', loading: true })
     expect(button().type).toBe('button')

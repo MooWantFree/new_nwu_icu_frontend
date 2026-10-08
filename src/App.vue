@@ -46,7 +46,8 @@ const isShadcnPage = computed(() =>
   ['/', '/home', '/login', '/review/timeline', '/review/course', '/review/teacher'].includes(route.path)
   || /^\/review\/(course|teacher)\/\d+$/.test(route.path)
   || /^\/user\/(me|\d+)$/.test(route.path)
-  || /^\/user\/settings(?:\/|$)/.test(route.path),
+  || /^\/user\/settings(?:\/|$)/.test(route.path)
+  || /^\/user\/(activate|forget-password|bind-college-email|bind-college-mail)\/?$/.test(route.path),
 )
 const isManagement = computed(() => Boolean(route.meta.isManagement))
 const frontendCommit = import.meta.env.VITE_FRONTEND_COMMIT

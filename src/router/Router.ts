@@ -109,7 +109,7 @@ const userRoutes = [
     name: 'userActivate',
     component: () => import('@/views/user/UserActivate.vue'),
     meta: {
-      pageTitle: '用户激活',
+      pageTitle: '账号激活',
     },
   },
   {
@@ -118,10 +118,10 @@ const userRoutes = [
     name: 'bindCollegeMail',
     component: () => import('@/views/user/UserActivate.vue'),
     meta: {
-      pageTitle: '绑定学院邮箱',
+      pageTitle: '验证西大邮箱',
       requiresAuth: true,
-      loginReason: '请先登录或注册，再绑定学院邮箱',
-      loginSuccessMessage: '登录成功，正在继续绑定学院邮箱',
+      loginReason: '请先登录或注册，再验证西大邮箱',
+      loginSuccessMessage: '登录成功，正在继续验证西大邮箱',
     },
   },
 ] satisfies RouteRecordRaw[]
