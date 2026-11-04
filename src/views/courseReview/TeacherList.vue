@@ -18,7 +18,7 @@
             <ShadcnSelect
               :value="schoolFilter"
               :options="schoolOptions"
-              :loading="schoolOptions.length === 1"
+              :loading="schoolsLoading"
               filterable
               aria-label="选择学院"
               @update:value="handleFilterChange('school', $event)"
@@ -45,7 +45,11 @@
         </button>
       </section>
 
-      <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="正在加载教师目录" role="status">
+      <LoadError v-if="schoolError" class="mb-5" message="学院列表加载失败" :busy="schoolsLoading" @retry="fetchSchoolOptions" />
+      <LoadError v-if="loadError" :message="loadError" :busy="loading" @retry="retryKey++">
+        <RouterLink v-if="currentPage > 1" :to="{ query: { ...route.query, page: '1' } }" class="rounded-md px-4 py-2 text-sm underline">返回第一页</RouterLink>
+      </LoadError>
+      <div v-else-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="正在加载教师目录" role="status">
         <span class="sr-only">正在加载教师目录</span>
         <div v-for="i in teacherSkeletonCount" :key="i" class="flex min-h-24 items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 motion-safe:animate-pulse" aria-hidden="true">
           <div class="h-10 w-10 shrink-0 rounded-lg bg-zinc-100" />
@@ -94,7 +98,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useShadcnToast } from '@/lib/useShadcnToast'
+import LoadError from '@/components/common/LoadError.vue'
 import { api } from '@/lib/requests'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 import { ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
@@ -105,7 +109,6 @@ import ShadcnSelect from '@/components/common/ShadcnSelect.vue'
 
 const router = useRouter()
 const route = useRoute()
-const message = useShadcnToast()
 const { checkingLogin, requireLogin } = useCreationLogin()
 
 enum OrderBy {
@@ -124,6 +127,10 @@ const schoolFilter = computed(() => typeof route.query.school === 'string' ? rou
 const orderBy = computed(() => route.query.order === OrderBy.Popular ? OrderBy.Popular : OrderBy.Rating)
 const data = ref<{ count: number; max_page: number; page: number; results: Teacher[] } | null>(null)
 const loading = ref(true)
+const loadError = ref('')
+const retryKey = ref(0)
+const schoolsLoading = ref(false)
+const schoolError = ref(false)
 const currentPage = computed(() => {
   const page = Number(route.query.page)
   return Number.isSafeInteger(page) && page > 0 ? page : 1
@@ -156,6 +163,7 @@ const orderByOptions = [
 
 const fetchTeachers = async (isCurrent: () => boolean) => {
   loading.value = true
+  loadError.value = ''
   teachers.value = []
   data.value = null
   totalTeachers.value = 0
@@ -183,14 +191,17 @@ const fetchTeachers = async (isCurrent: () => boolean) => {
       query
     })
     if (!isCurrent()) return
-    if (response.status !== 200) throw new Error('Failed to fetch teachers')
+    if (response.status !== 200) {
+      loadError.value = response.status === 404 && currentPage.value > 1 ? '这一页不存在，请返回第一页' : '教师列表加载失败，请重试'
+      return
+    }
     teachers.value = response.content.results
     data.value = response.content
     totalTeachers.value = response.content.count
   } catch (error) {
     if (!isCurrent()) return
     console.error('Error fetching teachers:', error)
-    message.error('网络错误，请重试')
+    loadError.value = '教师列表加载失败，请重试'
   } finally {
     if (isCurrent()) loading.value = false
   }
@@ -198,11 +209,15 @@ const fetchTeachers = async (isCurrent: () => boolean) => {
 
 // Function to fetch school options from API
 const fetchSchoolOptions = async () => {
+  if (schoolsLoading.value) return
+  schoolsLoading.value = true
+  schoolError.value = false
   try {
     const response = await api.get({
       url: '/api/assessment/school/'
     })
 
+    if (response.status !== 200) throw new Error('schools unavailable')
     schoolOptions.value = [
       { label: '全部学院', value: '' },
       ...response.content.schools.map((school: { id: number, name: string }) => ({
@@ -212,11 +227,13 @@ const fetchSchoolOptions = async () => {
     ]
   } catch (error) {
     console.error('Error fetching school options:', error)
-    message.error('获取学院列表失败')
+    schoolError.value = true
+  } finally {
+    schoolsLoading.value = false
   }
 }
 
-watch([schoolFilter, orderBy, currentPage], (_state, _oldState, onCleanup) => {
+watch([schoolFilter, orderBy, currentPage, retryKey], (_state, _oldState, onCleanup) => {
   let current = true
   onCleanup(() => { current = false })
   void fetchTeachers(() => current)

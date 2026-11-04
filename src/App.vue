@@ -7,7 +7,7 @@
           <RouterView />
         </div>
         <footer v-if="!isManagement && !isMessagePage" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-5 text-center text-xs text-zinc-500">
-          <span>2019-{{ new Date().getFullYear() }} NWU.ICU</span>
+          <span>{{ siteConfig.footer_start_year ? `${siteConfig.footer_start_year}-` : '' }}{{ new Date().getFullYear() }} {{ siteConfig.site_name }}</span>
           <span aria-hidden="true">·</span>
           <a v-if="frontendCommitUrl" :href="frontendCommitUrl" :title="`前端完整提交：${frontendCommit}`" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 hover:underline">前端 {{ shortCommit(frontendCommit) }}</a>
           <span v-else :title="`前端完整提交：${frontendCommit}`">前端 {{ shortCommit(frontendCommit) }}</span>
@@ -22,6 +22,7 @@
 </template>
 
 <script lang="ts" setup>
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ShadcnFeedbackProvider from '@/components/common/ShadcnFeedbackProvider.vue'
@@ -51,8 +52,8 @@ const commitUrl = (repositoryUrl: string, commit: string) => {
     return ''
   }
 }
-const frontendCommitUrl = commitUrl(import.meta.env.VITE_FRONTEND_GITHUB_URL, frontendCommit)
-const backendCommitUrl = commitUrl(import.meta.env.VITE_BACKEND_GITHUB_URL, backendCommit)
+const frontendCommitUrl = computed(() => commitUrl(siteConfig.frontend_repository_url, frontendCommit))
+const backendCommitUrl = computed(() => commitUrl(siteConfig.backend_repository_url, backendCommit))
 const shortCommit = (commit: string) => commit === 'unknown' ? 'unknown' : commit.slice(0, 8)
 </script>
 

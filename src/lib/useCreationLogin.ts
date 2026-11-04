@@ -21,6 +21,9 @@ export function useCreationLogin() {
       if (await checkLoginStatus()) return true
       notifyLoginRequired(action)
       return false
+    } catch {
+      message.error('暂时无法确认登录状态，请重试')
+      return false
     } finally {
       checkingLogin.value = false
     }

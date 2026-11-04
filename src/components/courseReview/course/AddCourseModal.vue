@@ -1,8 +1,6 @@
 <template>
   <ShadcnFormDialog :show="modelValue" title="添加课程" :busy="busy" :suspended="showTeacherSelectorModal" @close="closeModal">
-    <div v-if="loading" class="flex min-h-48 items-center justify-center gap-2 text-sm text-zinc-500" role="status">
-      <LoaderCircle class="h-5 w-5 animate-spin" aria-hidden="true" />加载中…
-    </div>
+    <LoadingSkeleton v-if="loading" label="正在加载课程表单" variant="form" />
     <div v-else-if="schoolLoadError" class="rounded-md border border-red-200 bg-red-50/50 p-4 text-sm text-red-600" role="alert">
       <p>{{ schoolLoadError }}</p>
       <button type="button" class="mt-3 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400" @click="loadSchoolId">重新加载</button>
@@ -67,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed, nextTick, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
 import { CircleAlert, LoaderCircle, Plus, X } from 'lucide-vue-next'
 import ShadcnSelect from '@/components/common/ShadcnSelect.vue'

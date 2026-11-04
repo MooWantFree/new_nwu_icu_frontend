@@ -1,10 +1,8 @@
 <template>
   <main class="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950 sm:px-6 sm:py-10">
     <div class="mx-auto max-w-6xl">
-      <div v-if="loading" role="status" class="surface-card flex min-h-60 items-center justify-center gap-2 p-6 text-sm text-zinc-500">
-        <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
-        正在验证管理权限…
-      </div>
+      <LoadingSkeleton v-if="loading && !session" label="正在验证管理权限" :rows="4" />
+      <LoadError v-else-if="sessionError" :message="sessionError" :busy="loading" @retry="loadSession" />
 
       <div v-else-if="notFound" class="py-24 text-center">
         <p class="text-7xl font-semibold text-zinc-300">404</p>
@@ -44,7 +42,7 @@
       <template v-else-if="session?.elevated">
         <header class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-6">
           <div>
-            <p class="text-xs font-medium text-zinc-500">NWU.ICU</p>
+            <p class="text-xs font-medium text-zinc-500">{{ siteConfig.site_name }}</p>
             <h1 class="mt-2 text-3xl font-semibold tracking-tight">管理员面板</h1>
             <p class="mt-2 text-sm text-zinc-600">Passkey 有效期为十分钟，每次管理操作后重新计时，连续十分钟无操作将自动失效。</p>
           </div>
@@ -87,17 +85,17 @@
         <section v-else-if="tab === 'about'" class="surface-card p-5">
           <h2 class="font-semibold">编辑关于本站</h2>
           <p class="mt-1 text-sm text-zinc-500">正文使用与公告相同的格式，可插入链接和图片。</p>
-          <div v-if="aboutLoading" class="py-12 text-center text-zinc-500">加载中…</div>
+          <LoadingSkeleton v-if="aboutLoading && !aboutLoaded" class="mt-4" label="正在加载关于本站" variant="form" />
           <template v-else>
             <div v-if="aboutError" class="mt-4 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700" role="alert">
               {{ aboutError }}
               <button type="button" class="ml-2 font-medium underline" @click="loadAbout">重试</button>
             </div>
             <label class="mt-5 block text-sm font-medium text-zinc-700">正文</label>
-            <div class="mt-2"><GuestbookEditor v-model="aboutContent" appearance="shadcn" :disabled="aboutBusy || Boolean(aboutError)" allow-images placeholder="输入关于本站的内容…" /></div>
+            <div class="mt-2"><GuestbookEditor v-model="aboutContent" appearance="shadcn" :disabled="aboutBusy || aboutLoading || Boolean(aboutError)" allow-images placeholder="输入关于本站的内容…" /></div>
             <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
               <p v-if="aboutMessage" :role="aboutSucceeded ? 'status' : 'alert'" class="mr-auto flex w-full items-start gap-2 rounded-lg border bg-white p-3 text-sm" :class="aboutSucceeded ? 'border-zinc-200 text-zinc-700' : 'border-red-200 text-red-700'"><component :is="aboutSucceeded ? CheckCircle2 : CircleAlert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{ aboutMessage }}</p>
-              <button :disabled="aboutBusy || Boolean(aboutError)" class="btn-primary px-5" @click="saveAbout">{{ aboutBusy ? '正在保存…' : '保存内容' }}</button>
+              <button :disabled="aboutBusy || aboutLoading || Boolean(aboutError)" class="btn-primary px-5" @click="saveAbout">{{ aboutBusy ? '正在保存…' : '保存内容' }}</button>
             </div>
           </template>
         </section>
@@ -110,8 +108,8 @@
               <div class="min-w-0 sm:w-36"><ShadcnSelect :value="reportBoard" :options="reportBoardOptions" aria-label="举报来源" @update:value="updateReportBoard" /></div>
             </div>
           </div>
-          <div v-if="sectionLoading" class="py-16 text-center text-zinc-500">加载中…</div>
-          <article v-for="report in reports" v-else :key="report.id" class="surface-card p-5">
+          <LoadingSkeleton v-if="sectionLoading && !reports.length" label="正在加载举报" />
+          <article v-for="report in reports" v-else :key="report.id" :inert="sectionLoading" :aria-busy="sectionLoading" class="surface-card p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div><span class="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{{ reasonLabel(report.reason) }}</span><span class="ml-2 text-sm text-zinc-600">#{{ report.id }} · {{ report.entry.board === 'guestbook' ? '留言板' : '公告回复' }}</span></div>
               <time class="text-xs text-zinc-500">{{ formatDate(report.created_at) }}</time>
@@ -130,7 +128,7 @@
             </div>
             <p v-else class="mt-4 text-sm text-zinc-600">处理说明：{{ report.handling_note }}</p>
           </article>
-          <p v-if="!sectionLoading && !reports.length" class="py-16 text-center text-zinc-500">没有符合条件的举报。</p>
+          <p v-if="!sectionLoading && !sectionError && !reports.length" class="py-16 text-center text-zinc-500">没有符合条件的举报。</p>
           <div v-if="reportMaxPage > 1" class="flex justify-center pt-2"><ReviewPagination :page="reportPage" :page-count="reportMaxPage" @update:page="loadReports" /></div>
         </section>
 
@@ -166,9 +164,9 @@
               <h2 class="font-semibold">公告列表</h2>
               <div class="w-32"><ShadcnSelect :value="announcementVisibility" :options="announcementVisibilityOptions" aria-label="公告状态" :disabled="announcementBusy || announcementActionId !== null" @update:value="updateAnnouncementVisibility" /></div>
             </div>
-            <div v-if="sectionLoading" class="py-12 text-center text-zinc-500">加载中…</div>
+            <LoadingSkeleton v-if="sectionLoading && !announcements.length" class="mt-4" label="正在加载公告" />
             <div v-else-if="announcements.length" class="mt-4 divide-y divide-zinc-200 rounded-xl border border-zinc-200">
-              <article v-for="announcement in announcements" :key="announcement.id" class="p-4">
+              <article v-for="announcement in announcements" :key="announcement.id" :inert="sectionLoading" :aria-busy="sectionLoading" class="p-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0">
                     <h3 class="truncate font-medium text-zinc-900">{{ announcement.title || '公告' }}</h3>
@@ -182,7 +180,7 @@
                 </div>
               </article>
             </div>
-            <p v-else class="py-12 text-center text-zinc-500">没有{{ announcementVisibility === 'published' ? '已发布' : '已隐藏' }}的公告。</p>
+            <p v-else-if="!sectionError" class="py-12 text-center text-zinc-500">没有{{ announcementVisibility === 'published' ? '已发布' : '已隐藏' }}的公告。</p>
             <div v-if="announcementMaxPage > 1" class="mt-5 flex justify-center"><ReviewPagination :page="announcementPage" :page-count="announcementMaxPage" @update:page="loadAnnouncements" /></div>
           </div>
         </section>
@@ -195,7 +193,7 @@
             </div>
           </div>
           <p v-if="telegramMessage" :role="telegramSucceeded ? 'status' : 'alert'" class="mt-4 flex items-start gap-2 rounded-lg border bg-white p-3 text-sm" :class="telegramSucceeded ? 'border-zinc-200 text-zinc-700' : 'border-red-200 text-red-700'"><component :is="telegramSucceeded ? CheckCircle2 : CircleAlert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{{ telegramMessage }}</p>
-          <div v-if="sectionLoading" class="py-12 text-center text-zinc-500">加载中…</div>
+          <LoadingSkeleton v-if="sectionLoading && !telegramLoaded" label="正在加载通知设置" variant="form" />
           <div v-else class="mt-5 divide-y divide-zinc-200 rounded-xl border border-zinc-200">
             <div v-for="item in telegramSwitches" :key="item.key" class="flex items-center justify-between gap-4 p-4">
               <span><span class="block text-sm font-medium text-zinc-900">{{ item.label }}</span><span class="mt-1 block text-xs leading-5 text-zinc-500">{{ item.description }}</span></span>
@@ -211,8 +209,8 @@
 
         <section v-else-if="tab === 'uploads'" class="space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-semibold tracking-tight">投稿审核</h2><div class="w-36"><ShadcnSelect :value="uploadStatus" :options="uploadStatusOptions" aria-label="审核状态" @update:value="updateUploadStatus" /></div></div>
-          <div v-if="sectionLoading" class="py-16 text-center text-zinc-500">加载中…</div>
-          <article v-for="upload in uploads" v-else :key="upload.id" class="surface-card p-5">
+          <LoadingSkeleton v-if="sectionLoading && !uploads.length" label="正在加载投稿" />
+          <article v-for="upload in uploads" v-else :key="upload.id" :inert="sectionLoading" :aria-busy="sectionLoading" class="surface-card p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div><h2 class="font-semibold">投稿 #{{ upload.id }}</h2><p class="mt-1 text-sm text-zinc-600">{{ upload.uploaded_by.nickname }}（{{ upload.uploaded_by.username }}）· {{ upload.total_size_display }}</p></div>
               <span class="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">{{ uploadStatusLabel(upload.status) }}</span>
@@ -242,21 +240,24 @@
             </div>
             <p v-if="upload.publish_error" class="mt-3 text-sm text-red-700">发布错误：{{ upload.publish_error }}</p>
           </article>
-          <p v-if="!sectionLoading && !uploads.length" class="py-16 text-center text-zinc-500">没有符合条件的投稿。</p>
+          <p v-if="!sectionLoading && !sectionError && !uploads.length" class="py-16 text-center text-zinc-500">没有符合条件的投稿。</p>
           <div v-if="uploadMaxPage > 1" class="flex justify-center pt-2"><ReviewPagination :page="uploadPage" :page-count="uploadMaxPage" @update:page="loadUploads" /></div>
         </section>
 
-        <div v-if="sectionError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ sectionError }}</p></div>
+        <div v-if="sectionError" role="alert" class="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"><CircleAlert class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><p class="break-words leading-6">{{ sectionError }}</p><button v-if="sectionLoadFailed" type="button" :disabled="sectionLoading" class="shrink-0 rounded px-2 py-1 underline disabled:opacity-50" @click="retrySection">重试</button></div>
       </template>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
+import LoadError from '@/components/common/LoadError.vue'
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser'
-import { CheckCircle2, CircleAlert, KeyRound, LoaderCircle, ShieldCheck } from 'lucide-vue-next'
+import { CheckCircle2, CircleAlert, KeyRound, ShieldCheck } from 'lucide-vue-next'
 import { SwitchRoot, SwitchThumb } from 'reka-ui'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { useShadcnDialog } from '@/lib/useShadcnDialog'
@@ -293,6 +294,10 @@ const requestedTab = () => {
 }
 const tab = ref<Tab>(requestedTab() || 'uploads')
 const sectionLoading = ref(false)
+const sectionLoadFailed = ref(false)
+const sessionError = ref('')
+const aboutLoaded = ref(false)
+const telegramLoaded = ref(false)
 const sectionError = ref('')
 const hasPendingReports = ref(false)
 const hasPendingUploads = ref(false)
@@ -421,13 +426,15 @@ const withKeePassXCError = async <T>(operation: () => Promise<T>): Promise<T> =>
 
 const loadSession = async () => {
   loading.value = true
+  sessionError.value = ''
+  notFound.value = false
   try {
     const response = await api.get({ url: '/api/management/session/' })
     if (response.status === 404) { notFound.value = true; return }
     if (response.status !== 200) throw new Error()
     session.value = response.content
     await syncTabFromRoute()
-  } catch { notFound.value = true } finally { loading.value = false }
+  } catch { sessionError.value = '管理页面加载失败，请重试' } finally { loading.value = false }
 }
 
 const registerPasskey = async () => {
@@ -490,6 +497,7 @@ const loadAbout = async () => {
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200) throw new Error(errorMessage(response.errors, '关于本站加载失败。'))
     aboutContent.value = response.content.about.content
+    aboutLoaded.value = true
   } catch (error) {
     if (requestVersion !== aboutRequestVersion) return
     aboutError.value = error instanceof Error ? error.message : '关于本站加载失败。'
@@ -534,11 +542,16 @@ const reportPage = ref(1)
 const reportMaxPage = ref(1)
 const reportNotes = reactive<Record<number, string>>({})
 let reportRequestVersion = 0
+let reportKey = ''
+let reportRetryPage = 1
 
 const loadReports = async (page = 1) => {
+  reportRetryPage = page
   const version = ++reportRequestVersion
-  reports.value = []
-  sectionLoading.value = true; sectionError.value = ''
+  const key = JSON.stringify([page, reportStatus.value, reportBoard.value])
+  if (key !== reportKey) reports.value = []
+  reportKey = key
+  sectionLoading.value = true; sectionError.value = ''; sectionLoadFailed.value = false
   try {
     const response = await api.get({ url: '/api/management/reports/', query: { status: reportStatus.value, board: reportBoard.value || undefined, page, pageSize: 10 } })
     if (version !== reportRequestVersion || tab.value !== 'reports') return
@@ -548,6 +561,7 @@ const loadReports = async (page = 1) => {
     reportPage.value = response.content.page
     reportMaxPage.value = response.content.max_page
   } catch (error) {
+    if (version === reportRequestVersion && tab.value === 'reports') sectionLoadFailed.value = true
     if (version === reportRequestVersion && tab.value === 'reports') sectionError.value = error instanceof Error ? error.message : '举报加载失败。'
   } finally {
     if (version === reportRequestVersion && tab.value === 'reports') sectionLoading.value = false
@@ -584,6 +598,8 @@ const announcementMaxPage = ref(1)
 const announcementActionId = ref<number | null>(null)
 let announcementSubmissionId = crypto.randomUUID()
 let announcementRequestVersion = 0
+let announcementKey = ''
+let announcementRetryPage = 1
 
 const resetAnnouncementEditor = () => {
   editingAnnouncementId.value = null
@@ -594,9 +610,13 @@ const resetAnnouncementEditor = () => {
 }
 
 const loadAnnouncements = async (page = 1) => {
+  announcementRetryPage = page
+  const key = JSON.stringify([page, announcementVisibility.value])
+  if (key !== announcementKey) announcements.value = []
+  announcementKey = key
   const requestVersion = ++announcementRequestVersion
   const visibility = announcementVisibility.value
-  sectionLoading.value = true; sectionError.value = ''
+  sectionLoading.value = true; sectionError.value = ''; sectionLoadFailed.value = false
   try {
     const response = await api.get({
       url: '/api/management/announcements/',
@@ -610,6 +630,7 @@ const loadAnnouncements = async (page = 1) => {
     announcementMaxPage.value = response.content.max_page
   } catch (error) {
     if (requestVersion !== announcementRequestVersion) return
+    sectionLoadFailed.value = true
     sectionError.value = error instanceof Error ? error.message : '公告加载失败。'
   } finally {
     if (requestVersion === announcementRequestVersion) sectionLoading.value = false
@@ -722,13 +743,14 @@ const telegramMessage = ref('')
 const telegramSucceeded = ref(false)
 
 const loadTelegramSettings = async () => {
-  sectionLoading.value = true; sectionError.value = ''; telegramMessage.value = ''
+  sectionLoading.value = true; sectionError.value = ''; sectionLoadFailed.value = false; telegramMessage.value = ''
   try {
     const response = await api.get({ url: '/api/management/notifications/telegram/' })
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200) throw new Error(errorMessage(response.errors, 'Telegram 通知设置加载失败。'))
     Object.assign(telegramSettings, response.content)
-  } catch (error) { sectionError.value = error instanceof Error ? error.message : 'Telegram 通知设置加载失败。' } finally { sectionLoading.value = false }
+    telegramLoaded.value = true
+  } catch (error) { sectionLoadFailed.value = true; sectionError.value = error instanceof Error ? error.message : 'Telegram 通知设置加载失败。' } finally { sectionLoading.value = false }
 }
 
 const saveTelegramSettings = async () => {
@@ -738,6 +760,7 @@ const saveTelegramSettings = async () => {
     if (response.status === 403) { await loadSession(); return }
     if (response.status !== 200) throw new Error(errorMessage(response.errors, 'Telegram 通知设置保存失败。'))
     Object.assign(telegramSettings, response.content)
+    telegramLoaded.value = true
     telegramSucceeded.value = true; telegramMessage.value = '设置已保存。'
   } catch (error) { telegramSucceeded.value = false; telegramMessage.value = error instanceof Error ? error.message : 'Telegram 通知设置保存失败。' } finally { telegramBusy.value = false }
 }
@@ -755,11 +778,16 @@ const uploadMaxPage = ref(1)
 const uploadPaths = reactive<Record<number, string>>({})
 const uploadReasons = reactive<Record<number, string>>({})
 let uploadRequestVersion = 0
+let uploadKey = ''
+let uploadRetryPage = 1
 
 const loadUploads = async (page = 1) => {
+  uploadRetryPage = page
   const version = ++uploadRequestVersion
-  uploads.value = []
-  sectionLoading.value = true; sectionError.value = ''
+  const key = JSON.stringify([page, uploadStatus.value])
+  if (key !== uploadKey) uploads.value = []
+  uploadKey = key
+  sectionLoading.value = true; sectionError.value = ''; sectionLoadFailed.value = false
   try {
     const response = await api.get({ url: '/api/management/uploads/', query: { status: uploadStatus.value || undefined, page, pageSize: 10 } })
     if (version !== uploadRequestVersion || tab.value !== 'uploads') return
@@ -769,6 +797,7 @@ const loadUploads = async (page = 1) => {
     for (const upload of uploads.value) uploadPaths[upload.id] = upload.target_path
     uploadPage.value = response.content.page; uploadMaxPage.value = response.content.max_page
   } catch (error) {
+    if (version === uploadRequestVersion && tab.value === 'uploads') sectionLoadFailed.value = true
     if (version === uploadRequestVersion && tab.value === 'uploads') sectionError.value = error instanceof Error ? error.message : '投稿加载失败。'
   } finally {
     if (version === uploadRequestVersion && tab.value === 'uploads') sectionLoading.value = false
@@ -799,6 +828,14 @@ const tabClass = (value: Tab) => [
 const reasonLabel = (value: ManagementReport['reason']) => ({ spam: '垃圾广告', abuse: '攻击辱骂', privacy: '泄露隐私', other: '其他' })[value]
 const uploadStatusLabel = (value: ResourceUploadRequest['status']) => ({ pending: '待审核', publishing: '发布中', approved: '已通过', rejected: '已拒绝', publish_failed: '发布失败' })[value]
 const formatDate = (value: string) => new Date(value).toLocaleString('zh-CN')
+
+const retrySection = () => {
+  if (sectionLoading.value) return
+  if (tab.value === 'reports') void loadReports(reportRetryPage)
+  if (tab.value === 'uploads') void loadUploads(uploadRetryPage)
+  if (tab.value === 'announcements') void loadAnnouncements(announcementRetryPage)
+  if (tab.value === 'notifications') void loadTelegramSettings()
+}
 
 watch(tab, value => {
   if (value !== 'reports') reportRequestVersion += 1

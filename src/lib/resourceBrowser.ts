@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
-import { siteOrigin } from './pageMetadata'
+import { siteConfig } from './siteConfig'
 
 export type ResourceEntry = {
   name: string
@@ -21,9 +21,9 @@ export function resourceMetadata(data: ResourceContents) {
   const parent = data.path.split('/').slice(0, -1).filter(Boolean).at(-1)
   const title = data.path === '/' ? '资料下载' : data.type === 'file'
     ? `${data.name} - ${parent || '资料下载'}` : `${data.name} - 资料下载`
-  const description = data.path === '/' ? '浏览和下载 NWU.ICU 公开学习资料。'
+  const description = data.path === '/' ? `浏览和下载 ${siteConfig.site_name} 公开学习资料。`
     : `${data.name}，${data.type === 'file' ? `所属目录：${parent || '全部资料'}。查看文件信息与下载入口。` : '浏览目录中的学习资料和文件。'}`
-  return { title, description, canonical: siteOrigin + resourcePageUrl(data.path), noindex: data.indexable === false }
+  return { title, description, canonical: siteConfig.site_origin + resourcePageUrl(data.path), noindex: data.indexable === false }
 }
 
 export function takeResourceBootstrap(path: string): ResourceContents | undefined {

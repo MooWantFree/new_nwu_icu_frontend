@@ -81,6 +81,16 @@ afterEach(() => {
 })
 
 describe('conversation identity and asynchronous requests', () => {
+  it('shows an actionable error instead of an empty conversation when initial loading fails', async () => {
+    mocks.get.mockRejectedValueOnce(new Error('offline'))
+    await mount()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('消息加载失败')
+    expect(container.textContent).not.toContain('没有更多消息')
+    container.querySelector<HTMLButtonElement>('[role="alert"] button')!.click(); await flush()
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(container.textContent).toContain('message 10')
+  })
+
   it('reports a failed send through the shared toast and retains the draft for retry', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     mocks.post.mockImplementation((request) => Promise.resolve(request.url === '/api/message/'
@@ -164,7 +174,7 @@ describe('conversation identity and asynchronous requests', () => {
     await switchTo(3)
     first.reject(new Error('old failed'))
     await flush()
-    expect(container.querySelector('.animate-spin')).not.toBeNull()
+    expect(container.querySelector('[role="status"][aria-label="正在加载消息"]')).not.toBeNull()
     expect(mocks.error).not.toHaveBeenCalled()
     second.resolve(detail([item(20, 3, 'B current')]))
     await flush()

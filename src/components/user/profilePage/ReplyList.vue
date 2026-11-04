@@ -57,16 +57,11 @@
         />
       </div>
     </div>
-    <div v-else-if="errorDetail" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center" role="alert">
-      <p class="text-sm leading-6 text-zinc-500">{{ errorDetail }}</p>
-    </div>
+    <LoadError v-else-if="errorDetail" :message="errorDetail" @retry="retryKey++" />
     <div v-else-if="data && data.results.length === 0" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center">
       <p class="text-sm text-zinc-500">暂无评论</p>
     </div>
-    <div v-else class="flex min-h-32 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white" role="status">
-      <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
-      <span class="text-sm text-zinc-500">加载中...</span>
-    </div>
+    <LoadingSkeleton v-else label="正在加载评论" />
   </div>
 </template>
 
@@ -76,7 +71,8 @@ import { api } from '@/lib/requests'
 import { APIUserActivitiesReply } from '@/types/api/user/profilePage'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { LoaderCircle } from 'lucide-vue-next'
+import LoadError from '@/components/common/LoadError.vue'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
@@ -100,6 +96,7 @@ const pageSize = computed(() => {
   return [10, 20, 30, 40].includes(size) ? size : 10
 })
 const errorDetail = ref<string | null>(null)
+const retryKey = ref(0)
 
 const getReplyRoute = (courseId: number, replyId: number) => ({
   name: 'courseReviewItem',
@@ -140,7 +137,7 @@ const fetchData = async (isCurrent: () => boolean) => {
 }
 
 // Watch for changes and fetch data
-watch([() => props.id, currentPage, pageSize], (_state, _oldState, onCleanup) => {
+watch([() => props.id, currentPage, pageSize, retryKey], (_state, _oldState, onCleanup) => {
   let current = true
   onCleanup(() => { current = false })
   void fetchData(() => current)

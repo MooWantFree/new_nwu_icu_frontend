@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isCollegeEmail } from '@/lib/siteConfig'
 import type { ErrorFactory, ErrorNotLogin } from '../errors'
 import { usernameSchema } from '@/types/common/userBasicInfo'
 import { MethodMap } from '../base'
@@ -118,13 +119,13 @@ export type APIUserActivitiesReply = {
 }
 
 // POST
-// 绑定西大邮箱
+// 绑定学校邮箱
 export const APIBindScholarEmailQuery = z.object({
   college_email: z
     .string()
     .email()
-    .refine((email) => email.endsWith('nwu.edu.cn'), {
-      message: '请使用以 nwu.edu.cn 结尾的西北大学邮箱',
+    .refine(isCollegeEmail, {
+      message: '请使用学校邮箱',
     }),
 })
 export type APIBindScholarEmail = {
@@ -221,7 +222,7 @@ export type APIUserProfileFromId = {
 }
 
 // GET
-// 点击邮箱链接确定绑定西大邮箱
+// 点击邮箱链接确定绑定学校邮箱
 const APIVerifyScholarEmailQuery = z.object({
   token: z.string(),
 })

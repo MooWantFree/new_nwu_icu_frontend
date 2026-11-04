@@ -53,7 +53,10 @@
         </button>
       </section>
 
-      <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <LoadError v-if="loadError" :message="loadError" :busy="loading" @retry="retryKey++">
+        <RouterLink v-if="currentPage > 1" :to="{ query: { ...route.query, page: '1' } }" class="rounded-md px-4 py-2 text-sm underline">返回第一页</RouterLink>
+      </LoadError>
+      <div v-else-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" role="status" aria-label="正在加载课程目录" aria-busy="true">
         <div
           v-for="i in 12"
           :key="i"
@@ -128,7 +131,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useShadcnToast } from '@/lib/useShadcnToast'
+import LoadError from '@/components/common/LoadError.vue'
 import { api } from '@/lib/requests'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 import { APICourseList, APICourseListQuery } from '@/types/api/courseReview/course'
@@ -137,7 +140,6 @@ import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import ReviewDirectoryNav from '@/components/courseReview/ReviewDirectoryNav.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
 
-const message = useShadcnToast()
 const route = useRoute()
 const router = useRouter()
 const { checkingLogin, requireLogin } = useCreationLogin()
@@ -158,6 +160,8 @@ const orderBy = computed(() => route.query.order_by === OrderBy.Popular ? OrderB
 const totalCourses = ref(0)
 const data = ref<APICourseList['response'] | null>(null)
 const loading = ref(true)
+const loadError = ref('')
+const retryKey = ref(0)
 const currentPage = computed(() => {
   const page = Number(route.query.page)
   return Number.isSafeInteger(page) && page > 0 ? page : 1
@@ -193,6 +197,7 @@ const courseTypeLabel = (value: string) => courseTypeLabels[value] || value || '
 
 const fetchCourses = async (isCurrent: () => boolean) => {
   loading.value = true
+  loadError.value = ''
   courses.value = []
   totalCourses.value = 0
   data.value = null
@@ -208,20 +213,23 @@ const fetchCourses = async (isCurrent: () => boolean) => {
       },
     })
     if (!isCurrent()) return
-    if (response.status !== 200) throw new Error('Failed to fetch courses')
+    if (response.status !== 200) {
+      loadError.value = response.status === 404 && currentPage.value > 1 ? '这一页不存在，请返回第一页' : '课程加载失败，请重试'
+      return
+    }
     courses.value = response.content.results
     totalCourses.value = response.content.count
     data.value = response.content
   } catch (error) {
     if (!isCurrent()) return
     console.error('Error fetching courses:', error)
-    message.error('网络错误，请重试')
+    loadError.value = '课程加载失败，请重试'
   } finally {
     if (isCurrent()) loading.value = false
   }
 }
 
-watch([courseType, orderBy, currentPage], (_state, _oldState, onCleanup) => {
+watch([courseType, orderBy, currentPage, retryKey], (_state, _oldState, onCleanup) => {
   let current = true
   onCleanup(() => { current = false })
   void fetchCourses(() => current)

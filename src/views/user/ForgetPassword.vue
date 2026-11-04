@@ -9,7 +9,7 @@
       <CircleAlert class="mt-0.5 h-4 w-4" aria-hidden="true" />
       <p class="min-w-0 break-words leading-6">{{ tokenError }}</p>
     </div>
-    <p v-else-if="resetSucceeded" class="text-sm leading-6 text-zinc-600">使用新密码登录 NWU.ICU。</p>
+    <p v-else-if="resetSucceeded" class="text-sm leading-6 text-zinc-600">使用新密码登录 {{ siteConfig.site_name }}。</p>
     <div v-else-if="linkSent" class="space-y-4">
       <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
         <p class="text-xs text-zinc-500">重置邮件发送至</p>
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { z } from 'zod'

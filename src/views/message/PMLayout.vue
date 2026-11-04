@@ -1,7 +1,8 @@
 <template>
   <div data-message-layout class="h-[calc(100dvh-4rem-1px)] min-w-0 overflow-hidden bg-zinc-50 p-3 sm:p-4 lg:p-6">
-    <div v-if="isLoading && !isLoggedIn" class="flex h-full items-center justify-center gap-2 text-sm text-zinc-500" role="status">
-      <LoaderCircle class="h-5 w-5 animate-spin" aria-hidden="true" />正在加载消息中心…
+    <div v-if="isLoading && !isLoggedIn" class="mx-auto grid max-w-7xl gap-4 sm:grid-cols-[220px_minmax(0,1fr)]">
+      <LoadingSkeleton label="正在加载消息导航" />
+      <LoadingSkeleton label="正在加载消息中心" :rows="5" />
     </div>
     <div v-else-if="isLoggedIn" data-message-shell class="mx-auto flex h-full min-w-0 max-w-7xl flex-col gap-3 overflow-hidden sm:flex-row lg:gap-4">
       <aside :class="['flex w-full shrink-0 flex-col rounded-xl border border-zinc-200 bg-white', isSidebarOpen ? 'sm:w-52 lg:w-56' : 'sm:w-14']">
@@ -23,8 +24,12 @@
           </RouterLink>
         </nav>
       </aside>
-      <main class="h-full min-h-0 min-w-0 flex-1 overflow-hidden"><RouterView /></main>
+      <main class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <LoadError v-if="profileError" :message="profileError" :busy="isLoading" @retry="fetchUserInfo" />
+        <div class="min-h-0 flex-1"><RouterView /></div>
+      </main>
     </div>
+    <LoadError v-else-if="profileError" :message="profileError" :busy="isLoading" @retry="fetchUserInfo" />
     <div v-else class="flex h-full items-center justify-center px-3">
       <section class="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
         <span class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50"><MessageSquare class="h-5 w-5 text-zinc-500" aria-hidden="true" /></span>
@@ -40,12 +45,14 @@
 </template>
 
 <script setup lang="ts">
-import { LoaderCircle, ThumbsUp, MessageSquare, Users, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next'
+import { ThumbsUp, MessageSquare, Users, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
+import LoadError from '@/components/common/LoadError.vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUser } from '@/lib/useUser'
 
-const { isLoggedIn, isLoading, userInfo, fetchUnreadCount } = useUser()
+const { isLoggedIn, isLoading, userInfo, fetchUnreadCount, profileError, fetchUserInfo } = useUser()
 const route = useRoute()
 const loginTo = computed(() => ({ path: '/login', query: { redirect: route.fullPath } }))
 const isSidebarOpen = ref(true)

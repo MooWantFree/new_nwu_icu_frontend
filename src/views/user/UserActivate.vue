@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowRight, CheckCircle2, CircleAlert, LoaderCircle, MailCheck, ShieldCheck } from 'lucide-vue-next'
@@ -78,9 +79,9 @@ const purpose = computed(() => isBindingCollegeEmail.value ? 'college-email-bind
 let requestVersion = 0
 
 const pageTitle = computed(() => {
-  if (success.value) return isBindingCollegeEmail.value ? '西大邮箱已验证' : '账号已激活'
+  if (success.value) return isBindingCollegeEmail.value ? `${siteConfig.university_short_name}邮箱已验证` : '账号已激活'
   if (error.value) return isBindingCollegeEmail.value ? '邮箱验证未完成' : '账号激活未完成'
-  return isBindingCollegeEmail.value ? '验证西大邮箱' : '激活你的账号'
+  return isBindingCollegeEmail.value ? `验证${siteConfig.university_short_name}邮箱` : '激活你的账号'
 })
 const pageDescription = computed(() => {
   if (success.value) return isBindingCollegeEmail.value
@@ -89,7 +90,7 @@ const pageDescription = computed(() => {
   if (loading.value) return '正在处理你的请求，请稍候。'
   if (error.value) return '请检查邮件中的链接，或稍后重试。'
   return isBindingCollegeEmail.value
-    ? '确认后，将验证邮件中的西大邮箱绑定到当前账号。'
+    ? `确认后，将验证邮件中的${siteConfig.university_short_name}邮箱绑定到当前账号。`
     : '确认你的注册邮箱，完成账号激活。'
 })
 
@@ -141,7 +142,7 @@ const confirmAction = async () => {
       success.value = true
       clearActionToken(actionPurpose)
       if (binding && user.userInfo.value === startingUser) syncVerifiedUser(response.content)
-      message.success(binding ? '西大邮箱绑定成功' : '账户激活成功')
+      message.success(binding ? `${siteConfig.university_short_name}邮箱绑定成功` : '账户激活成功')
     } else if (response.errors?.some(item => item.err_code === 'invalid_token') || (binding && response.status === 400 && !response.errors?.length)) {
       error.value = '验证链接无效或已过期，请从最新的邮件中重新打开。'
     } else {

@@ -35,7 +35,7 @@
             :label="`NWU 邮箱：${verificationStatus}`"
             :button-text="verificationStatus"
             badge
-            content="请使用西北大学邮箱，完成验证后显示校邮认证标记。"
+            :content="`请使用${siteConfig.university_name}邮箱，完成验证后显示校邮认证标记。`"
           >
             <template v-if="isNWUEmailVerified" #icon>
               <Check class="h-3 w-3" aria-hidden="true" />
@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, nextTick, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
 import ShadcnModal from '@/components/common/ShadcnModal.vue'
 import { Check, LoaderCircle, RotateCw, X } from 'lucide-vue-next'

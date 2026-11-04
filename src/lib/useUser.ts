@@ -8,15 +8,22 @@ type UserProfile = Omit<APIUserProfile['response'], 'is_me'> & {unread: APIUnrea
 const userInfo = ref<UserProfile | null>(null)
 const isLoggedIn = ref(false)
 const isLoading = ref(false)
+const profileError = ref('')
 let unreadRequestVersion = 0
+let sessionVersion = 0
+let profileRequestVersion = 0
 
 const login = (data: UserProfile) => {
+  sessionVersion += 1
+  profileError.value = ''
   unreadRequestVersion += 1
   userInfo.value = data
   isLoggedIn.value = true
 }
 
 const logout = () => {
+  sessionVersion += 1
+  profileError.value = ''
   unreadRequestVersion += 1
   userInfo.value = null
   isLoggedIn.value = false
@@ -40,30 +47,39 @@ const fetchUnreadCount = async () => {
 const fetchUserInfo = async () => {
   if (isLoading.value) return
   isLoading.value = true
+  profileError.value = ''
+  const session = sessionVersion
+  const requestVersion = ++profileRequestVersion
   const unreadVersion = ++unreadRequestVersion
+  // A count failure must never invalidate the user's session. Handle rejection
+  // immediately, even while the profile request is still pending.
+  const profileReq = api.get({ url: '/api/user/profile/' })
+  const unreadReq = api.get({ url: '/api/message/unread/' }).catch(() => null)
   try {
-    const profileReq = api.get({ url: '/api/user/profile/' })
-    const unreadReq = api.get({ url: '/api/message/unread/' })
-    const [profile, unread] = await Promise.all([profileReq, unreadReq])
-    if (profile.status === 200 && unread.status === 200) {
-      if (userInfo.value?.id === profile.content.id) {
-        // A read refresh can complete while this slower profile request is in
-        // flight. Keep its newer counts and let any current unread poll finish.
-        userInfo.value = {
-          ...profile.content,
-          unread: unreadVersion === unreadRequestVersion ? unread.content : userInfo.value.unread,
-        }
-      } else {
-        login({ ...profile.content, unread: unread.content })
-      }
-    } else {
+    const profile = await profileReq
+    if (session !== sessionVersion) return
+    if (profile.status === 401) {
       logout()
+      return
     }
+    if (profile.status !== 200) throw new Error('profile unavailable')
+    const previousCounts = userInfo.value?.id === profile.content.id ? userInfo.value.unread : undefined
+    userInfo.value = {
+      ...profile.content,
+      unread: previousCounts ?? { unread: { user: 0, reply: 0, like: 0, system: 0 }, total: 0 },
+    }
+    isLoggedIn.value = true
+    isLoading.value = false
+    void unreadReq.then(unread => {
+      if (session === sessionVersion && unreadVersion === unreadRequestVersion && unread?.status === 200 && userInfo.value?.id === profile.content.id) {
+        userInfo.value = { ...userInfo.value, unread: unread.content }
+      }
+    })
   } catch (error) {
     console.error('Error fetching user info:', error)
-    logout()
+    if (session === sessionVersion) profileError.value = '个人资料加载失败，请重试'
   } finally {
-    isLoading.value = false
+    if (requestVersion === profileRequestVersion) isLoading.value = false
   }
 }
 
@@ -94,6 +110,7 @@ export function useUser(setup: boolean = true) {
     userInfo: readonly(userInfo),
     isLoggedIn: readonly(isLoggedIn),
     isLoading: readonly(isLoading),
+    profileError: readonly(profileError),
     fetchUserInfo,
     fetchUnreadCount,
     login,

@@ -1,8 +1,9 @@
-const siteName = 'NWU.ICU'
-export const siteOrigin = 'https://nwu.icu'
+import { siteConfig } from './siteConfig'
 
 export function pageTitle(title = '主页') {
-  const base = title.replace(/\s*[-|]\s*NWU\.ICU\s*$/i, '').trim()
+  const siteName = siteConfig.site_name
+  const escapedName = siteName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const base = title.replace(new RegExp(`\\s*[-|]\\s*${escapedName}\\s*$`, 'i'), '').trim()
   return `${base && base !== siteName ? base : '主页'} - ${siteName}`
 }
 

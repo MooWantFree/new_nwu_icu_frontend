@@ -9,10 +9,47 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; media-src 'self' blob: https:; worker-src 'self' blob:"
     />
-    <title>主页 - NWU.ICU</title>
+    <title>主页</title>
+    <link rel="stylesheet" href="/startup.css">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div data-site-loading role="status" aria-busy="true">
+        <span class="startup-status">页面加载中</span>
+        <div aria-hidden="true">
+          <div class="startup-nav">
+            <div class="startup-nav-inner">
+              <div class="startup-brand"><i class="startup-block startup-logo"></i><i class="startup-block startup-name"></i></div>
+              <div class="startup-menu"><i class="startup-block"></i><i class="startup-block"></i><i class="startup-block"></i></div>
+              <i class="startup-block startup-account"></i>
+            </div>
+          </div>
+          <div class="startup-main">
+            <div class="startup-heading"><i class="startup-block startup-title"></i><i class="startup-block startup-action"></i></div>
+            <div class="startup-grid">
+              <div class="startup-card">
+                <div class="startup-card-heading"><i class="startup-block"></i></div>
+                <div class="startup-rows">
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                </div>
+              </div>
+              <div class="startup-card startup-sidebar">
+                <div class="startup-card-heading"><i class="startup-block"></i></div>
+                <div class="startup-rows">
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                  <div class="startup-row"><i class="startup-block"></i><i class="startup-block"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--# include virtual="/_site/bootstrap" -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

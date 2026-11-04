@@ -6,11 +6,11 @@ import '@/style/style.css'
 import { captureActionTokenFromUrl } from '@/lib/actionTokens'
 import { redactSensitiveUrl } from '@/lib/security'
 import { isManagementPath } from '@/lib/managementRoute'
+import { siteConfig } from '@/lib/siteConfig'
+import { loadSiteConfigWithRetry } from '@/lib/siteStartup'
 import { initializeStatistics } from '@/lib/analytics'
 
 captureActionTokenFromUrl()
-const app = createApp(App)
-app.use(Router)
 
 const redactSentryEvent = (event) => {
   if (event.request?.url) event.request.url = redactSensitiveUrl(event.request.url)
@@ -27,18 +27,32 @@ const redactSentryEvent = (event) => {
   return event
 }
 
-if (import.meta.env.PROD && !isManagementPath(window.location.pathname)) {
-  initializeStatistics()
-  Sentry.init({
-    app,
-    dsn: 'https://70fa0bc07f114e538288ace62c87faa5@o971270.ingest.us.sentry.io/5923395',
-    integrations: [Sentry.browserTracingIntegration({ Router })],
-    tracesSampleRate: 0.1,
-    tracePropagationTargets: [window.location.host, /^\/api\//],
-    beforeSend: redactSentryEvent,
-    beforeSendTransaction: redactSentryEvent,
-  })
+async function start() {
+  await loadSiteConfigWithRetry(document.querySelector('#app'))
+  const app = createApp(App)
+  app.use(Router)
+  if (import.meta.env.PROD && !isManagementPath(window.location.pathname)) {
+    initializeStatistics()
+    if (siteConfig.sentry_dsn) Sentry.init({
+      app,
+      dsn: siteConfig.sentry_dsn,
+      integrations: [Sentry.browserTracingIntegration({ Router })],
+      tracesSampleRate: 0.1,
+      tracePropagationTargets: [window.location.host, /^\/api\//],
+      beforeSend: redactSentryEvent,
+      beforeSendTransaction: redactSentryEvent,
+    })
+  }
+
+  // Keep server-rendered resource content visible until its Vue route is ready.
+  await Router.isReady()
+  app.mount('#app')
 }
 
-// Keep server-rendered resource content visible until its Vue route is ready.
-Router.isReady().then(() => app.mount('#app'))
+start().catch(() => {
+  document.querySelector('[data-site-loading]')?.remove()
+  const error = document.createElement('p')
+  error.setAttribute('role', 'alert')
+  error.textContent = '页面启动失败。'
+  document.querySelector('#app')?.prepend(error)
+})

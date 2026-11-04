@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
     environment: 'jsdom',
+    setupFiles: ['src/test/siteConfigFixture.ts'],
     include: ['src/**/*.test.ts'],
   },
 })

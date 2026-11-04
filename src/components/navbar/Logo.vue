@@ -5,11 +5,12 @@
     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
     @click="handleLogoClick"
   >
-    <img alt="NWU.ICU logo" src="@/assets/logo.png" class="h-8 w-8 object-contain" />
+    <img :alt="`${siteConfig.site_name} logo`" src="@/assets/logo.png" class="h-8 w-8 object-contain" />
   </button>
 </template>
 
 <script setup lang="ts">
+import { siteConfig } from '@/lib/siteConfig'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()

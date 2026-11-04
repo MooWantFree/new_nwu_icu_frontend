@@ -12,11 +12,12 @@
         </nav>
         <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">用户设置</h1>
       </header>
-      <div v-if="!userInfo" role="status" aria-busy="true" class="flex min-h-32 items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white px-5 py-10 text-sm text-zinc-500 shadow-sm">
-        <LoaderCircle class="h-5 w-5 shrink-0 animate-spin text-zinc-400" aria-hidden="true" />
-        <p>加载中，请稍候...</p>
+      <LoadError v-if="profileError" class="mb-5" :message="profileError" :busy="isLoading" @retry="fetchUserInfo" />
+      <div v-if="!userInfo && !profileError && isLoading" class="grid gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+        <LoadingSkeleton label="正在加载设置菜单" :rows="4" />
+        <LoadingSkeleton label="正在加载个人设置" variant="form" />
       </div>
-      <div v-else class="grid min-w-0 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+      <div v-else-if="userInfo" class="grid min-w-0 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
         <nav aria-label="用户设置" class="min-w-0 self-start rounded-xl border border-zinc-200 bg-white p-2 shadow-sm">
           <div class="grid grid-cols-2 gap-1 p-1 md:flex md:flex-col">
             <RouterLink
@@ -44,13 +45,18 @@
           </RouterView>
         </div>
       </div>
+      <LoadError v-else-if="!profileError" message="请登录后查看设置" :retryable="false">
+        <RouterLink :to="{ path: '/login', query: { redirect: $route.fullPath } }" class="rounded-md px-4 py-2 text-sm underline">登录或注册</RouterLink>
+      </LoadError>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
 import { useUser } from '@/lib/useUser'
-import { ArrowLeft, KeyRound, LoaderCircle, Mail, Shield, UserRound } from 'lucide-vue-next'
+import { ArrowLeft, KeyRound, Mail, Shield, UserRound } from 'lucide-vue-next'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
+import LoadError from '@/components/common/LoadError.vue'
 
 const tabs = [
   { name: 'profileSettings', label: '个人资料', icon: UserRound },
@@ -59,7 +65,7 @@ const tabs = [
   { name: 'privateSettings', label: '隐私设置', icon: Shield },
 ]
 
-const { userInfo } = useUser()
+const { userInfo, isLoading, profileError, fetchUserInfo } = useUser()
 </script>
 
 <style scoped>

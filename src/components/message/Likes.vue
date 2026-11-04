@@ -18,12 +18,7 @@
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto bg-white p-3 sm:p-5">
-        <div v-if="loading" class="flex h-full items-center justify-center">
-          <div class="text-center">
-            <LoaderCircle class="mx-auto h-5 w-5 animate-spin text-zinc-600" />
-            <p class="mt-3 text-sm text-zinc-500">正在加载点赞…</p>
-          </div>
-        </div>
+        <LoadingSkeleton v-if="loading && !likes.length" label="正在加载点赞" :rows="4" />
 
         <div v-if="!loading && loadError" role="alert" class="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-red-200 bg-red-50/50 p-4 text-sm text-red-700">
           <AlertCircle class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -31,7 +26,7 @@
           <button type="button" class="shrink-0 rounded-md px-2 py-1 font-medium underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400" @click="refreshLikes">重试</button>
         </div>
 
-        <div v-if="!loading && likes.length" class="mx-auto max-w-4xl space-y-3">
+        <div v-if="likes.length" :aria-busy="loading" class="mx-auto max-w-4xl space-y-3">
           <article v-for="notice in likes" :key="notice.id" class="group overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 sm:p-5">
             <div class="flex min-w-0 items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
@@ -89,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useShadcnToast } from '@/lib/useShadcnToast'
@@ -96,7 +92,7 @@ import { api } from '@/lib/requests'
 import type { APILikeList } from '@/types/api/messages/like'
 import Time from '@/components/tinyComponents/Time.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
-import { AlertCircle, ChevronRight, LoaderCircle, RefreshCw, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import { AlertCircle, ChevronRight, RefreshCw, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
 
 const message = useShadcnToast()
 const loading = ref(true)
@@ -112,10 +108,11 @@ const totalCount = ref(0)
 const maxPage = ref(0)
 
 let requestVersion = 0
+let loadedPage = 0
 
 const fetchLikes = async (page: number) => {
   const version = ++requestVersion
-  likes.value = []
+  if (page !== loadedPage) likes.value = []
   loadError.value = ''
   try {
     loading.value = true
@@ -126,6 +123,7 @@ const fetchLikes = async (page: number) => {
     if (version !== requestVersion) return
     if (response.status !== 200) throw new Error('Failed to fetch likes')
     likes.value = response.content.results
+    loadedPage = page
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
     if (likes.value.length) {

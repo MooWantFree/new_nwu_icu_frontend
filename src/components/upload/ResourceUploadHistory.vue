@@ -39,15 +39,8 @@
         </button>
       </div>
 
-      <div
-        v-if="loading && !records.length"
-        class="mt-5 flex min-h-44 flex-col items-center justify-center gap-3 rounded-lg border border-zinc-200 text-sm text-zinc-500"
-        role="status"
-      >
-        <Loader2 class="h-5 w-5 animate-spin" />
-        正在加载投稿记录…
-      </div>
-      <div v-else-if="error" class="mt-5 rounded-lg border border-red-200 p-4" role="alert">
+      <LoadingSkeleton v-if="loading && !records.length" class="mt-5" label="正在加载投稿记录" />
+      <div v-if="error" class="mt-5 rounded-lg border border-red-200 p-4" role="alert">
         <div class="flex items-start gap-2.5">
           <AlertCircle class="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
           <div class="min-w-0">
@@ -64,7 +57,7 @@
           </div>
         </div>
       </div>
-      <div v-else-if="!filteredRecords.length" class="mt-5 flex min-h-44 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 px-4 py-8 text-center">
+      <div v-if="!loading && !error && !filteredRecords.length" class="mt-5 flex min-h-44 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 px-4 py-8 text-center">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-500">
           <Archive class="h-5 w-5" />
         </div>
@@ -75,7 +68,7 @@
           {{ records.length ? '可以重新选择上方状态筛选' : '你的第一份分享会显示在这里' }}
         </p>
       </div>
-      <div v-else class="mt-5 overflow-hidden rounded-lg border border-zinc-200" :aria-busy="loading">
+      <div v-if="filteredRecords.length" class="mt-5 overflow-hidden rounded-lg border border-zinc-200" :aria-busy="loading">
         <article
           v-for="record in filteredRecords"
           :id="`upload-record-${record.id}`"
@@ -188,8 +181,9 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed } from 'vue'
-import { AlertCircle, Archive, ChevronRight, ExternalLink, FileText, Folder, Loader2, Pencil, RefreshCw } from 'lucide-vue-next'
+import { AlertCircle, Archive, ChevronRight, ExternalLink, FileText, Folder, Pencil, RefreshCw } from 'lucide-vue-next'
 import Time from '@/components/tinyComponents/Time.vue'
 import { toSafeExternalUrl } from '@/lib/security'
 import type { ResourceUploadRequest } from '@/types/api/resourceUpload'

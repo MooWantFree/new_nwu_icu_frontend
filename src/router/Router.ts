@@ -118,10 +118,10 @@ const userRoutes = [
     name: 'bindCollegeMail',
     component: () => import('@/views/user/UserActivate.vue'),
     meta: {
-      pageTitle: '验证西大邮箱',
+      pageTitle: '验证学校邮箱',
       requiresAuth: true,
-      loginReason: '请先登录或注册，再验证西大邮箱',
-      loginSuccessMessage: '登录成功，正在继续验证西大邮箱',
+      loginReason: '请先登录或注册，再验证学校邮箱',
+      loginSuccessMessage: '登录成功，正在继续验证学校邮箱',
     },
   },
 ] satisfies RouteRecordRaw[]
@@ -257,6 +257,12 @@ const guestbookRoutes = [
 
 const routes = [
   {
+    path: '/connection-error',
+    name: 'connectionError',
+    component: () => import('@/views/ConnectionError.vue'),
+    meta: { pageTitle: '连接失败' },
+  },
+  {
     path: '/manage/:section(uploads|announcements|files|notifications|reports|about)?',
     name: 'manage',
     component: () => import('@/views/manage/Manage.vue'),
@@ -318,12 +324,11 @@ Router.beforeEach(async (to) => {
     return false
   }
   // Check for login required
-  if (to.meta?.requiresAuth && !(await checkLoginStatus())) {
-    return {
-      name: 'login',
-      query: {
-        redirect: to.fullPath,
-      },
+  if (to.meta?.requiresAuth) {
+    try {
+      if (!(await checkLoginStatus())) return { name: 'login', query: { redirect: to.fullPath } }
+    } catch {
+      return { name: 'connectionError', query: { redirect: to.fullPath } }
     }
   }
   return

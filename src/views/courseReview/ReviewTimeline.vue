@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">时间线</h1>
           <span v-if="loading" class="h-5 w-20 rounded-md bg-zinc-200 motion-safe:animate-pulse" aria-hidden="true" />
-          <span v-else class="text-sm text-zinc-500">
+          <span v-else-if="!loadError" class="text-sm text-zinc-500">
             {{ totalReviewCount }} 条评价
           </span>
         </div>
@@ -19,7 +19,10 @@
           <h2 id="timeline-reviews-title" class="text-sm font-semibold">最新评价</h2>
         </header>
 
-        <div v-if="loading" class="divide-y divide-zinc-200" aria-label="正在加载课程评价" role="status">
+        <LoadError v-if="loadError" :message="loadError" :busy="loading" @retry="retryKey++">
+          <RouterLink v-if="currentPage > 1" :to="{ query: { ...route.query, page: '1' } }" class="rounded-md px-4 py-2 text-sm underline">返回第一页</RouterLink>
+        </LoadError>
+        <div v-else-if="loading" class="divide-y divide-zinc-200" aria-label="正在加载课程评价" role="status">
           <span class="sr-only">正在加载课程评价</span>
           <review-item-skeleton v-for="index in pageSize" :key="index" />
         </div>
@@ -45,7 +48,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useShadcnToast } from '@/lib/useShadcnToast'
+import LoadError from '@/components/common/LoadError.vue'
 import { MessageSquareText } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
 import ReviewItem from '@/components/courseReview/timeline/ReviewItem.vue'
@@ -65,13 +68,14 @@ const props = defineProps({
   },
 })
 
-const message = useShadcnToast()
 const router = useRouter()
 const route = useRoute()
 
 const reviews = ref<APILatestReviews['response']['results']>([])
 const totalReviewCount = ref(0)
 const loading = ref(true)
+const loadError = ref('')
+const retryKey = ref(0)
 const currentPage = computed(() => {
   const page = Number(route.query.page)
   return Number.isSafeInteger(page) && page > 0 ? page : 1
@@ -84,6 +88,7 @@ const pageSize = computed(() => {
 
 const fetchReviews = async (isCurrent: () => boolean) => {
   loading.value = true
+  loadError.value = ''
   reviews.value = []
   totalReviewCount.value = 0
   const searchParams = {
@@ -92,14 +97,15 @@ const fetchReviews = async (isCurrent: () => boolean) => {
     desc: 1,
   }
   try {
-    const { status, content, errors } = await api.get({
+    const { status, content } = await api.get({
       url: '/api/assessment/latest-review/',
       query: searchParams,
     })
     if (!isCurrent()) return
 
     if (status !== 200) {
-      throw new Error(errors ? errors.map(err => err.err_msg).join(', ') : '获取点评失败，请重试')
+      loadError.value = status === 404 && currentPage.value > 1 ? '这一页不存在，请返回第一页' : '评价加载失败，请重试'
+      return
     }
 
     reviews.value = content.results
@@ -107,7 +113,7 @@ const fetchReviews = async (isCurrent: () => boolean) => {
   } catch (error) {
     if (!isCurrent()) return
     console.error('Error fetching reviews:', error)
-    message.error(error instanceof Error ? error.message : '获取点评失败，请重试')
+    loadError.value = '评价加载失败，请重试'
   } finally {
     if (isCurrent()) loading.value = false
   }
@@ -124,7 +130,7 @@ const onPageUpdate = async (page: number) => {
 }
 
 
-watch([currentPage, pageSize], (_state, _oldState, onCleanup) => {
+watch([currentPage, pageSize, retryKey], (_state, _oldState, onCleanup) => {
   let current = true
   onCleanup(() => { current = false })
   void fetchReviews(() => current)

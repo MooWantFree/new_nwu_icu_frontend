@@ -75,6 +75,18 @@ const goBack = async (router: Router) => {
 }
 
 describe('unified system notifications', () => {
+  it('keeps the existing notices visible during refresh and after a failed refresh', async () => {
+    await mount()
+    const pending = deferred()
+    mocks.get.mockReturnValueOnce(pending.promise)
+    await refresh()
+    expect(container.querySelector('article')?.textContent).toContain('第1页标题')
+    expect(container.querySelector('[role="status"]')).toBeNull()
+    pending.reject(new Error('offline')); await flush()
+    expect(container.querySelector('article')?.textContent).toContain('第1页标题')
+    expect(container.querySelector('[role="alert"] button')?.textContent).toContain('重试')
+  })
+
   it('shows mixed notices in one list, sanitizes announcement HTML, and escapes other content', async () => {
     const imagePath = '/api/download/12345678-1234-1234-1234-123456789abc/'
     mocks.get.mockResolvedValue(response(1, [
@@ -207,7 +219,8 @@ describe('unified system notifications', () => {
     await nextPage()
     old.resolve(response(1))
     await flush()
-    expect(container.querySelector('article')).toBeNull()
+    expect(container.querySelector('article')?.textContent).toContain('第1页通知')
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull()
     expect(mocks.post).not.toHaveBeenCalled()
     latest.resolve(response(2))
     await flush()

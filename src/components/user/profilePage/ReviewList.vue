@@ -107,16 +107,11 @@
         />
       </div>
     </div>
-    <div v-else-if="errorDetail" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center" role="alert">
-      <p class="text-sm leading-6 text-zinc-500">{{ errorDetail }}</p>
-    </div>
+    <LoadError v-else-if="errorDetail" :message="errorDetail" @retry="retryKey++" />
     <div v-else-if="data && data.results.length === 0" class="rounded-xl border border-zinc-200 bg-white px-4 py-12 text-center">
       <p class="text-sm text-zinc-500">暂无评价</p>
     </div>
-    <div v-else class="flex min-h-32 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white" role="status">
-      <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
-      <span class="text-sm text-zinc-500">加载中...</span>
-    </div>
+    <LoadingSkeleton v-else label="正在加载评价" />
   </div>
 </template>
 
@@ -129,7 +124,9 @@ import { useRoute, useRouter } from 'vue-router'
 import ReviewMetricScale from '@/components/courseReview/course/courseReviews/ReviewMetricScale.vue'
 import { reviewMetrics } from '@/lib/reviewMetrics'
 import ShadcnRating from '@/components/common/ShadcnRating.vue'
-import { LoaderCircle, ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import { ThumbsUp, ThumbsDown } from 'lucide-vue-next'
+import LoadError from '@/components/common/LoadError.vue'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import ReviewPlainText from '@/components/tinyComponents/ReviewPlainText.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
@@ -142,6 +139,7 @@ const props = defineProps<{
 // Define reactive data
 const data = ref<APIUserActivitiesReview['response'] | null>(null)
 const errorDetail = ref<string>('')
+const retryKey = ref(0)
 const route = useRoute()
 const router = useRouter()
 const currentPage = computed(() => {
@@ -186,7 +184,7 @@ const fetchData = async (isCurrent: () => boolean) => {
 }
 
 // Watch for changes and fetch data
-watch([() => props.id, currentPage, pageSize], (_state, _oldState, onCleanup) => {
+watch([() => props.id, currentPage, pageSize, retryKey], (_state, _oldState, onCleanup) => {
   let current = true
   onCleanup(() => { current = false })
   void fetchData(() => current)

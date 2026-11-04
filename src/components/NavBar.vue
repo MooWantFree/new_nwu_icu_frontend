@@ -5,8 +5,8 @@
         <!-- Logo component -->  
         <div class="flex shrink-0 items-center gap-2">
           <Logo @showMessage="showMessage" />
-          <RouterLink to="/" aria-label="NWU.ICU 主页" class="flex flex-col rounded-md">
-            <span class="text-[15px] font-semibold leading-5 tracking-tight text-zinc-950">NWU.ICU</span>
+          <RouterLink to="/" :aria-label="`${siteConfig.site_name} 主页`" class="flex flex-col rounded-md">
+            <span class="text-[15px] font-semibold leading-5 tracking-tight text-zinc-950">{{ siteConfig.site_name }}</span>
             <span class="hidden text-[10px] leading-4 tracking-wide text-zinc-500 sm:block">Campus community</span>
           </RouterLink>
         </div>
@@ -69,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { siteConfig } from '@/lib/siteConfig'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUser } from '@/lib/useUser'

@@ -6,10 +6,7 @@
     </header>
 
     <div class="space-y-6 px-5 py-6 sm:px-6">
-      <div v-if="isLoading || (!savedSettings && !loadError)" role="status" class="flex min-h-40 items-center justify-center gap-2 text-sm text-zinc-500">
-        <LoaderCircle class="h-5 w-5 animate-spin text-zinc-400" aria-hidden="true" />
-        正在加载隐私设置…
-      </div>
+    <LoadingSkeleton v-if="isLoading || (!savedSettings && !loadError)" label="正在加载隐私设置" variant="form" />
       <div v-else-if="loadError" class="space-y-4">
         <div role="alert" class="grid grid-cols-[1rem_1fr] items-start gap-x-3 gap-y-1 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700">
           <CircleAlert class="mt-0.5 h-4 w-4" aria-hidden="true" />
@@ -64,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { CircleAlert, LoaderCircle } from 'lucide-vue-next'
 import { api } from '@/lib/requests'

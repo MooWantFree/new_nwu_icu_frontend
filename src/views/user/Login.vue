@@ -15,6 +15,7 @@
         {{ reason }}
       </p>
       <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <LoadError v-if="checkError" :message="checkError" :busy="checking" @retry="checkExistingSession" />
         <LoginForm @login-success="handleLoginSuccess" />
       </div>
     </div>
@@ -22,7 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount } from 'vue'
+import { computed, onBeforeMount, ref } from 'vue'
+import LoadError from '@/components/common/LoadError.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { ArrowLeft } from 'lucide-vue-next'
@@ -42,11 +44,18 @@ const loginContext = computed(() => resolveLoginContext(
 ))
 const reason = computed(() => loginContext.value.reason)
 
-onBeforeMount(async () => {
-  if (await checkLoginStatus()) {
-    await router.replace(loginContext.value.redirect)
-  }
-})
+const checkError = ref('')
+const checking = ref(false)
+async function checkExistingSession() {
+  if (checking.value) return
+  checking.value = true
+  try {
+    if (await checkLoginStatus()) await router.replace(loginContext.value.redirect)
+    checkError.value = ''
+  } catch { checkError.value = '暂时无法确认登录状态，请重试' }
+  finally { checking.value = false }
+}
+onBeforeMount(checkExistingSession)
 
 const handleLoginSuccess = async () => {
   await fetchUserInfo()

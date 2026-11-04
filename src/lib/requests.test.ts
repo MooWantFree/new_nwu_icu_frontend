@@ -3,8 +3,65 @@ import { api } from './requests'
 import { registerCaptchaChallengeHandler } from './captchaChallenge'
 
 afterEach(() => {
+  vi.restoreAllMocks()
   registerCaptchaChallengeHandler(undefined)
   vi.unstubAllGlobals()
+})
+
+describe('bounded requests', () => {
+  const waitForAbort = (signal: AbortSignal) => new Promise<never>((_resolve, reject) => {
+    if (signal.aborted) reject(signal.reason)
+    else signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+  })
+
+  it('times out while reading the response body without repeating a write', async () => {
+    document.cookie = 'csrftoken=test-token; path=/'
+    const deadline = new AbortController()
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal)
+    const fetchMock = vi.fn().mockImplementation(async (_url, options) => ({
+      status: 200, text: () => waitForAbort(options.signal),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = api.post({ url: '/api/assessment/review/', query: {} as never })
+    const assertion = expect(pending).rejects.toMatchObject({ name: 'TimeoutError' })
+    await Promise.resolve()
+    deadline.abort(new DOMException('timeout', 'TimeoutError'))
+    await assertion
+    expect(timeout).toHaveBeenCalledWith(15_000)
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('preserves caller cancellation in addition to the timeout', async () => {
+    const controller = new AbortController()
+    const fetchMock = vi.fn().mockImplementation((_url, options) => waitForAbort(options.signal))
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = api.get({ url: '/api/user/profile/', options: { signal: controller.signal } })
+    const assertion = expect(pending).rejects.toMatchObject({ name: 'AbortError' })
+    controller.abort()
+    await assertion
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('bounds the CSRF step and never submits if it times out', async () => {
+    document.cookie = 'csrftoken=; Max-Age=0; path=/'
+    const deadline = new AbortController()
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal)
+    const fetchMock = vi.fn().mockImplementation((_url, options) => waitForAbort(options.signal))
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = api.post({ url: '/api/assessment/review/', query: {} as never })
+    const assertion = expect(pending).rejects.toMatchObject({ name: 'TimeoutError' })
+    deadline.abort(new DOMException('timeout', 'TimeoutError'))
+    await assertion
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('/api/user/csrf/', expect.anything())
+  })
+
+  it('uses the longer upload deadline for file bodies', async () => {
+    document.cookie = 'csrftoken=test-token; path=/'
+    const timeout = vi.spyOn(AbortSignal, 'timeout')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 200, text: async () => '{}' }))
+    await api.post({ url: '/api/assessment/review/', query: new FormData() as never })
+    expect(timeout).toHaveBeenCalledWith(60_000)
+  })
 })
 
 describe('API request query serialization', () => {

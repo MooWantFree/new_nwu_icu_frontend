@@ -1,6 +1,7 @@
 import { APIBase, MethodMap } from '@/types/api/base'
 import { RequestEndpoints } from '@/types/api'
 import { requestCaptchaProof } from '@/lib/captchaChallenge'
+import { requestSignal, UPLOAD_TIMEOUT_MS } from './requestSignal'
 
 type APIResponse<T extends APIBase> = {
   message: T['message'] extends string ? T['message'] : string
@@ -56,7 +57,8 @@ async function request<T extends APIBase>({
   let fullUrl = `${url}`
 
   if (method !== MethodMap.GET && !getCsrfToken()) {
-    await fetch('/api/user/csrf/', { credentials: 'include' })
+    const csrf = await fetch('/api/user/csrf/', { credentials: 'include', signal: requestSignal(options?.signal) })
+    if (!csrf.ok) throw new Error('暂时无法提交，请重试')
   }
 
   const defaultOptions: RequestInit = {
@@ -98,7 +100,7 @@ async function request<T extends APIBase>({
           const xhr = new XMLHttpRequest()
           xhr.open(method, fullUrl)
           xhr.withCredentials = mergedOptions.credentials === 'include'
-          xhr.timeout = 60_000
+          xhr.timeout = UPLOAD_TIMEOUT_MS
           
           // Copy headers from mergedOptions
           Object.entries(mergedOptions.headers || {}).forEach(([key, value]) => {
@@ -126,6 +128,10 @@ async function request<T extends APIBase>({
           xhr.onerror = () => reject(new Error('网络连接中断'))
           xhr.onabort = () => reject(new Error('上传已取消'))
           xhr.ontimeout = () => reject(new Error('服务器处理超时'))
+          const abort = () => xhr.abort()
+          if (options?.signal?.aborted) { reject(options.signal.reason); return }
+          options?.signal?.addEventListener('abort', abort, { once: true })
+          xhr.onloadend = () => options?.signal?.removeEventListener('abort', abort)
           xhr.send(query)
         })
       }
@@ -137,6 +143,7 @@ async function request<T extends APIBase>({
   }
 
   try {
+    mergedOptions.signal = requestSignal(options?.signal, query instanceof FormData || query instanceof File ? UPLOAD_TIMEOUT_MS : undefined)
     const response = await fetch(fullUrl, mergedOptions)
     const result = parseResponseBody<T>(await response.text(), response.statusText)
 

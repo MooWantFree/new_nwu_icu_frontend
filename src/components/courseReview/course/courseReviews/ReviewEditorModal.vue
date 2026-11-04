@@ -36,12 +36,7 @@
           </button>
         </header>
 
-        <div v-if="loading" class="flex min-h-72 flex-1 items-center justify-center bg-zinc-50 p-6">
-          <div class="flex flex-col items-center">
-            <LoaderCircle class="h-10 w-10 animate-spin text-zinc-950" />
-            <p class="mt-3 text-sm font-medium text-zinc-600">加载中...</p>
-          </div>
-        </div>
+        <LoadingSkeleton v-if="loading" class="min-h-72" label="正在加载评价编辑器" variant="form" />
 
         <main v-else class="min-h-0 flex-1 overflow-y-auto bg-zinc-50">
           <section v-if="step === 1" class="p-4 sm:p-6">
@@ -189,6 +184,7 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue'
 import { LoaderCircle, X } from 'lucide-vue-next'
 import { api } from '@/lib/requests'

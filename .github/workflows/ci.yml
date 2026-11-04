@@ -43,6 +43,8 @@ jobs:
         run: pnpm test
       - name: Build production bundle
         run: pnpm build
+      - name: Verify gateway configuration bootstrap
+        run: python3 scripts/test_gateway_bootstrap.py
 
   publish:
     name: Publish gateway image for a fixed backend
@@ -73,7 +75,10 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$BACKEND_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo 'Use a full lowercase backend commit SHA.' >&2; exit 1; }
-          backend_repository=ghcr.io/nwuca/nwu.icu
+          source .env.production.example
+          backend_repository="$BACKEND_IMAGE_REPOSITORY"
+          [[ "$backend_repository" =~ ^[a-z0-9][a-z0-9./_-]+$ ]] || exit 1
+          printf 'backend_source=%s\n' "$BACKEND_GITHUB_URL" >> "$GITHUB_OUTPUT"
           backend_tag="$backend_repository:sha-$BACKEND_COMMIT"
           docker pull --platform linux/amd64 "$backend_tag"
           revision=$(docker image inspect "$backend_tag" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')
@@ -97,7 +102,7 @@ jobs:
             FRONTEND_COMMIT=${{ github.sha }}
             BACKEND_COMMIT=${{ inputs.backend_commit }}
             FRONTEND_GITHUB_URL=https://github.com/${{ github.repository }}
-            BACKEND_GITHUB_URL=https://github.com/NWUCA/NWU.ICU
+            BACKEND_GITHUB_URL=${{ steps.release.outputs.backend_source }}
             BACKEND_IMAGE=${{ steps.release.outputs.backend_image }}
           cache-from: type=gha,scope=gateway
           cache-to: type=gha,mode=max,scope=gateway

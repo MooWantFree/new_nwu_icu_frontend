@@ -101,6 +101,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { siteConfig } from '@/lib/siteConfig'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -116,20 +118,7 @@ import HomeReviewPreview from '@/components/courseReview/HomeReviewPreview.vue'
 import AnnouncementPreview from '@/components/guestbook/AnnouncementPreview.vue'
 import GuestbookPreview from '@/components/guestbook/GuestbookPreview.vue'
 
-const campusServices = [
-  { label: '教务管理系统', url: 'https://jwgl.nwu.edu.cn/sso/jziotlogin' },
-  { label: '图书馆自助打印', url: 'https://weixinprinthost.woquyun.com/wq-web/#/index' },
-  { label: '西大邮箱', url: 'https://mail.stumail.nwu.edu.cn/' },
-  { label: 'WEB VPN', url: 'https://webvpn.nwu.edu.cn/' },
-  { label: '彩虹体育馆预约', url: 'http://cgzx.nwu.edu.cn:8080/venues/auth' },
-  {
-    label: '图书馆馆藏检索',
-    url: 'https://agentdockingopac.featurelib.libsou.com/showhome/search/showSearch?schoolId=25',
-  },
-  { label: '班车时刻表', url: 'https://hqjt.nwu.edu.cn/fwdt/bcsk.htm' },
-  { label: '西大电话', url: 'https://www.nwu.edu.cn/ggzy/xddh.htm' },
-  { label: '正版软件', url: 'https://zhengban.nwu.edu.cn/' },
-]
+const campusServices = computed(() => siteConfig.navigation_links)
 </script>
 
 <style scoped>

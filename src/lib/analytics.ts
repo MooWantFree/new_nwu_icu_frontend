@@ -1,7 +1,7 @@
 import { isManagementPath } from './managementRoute'
 import { redactSensitiveUrl } from './security'
 
-const websiteId = '0d15e201-f875-4dd3-a36e-41b60243817d'
+import { siteConfig } from './siteConfig'
 
 const statisticsUrl = (value: string): string => {
   if (!value) return ''
@@ -32,14 +32,15 @@ export const beforeStatisticsSend = (type: string, payload: Record<string, unkno
 }
 
 export const initializeStatistics = () => {
-  if (window.location.hostname !== 'nwu.icu' || isManagementPath(window.location.pathname)) return
+  const { website_id: websiteId, domains } = siteConfig.analytics
+  if (!websiteId || !domains.includes(window.location.hostname) || isManagementPath(window.location.pathname)) return
   const statsWindow = window as Window & { nwuBeforeStatisticsSend?: typeof beforeStatisticsSend }
   statsWindow.nwuBeforeStatisticsSend = beforeStatisticsSend
   const script = document.createElement('script')
   script.defer = true
   script.src = '/_site/client.js'
   script.dataset.websiteId = websiteId
-  script.dataset.domains = 'nwu.icu'
+  script.dataset.domains = domains.join(',')
   script.dataset.excludeSearch = 'true'
   script.dataset.excludeHash = 'true'
   script.dataset.doNotTrack = 'true'

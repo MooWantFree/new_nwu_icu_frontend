@@ -113,7 +113,7 @@ describe('message layout authentication refresh', () => {
     mocks.isLoading.value = true
     await mountLayout()
 
-    expect(container.querySelector('.animate-spin')).not.toBeNull()
+    expect(container.querySelector('[role="status"][aria-label="正在加载消息中心"]')).not.toBeNull()
     expect(container.textContent).not.toContain('需要登录')
   })
 

@@ -1,8 +1,6 @@
 <template>
   <div class="h-full min-w-0 overflow-hidden bg-zinc-50">
-    <div v-if="loading" class="flex h-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white text-sm text-zinc-500" role="status">
-      <LoaderCircle class="h-5 w-5 animate-spin" aria-hidden="true" />正在加载会话…
-    </div>
+    <LoadingSkeleton v-if="loading" label="正在加载会话" :rows="5" />
     <div v-else class="flex h-full min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white">
       <section class="h-full w-full shrink-0 flex-col border-r border-zinc-200 bg-white sm:w-64 lg:w-72" :class="selectedMessage ? 'hidden sm:flex' : 'flex'" aria-label="会话列表">
         <header class="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 px-4">
@@ -52,13 +50,14 @@
   </div>
 </template>
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { ref, watch, onMounted, computed, onUnmounted } from 'vue'
 import ChatView from './ChatView.vue'
 import { api } from '@/lib/requests'
 import { useShadcnToast } from '@/lib/useShadcnToast'
 import { useRoute, useRouter } from 'vue-router'
 import { APIUserMessageList } from '@/types/api/messages/inbox'
-import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-vue-next'
+import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import Time from '@/components/tinyComponents/Time.vue'
 

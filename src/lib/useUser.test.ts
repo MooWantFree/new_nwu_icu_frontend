@@ -33,6 +33,61 @@ afterEach(() => {
 })
 
 describe('shared unread counts', () => {
+  it.each([503, 403])('retains identity when the profile returns %s', async status => {
+    vi.mocked(api.get).mockResolvedValue({ status } as never)
+    await useUser(false).fetchUserInfo()
+    expect(useUser(false).isLoggedIn.value).toBe(true)
+    expect(useUser(false).userInfo.value?.id).toBe(profile.id)
+    expect(useUser(false).profileError.value).toContain('重试')
+  })
+
+  it('retains identity on disconnection and clears the error after retry', async () => {
+    vi.mocked(api.get).mockRejectedValue(new TypeError('Failed to fetch'))
+    await useUser(false).fetchUserInfo()
+    expect(useUser(false).isLoggedIn.value).toBe(true)
+    expect(useUser(false).profileError.value).not.toBe('')
+    vi.mocked(api.get).mockImplementation(({ url }) => Promise.resolve({ status: 200, content: url === '/api/user/profile/' ? profile : unread(1) } as never))
+    await useUser(false).fetchUserInfo()
+    expect(useUser(false).profileError.value).toBe('')
+    expect(useUser(false).userInfo.value?.unread.total).toBe(1)
+  })
+
+  it.each([401, 503])('does not log out when only unread counts return %s', async status => {
+    useUser(false).login({ ...profile, unread: unread(3) })
+    vi.mocked(api.get).mockImplementation(({ url }) => Promise.resolve(url === '/api/user/profile/' ? { status: 200, content: profile } as never : { status } as never))
+    await useUser(false).fetchUserInfo()
+    expect(useUser(false).isLoggedIn.value).toBe(true)
+    expect(useUser(false).userInfo.value?.unread.total).toBe(3)
+  })
+
+  it('makes the profile available before a slow count request finishes', async () => {
+    useUser(false).logout()
+    const counts = deferred()
+    vi.mocked(api.get).mockResolvedValueOnce({ status: 200, content: profile } as never).mockReturnValueOnce(counts.promise)
+    const request = useUser(false).fetchUserInfo()
+    await request
+    expect(useUser(false).isLoggedIn.value).toBe(true)
+    expect(useUser(false).isLoading.value).toBe(false)
+    counts.resolve(response(4)); await Promise.resolve(); await nextTick()
+    expect(useUser(false).userInfo.value?.unread.total).toBe(4)
+  })
+
+  it('clears identity only for a current profile 401', async () => {
+    vi.mocked(api.get).mockResolvedValue({ status: 401 } as never)
+    await useUser(false).fetchUserInfo()
+    expect(useUser(false).isLoggedIn.value).toBe(false)
+    expect(useUser(false).userInfo.value).toBeNull()
+  })
+
+  it('ignores an expired profile response after another login', async () => {
+    const old = deferred()
+    vi.mocked(api.get).mockReturnValueOnce(old.promise).mockResolvedValueOnce(response(0))
+    const request = useUser(false).fetchUserInfo()
+    useUser(false).login({ ...profile, id: 2 })
+    old.resolve({ status: 401 } as never); await request
+    expect(useUser(false).userInfo.value?.id).toBe(2)
+  })
+
   it('refreshes unread counts without a profile request or authentication loader', async () => {
     vi.mocked(api.get).mockResolvedValue(response(3))
     await useUser(false).fetchUnreadCount()

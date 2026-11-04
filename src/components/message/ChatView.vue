@@ -19,9 +19,8 @@
       </div>
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white p-4 sm:p-5" ref="messageContainer" @scroll="handleScroll">
-      <div v-if="isLoading" role="status" aria-label="正在加载消息" class="flex h-full items-center justify-center">
-        <Loader2 class="h-5 w-5 animate-spin text-zinc-500" />
-      </div>
+      <LoadingSkeleton v-if="isLoading" label="正在加载消息" :rows="4" />
+      <LoadError v-else-if="loadError" :message="loadError" @retry="loadInitMessages(currentContext())" />
       <div v-else class="mx-auto max-w-screen-md space-y-5">
         <div v-if="finalMessageList.length === 0" class="flex min-h-56 flex-col items-center justify-center gap-3 text-center text-sm text-zinc-500">
           <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50">
@@ -107,6 +106,8 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
+import LoadError from '@/components/common/LoadError.vue'
 import { ref, reactive, watch, onMounted, nextTick, useTemplateRef, computed, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useShadcnToast } from '@/lib/useShadcnToast'
@@ -129,6 +130,7 @@ const emit = defineEmits<{ read: [chatterId: number]; close: [] }>()
 
 const messageList = ref<APIUserMessageDetail['response']['results']>([])
 const isLoading = ref(true)
+const loadError = ref('')
 const drafts = reactive(new Map<number, string>())
 const sending = reactive(new Set<number>())
 const newMessage = computed({
@@ -173,6 +175,8 @@ const markRead = async (context: ConversationContext, throughMessageId: number) 
 }
 
 const loadInitMessages = async (context: ConversationContext) => {
+  isLoading.value = true
+  loadError.value = ''
   try {
     const resp = await api.get({
       url: '/api/message/user/:id',
@@ -203,7 +207,7 @@ const loadInitMessages = async (context: ConversationContext) => {
     }
   } catch (e) {
     if (!isCurrent(context)) return
-    message.error('获取消息失败，请重试')
+    loadError.value = '消息加载失败，请重试'
     console.error('Error fetching messages:', e)
   } finally {
     if (isCurrent(context)) isLoading.value = false
@@ -258,7 +262,7 @@ const loadOnScroll = useDebounceFn((context: ConversationContext) => {
 const handleScroll = () => loadOnScroll(currentContext())
 
 const fetchNewMessages = async () => {
-  if (!active || isLoading.value || isFetchingNew.value) return
+  if (!active || isLoading.value || loadError.value || isFetchingNew.value) return
   const context = currentContext()
   try {
     isFetchingNew.value = true

@@ -18,12 +18,7 @@
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto bg-white p-3 sm:p-5">
-        <div v-if="loading" class="flex h-full items-center justify-center">
-          <div class="text-center">
-            <LoaderCircle class="mx-auto h-5 w-5 animate-spin text-zinc-600" />
-            <p class="mt-3 text-sm text-zinc-500">正在加载回复…</p>
-          </div>
-        </div>
+        <LoadingSkeleton v-if="loading && !replies.length" label="正在加载回复" :rows="4" />
 
         <div v-if="!loading && loadError" role="alert" class="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-red-200 bg-red-50/50 p-4 text-sm text-red-700">
           <AlertCircle class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -31,7 +26,7 @@
           <button type="button" class="shrink-0 rounded-md px-2 py-1 font-medium underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400" @click="refreshReplies">重试</button>
         </div>
 
-        <div v-if="!loading && replies.length" class="mx-auto max-w-4xl space-y-3">
+        <div v-if="replies.length" :aria-busy="loading" class="mx-auto max-w-4xl space-y-3">
           <article v-for="reply in replies" :key="reply.id" class="overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 sm:p-5">
             <div class="flex min-w-0 items-center gap-3">
               <UserAvatar :avatar="reply.created_by.avatar" :uuid="reply.created_by.uuid" :has-avatar="reply.created_by.has_avatar" :alt="reply.created_by.nickname" class="h-10 w-10 shrink-0 rounded-full ring-1 ring-zinc-200" />
@@ -88,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useShadcnToast } from '@/lib/useShadcnToast'
@@ -96,7 +92,7 @@ import { sanitizeGuestbookHtml } from '@/lib/guestbook'
 import type { APINotificationList } from '@/types/api/messages/messages'
 import Time from '@/components/tinyComponents/Time.vue'
 import ReviewPagination from '@/components/courseReview/ReviewPagination.vue'
-import { AlertCircle, ChevronRight, LoaderCircle, RefreshCw, MessageSquare } from 'lucide-vue-next'
+import { AlertCircle, ChevronRight, RefreshCw, MessageSquare } from 'lucide-vue-next'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const message = useShadcnToast()
@@ -113,6 +109,7 @@ const totalCount = ref(0)
 const maxPage = ref(0)
 
 let requestVersion = 0
+let loadedPage = 0
 
 onUnmounted(() => {
   requestVersion += 1
@@ -120,7 +117,7 @@ onUnmounted(() => {
 
 const fetchReplies = async (page: number) => {
   const version = ++requestVersion
-  replies.value = []
+  if (page !== loadedPage) replies.value = []
   loadError.value = ''
   try {
     loading.value = true
@@ -131,6 +128,7 @@ const fetchReplies = async (page: number) => {
     if (version !== requestVersion) return
     if (response.status !== 200) throw new Error('Failed to fetch replies')
     replies.value = response.content.results
+    loadedPage = page
     totalCount.value = response.content.count
     maxPage.value = response.content.max_page
     if (replies.value.length) {

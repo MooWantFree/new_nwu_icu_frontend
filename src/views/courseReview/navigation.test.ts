@@ -4,12 +4,14 @@ import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-
 import Teacher from './Teacher.vue'
 import CourseList from './CourseList.vue'
 import ReviewTimeline from './ReviewTimeline.vue'
+import TeacherList from './TeacherList.vue'
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/requests', () => ({ api: { get: mocks.get } }))
 vi.mock('@/lib/useShadcnToast', () => ({ useShadcnToast: () => ({ error: mocks.error }) }))
 vi.mock('@/lib/logins', () => ({ checkLoginStatus: vi.fn() }))
 vi.mock('@/components/courseReview/course/AddCourseModal.vue', () => ({ default: { render: () => null } }))
+vi.mock('@/components/courseReview/course/AddTeacherModal.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/ReviewDirectoryNav.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/teacher/TeacherSkeleton.vue', () => ({ default: { render: () => h('p', 'teacher loading') } }))
 vi.mock('@/components/infoNErrors/404.vue', () => ({ default: { render: () => h('p', 'teacher missing') } }))
@@ -50,7 +52,7 @@ const mount = async (path: string) => {
   const router = createRouter({ history: createMemoryHistory(), routes: [
     { path: '/review/teacher/:id', component: Teacher },
     { path: '/review/course', component: CourseList },
-    { path: '/review/teacher', component: { render: () => null } },
+    { path: '/review/teacher', component: TeacherList },
     { path: '/review/course/:id', component: { render: () => h('p', 'course detail') } },
     { path: '/review/timeline', component: ReviewTimeline },
   ] })
@@ -83,6 +85,32 @@ beforeEach(() => {
 afterEach(() => { app?.unmount(); app = undefined; container.remove() })
 
 describe('review navigation', () => {
+  it.each(['/review/course', '/review/teacher', '/review/timeline'])('distinguishes failure from empty data and retries %s', async path => {
+    mocks.get.mockImplementation(({ url }) => Promise.resolve(url === '/api/assessment/school/'
+      ? { status: 200, content: { schools: [] } } : { status: 503 }))
+    const router = await mount(`${path}?page=2&source=bookmark`)
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('加载失败')
+    expect(container.textContent).not.toContain('没有找到')
+    expect(container.textContent).not.toContain('暂时还没有课程评价')
+    mocks.get.mockResolvedValue({ status: 200, content: { results: [], count: 0, max_page: 1, page: 2 } })
+    container.querySelector<HTMLButtonElement>('[role="alert"] button')!.click()
+    await flush()
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(router.currentRoute.value.query).toEqual({ page: '2', source: 'bookmark' })
+    expect(mocks.get).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({ page: 2 }) }))
+  })
+
+  it('offers the first page for an expired page number', async () => {
+    mocks.get.mockResolvedValue({ status: 404 })
+    const router = await mount('/review/course?page=999&course_type=english')
+    expect(container.textContent).toContain('这一页不存在')
+    const link = container.querySelector<HTMLAnchorElement>('[role="alert"] a')!
+    mocks.get.mockResolvedValue(courseResponse())
+    link.click(); await flush()
+    expect(router.currentRoute.value.query).toEqual({ page: '1', course_type: 'english' })
+    expect(container.textContent).toContain('英美诗歌选读')
+  })
+
   it('loads a new teacher in the reused view and restores the previous teacher on back', async () => {
     mocks.get.mockImplementation(({ params }) => Promise.resolve(teacherResponse(params.id, params.id === 172 ? '许永峰' : '马珂琦')))
     const router = await mount('/review/teacher/172')

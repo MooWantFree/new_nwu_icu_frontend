@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isRegistrationEmailBlocked } from '@/lib/siteConfig'
 import {
   basePasswordSchema,
   usernameSchema,
@@ -15,7 +16,7 @@ const APIRegisterQuery = z.object({
   email: z
     .string()
     .email()
-    .refine((email) => !email.endsWith('@nwu.edu.cn'), {
+    .refine((email) => !isRegistrationEmailBlocked(email), {
       message: '为了保证账号的稳定性，请不要使用学校邮箱注册',
     }),
   captcha_key: z.string(),
