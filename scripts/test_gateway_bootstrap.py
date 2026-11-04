@@ -34,6 +34,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        print('bootstrap-request', flush=True)
         state = json.loads(Path('/fixture/state.json').read_text())
         if state['mode'] == 'slow':
             time.sleep(4)
@@ -119,6 +120,10 @@ print(json.dumps({'status': response.status, 'headers': dict(response.headers), 
         self.assertEqual(direct['body'], '')
         for mode in ('error', 'slow'):
             self.set_state(mode)
+            before = self.docker('logs', self.web).count('bootstrap-request')
+            self.docker('exec', self.gateway, 'wget', '-q', '--spider',
+                        'http://127.0.0.1/startup.css')
+            self.assertEqual(self.docker('logs', self.web).count('bootstrap-request'), before)
             started = time.monotonic()
             response = self.request('/')
             self.assertLess(time.monotonic() - started, 5)
