@@ -225,7 +225,7 @@ const handleImageUpload = async (url: string) => {
   generalError.value = ''
   generalApiErrors = []
   const avatarUuid = url.split('/')[3]
-  if (!z.string().uuid().safeParse(avatarUuid).success) {
+  if (!z.guid().safeParse(avatarUuid).success) {
     showApiErrors(undefined, '头像上传失败，请重新选择图片')
     return
   }
@@ -255,7 +255,7 @@ const validateForm = () => {
   const result = profileSchema.safeParse(formData.value)
   showNicknameValidation(formData.value.nickname)
   if (result.success) return result.data
-  for (const error of result.error.errors) {
+  for (const error of result.error.issues) {
     if (error.path[0] === 'nickname') {
       errors.value.nickname = nicknameError(formData.value.nickname)
     } else if (error.path[0] === 'bio') {

@@ -47,9 +47,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import ImageExtension from '@tiptap/extension-image'
-import LinkExtension from '@tiptap/extension-link'
-import Underline from '@tiptap/extension-underline'
-import Placeholder from '@tiptap/extension-placeholder'
+import { Placeholder } from '@tiptap/extensions'
 import { Bold, Image as ImageIcon, Italic, Link as LinkIcon, Strikethrough, Underline as UnderlineIcon } from 'lucide-vue-next'
 
 import ImageUpload from '@/components/tiptap/editor/ImageUpload.vue'
@@ -97,6 +95,8 @@ const editor = useEditor({
   editable: !props.disabled,
   extensions: [
     StarterKit.configure({
+      link: props.allowImages ? { openOnClick: false, autolink: false } : false,
+      trailingNode: false,
       blockquote: false,
       bulletList: false,
       code: false,
@@ -105,11 +105,7 @@ const editor = useEditor({
       horizontalRule: false,
       orderedList: false,
     }),
-    Underline,
-    ...(props.allowImages ? [
-      AnnouncementImage.configure({ allowBase64: false }),
-      LinkExtension.configure({ openOnClick: false, autolink: false }),
-    ] : []),
+    ...(props.allowImages ? [AnnouncementImage.configure({ allowBase64: false })] : []),
     Placeholder.configure({ placeholder: props.placeholder || '写下你的留言…' }),
   ],
   editorProps: {
@@ -127,7 +123,7 @@ const editor = useEditor({
 
 watch(() => props.modelValue, (value) => {
   if (editor.value && value !== editor.value.getHTML()) {
-    editor.value.commands.setContent(sanitize(value), false)
+    editor.value.commands.setContent(sanitize(value), { emitUpdate: false })
   }
 })
 watch(() => props.disabled, disabled => editor.value?.setEditable(!disabled))

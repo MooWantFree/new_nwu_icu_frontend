@@ -121,7 +121,7 @@ const validateForm = () => {
   if (!formData.value.confirm_password) errors.value.confirm_password = '请再次输入新密码'
   const result = APIUserResetPasswordQuery.safeParse(formData.value)
   if (!result.success) {
-    for (const error of result.error.errors) {
+    for (const error of result.error.issues) {
       const field = error.path[0] as PasswordField
       if (field in errors.value && !errors.value[field]) errors.value[field] = error.message
     }

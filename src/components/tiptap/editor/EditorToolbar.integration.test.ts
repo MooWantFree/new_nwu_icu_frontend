@@ -2,13 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref, type App } from 'vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
-import Link from '@tiptap/extension-link'
+import { TableKit } from '@tiptap/extension-table'
 import EditorToolbar from './EditorToolbar.vue'
 import ShadcnFormDialog from '@/components/common/ShadcnFormDialog.vue'
 
@@ -33,7 +28,11 @@ const mount = async () => {
   const closed = vi.fn(() => { open.value = false })
   const parentSubmit = vi.fn((event: Event) => event.preventDefault())
   editor = new Editor({
-    extensions: [StarterKit, Underline, TextAlign.configure({ types: ['heading', 'paragraph'] }), Table, TableRow, TableHeader, TableCell, Link.configure({ openOnClick: false })],
+    extensions: [
+      StarterKit.configure({ link: { openOnClick: false }, trailingNode: false }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TableKit,
+    ],
     content: '<p>初始内容</p>', injectCSS: false,
   })
   app = createApp({ render: () => h(ShadcnFormDialog, { show: open.value, title: '写评价', onClose: closed }, {

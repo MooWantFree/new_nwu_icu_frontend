@@ -34,8 +34,8 @@ export type GuestbookEntry = {
 export type DiscussionBoard = 'guestbook' | 'announcements'
 
 const pageQuery = z.object({ page: z.number().optional(), pageSize: z.number().optional() })
-const contentQuery = z.object({ content: z.string(), anonymous: z.boolean().optional(), submission_id: z.string().uuid() })
-const replyQuery = z.object({ content: z.string(), submission_id: z.string().uuid() })
+const contentQuery = z.object({ content: z.string(), anonymous: z.boolean().optional(), submission_id: z.guid() })
+const replyQuery = z.object({ content: z.string(), submission_id: z.guid() })
 
 type PaginatedEntries = { page: number; max_page: number; count: number; results: GuestbookEntry[] }
 

@@ -14,9 +14,8 @@
 import { onBeforeUnmount, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
+import { Placeholder } from '@tiptap/extensions'
 import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
 import FileHandler from '@tiptap/extension-file-handler'
 import { useFileUpload } from '@/lib/fileUploads'
 import { useShadcnToast } from '@/lib/useShadcnToast'
@@ -24,11 +23,7 @@ import EditorToolbar from './EditorToolbar.vue'
 import { AllowedMimeTypes } from './vars'
 import 'prosemirror-view/style/prosemirror.css'
 import TextAlign from '@tiptap/extension-text-align'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
-import Link from '@tiptap/extension-link'
+import { TableKit } from '@tiptap/extension-table'
 import { sanitizeUserRichText } from '@/lib/richText'
 
 const {
@@ -55,13 +50,16 @@ onBeforeUnmount(() => { mounted = false })
 
 const editor = useEditor({
   extensions: [
-    StarterKit,
-    /* Not exists in StarterKit: {
-      Nodes: [Table, Task],
-      Marks: [Highlight, Link, Subscript, Superscript, TextStyle, Underline],
-      Functionality: [BubbleMenu, CharacterCount, Color, FloatingMenu, Focus, Undo/Redo
-                      Placeholder, Math, TableOfContents, TextAlign, Typography,]
-    } */
+    StarterKit.configure({
+      trailingNode: false,
+      link: {
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-zinc-950 underline underline-offset-4 hover:text-zinc-700',
+        },
+        defaultProtocol: 'https',
+      },
+    }),
     // TODO: Mathematics
     // TODO: CodeBlockLowlight
     Placeholder.configure({
@@ -85,24 +83,11 @@ const editor = useEditor({
         files.forEach((file) => handleFile(currentEditor, file, pos))
       },
     }),
-    Underline,
     Image,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
     }),
-    Table.configure({
-      resizable: true,
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    Link.configure({
-      openOnClick: false,
-      HTMLAttributes: {
-        class: 'text-zinc-950 underline underline-offset-4 hover:text-zinc-700',
-      },
-      defaultProtocol: 'https',
-    }),
+    TableKit.configure({ table: { resizable: true } }),
   ],
   editorProps: {
     attributes: {
@@ -126,7 +111,7 @@ watch(
       newContent !== editor.value.getHTML() &&
       newContent !== undefined
     ) {
-      editor.value.commands.setContent(sanitizeUserRichText(newContent), false)
+      editor.value.commands.setContent(sanitizeUserRichText(newContent), { emitUpdate: false })
     }
   }
 )

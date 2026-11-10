@@ -158,7 +158,7 @@ const checkUsernameAvailability = debounce(async () => {
     usernameSchema.parse(formData.username);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      errors.username = error.errors[0].message;
+      errors.username = error.issues[0].message;
       return
     }
   }
@@ -204,7 +204,7 @@ const validateForm = (): boolean => {
     usernameSchema.parse(formData.username);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      errors.username = error.errors[0].message;
+      errors.username = error.issues[0].message;
       isValid = false;
     }
   }
@@ -223,7 +223,7 @@ const validateForm = (): boolean => {
     basePasswordSchema.parse(formData.password);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      errors.password = error.errors[0].message;
+      errors.password = error.issues[0].message;
       isValid = false;
     }
   }
@@ -311,7 +311,7 @@ const checkPasswordAvailability = debounce(() => {
     errors.password = '';
   } catch (error) {
     if (error instanceof z.ZodError) {
-      errors.password = error.errors[0].message;
+      errors.password = error.issues[0].message;
     }
   }
 }, 300);

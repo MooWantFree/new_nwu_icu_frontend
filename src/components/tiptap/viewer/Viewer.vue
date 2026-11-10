@@ -46,15 +46,10 @@ import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
 import ExpandButton from './ExpandButton.vue'
 import 'prosemirror-view/style/prosemirror.css'
 import TextAlign from '@tiptap/extension-text-align'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
-import Link from '@tiptap/extension-link'
+import { TableKit } from '@tiptap/extension-table'
 import LinkConfirmModal from './LinkConfirmModal.vue'
 import { openSafeExternalUrl, toSafeExternalUrl } from '@/lib/security'
 import { sanitizeUserRichText } from '@/lib/richText'
@@ -79,34 +74,24 @@ const emit = defineEmits<{
 
 const editor = useEditor({
   extensions: [
-    StarterKit,
-    /* Not exists in StarterKit: {
-      Nodes: [Table, Task],
-      Marks: [Highlight, Link, Subscript, Superscript, TextStyle, Underline],
-      Functionality: [BubbleMenu, CharacterCount, Color, FloatingMenu, Focus, Undo/Redo
-                      Placeholder, Math, TableOfContents, TextAlign, Typography,]
-    } */
+    StarterKit.configure({
+      trailingNode: false,
+      link: {
+        openOnClick: false,
+        defaultProtocol: 'https',
+        autolink: false,
+        HTMLAttributes: {
+          class: 'text-zinc-950 underline underline-offset-4 hover:text-zinc-700',
+        },
+      },
+    }),
     // TODO: Mathematics
     // TODO: CodeBlockLowlight
-    Underline,
     Image,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
     }),
-    Table.configure({
-      resizable: true,
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    Link.configure({
-      openOnClick: false,
-      defaultProtocol: 'https',
-      autolink: false,
-      HTMLAttributes: {
-        class: 'text-zinc-950 underline underline-offset-4 hover:text-zinc-700',
-      },
-    }),
+    TableKit.configure({ table: { resizable: true } }),
   ],
   editorProps: {
     attributes: {
@@ -135,7 +120,7 @@ watch(
   (newValue) => {
     const safeContent = sanitizeUserRichText(newValue)
     if (editor.value && editor.value.getHTML() !== safeContent) {
-      editor.value.commands.setContent(safeContent, false)
+      editor.value.commands.setContent(safeContent, { emitUpdate: false })
     }
   },
 )

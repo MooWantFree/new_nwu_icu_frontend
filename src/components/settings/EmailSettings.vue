@@ -220,8 +220,8 @@ async function saveNwuEmail() {
   nwuEmailError.value = ''
   const validation = APIBindScholarEmailQuery.safeParse({ college_email: draftEmail.value.trim().toLowerCase() })
   if (!validation.success) {
-    const firstError = validation.error.errors[0]
-    nwuEmailError.value = firstError?.code === 'invalid_string' ? '请输入有效的 NWU 邮箱地址' : firstError?.message || '邮箱格式不正确'
+    const firstError = validation.error.issues[0]
+    nwuEmailError.value = firstError?.code === 'invalid_format' ? '请输入有效的 NWU 邮箱地址' : firstError?.message || '邮箱格式不正确'
     nwuEmailAddressInput.value?.focus()
     return
   }

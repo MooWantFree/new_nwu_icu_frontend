@@ -256,7 +256,7 @@ async function handlePasswordReset() {
   clearErrors()
   const passwordResult = basePasswordSchema.safeParse(newPassword.value)
   if (!passwordResult.success) {
-    fieldErrors.value.newPassword = passwordResult.error.errors[0]?.message || '新密码不符合要求'
+    fieldErrors.value.newPassword = passwordResult.error.issues[0]?.message || '新密码不符合要求'
     focusField('new-password')
     return
   }
