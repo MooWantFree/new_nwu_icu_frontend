@@ -64,6 +64,7 @@ ThreadingHTTPServer(('0.0.0.0', 8000), Handler).serve_forever()
                     '--network-alias', 'gateway',
                     '-v', f'{ROOT / "dist"}:/usr/share/nginx/html:ro',
                     '-v', f'{ROOT / "nginx/default.conf"}:/etc/nginx/conf.d/default.conf:ro',
+                    '-v', f'{ROOT / "nginx/zip-download-limit.conf"}:/etc/nginx/conf.d/00-zip-download-limit.conf:ro',
                     os.environ.get('GATEWAY_TEST_IMAGE', 'nginx:1.27-alpine'))
         for _ in range(30):
             try:

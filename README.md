@@ -64,6 +64,8 @@ docker compose --env-file "$ENV_FILE" \
 
 由 OpenResty 提供 HTTPS，并将网站请求转发到 `GATEWAY_NETWORK_ALIAS` 配置的网关别名，端口为 `80`。OpenResty 容器与 gateway 需加入同一个 Docker 网络。完整配置见 [OpenResty 接入说明](https://github.com/NWUCA/NWU.ICU/blob/master/deploy/openresty.md)。
 
+gateway 用 `resource-reader` 从只读挂载 `/srv/resources` 发送已授权的普通文件。提供下载的域名应共用外层 OpenResty 的 [ZIP 并发配置](nginx/zip-download-limit.conf)。现有站点的配置来源、切换顺序和回滚见[首次启用资料下载网关](https://github.com/NWUCA/NWU.ICU/blob/master/deploy/production-runbook.md#首次启用资料下载网关)。
+
 上线后检查首页、课程评价、资料页和登录页面。资料投稿、批量下载及管理员 Passkey 也需要实际操作验证。
 
 ### 更新

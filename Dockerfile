@@ -20,6 +20,13 @@ RUN pnpm build
 
 FROM nginx:1.27-alpine
 
+ARG UPLOAD_UID=10001
+ARG UPLOAD_GID=10001
+RUN addgroup -g "$UPLOAD_GID" resource-files \
+    && adduser -D -H -u "$UPLOAD_UID" -G resource-files resource-reader \
+    && sed -i 's/^user[[:space:]]\+nginx;/user resource-reader resource-files;/' /etc/nginx/nginx.conf \
+    && grep -q '^user resource-reader resource-files;' /etc/nginx/nginx.conf
+
 ARG FRONTEND_COMMIT=unknown
 ARG BACKEND_COMMIT=unknown
 ARG FRONTEND_GITHUB_URL=
@@ -29,6 +36,7 @@ LABEL org.opencontainers.image.source=$FRONTEND_GITHUB_URL \
     io.nwuicu.backend-commit=$BACKEND_COMMIT \
     io.nwuicu.backend-image=$BACKEND_IMAGE
 
+COPY nginx/zip-download-limit.conf /etc/nginx/conf.d/00-zip-download-limit.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 

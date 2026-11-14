@@ -85,6 +85,10 @@ jobs:
           [[ "$revision" == "$BACKEND_COMMIT" ]] || { echo 'Backend image revision mismatch.' >&2; exit 1; }
           backend_image=$(docker image inspect "$backend_tag" --format '{{range .RepoDigests}}{{println .}}{{end}}' | grep -E "^$backend_repository@sha256:[0-9a-f]{64}$")
           [[ -n "$backend_image" && "$backend_image" != *$'\n'* ]]
+          # Match the reader to the owner of group/private-mode resource files.
+          upload_uid=$(docker run --rm --entrypoint id "$backend_image" -u)
+          upload_gid=$(docker run --rm --entrypoint id "$backend_image" -g)
+          printf 'upload_uid=%s\nupload_gid=%s\n' "$upload_uid" "$upload_gid" >> "$GITHUB_OUTPUT"
           repository="ghcr.io/${GITHUB_REPOSITORY,,}"
           image="$repository:sha-$FRONTEND_COMMIT-backend-$BACKEND_COMMIT"
           printf 'backend_image=%s\nimage=%s\n' "$backend_image" "$image" >> "$GITHUB_OUTPUT"
@@ -99,6 +103,8 @@ jobs:
           push: true
           tags: ${{ steps.release.outputs.image }}
           build-args: |
+            UPLOAD_UID=${{ steps.release.outputs.upload_uid }}
+            UPLOAD_GID=${{ steps.release.outputs.upload_gid }}
             FRONTEND_COMMIT=${{ github.sha }}
             BACKEND_COMMIT=${{ inputs.backend_commit }}
             FRONTEND_GITHUB_URL=https://github.com/${{ github.repository }}
