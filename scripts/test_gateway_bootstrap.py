@@ -28,12 +28,31 @@ class GatewayBootstrapTests(unittest.TestCase):
         directory = Path(self.temp.name)
         self.state = directory / 'state.json'
         self.set_state('ok', 'Campus A')
+        resources = directory / 'resources'
+        resources.mkdir(mode=0o755)
+        (resources / 'example.txt').write_bytes(b'0123456789')
         (directory / 'server.py').write_text('''
 import json, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == '/api/gateway-error/':
+            self.close_connection = True
+            return
+        if self.path == '/api/resources/file/example.txt':
+            self.send_response(200)
+            self.send_header('X-Accel-Redirect', '/_protected/resources/example.txt')
+            self.send_header('ETag', '"range-fixture"')
+            self.end_headers()
+            return
+        if self.path in ('/disk', '/api/test/', '/admin/'):
+            self.send_response(200)
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('X-Frame-Options', 'DENY')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.end_headers()
+            return
         print('bootstrap-request', flush=True)
         state = json.loads(Path('/fixture/state.json').read_text())
         if state['mode'] == 'slow':
@@ -64,6 +83,8 @@ ThreadingHTTPServer(('0.0.0.0', 8000), Handler).serve_forever()
                     '--network-alias', 'gateway',
                     '-v', f'{ROOT / "dist"}:/usr/share/nginx/html:ro',
                     '-v', f'{ROOT / "nginx/default.conf"}:/etc/nginx/conf.d/default.conf:ro',
+                    '-v', f'{ROOT / "nginx/snippets"}:/etc/nginx/snippets:ro',
+                    '-v', f'{resources}:/srv/resources:ro',
                     '-v', f'{ROOT / "nginx/zip-download-limit.conf"}:/etc/nginx/conf.d/00-zip-download-limit.conf:ro',
                     os.environ.get('GATEWAY_TEST_IMAGE', 'nginx:1.27-alpine'))
         for _ in range(30):
@@ -84,19 +105,49 @@ ThreadingHTTPServer(('0.0.0.0', 8000), Handler).serve_forever()
     def set_state(self, mode, name='Campus A'):
         self.state.write_text(json.dumps({'mode': mode, 'name': name}))
 
-    def request(self, url):
+    def request(self, url, headers=None):
         code = '''
 import json, sys, urllib.request, urllib.error
 request = urllib.request.Request('http://gateway' + sys.argv[1], headers={
     'Host': 'campus.example.org', 'Cookie': 'sessionid=test', 'Authorization': 'Bearer test',
-    'X-Forwarded-Proto': 'https'})
+    'X-Forwarded-Proto': 'https', **json.loads(sys.argv[2])})
 try:
     response = urllib.request.urlopen(request, timeout=8)
 except urllib.error.HTTPError as error:
     response = error
-print(json.dumps({'status': response.status, 'headers': dict(response.headers), 'body': response.read().decode()}))
+headers = {key: response.headers.get_all(key) for key in response.headers}
+print(json.dumps({'status': response.status, 'headers': headers, 'body': response.read().decode()}))
 '''
-        return json.loads(self.docker('exec', self.web, 'python', '-c', code, url))
+        return json.loads(self.docker('exec', self.web, 'python', '-c', code, url, json.dumps(headers or {})))
+
+    def assert_security_headers(self, response, frame_options):
+        headers = response['headers']
+        self.assertEqual(headers.get('X-Content-Type-Options'), ['nosniff'])
+        self.assertEqual(headers.get('X-Frame-Options'), [frame_options])
+        self.assertEqual(headers.get('Referrer-Policy'), ['no-referrer'])
+
+    def test_security_headers_on_static_proxied_and_error_responses(self):
+        asset = next((ROOT / 'dist/assets').glob('*.css'))
+        for path, status, frames in (
+            ('/assets/' + asset.name, 200, 'SAMEORIGIN'),
+            ('/assets/missing-fixture.css', 404, 'SAMEORIGIN'),
+            ('/resource-entry.js', 200, 'SAMEORIGIN'),
+            ('/media/private', 404, 'SAMEORIGIN'),
+            ('/disk', 200, 'DENY'), ('/api/test/', 200, 'DENY'), ('/admin/', 200, 'DENY'),
+            ('/api/gateway-error/', 502, 'SAMEORIGIN'),
+        ):
+            with self.subTest(path=path):
+                response = self.request(path)
+                self.assertEqual(response['status'], status)
+                self.assert_security_headers(response, frames)
+
+        response = self.request('/api/resources/file/example.txt', {'Range': 'bytes=2-4'})
+        self.assertEqual(response['status'], 206)
+        self.assertEqual(response['body'], '234')
+        self.assertEqual(response['headers']['Content-Range'], ['bytes 2-4/10'])
+        self.assertEqual(response['headers']['ETag'], ['"range-fixture"'])
+        self.assertEqual(response['headers']['Content-Security-Policy'], ["sandbox; default-src 'none'"])
+        self.assert_security_headers(response, 'SAMEORIGIN')
 
     def test_documents_use_fresh_config_and_retain_failure_recovery_and_admin_csp(self):
         for url in ('/', '/review/course', '/manage', '/manage/files',
@@ -111,9 +162,10 @@ print(json.dumps({'status': response.status, 'headers': dict(response.headers), 
                 self.assertIn('data-site-loading', response['body'])
                 self.assertIn('no-store', response['headers']['Cache-Control'])
                 self.assertNotIn('<!--#', response['body'])
+                self.assert_security_headers(response, 'DENY' if url.startswith('/manage') else 'SAMEORIGIN')
                 if url.startswith('/manage'):
                     self.assertIn("script-src 'self' moz-extension: chrome-extension:;", response['body'])
-                    self.assertIn("connect-src 'self';", response['headers']['Content-Security-Policy'])
+                    self.assertIn("connect-src 'self';", response['headers']['Content-Security-Policy'][0])
         self.set_state('ok', 'Campus B')
         self.assertIn('Campus B', self.request('/')['body'])
         direct = self.request('/_site/bootstrap')

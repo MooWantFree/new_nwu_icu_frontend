@@ -38,6 +38,7 @@ LABEL org.opencontainers.image.source=$FRONTEND_GITHUB_URL \
 
 COPY nginx/zip-download-limit.conf /etc/nginx/conf.d/00-zip-download-limit.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/snippets/ /etc/nginx/snippets/
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
