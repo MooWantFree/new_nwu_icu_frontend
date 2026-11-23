@@ -86,7 +86,7 @@ ThreadingHTTPServer(('0.0.0.0', 8000), Handler).serve_forever()
                     '-v', f'{ROOT / "nginx/snippets"}:/etc/nginx/snippets:ro',
                     '-v', f'{resources}:/srv/resources:ro',
                     '-v', f'{ROOT / "nginx/zip-download-limit.conf"}:/etc/nginx/conf.d/00-zip-download-limit.conf:ro',
-                    os.environ.get('GATEWAY_TEST_IMAGE', 'nginx:1.27-alpine'))
+                    os.environ.get('GATEWAY_TEST_IMAGE', 'nginx:1.30.7-alpine'))
         for _ in range(30):
             try:
                 if 'site-config-bootstrap' in self.request('/')['body']:
