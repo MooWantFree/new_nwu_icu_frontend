@@ -15,7 +15,6 @@ vi.mock('@/components/courseReview/course/AddTeacherModal.vue', () => ({ default
 vi.mock('@/components/courseReview/ReviewDirectoryNav.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/courseReview/teacher/TeacherSkeleton.vue', () => ({ default: { render: () => h('p', 'teacher loading') } }))
 vi.mock('@/components/infoNErrors/404.vue', () => ({ default: { render: () => h('p', 'teacher missing') } }))
-vi.mock('@/components/infoNErrors/500.vue', () => ({ default: { render: () => h('p', 'teacher failed') } }))
 vi.mock('@/components/courseReview/timeline/ReviewItemSkeleton.vue', () => ({ default: { render: () => h('p', 'review loading') } }))
 vi.mock('@/components/courseReview/timeline/ReviewItem.vue', () => ({ default: defineComponent({
   props: ['review'], setup: props => () => h('p', props.review.content),
@@ -109,6 +108,38 @@ describe('review navigation', () => {
     link.click(); await flush()
     expect(router.currentRoute.value.query).toEqual({ page: '1', course_type: 'english' })
     expect(container.textContent).toContain('英美诗歌选读')
+  })
+
+  it.each([
+    ['gateway error', () => Promise.resolve({ status: 502 })],
+    ['network failure', () => Promise.reject(new TypeError('Failed to fetch'))],
+    ['incomplete response', () => Promise.resolve({ status: 200, content: {} })],
+  ] as const)('retries teacher details in place after a %s', async (_label, failure) => {
+    const retry = deferred()
+    mocks.get.mockImplementationOnce(failure).mockReturnValueOnce(retry.promise)
+    const path = '/review/teacher/172?source=directory'
+    const router = await mount(path)
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('教师信息加载失败')
+    const button = container.querySelector<HTMLButtonElement>('[role="alert"] button')!
+    button.click()
+    await flush()
+    expect(button.disabled).toBe(true)
+    expect(mocks.get.mock.calls[1]).toEqual(mocks.get.mock.calls[0])
+    retry.resolve(teacherResponse(172, '许永峰'))
+    await flush()
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(container.textContent).toContain('许永峰的课程')
+    expect(router.currentRoute.value.fullPath).toBe(path)
+  })
+
+  it('links to teachers without a school from the directory', async () => {
+    mocks.get.mockImplementation(({ url }) => Promise.resolve(url === '/api/assessment/school/'
+      ? { status: 200, content: { schools: [] } }
+      : { status: 200, content: { count: 1, page: 1, max_page: 1, results: [{ id: 172, name: '许永峰', school: null }] } }))
+    await mount('/review/teacher')
+    const link = container.querySelector('a[href="/review/teacher/172"]')
+    expect(link?.textContent).toContain('许永峰')
+    expect(link?.textContent).toContain('学院待补充')
   })
 
   it('loads a new teacher in the reused view and restores the previous teacher on back', async () => {

@@ -9,11 +9,7 @@
         <span aria-hidden="true">/</span>
         <span class="text-zinc-700">教师详情</span>
       </nav>
-      <component
-        v-if="errorMsg.component"
-        :is="errorMsg.component"
-        :detail="errorMsg.detail"
-      />
+      <LoadError v-if="loadFailed" message="教师信息加载失败" :busy="loading" @retry="retryKey++" />
       <TeacherSkeleton v-else-if="loading" />
       <div v-else-if="teacher">
         <header class="mb-6 flex flex-col gap-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -96,15 +92,13 @@
           </div>
         </section>
       </div>
-      <div v-else class="text-center text-zinc-500">
-        <Page404 />
-      </div>
+      <Page404 v-else detail="教师信息不存在" />
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, BookOpen, ChevronRight, PlusCircle, Star, UsersRound } from 'lucide-vue-next'
 import { api } from '@/lib/requests'
@@ -112,19 +106,14 @@ import TeacherSkeleton from '@/components/courseReview/teacher/TeacherSkeleton.v
 import { APITeacherInfo } from '@/types/api/courseReview/teacher'
 import AddCourseModal from '@/components/courseReview/course/AddCourseModal.vue'
 import Page404 from '@/components/infoNErrors/404.vue'
-import Page500 from '@/components/infoNErrors/500.vue'
+import LoadError from '@/components/common/LoadError.vue'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 
 const route = useRoute()
 const { checkingLogin, requireLogin } = useCreationLogin()
 
-const errorMsg = shallowRef<{
-  component: typeof Page404 | typeof Page500 | null,
-  detail: string,
-}>({
-  component: null,
-  detail: '',
-})
+const loadFailed = ref(false)
+const retryKey = ref(0)
 const teacher = ref<APITeacherInfo['response'] | null>(null)
 const totalReviewCount = computed(() => teacher.value?.course_list.reduce((total, course) => total + course.review_count, 0) ?? 0)
 const loading = ref(true)
@@ -134,45 +123,29 @@ const handleAddCourseButtonClick = async () => {
   if (await requireLogin('添加课程')) showTeacherSelectorModal.value = true
 }
 
-const fetchTeacherData = async (teacherId: number, isCurrent: () => boolean) => {
+watch([() => route.params.id, retryKey], async ([id], [previousId], onCleanup) => {
+  let current = true
+  onCleanup(() => { current = false })
+  if (id !== previousId) loadFailed.value = false
+  teacher.value = null
+  showTeacherSelectorModal.value = false
+  loading.value = true
   try {
     const { status, content } = await api.get({
       url: '/api/assessment/teacher/:id/',
-      params: { id: teacherId },
+      params: { id: Number(id) },
     })
-    if (!isCurrent()) return
-    if (status === 200) {
+    if (!current) return
+    if (status === 200 && content?.teacher_info && Array.isArray(content.course_list)) {
       teacher.value = content
-    } else if (status === 404) {
-      errorMsg.value = {
-        component: Page404,
-        detail: '教师信息不存在',
-      }
-      return
+      loadFailed.value = false
     } else {
-      throw new Error('Failed to fetch teacher data')
+      loadFailed.value = status !== 404
     }
-  } catch (error) {
-    if (!isCurrent()) return
-    console.error('Error fetching teacher data:', error)
-    if (error instanceof Error) {
-      errorMsg.value = {
-        component: Page500,
-        detail: error.toString(),
-      }
-    }
+  } catch {
+    if (current) loadFailed.value = true
   } finally {
-    if (isCurrent()) loading.value = false
+    if (current) loading.value = false
   }
-}
-
-watch(() => route.params.id, (id, _oldId, onCleanup) => {
-  let current = true
-  onCleanup(() => { current = false })
-  teacher.value = null
-  errorMsg.value = { component: null, detail: '' }
-  showTeacherSelectorModal.value = false
-  loading.value = true
-  void fetchTeacherData(Number(id), () => current)
 }, { immediate: true })
 </script>

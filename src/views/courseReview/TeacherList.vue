@@ -78,7 +78,7 @@
           </div>
           <div class="min-w-0 flex-1">
             <h2 class="truncate text-base font-semibold text-zinc-950">{{ teacher.name }}</h2>
-            <p class="mt-1 truncate text-xs leading-5 text-zinc-500">{{ teacher.school }}</p>
+            <p class="mt-1 truncate text-xs leading-5 text-zinc-500">{{ teacher.school || '学院待补充' }}</p>
           </div>
           <ChevronRight class="h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600" aria-hidden="true" />
         </RouterLink>
@@ -100,6 +100,7 @@ import { onMounted, computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LoadError from '@/components/common/LoadError.vue'
 import { api } from '@/lib/requests'
+import type { APITeacherList } from '@/types/api/courseReview/teacher'
 import { useCreationLogin } from '@/lib/useCreationLogin'
 import { ChevronRight, PlusCircle, UsersRound } from 'lucide-vue-next'
 import AddTeacherModal from '@/components/courseReview/course/AddTeacherModal.vue'
@@ -116,16 +117,10 @@ enum OrderBy {
   Popular = 'popular',
 }
 
-interface Teacher {
-  id: number
-  name: string
-  school: string
-}
-
-const teachers = ref<Teacher[]>([])
+const teachers = ref<APITeacherList['response']['results']>([])
 const schoolFilter = computed(() => typeof route.query.school === 'string' ? route.query.school : '')
 const orderBy = computed(() => route.query.order === OrderBy.Popular ? OrderBy.Popular : OrderBy.Rating)
-const data = ref<{ count: number; max_page: number; page: number; results: Teacher[] } | null>(null)
+const data = ref<APITeacherList['response'] | null>(null)
 const loading = ref(true)
 const loadError = ref('')
 const retryKey = ref(0)
